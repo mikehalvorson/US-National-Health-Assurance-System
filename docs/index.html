@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>National Health Assurance Simulator</title>
+<meta name="description" content="An interactive, bottom-up fiscal simulation of the proposed U.S. National Health Assurance Framework — every parameter sourced, every assumption adjustable.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <h1>National Health Assurance Simulator</h1>
+    <p class="sub">
+      A bottom-up fiscal simulation of the proposed National Health Assurance
+      Framework — a public system that would replace U.S. private health
+      insurance with automatic coverage, zero point-of-care cost, national
+      drug purchasing, hospital global budgets, and a community
+      diagnostic-treatment network. Every parameter is sourced; every major
+      assumption is adjustable. The model computes its own answer —
+      it is <em>not</em> tuned to match the framework's claimed cost.
+    </p>
+    <p class="meta">
+      All results in real 2024 dollars. Calibrated to CMS National Health
+      Expenditure data (2023, the last finalized year).
+      Monte Carlo uncertainty bands from sourced parameter ranges.
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources &amp; methodology on GitHub</a>.
+    </p>
+  </header>
+
+  <!-- Hero: the headline result -->
+  <section class="card" id="hero-card">
+    <h2>What would the mature system cost at today's scale?</h2>
+    <p class="desc">The framework claims a mature cost of $4.75T/yr in 2024
+      dollars — implicitly, the fully-built system at today's population and
+      prices. This model computes that same counterfactual bottom-up: all
+      policies fully phased in, the economy at 2024 scale. (Actual 2024 U.S.
+      health spending: ~$5.2–5.3T.) The projection through 2042, with real
+      growth, is in the chart below.</p>
+    <div class="hero">
+      <div class="hero-block">
+        <div class="label">This model's estimate (median)</div>
+        <div class="hero-num" id="hero-value">—</div>
+        <div class="range" id="hero-range">—</div>
+      </div>
+      <div class="hero-block">
+        <div class="label">The framework document's own claim</div>
+        <div class="claim-chip">
+          <span><b>$4.75T</b>/yr (range $4.30–5.25T) — asserted, not derived</span>
+        </div>
+        <div class="range" id="claim-verdict">—</div>
+      </div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <!-- Controls -->
+  <section class="card">
+    <h2>Assumptions</h2>
+    <p class="desc">Pick a stress scenario from the framework's own 19-scenario
+      catalog, or adjust individual assumptions. Badges show evidence quality:
+      <span class="conf high">high</span> = official statistic or scored estimate,
+      <span class="conf medium">medium</span> = reputable study or survey,
+      <span class="conf low">low</span> = analyst assumption — no direct source exists.</p>
+    <div class="controls" id="controls"></div>
+    <p class="scenario-desc" id="scenario-desc"></p>
+    <div class="controls-foot">
+      <button class="btn" id="reset-btn">Reset assumptions</button>
+      <span class="runs-note" id="runs-note"></span>
+    </div>
+  </section>
+
+  <!-- Path chart -->
+  <section class="card">
+    <h2>Annual total system cost, 2027–2042</h2>
+    <p class="desc">The status-quo path follows CMS's own spending trajectory.
+      The NHA path phases in over the framework's Phase 0–8 roadmap
+      (coverage waves from Year 4, national default coverage Year 8, expanded
+      long-term-care/behavioral/dental benefits Years 10–12), including all
+      transition costs. The band is the 10th–90th percentile across Monte
+      Carlo draws of every uncertain parameter.</p>
+    <div id="path-chart"></div>
+    <details class="tableview"><summary>View as table</summary>
+      <div class="tbl-scroll"><table class="data" id="path-table"></table></div>
+    </details>
+  </section>
+
+  <!-- Bridge chart -->
+  <section class="card">
+    <h2>Why the total lands where it does</h2>
+    <p class="desc">The bridge from the status-quo baseline at maturity (2041)
+      to the NHA total, using central-estimate parameters. Each saving
+      mechanism appears exactly once — the model computes both worlds directly
+      and derives these differences, so nothing can be double-counted.</p>
+    <div id="bridge-chart"></div>
+    <details class="tableview"><summary>View as table</summary>
+      <div class="tbl-scroll"><table class="data" id="bridge-table"></table></div>
+    </details>
+  </section>
+
+  <!-- Financing -->
+  <section class="card">
+    <h2>Who pays</h2>
+    <p class="desc">Mature-year public cost funded by redirecting what
+      government already spends, a state maintenance-of-effort contribution,
+      an employer contribution replacing today's premiums — and the remainder,
+      which requires new revenue. The comparison shows how far the framework's
+      extreme-wealth tax package goes toward that gap.</p>
+    <div id="financing-chart"></div>
+    <p class="note" id="financing-note"></p>
+    <details class="tableview"><summary>View as table</summary>
+      <div class="tbl-scroll"><table class="data" id="financing-table"></table></div>
+    </details>
+  </section>
+
+  <!-- Benchmarks -->
+  <section class="card">
+    <h2>Sanity checks against independent estimates</h2>
+    <p class="desc">Two different questions, two different panels — these
+      concepts are not interchangeable, which is exactly why the framework's
+      single asserted number needed this model.</p>
+    <h2 style="font-size:14.5px;margin-top:14px">Total system cost — mature system at 2024 scale (all payers, $/yr)</h2>
+    <div id="benchmark-nhe"></div>
+    <h2 style="font-size:14.5px;margin-top:20px">Added federal cost (vs. current-law federal health spending, $/yr)</h2>
+    <div id="benchmark-fed"></div>
+    <p class="note" id="benchmark-note"></p>
+  </section>
+
+  <!-- Household view -->
+  <section class="card">
+    <h2>What it means for a household</h2>
+    <p class="desc">Households currently sponsor about 27% of national health
+      spending through premiums, payroll deductions, and out-of-pocket costs.
+      Under NHA nearly all of that is replaced by public financing — the open
+      question is how much of the new revenue lands back on ordinary
+      households, which depends on the tax design (the framework caps ordinary
+      households at 5% of incremental burden — KPP-C8).</p>
+    <div class="tiles" id="household-tiles"></div>
+  </section>
+
+  <!-- Methodology -->
+  <section class="card">
+    <h2>Methodology, honestly</h2>
+    <div class="note">
+      <b>What this is:</b> a national-aggregate annual model (v1). It computes
+      the status-quo world and the NHA world category by category from CMS
+      2023 calibration data, phases policy in over the framework's Phase 0–8
+      roadmap, and samples every uncertain parameter from a sourced
+      low/central/high range (triangular distribution, independent draws).
+      Steady state is the 2040–2042 average.
+    </div>
+    <div class="note">
+      <b>What it is not:</b> it has no regional, demographic, or
+      specialty-level detail (planned v2); it does not model macroeconomic
+      feedback (wage pass-through, labor-market effects); parameter draws are
+      independent, which understates tail risk; and access/health-outcome
+      effects are represented only where they carry a cost.
+    </div>
+    <div class="warnbox" id="gaps-box">
+      <b>Weakest assumptions</b> — these parameters have no direct real-world
+      source and materially move the result. They are flagged
+      <span class="conf low">low</span> in the controls and listed with their
+      derivation anchors in the full parameter table below.
+      <span id="gaps-list"></span>
+    </div>
+    <details class="tableview"><summary>Full parameter table with sources (the entire evidence base)</summary>
+      <div class="tbl-scroll"><table class="data" id="param-table"></table></div>
+    </details>
+    <div class="selftest" id="selftest"></div>
+  </section>
+
+  <footer class="site">
+    Built from the National Health Assurance Framework v2.0.0 and its research
+    parameter base —
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">source repository</a>.
+    This is a policy model, not a prediction; all figures carry the
+    uncertainty shown.
+  </footer>
+
+</div>
+
+<script src="js/params.js"></script>
+<script src="js/scenarios.js"></script>
+<script src="js/model.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

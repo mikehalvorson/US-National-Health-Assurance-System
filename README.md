@@ -27,6 +27,49 @@ a quantitative fiscal/access/outcomes simulation of that framework.
                                                             for simulation calibration constants
 ```
 
+## The simulator (v1 — built)
+
+`docs/` contains the **interactive public dashboard**: a fully client-side
+static web app (plain HTML/JS/SVG, no build step, no dependencies, no
+server) implementing the national-aggregate simulation specified in
+HANDOFF.md. It runs 600 Monte Carlo draws over 27 sourced parameter
+distributions in ~15ms in the browser, covers the framework's Phase 0–8
+rollout (2027–2042) and all 19 stress scenarios, and validates itself with
+9 built-in integrity tests shown in the page footer.
+
+```
+docs/index.html        page structure
+docs/style.css         theme (light + dark), validated chart palette
+docs/js/params.js      the parameter base: 27 distributions, each with
+                        source citation + confidence grade, plus CMS 2023
+                        calibration constants and phase-ramp schedules
+docs/js/scenarios.js   the 19-scenario catalog as parameter overrides
+docs/js/model.js       the engine: baseline world + NHA world computed
+                        directly per category (offsets derived as
+                        differences so double-counting is structurally
+                        impossible), Monte Carlo, self-tests
+docs/js/charts.js      dependency-free SVG charts (path + band, waterfall
+                        bridge, financing stack, benchmark intervals)
+docs/js/app.js         controls, rendering, tables
+tools/serve.ps1        local preview server (PowerShell, no Node needed)
+```
+
+**To deploy publicly:** GitHub → repo Settings → Pages → Source: "Deploy
+from a branch" → Branch: `main`, folder `/docs` → Save. The dashboard will
+be live at `https://mikehalvorson.github.io/US-National-Health-Assurance-System/`
+within a couple of minutes. To preview locally:
+`powershell -File tools/serve.ps1` then open http://localhost:8517.
+
+**Headline v1 finding (base case, seed 42):** the mature system at 2024
+scale computes to ~$5.3T/yr (10th–90th pct ≈ $5.2–5.5T) versus the
+framework's asserted $4.75T (range $4.30–5.25T) and actual 2024 spending
+of ~$5.3T — i.e., the framework's savings levers roughly pay for its
+benefit expansions rather than beating today's spending, and the $4.75T
+claim only lands inside the model's range under the optimistic scenario.
+Mature-year new-revenue requirement computes to ~$3.4T/yr, of which the
+extreme-wealth tax package covers roughly 12%. These results move with the
+sliders — that's the point of the tool.
+
 ## Status
 
 The framework document defines a full architecture, requirements register,
