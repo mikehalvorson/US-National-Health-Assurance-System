@@ -224,6 +224,62 @@ table.data th.num { text-align: right; }
   border-radius: 0 8px 8px 0;
 }
 
+/* ---- Care scenario cards ---- */
+.care-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 12px; margin-top: 14px;
+}
+.care-card {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; background: var(--surface-1);
+  display: flex; flex-direction: column;
+}
+.care-title { font-weight: 650; font-size: 14px; margin-bottom: 10px; }
+.care-rows { flex: 1; }
+.care-row { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.care-row-label { color: var(--text-secondary); font-size: 12.5px; }
+.care-row-val { font-weight: 650; font-size: 13.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.care-row-note { color: var(--text-muted); font-size: 11.5px; margin-top: 1px; }
+.care-nha {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--gridline);
+}
+.care-nha-line { display: flex; align-items: baseline; gap: 8px; }
+.care-nha-label { color: var(--text-secondary); font-size: 12.5px; }
+.care-nha-val { font-size: 22px; font-weight: 700; color: var(--status-good); }
+.care-year-chip {
+  font-size: 11px; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 1px 8px; margin-left: auto; white-space: nowrap;
+}
+.care-nha-note { color: var(--text-muted); font-size: 11.5px; margin-top: 3px; }
+.care-src { color: var(--text-muted); font-size: 10.5px; margin-top: 9px; }
+
+/* ---- Household calculator ---- */
+.hh-picker { margin-top: 4px; }
+.hh-picker label { font-size: 13px; color: var(--text-secondary); }
+.hh-picker select {
+  font: inherit; font-size: 14px; padding: 7px 10px; margin-left: 6px;
+  background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.hh-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;
+}
+@media (max-width: 640px) { .hh-grid { grid-template-columns: 1fr; } }
+.hh-col {
+  border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+}
+.hh-col-nha { border-color: color-mix(in srgb, var(--status-good) 35%, var(--border)); }
+.hh-col-head { font-weight: 650; font-size: 13.5px; margin-bottom: 8px; }
+.hh-line { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.hh-line-label { color: var(--text-secondary); font-size: 13px; }
+.hh-line-val { font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hh-line-note { color: var(--text-muted); font-size: 11.5px; margin-top: 2px; }
+.hh-total { border-top: 1px solid var(--gridline); padding-top: 8px; margin-top: 10px; }
+.hh-foot { margin-top: 12px; }
+
 /* ---- Self-test footer ---- */
 .selftest { margin-top: 26px; font-size: 12.5px; color: var(--text-muted); }
 .selftest .pass { color: var(--status-good); font-weight: 600; }

@@ -29,27 +29,50 @@
     </p>
   </header>
 
-  <!-- Hero: the headline result -->
+  <!-- Hero: what you'd pay at the point of care -->
+  <section class="card" id="care-card-section">
+    <h2>What you'd pay for care</h2>
+    <p class="desc">The framework's core design rule: covered medically
+      necessary care costs <b>$0 at the point of use</b> — no deductibles,
+      no copays, no surprise bills, no medical debt (patient billing is
+      capped at 0.5% of covered encounters). The system is paid for through
+      public financing instead, shown further down. Here is what that means
+      for real care episodes: today's typical cost with employer insurance,
+      without insurance, and under NHA — with the year each benefit arrives,
+      assuming enactment in 2027.</p>
+    <div class="care-grid" id="care-cards"></div>
+  </section>
+
+  <!-- Household annual calculator -->
+  <section class="card">
+    <h2>Your household's annual healthcare bill</h2>
+    <p class="desc">Premiums plus out-of-pocket costs today, versus the
+      mature system — where the household-facing question becomes the tax
+      design. The tax line below is computed live from this model's financing
+      results and the framework's own household-protection cap.</p>
+    <div id="household-calc"></div>
+  </section>
+
+  <!-- System-level projection -->
   <section class="card" id="hero-card">
-    <h2>What would the mature system cost at today's scale?</h2>
-    <p class="desc">The framework claims a mature cost of $4.75T/yr in 2024
-      dollars — implicitly, the fully-built system at today's population and
-      prices. This model computes that same counterfactual bottom-up: all
-      policies fully phased in, the economy at 2024 scale. (Actual 2024 U.S.
-      health spending: ~$5.2–5.3T.) The projection through 2042, with real
-      growth, is in the chart below.</p>
+    <h2>The system-level price tag</h2>
+    <p class="desc">This model's own projection, computed bottom-up from
+      sourced parameters: what the fully-mature system would cost at today's
+      (2024) scale — directly comparable with the ~$5.3T the U.S. actually
+      spends now. The savings levers (drug negotiation, administrative
+      consolidation, payment reform) largely pay for the benefit expansions
+      (universal coverage, $0 care, long-term care, dental/vision/hearing,
+      behavioral health).</p>
     <div class="hero">
       <div class="hero-block">
-        <div class="label">This model's estimate (median)</div>
+        <div class="label">Mature system at 2024 scale (median)</div>
         <div class="hero-num" id="hero-value">—</div>
         <div class="range" id="hero-range">—</div>
       </div>
       <div class="hero-block">
-        <div class="label">The framework document's own claim</div>
-        <div class="claim-chip">
-          <span><b>$4.75T</b>/yr (range $4.30–5.25T) — asserted, not derived</span>
-        </div>
-        <div class="range" id="claim-verdict">—</div>
+        <div class="label">Actual U.S. health spending, 2024</div>
+        <div class="hero-num" style="color:var(--text-secondary)">$5.3T/yr</div>
+        <div class="range">CMS preliminary — the status-quo comparison point</div>
       </div>
     </div>
     <div class="tiles" id="tiles"></div>
@@ -120,23 +143,11 @@
     <p class="desc">Two different questions, two different panels — these
       concepts are not interchangeable, which is exactly why the framework's
       single asserted number needed this model.</p>
-    <h2 style="font-size:14.5px;margin-top:14px">Total system cost — mature system at 2024 scale (all payers, $/yr)</h2>
+    <h2 style="font-size:14.5px;margin-top:14px">Total system cost — mature system at 2024 scale, vs. today (all payers, $/yr)</h2>
     <div id="benchmark-nhe"></div>
     <h2 style="font-size:14.5px;margin-top:20px">Added federal cost (vs. current-law federal health spending, $/yr)</h2>
     <div id="benchmark-fed"></div>
     <p class="note" id="benchmark-note"></p>
-  </section>
-
-  <!-- Household view -->
-  <section class="card">
-    <h2>What it means for a household</h2>
-    <p class="desc">Households currently sponsor about 27% of national health
-      spending through premiums, payroll deductions, and out-of-pocket costs.
-      Under NHA nearly all of that is replaced by public financing — the open
-      question is how much of the new revenue lands back on ordinary
-      households, which depends on the tax design (the framework caps ordinary
-      households at 5% of incremental burden — KPP-C8).</p>
-    <div class="tiles" id="household-tiles"></div>
   </section>
 
   <!-- Methodology -->
@@ -149,6 +160,14 @@
       roadmap, and samples every uncertain parameter from a sourced
       low/central/high range (triangular distribution, independent draws).
       Steady state is the 2040–2042 average.
+    </div>
+    <div class="note">
+      <b>On the framework document's original figure:</b> earlier drafts
+      asserted a mature cost of $4.75T/yr (2024 dollars) without a derivation.
+      That figure is superseded by this model's computed projections — under
+      central assumptions the model lands somewhat above it, and reaches it
+      only under the optimistic scenario. The full comparison lives in the
+      parameter table and scenario presets, not in the headline.
     </div>
     <div class="note">
       <b>What it is not:</b> it has no regional, demographic, or
@@ -184,6 +203,7 @@
 <script src="js/scenarios.js"></script>
 <script src="js/model.js"></script>
 <script src="js/charts.js"></script>
+<script src="js/care.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

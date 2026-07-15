@@ -27,7 +27,26 @@ a quantitative fiscal/access/outcomes simulation of that framework.
                                                             for simulation calibration constants
 ```
 
-## The simulator (v1 — built)
+## The simulator (v2 — built)
+
+v2 reorients the dashboard around what the system means for a person, not
+around the framework document's original asserted figure (now noted only in
+the methodology as superseded by the model's computed projections):
+
+- **"What you'd pay for care"** leads the page: nine real care episodes
+  (ER visit, childbirth, monthly insulin, MRI, ambulance, blood work,
+  therapy, hearing aids, a nursing-home year, plus family premiums), each
+  showing today's typical insured cost, today's uninsured cost, and the
+  NHA point-of-care price ($0 for covered care) with the year the benefit
+  arrives on the phase roadmap — every card sourced and confidence-graded.
+- **A household annual calculator**: pick your situation (employer family,
+  employer single, marketplace, uninsured) and compare today's
+  premiums + out-of-pocket against the mature system, including a live
+  model-computed line for the average household share of new taxes under
+  the framework's ≤5% ordinary-household cap (KPP-C8).
+- The system-level projection, cost path, bridge, financing, and benchmark
+  sections follow, unchanged in substance.
+
 
 `docs/` contains the **interactive public dashboard**: a fully client-side
 static web app (plain HTML/JS/SVG, no build step, no dependencies, no
@@ -50,6 +69,8 @@ docs/js/model.js       the engine: baseline world + NHA world computed
                         impossible), Monte Carlo, self-tests
 docs/js/charts.js      dependency-free SVG charts (path + band, waterfall
                         bridge, financing stack, benchmark intervals)
+docs/js/care.js        point-of-care scenario cards + household calculator
+                        (v2): sourced today-vs-NHA costs for real episodes
 docs/js/app.js         controls, rendering, tables
 tools/serve.ps1        local preview server (PowerShell, no Node needed)
 ```

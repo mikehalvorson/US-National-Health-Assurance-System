@@ -116,7 +116,13 @@
     renderBridge();
     renderFinancing();
     renderBenchmarks();
-    renderHousehold();
+    if (NHA._rerenderHousehold) NHA._rerenderHousehold();
+  }
+
+  /* Live model numbers for the household calculator (mature year, 2024$) */
+  function modelNumbersForHousehold() {
+    var d = mc.modePath.detail[mc.years.length - 2]; // 2041
+    return { newRevenueB: d.newRevenue * DEF };
   }
 
   function bandTxt(b, fmt) {
@@ -129,21 +135,6 @@
     $("hero-range").textContent = bandTxt(
       { p10: tot.p10 * DEF, p90: tot.p90 * DEF },
       function (v) { return NHA.fmt.money(v); });
-
-    /* verdict vs framework claim (claim already in 2024$) */
-    var c = NHA.FRAMEWORK_CLAIM;
-    var med = tot.p50 * DEF;
-    var verdict;
-    if (med >= c.low && med <= c.high) {
-      verdict = "This model's median falls inside the framework's claimed range.";
-    } else if (med > c.high) {
-      verdict = "This model's median is " + NHA.fmt.moneyShort(med - c.mode) +
-        " above the framework's central claim — the claim looks optimistic under these assumptions.";
-    } else {
-      verdict = "This model's median is " + NHA.fmt.moneyShort(c.mode - med) +
-        " below the framework's central claim under these assumptions.";
-    }
-    $("claim-verdict").textContent = verdict;
   }
 
   function renderTiles() {
@@ -331,14 +322,10 @@
 
   /* ---------- Benchmarks ---------- */
   function renderBenchmarks() {
-    var c = NHA.FRAMEWORK_CLAIM;
-
     NHA.renderBenchmarkChart($("benchmark-nhe"), [
       { label: "This model — mature system at 2024 scale", note: "real 2024$",
         lo: mc.steady.matureToday.p10 * DEF, hi: mc.steady.matureToday.p90 * DEF,
         mid: mc.steady.matureToday.p50 * DEF, color: "var(--series-1)" },
-      { label: "Framework's own claim", note: "asserted, 2024$",
-        lo: c.low, hi: c.high, mid: c.mode, color: "var(--series-5)" },
       { label: "Actual U.S. health spending, 2024", note: "CMS preliminary",
         lo: 5250, hi: 5350, mid: 5300, color: "var(--baseline-series)" }
     ], { aria: "Total system cost comparison, all at 2024 scale" });
@@ -367,36 +354,6 @@
       ") — note 2030 is mid-transition here (coverage ~85%, expansions not yet phased in), " +
       "and published benchmarks are in each study's own dollars, so treat these as " +
       "order-of-magnitude checks, not exact comparisons.";
-  }
-
-  /* ---------- Household ---------- */
-  function renderHousehold() {
-    var t = mc.years.length - 2;
-    var d = mc.modePath.detail[t];
-    var host = $("household-tiles");
-    host.innerHTML = "";
-    var items = [
-      { label: "Household spending replaced (2041)",
-        value: NHA.fmt.money(d.householdRelief * DEF) + "/yr",
-        range: "premiums, payroll premiums & most out-of-pocket" },
-      { label: "Today's avg. family premium (context)",
-        value: "$26,993/yr",
-        range: "KFF 2025 — worker pays ~$6,850 of it" },
-      { label: "Per-person system cost at maturity",
-        value: NHA.fmt.perCap(mc.steady.perCapita.p50 * DEF),
-        range: "vs. $14,570 actual in 2023 (CMS)" },
-      { label: "Framework's household protection target",
-        value: "≤ 5%",
-        range: "of incremental financing burden on ordinary households (KPP-C8)" }
-    ];
-    items.forEach(function (it) {
-      var tl = document.createElement("div"); tl.className = "tile";
-      var l = document.createElement("div"); l.className = "label"; l.textContent = it.label;
-      var v = document.createElement("div"); v.className = "value"; v.textContent = it.value;
-      var r = document.createElement("div"); r.className = "range"; r.textContent = it.range;
-      tl.appendChild(l); tl.appendChild(v); tl.appendChild(r);
-      host.appendChild(tl);
-    });
   }
 
   /* ---------- Parameter table + gaps ---------- */
@@ -470,5 +427,7 @@
   /* ---------- Boot ---------- */
   buildControls();
   renderParamTable();
-  recompute();
+  NHA.renderCareCards($("care-cards"));
+  recompute(); // must run before the household calc first reads model numbers
+  NHA.renderHouseholdCalc($("household-calc"), modelNumbersForHousehold);
 })();
