@@ -3,31 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>National Health Assurance Simulator</title>
-<meta name="description" content="An interactive, bottom-up fiscal simulation of the proposed U.S. National Health Assurance Framework — every parameter sourced, every assumption adjustable.">
+<title>National Health Assurance &amp; Public Financing Simulator</title>
+<meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it — every parameter sourced, every assumption adjustable.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
 
   <header class="site">
-    <h1>National Health Assurance Simulator</h1>
+    <h1>National Health Assurance &amp; Public Financing Simulator</h1>
     <p class="sub">
-      A bottom-up fiscal simulation of the proposed National Health Assurance
-      Framework — a public system that would replace U.S. private health
-      insurance with automatic coverage, zero point-of-care cost, national
-      drug purchasing, hospital global budgets, and a community
-      diagnostic-treatment network. Every parameter is sourced; every major
-      assumption is adjustable. The model computes its own answer —
-      it is <em>not</em> tuned to match the framework's claimed cost.
+      Bottom-up policy simulations you can interrogate: a fiscal model of the
+      proposed National Health Assurance Framework — a public system replacing
+      U.S. private health insurance with automatic coverage and zero
+      point-of-care cost — and a general U.S. tax model showing how any
+      funding need can be financed, and who bears the burden across income
+      groups. Every parameter is sourced; every major assumption is
+      adjustable. The models compute their own answers.
     </p>
     <p class="meta">
       All results in real 2024 dollars. Calibrated to CMS National Health
-      Expenditure data (2023, the last finalized year).
-      Monte Carlo uncertainty bands from sourced parameter ranges.
+      Expenditure data (2023, the last finalized year) and CBO's household
+      income and federal tax distribution.
       <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources &amp; methodology on GitHub</a>.
     </p>
   </header>
+
+  <nav class="tabs" aria-label="Dashboard sections">
+    <button id="tab-health" class="active">Healthcare</button>
+    <button id="tab-tax">Taxes &amp; Financing</button>
+  </nav>
+
+  <div id="view-health">
 
   <!-- Hero: what you'd pay at the point of care -->
   <section class="card" id="care-card-section">
@@ -189,6 +196,100 @@
     <div class="selftest" id="selftest"></div>
   </section>
 
+  </div><!-- /view-health -->
+
+  <div id="view-tax" hidden>
+
+  <!-- Funding programs -->
+  <section class="card">
+    <h2>What needs funding</h2>
+    <p class="desc">The tax model is general: it funds <em>programs</em>, each
+      with its own need over time. National Health Assurance's new-revenue
+      requirement flows in live from the healthcare model (change assumptions
+      or scenarios there and the need updates here). Add other programs —
+      childcare, climate, deficit reduction — to see combined financing
+      demands.</p>
+    <div class="program-list" id="program-list"></div>
+    <div class="program-add">
+      <input class="p-name" id="p-add-name" placeholder="Program name" aria-label="Program name">
+      <input class="p-amt" id="p-add-amt" type="number" placeholder="$B/yr" aria-label="Annual amount in billions">
+      <input class="p-start" id="p-add-start" type="number" value="2030" min="2027" max="2042" aria-label="Start year">
+      <input class="p-ramp" id="p-add-ramp" type="number" value="3" min="0" max="10" aria-label="Ramp years">
+      <button id="p-add-btn">Add program</button>
+      <span class="note" style="margin:0">amount ($B/yr at maturity) · start year · ramp-in years</span>
+    </div>
+  </section>
+
+  <!-- Instruments -->
+  <section class="card">
+    <h2>The tax package</h2>
+    <p class="desc">Ten instruments spanning the realistic menu — progressive
+      surtaxes, payroll, corporate, wealth, consumption. Each has a sourced
+      revenue estimate, a start year, and (where continuous) a rate slider.
+      Turn the regressive consumption tax on and watch the bottom quintiles'
+      net position flip — that trade-off is the point of this page.</p>
+    <div class="tax-controls" id="tax-instruments"></div>
+  </section>
+
+  <!-- Revenue vs need over time -->
+  <section class="card">
+    <h2>Revenue vs. need, 2027–2042</h2>
+    <p class="desc">Each instrument phases in on its own schedule; bases grow
+      with the economy. The ink line is the total funding need of every
+      enabled program — the stack has to reach it.</p>
+    <div id="tax-path-chart"></div>
+    <div class="tiles" id="tax-tiles"></div>
+  </section>
+
+  <!-- Distributional impact -->
+  <section class="card">
+    <h2>Who bears the burden — and who comes out ahead</h2>
+    <p class="desc">The question that matters for lower-income Americans:
+      new taxes <em>minus</em> the health costs this system eliminates
+      (premiums, deductibles, copays), by income group. Bars left of zero
+      mean a group's total annual costs go <em>down</em>. View in
+      <label style="display:inline">
+        year <select id="dist-year" aria-label="Distribution year"></select>
+      </label>
+      <span class="mode-toggle" role="group" aria-label="Units">
+        <button id="mode-dollars" class="active">$ per household</button>
+        <button id="mode-pct">% of income</button>
+      </span>
+    </p>
+    <div id="tax-impact-chart"></div>
+    <h2 style="font-size:14.5px;margin-top:20px">Average federal tax rate, current law → with this package</h2>
+    <p class="desc">Pure tax-side view (health savings excluded), comparable
+      to CBO's effective-rate tables.</p>
+    <div id="tax-rate-chart"></div>
+    <details class="tableview"><summary>View distribution as table</summary>
+      <div class="tbl-scroll" id="tax-dist-table"></div>
+    </details>
+  </section>
+
+  <!-- Tax methodology -->
+  <section class="card">
+    <h2>Tax model methodology</h2>
+    <div class="note">
+      <b>Structure:</b> income groups follow CBO's distribution format
+      (quintiles, 80–90th, 90–99th, top 1%). Each instrument carries a sourced
+      revenue estimate at 2024 scale (growing with the economy), a phase-in
+      schedule, and an incidence vector — who ultimately bears it — using
+      CBO/JCT conventions (employer payroll → workers' wages; corporate →
+      25% labor / 75% capital; consumption taxes → consumption shares).
+    </div>
+    <div class="note">
+      <b>Honest limits:</b> incidence is static (no behavioral responses
+      beyond the haircuts already in each estimate); group boundaries don't
+      capture within-group variation (a "middle quintile" family with high
+      health costs gains far more than one without); the wealth tax's legal
+      survival is genuinely uncertain (the framework carries a fallback
+      matrix for that reason); and distribution tables use seeded values
+      pending reconciliation against the tax research file in the repo.
+    </div>
+  </section>
+
+  </div><!-- /view-tax -->
+
   <footer class="site">
     Built from the National Health Assurance Framework v2.0.0 and its research
     parameter base —
@@ -204,6 +305,10 @@
 <script src="js/model.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/care.js"></script>
+<script src="js/taxparams.js"></script>
+<script src="js/taxmodel.js"></script>
+<script src="js/taxcharts.js"></script>
 <script src="js/app.js"></script>
+<script src="js/taxapp.js"></script>
 </body>
 </html>

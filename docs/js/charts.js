@@ -434,4 +434,8 @@ window.NHA = NHA;
       g.addEventListener("pointerleave", hideTip);
     });
   };
+
+  /* shared low-level helpers for other chart modules (taxcharts.js) */
+  NHA._chartUtil = { el: el, div: div, niceTicks: niceTicks,
+    showTip: showTip, hideTip: hideTip, tipRow: tipRow, barPath: barPath };
 })();

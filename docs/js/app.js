@@ -117,6 +117,14 @@
     renderFinancing();
     renderBenchmarks();
     if (NHA._rerenderHousehold) NHA._rerenderHousehold();
+
+    /* publish the financing path (2024$) for the tax model */
+    NHA._healthPath = {
+      years: mc.years.slice(),
+      newRevenue: mc.modePath.detail.map(function (d) { return d.newRevenue * DEF; }),
+      relief: mc.modePath.detail.map(function (d) { return d.householdRelief * DEF; })
+    };
+    if (NHA.TAX && NHA.TAX.onHealthUpdate) NHA.TAX.onHealthUpdate();
   }
 
   /* Live model numbers for the household calculator (mature year, 2024$) */
@@ -404,6 +412,12 @@
       name: "Bridge decomposition matches engine total exactly",
       ok: (NHA._bridgeIdentityError || 0) < 0.01,
       note: "err=" + (NHA._bridgeIdentityError || 0).toExponential(1)
+    });
+    /* tax-model tests register via NHA.SELFTESTS (taxmodel.js) */
+    (NHA.SELFTESTS || []).forEach(function (t) {
+      var ok = false, note = "";
+      try { ok = !!t.run(); } catch (e) { note = String(e); }
+      results.push({ name: t.name, ok: ok, note: note });
     });
     var passed = results.filter(function (r) { return r.ok; }).length;
     var head = document.createElement("div");

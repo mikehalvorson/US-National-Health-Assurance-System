@@ -72,6 +72,16 @@ docs/js/charts.js      dependency-free SVG charts (path + band, waterfall
 docs/js/care.js        point-of-care scenario cards + household calculator
                         (v2): sourced today-vs-NHA costs for real episodes
 docs/js/app.js         controls, rendering, tables
+docs/js/taxparams.js   tax model (v3): income groups (CBO format), ten tax
+                        instruments with sourced revenue + incidence vectors,
+                        pluggable funding programs
+docs/js/taxmodel.js    tax engine: revenue over time with phase-in schedules,
+                        distributional burden by income group, net-of-health-
+                        savings impact; self-tests
+docs/js/taxcharts.js   revenue-vs-need stacked area, net household impact
+                        diverging bars, effective-rate dumbbell
+docs/js/taxapp.js      tax view UI + tab navigation; healthcare model's
+                        financing path flows in live
 tools/serve.ps1        local preview server (PowerShell, no Node needed)
 ```
 
