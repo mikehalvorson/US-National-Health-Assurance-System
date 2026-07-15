@@ -21,6 +21,23 @@ highest-confidence, most load-bearing numbers from all five files into one
 machine-readable table — use it as the starting calibration set, then go to
 the relevant detail file for anything it doesn't cover.
 
+## Calibration base year — do not sum across vintages
+
+CMS's National Health Expenditure series is the anchor for most figures in
+this repo, but not every row uses the same vintage: **2023 is the last
+fully-finalized historical year** and is what most figures use (total NHE
+$4,866.5B, hospital $1,519.7B, physician/clinical $978.0B, etc.). A few rows
+— pulled by a different research pass — use **2024 preliminary/CMS-estimate**
+figures instead (total NHE $5.3T-$5.28T, retail Rx $467.0B, dental $189.2B).
+Both vintages are individually correct and labeled with their `year` column
+in `parameter_baseline_seed.csv`, but **do not sum line items across the two
+vintages into a single-year total** — that will silently overstate spending
+by a year's growth (NHE grew ~9-10% between 2023 and 2024). Pick 2023 as the
+internally-consistent base year for the model's calibration point, and treat
+any 2024 figures either as trend/growth-rate inputs or inflate the 2023
+figures forward using CMS's own category-specific growth rates (also in the
+CMS NHE release) before mixing them into the same year's total.
+
 ## The single most important open question
 
 **The framework's own stated cost position is a mature steady-state total
