@@ -441,3 +441,26 @@ NHA.MONEYFLOW = {
     { from: "oth",   to: "other",    value: 341, note: "philanthropy, investment income, workers' comp" }
   ]
 };
+
+/* ---- "What's wrong, by the numbers" — sourced problem statistics --------
+ * Every figure traces to the research files in the repo (research/01–06). */
+NHA.PROBLEM_STATS = [
+  { value: "17.6% of GDP", label: "U.S. health spending, 2023",
+    note: "$4.87T — $14,570 per person, the highest of any nation (CMS NHE)" },
+  { value: "26.7M", label: "people uninsured",
+    note: "rising again after Medicaid unwinding and ACA subsidy expiration (KFF/Census, 2024)" },
+  { value: "20.7%", label: "of income goes to healthcare in the poorest fifth of households",
+    note: "vs 3.7% in the richest fifth — the same bills hit 16× harder at the bottom (BLS CES 2024)" },
+  { value: "2.78×", label: "U.S. prescription drug prices vs 33 peer countries",
+    note: "4.22× for brand-name drugs (RAND international price comparison, 2022 data)" },
+  { value: "25.3%", label: "of U.S. hospital budgets go to administration",
+    note: "vs ~15–20% in peer nations (Himmelstein et al., Health Affairs cross-national study)" },
+  { value: "$760–935B", label: "wasted every year — roughly a quarter of all health spending",
+    note: "administrative complexity, pricing failures, low-value care, fraud (JAMA 2019 synthesis)" },
+  { value: "$83,000", label: "per physician, per year, spent on billing and insurance paperwork",
+    note: "vs ~$22,000 for physicians in single-payer Ontario (Health Affairs)" },
+  { value: "417", label: "rural hospitals at risk of closure",
+    note: "150–210 have already closed since 2010 (Chartis; UNC Sheps Center)" },
+  { value: "$26,993", label: "average family premium, 2025",
+    note: "workers pay $6,850 of it — before any deductible or copay (KFF Employer Survey)" }
+];

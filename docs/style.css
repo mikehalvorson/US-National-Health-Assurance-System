@@ -242,6 +242,15 @@ table.data th.num { text-align: right; }
   border-radius: 0 8px 8px 0;
 }
 
+/* ---- Story lists (levers, proposal) ---- */
+.lever-list {
+  margin: 12px 0 4px 0; padding-left: 22px;
+  display: grid; gap: 9px;
+  font-size: 14px; line-height: 1.55; color: var(--text-secondary);
+}
+.lever-list li::marker { color: var(--accent); }
+.lever-list b { color: var(--text-primary); }
+
 /* ---- Money flow diagrams ---- */
 .flow-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 16px;

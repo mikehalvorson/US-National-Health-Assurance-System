@@ -36,17 +36,115 @@
 
   <div id="view-health">
 
-  <!-- Hero: what you'd pay at the point of care -->
+  <!-- ACT 1: The system today -->
+  <section class="card">
+    <h2>The system today</h2>
+    <p class="desc">American healthcare is not one system — it's four
+      payment systems stapled together, with your coverage determined
+      mostly by your job, your age, and your income. About 157 million
+      people get insurance through an employer, who pays most of the
+      premium out of what would otherwise be wages. Medicare covers ~67
+      million people over 65 or disabled, funded by payroll taxes, general
+      federal revenue, and enrollee premiums. Medicaid &amp; CHIP cover ~72
+      million lower-income people, funded jointly by Washington and the
+      states. Everyone also pays directly at the point of care —
+      deductibles, copays, and uncovered bills totaled $506B in 2023. And
+      ~26 million people have no coverage at all. Here is where the $4.87T
+      came from and where it went — hover any ribbon for what it contains.</p>
+    <div class="flow-panel" style="max-width:560px;margin:14px auto 0">
+      <div class="flow-title">Actual 2023 spending — $4.87T (CMS)</div>
+      <div id="flow-today-solo"></div>
+    </div>
+    <details class="tableview"><summary>View the distribution as a table</summary>
+      <div class="tbl-scroll"><table class="data" id="sponsor-table"></table></div>
+    </details>
+  </section>
+
+  <!-- ACT 2: What's wrong, by the numbers -->
+  <section class="card">
+    <h2>What's wrong, by the numbers</h2>
+    <p class="desc">The problem isn't that America spends on health — every
+      rich country does. It's that America pays far more and gets less
+      coverage, less security, and staggering overhead. Every figure below
+      is sourced (citations in the
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/tree/main/research"
+         target="_blank" rel="noopener">research repository</a>).</p>
+    <div class="tiles" id="problem-tiles"></div>
+  </section>
+
+  <!-- ACT 3: The fixable part -->
+  <section class="card">
+    <h2>The fixable part</h2>
+    <p class="desc">Most of that dysfunction is structural, not medical —
+      which means it's addressable by redesigning how money moves, not by
+      rationing care. Four levers do most of the work:</p>
+    <ul class="lever-list">
+      <li><b>Administrative consolidation.</b> One public payer and one
+        claims rail replace ~900 insurers' duplicated overhead and the
+        billing bureaucracy providers maintain to fight them — recoverable
+        savings estimated at $200–500B/yr across the literature.</li>
+      <li><b>Drug-price negotiation and public manufacturing.</b> The IRA
+        already proved government negotiation works (CBO-scored, 38–79%
+        price cuts on the first ten drugs). Applied system-wide against
+        prices 2.78× the international average — plus a public manufacturer
+        for essential generics, modeled on Civica Rx's real $30-a-vial
+        insulin — the model tests net price cuts of 25–55%.</li>
+      <li><b>Hospital payment reform.</b> Global budgets replace per-claim
+        billing, ending facility-fee markups, related-party extraction, and
+        a slice of the $76–101B/yr in scored low-value care — while
+        readiness funding protects ERs and rural service lines instead of
+        letting them close.</li>
+      <li><b>Front-door capacity.</b> A community diagnostic-treatment
+        network and specialist e-consults absorb the routine care that
+        currently lands in $2,453-average ER visits and months-long
+        specialist queues.</li>
+    </ul>
+    <p class="note">The framework's bet: these levers can pay for most of
+      covering everyone with no bills. Whether the bet holds is exactly
+      what the model on this page computes — it is not assumed.</p>
+  </section>
+
+  <!-- ACT 4: The proposal -->
+  <section class="card">
+    <h2>The proposal: National Health Assurance</h2>
+    <p class="desc">A single public system replacing employment-linked
+      insurance entirely, specified in the
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System"
+         target="_blank" rel="noopener">framework document</a> this
+      dashboard simulates:</p>
+    <ul class="lever-list">
+      <li><b>Automatic, continuous coverage</b> for every resident — no
+        enrollment cliffs, no churn, no linkage to your job.</li>
+      <li><b>$0 at the point of care</b> for covered medically necessary
+        care; medical debt for covered care is prohibited (patient billing
+        capped at 0.5% of encounters).</li>
+      <li><b>National drug purchasing</b> through a real-time public
+        pharmacy claims utility (replacing PBMs), plus a Public Medicines
+        Corporation manufacturing essential generics.</li>
+      <li><b>Hospitals on global budgets</b> under public-service charters
+        — funded for readiness and essential service lines, not per-claim
+        revenue.</li>
+      <li><b>A four-type community diagnostic-treatment network</b>
+        (~15,000 units, from pharmacy micro-clinics to rural enhanced and
+        urban public-health units) delivering same-day routine care.</li>
+      <li><b>A structured specialist backplane</b> — complete workups and
+        24-hour e-consults before in-person referrals, with urgency classes
+        and protected urgent capacity.</li>
+      <li><b>Expanded benefits phased in:</b> long-term care (home-first),
+        behavioral health, dental, vision, hearing, and EMS.</li>
+      <li><b>A 12-year gated rollout (2027–2038)</b> with go/no-go
+        phase gates, transition protections for patients, providers, and
+        displaced workers, and independent oversight bodies.</li>
+    </ul>
+  </section>
+
+  <!-- What you'd pay at the point of care -->
   <section class="card" id="care-card-section">
     <h2>What you'd pay for care</h2>
-    <p class="desc">The framework's core design rule: covered medically
-      necessary care costs <b>$0 at the point of use</b> — no deductibles,
-      no copays, no surprise bills, no medical debt (patient billing is
-      capped at 0.5% of covered encounters). The system is paid for through
-      public financing instead, shown further down. Here is what that means
-      for real care episodes: today's typical cost with employer insurance,
-      without insurance, and under NHA — with the year each benefit arrives,
-      assuming enactment in 2027.</p>
+    <p class="desc">Here is what that design means for real care episodes:
+      today's typical cost with employer insurance, without insurance, and
+      under NHA — with the year each benefit arrives, assuming enactment in
+      2027.</p>
     <div class="care-grid" id="care-cards"></div>
   </section>
 
@@ -87,18 +185,13 @@
 
   <!-- Money flow: today vs NHA -->
   <section class="card">
-    <h2>Where the money comes from — today vs. NHA</h2>
-    <p class="desc"><b>How the current system works:</b> America already
-      spends ~$4.9T/yr on health care, routed through four big payment
-      streams. About 157 million people get insurance through an employer —
-      employers pay most of the premium and workers pay the rest, both
-      ultimately out of workers' compensation. Medicare (~67M people, 65+
-      and disabled) is funded by payroll taxes, general federal revenue, and
-      enrollee premiums. Medicaid & CHIP (~72M lower-income people) are
-      funded jointly by federal and state governments. Everyone also pays
-      directly at the point of care — deductibles, copays, and uncovered
-      bills totaled $506B in 2023 — and ~26 million people have no coverage
-      at all. Hover any ribbon for what it contains.</p>
+    <h2>How the money re-routes</h2>
+    <p class="desc">The single most misunderstood thing about a public
+      system: society's total spending barely changes — <em>the routes
+      change</em>. Compare the flow you saw at the top of the page with the
+      same flow under NHA. Premiums and point-of-care bills disappear; the
+      same dollars reach the same doctors and hospitals through public
+      financing instead. Hover any ribbon for what it contains.</p>
     <div class="flow-grid">
       <div class="flow-panel">
         <div class="flow-title">Today — actual 2023 spending ($4.87T, CMS)</div>
@@ -118,9 +211,6 @@
       (current scenario and sliders); the household share of new taxes is
       drawn at the framework's 5% ordinary-household cap (KPP-C8), whose
       achievability you can test on the Taxes &amp; Financing tab.</p>
-    <details class="tableview"><summary>View today's distribution as a table</summary>
-      <div class="tbl-scroll"><table class="data" id="sponsor-table"></table></div>
-    </details>
   </section>
 
   <!-- Controls -->

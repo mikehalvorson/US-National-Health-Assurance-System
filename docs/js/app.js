@@ -367,13 +367,16 @@
 
   /* ---------- Money flow (today vs NHA) ---------- */
   function renderMoneyFlow() {
-    /* Today: static CMS 2023 sponsor→channel map */
-    NHA.renderFlowDiagram($("flow-today"), {
+    /* Today: static CMS 2023 sponsor→channel map — rendered twice: solo in
+       "The system today" (Act 1) and again in the comparison section */
+    var todaySpec = {
       sources: NHA.MONEYFLOW.sources,
       channels: NHA.MONEYFLOW.channels,
       ribbons: NHA.MONEYFLOW.ribbons,
       aria: "How U.S. health spending is funded today: households, employers, federal, state, and other private sources flowing to private insurance, Medicare, Medicaid, out-of-pocket bills, and other programs"
-    });
+    };
+    if ($("flow-today-solo")) NHA.renderFlowDiagram($("flow-today-solo"), todaySpec);
+    NHA.renderFlowDiagram($("flow-today"), todaySpec);
 
     /* NHA: mature-year financing scaled to 2024 economy (matches the hero) */
     var i41 = mc.years.indexOf(2041);
@@ -422,6 +425,20 @@
       "federal budget, not new cost to society — most of it replaces the " +
       NHA.fmt.money(d.householdRelief * k) + "/yr households currently spend on premiums and " +
       "out-of-pocket care, which drops to roughly zero.";
+  }
+
+  /* "What's wrong, by the numbers" — static sourced stat tiles */
+  function renderProblemTiles() {
+    var host = $("problem-tiles");
+    host.innerHTML = "";
+    NHA.PROBLEM_STATS.forEach(function (s) {
+      var tl = document.createElement("div"); tl.className = "tile";
+      var v = document.createElement("div"); v.className = "value"; v.textContent = s.value;
+      var l = document.createElement("div"); l.className = "label"; l.textContent = s.label;
+      var r = document.createElement("div"); r.className = "range"; r.textContent = s.note;
+      tl.appendChild(v); tl.appendChild(l); tl.appendChild(r);
+      host.appendChild(tl);
+    });
   }
 
   /* Sponsor table: today's distribution with composition notes */
@@ -524,6 +541,7 @@
   /* ---------- Boot ---------- */
   buildControls();
   renderParamTable();
+  renderProblemTiles();
   NHA.renderCareCards($("care-cards"));
   recompute(); // must run before the household calc first reads model numbers
   NHA.renderHouseholdCalc($("household-calc"), modelNumbersForHousehold);
