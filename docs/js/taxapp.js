@@ -234,8 +234,10 @@
     note.className = "note";
     note.textContent = reliefB > 0
       ? "Health savings distribute the healthcare model's " + NHA.fmt.money(reliefB) +
-        "/yr of replaced household health spending across groups (KFF/MEPS pattern; " +
-        "low at the bottom because Medicaid already covers many low-income households)."
+        "/yr of replaced household health spending across groups per the BLS Consumer " +
+        "Expenditure Survey 2024 pattern ($3,445/yr in the lowest quintile to $9,771 in the " +
+        "highest — 20.7% vs 3.7% of income). Shares are muted at the bottom because Medicaid " +
+        "already covers many low-income households."
       : "Health savings are zero because the NHA program is disabled — showing pure tax incidence.";
     host.appendChild(note);
   }

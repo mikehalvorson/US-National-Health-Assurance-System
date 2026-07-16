@@ -15,6 +15,7 @@ those as open research items, not silent gaps.
 | [03_drugs_pharmacy_diagnostics_devices.md](03_drugs_pharmacy_diagnostics_devices.md) | Drug spending, PBM economics, IRA negotiation savings, Civica Rx as a public-manufacturing analogue, labs/imaging/devices | CP-RX, CP-DX |
 | [04_ltc_behavioral_dvh_ems_publichealth.md](04_ltc_behavioral_dvh_ems_publichealth.md) | Long-term care, behavioral health/SUD, dental/vision/hearing, EMS, public health/prevention | CP-LTC, CP-BH, CP-DVH, CP-EMS, CP-PH |
 | [05_it_governance_rd_transition.md](05_it_governance_rd_transition.md) | Health IT/records/cyber infrastructure precedents, governance/oversight agency cost ratios, biomedical R&D funding, transition/migration program costs | CP-IT, CP-GOV, CP-RD, CP-TRN |
+| [06_tax_distribution_financing.md](06_tax_distribution_financing.md) | Tax model baselines: CBO 2022 household income/tax distribution (from CBO's own workbook), FY2024–25 Treasury receipts, Fed DFA wealth distribution (2026:Q1), CBO Dec 2024 revenue-options scores, CBO/JCT/TPC incidence conventions, CES 2024 health spending by income quintile | tax model (docs/js/taxparams.js) |
 
 [parameter_baseline_seed.csv](parameter_baseline_seed.csv) pulls the ~45
 highest-confidence, most load-bearing numbers from all five files into one

@@ -1,83 +1,89 @@
 /* =========================================================================
- * U.S. tax system model — parameter base
+ * U.S. tax system model — parameter base (reconciled)
  *
  * A generic, extensible tax-financing model: income groups × instruments ×
  * years. Built to fund ANY set of programs (healthcare is just the first),
- * with instruments that can phase in over time to meet varied funding needs.
+ * with instruments that phase in over time to meet varied funding needs.
  *
- * Seeded values are labeled with source + confidence, same convention as the
- * healthcare model. Group table follows CBO's "Distribution of Household
- * Income and Federal Taxes" format (2021 data year scaled to ~2024 levels);
- * pending reconciliation against research/06_tax_distribution_financing.md.
+ * RECONCILED against research/06_tax_distribution_financing.md (primary
+ * sources pulled 2026-07-15):
+ *  - Income groups: CBO, "The Distribution of Household Income, 2022"
+ *    (pub. Jan 2026), supplemental-data workbook. CBO's 2022 dollars are
+ *    inflated to 2024$ by the PCE factor ≈ 1.064. The 91–99th group is a
+ *    weighted combination of CBO's 91–95 and 96–99 rows.
+ *  - Instrument scores: CBO "Options for Reducing the Deficit: 2025–2034"
+ *    (Dec 2024, JCT staff), Treasury FY2025 Greenbook, Saez–Zucman (2021),
+ *    JCT 99.5%-Act letter. Annualized from 10-year scores.
+ *  - Incidence: CBO/JCT conventions (employer payroll → workers, CBO WP
+ *    2021-06; corporate → 25% labor / 75% capital, JCX-14-13); CES 2024
+ *    consumption shares; TPC/Burman FTT table (NTJ 2016, Table 6).
+ *  - Wage/capital shares derived from CBO's tax-rate-by-tax-type matrix
+ *    (supplemental Table 9) × group incomes.
  * All dollars: real 2024 dollars. All revenues: $ billions/year.
+ * Known limits: CBO options predate the July 2025 reconciliation act
+ * (OBBBA) — scores tied to the old baseline are noted per instrument.
  * ========================================================================= */
 "use strict";
 var NHA = window.NHA || {};
 window.NHA = NHA;
 NHA.TAX = {};
 
-/* ---- Income groups (CBO format) ----------------------------------------
- * hhM: households (millions). avgIncome: average household income before
- * transfers and taxes, ~2024$. curRate: current-law average federal tax
- * rate, all federal taxes combined (CBO 2021, adjusted toward a normal
- * non-pandemic year). Shares columns are each group's share of the named
- * national aggregate (each column sums to 1.0):
- *   wageShare      — share of total wages & salaries (payroll incidence)
- *   capShare       — share of capital income/asset ownership (corporate 75%,
- *                    cap-gains, FTT incidence)
- *   consumpShare   — share of total consumption (VAT incidence, BLS CES)
- *   healthRelief   — share of the household health spending that NHA
- *                    replaces (premium shares + OOP; low at the bottom
- *                    because Medicaid already covers many low-income
- *                    households — they gain coverage, not bill relief)
+/* ---- Income groups (CBO 2022, → 2024$) ----------------------------------
+ * hhM: households, millions (CBO; quintiles hold equal PEOPLE, so household
+ * counts differ). avgIncome: household income before transfers & taxes.
+ * curRate: average federal tax rate, all federal taxes (CBO Table 1/9).
+ * Share columns each sum to 1.0 across groups:
+ *   wageShare    — share of payroll-taxed earnings (derived from CBO's
+ *                  payroll-rate-by-group × income matrix)
+ *   capShare     — share of capital income (derived from CBO's imputed
+ *                  corporate-tax burden by group)
+ *   consumpShare — share of total consumption (BLS CES 2024; top-quintile
+ *                  split by declining consumption propensity)
+ *   healthRelief — share of replaced household health spending (CES 2024
+ *                  healthcare outlays by quintile: $3,445 → $9,771 bottom
+ *                  to top — only a 3:1 spread against a 16:1 income spread,
+ *                  which is why relief is so progressive as % of income)
  * ------------------------------------------------------------------------ */
 NHA.TAX.GROUPS = [
-  { id: "q1",   label: "Lowest 20%",  hhM: 26.44, avgIncome: 33000,
-    curRate: 0.015, wageShare: 0.03, capShare: 0.01, consumpShare: 0.09, healthRelief: 0.063 },
-  { id: "q2",   label: "20–40%",      hhM: 26.44, avgIncome: 74000,
-    curRate: 0.070, wageShare: 0.08, capShare: 0.02, consumpShare: 0.13, healthRelief: 0.145 },
-  { id: "q3",   label: "Middle 20%",  hhM: 26.44, avgIncome: 119000,
-    curRate: 0.125, wageShare: 0.14, capShare: 0.04, consumpShare: 0.17, healthRelief: 0.214 },
-  { id: "q4",   label: "60–80%",      hhM: 26.44, avgIncome: 184000,
-    curRate: 0.165, wageShare: 0.22, capShare: 0.08, consumpShare: 0.22, healthRelief: 0.261 },
-  { id: "d9",   label: "80–90%",      hhM: 13.22, avgIncome: 267000,
-    curRate: 0.195, wageShare: 0.18, capShare: 0.10, consumpShare: 0.14, healthRelief: 0.147 },
-  { id: "p9199", label: "90–99%",     hhM: 11.90, avgIncome: 453000,
-    curRate: 0.230, wageShare: 0.25, capShare: 0.35, consumpShare: 0.18, healthRelief: 0.150 },
-  { id: "top1", label: "Top 1%",      hhM: 1.32,  avgIncome: 3200000,
-    curRate: 0.300, wageShare: 0.10, capShare: 0.40, consumpShare: 0.07, healthRelief: 0.020 }
+  { id: "q1",    label: "Lowest 20%",  hhM: 26.4, avgIncome: 27900,
+    curRate: 0.014, wageShare: 0.05,  capShare: 0.015, consumpShare: 0.09,  healthRelief: 0.11 },
+  { id: "q2",    label: "20–40%",      hhM: 26.9, avgIncome: 62900,
+    curRate: 0.095, wageShare: 0.10,  capShare: 0.035, consumpShare: 0.13,  healthRelief: 0.155 },
+  { id: "q3",    label: "Middle 20%",  hhM: 26.4, avgIncome: 100000,
+    curRate: 0.134, wageShare: 0.155, capShare: 0.06,  consumpShare: 0.17,  healthRelief: 0.185 },
+  { id: "q4",    label: "60–80%",      hhM: 25.9, avgIncome: 152300,
+    curRate: 0.176, wageShare: 0.245, capShare: 0.10,  consumpShare: 0.23,  healthRelief: 0.235 },
+  { id: "d9",    label: "80–90%",      hhM: 12.8, avgIncome: 225500,
+    curRate: 0.208, wageShare: 0.17,  capShare: 0.105, consumpShare: 0.155, healthRelief: 0.14 },
+  { id: "p9199", label: "90–99%",      hhM: 11.4, avgIncome: 413400,
+    curRate: 0.247, wageShare: 0.235, capShare: 0.225, consumpShare: 0.18,  healthRelief: 0.15 },
+  { id: "top1",  label: "Top 1%",      hhM: 1.2,  avgIncome: 2873800,
+    curRate: 0.315, wageShare: 0.045, capShare: 0.46,  consumpShare: 0.045, healthRelief: 0.025 }
 ];
-/* Sources: CBO Distribution of Household Income and Federal Taxes (2021 data,
- * pub. 2024) for incomes/rates [medium — scaled to 2024]; SSA/BEA for wage
- * shares [medium]; Fed Distributional Financial Accounts for capital shares
- * [medium]; BLS Consumer Expenditure Survey for consumption [medium];
- * KFF/MEPS spending patterns for health-relief shares [low-medium, derived]. */
+/* Provenance: incomes/rates/households HIGH confidence (CBO workbook);
+ * wage & capital shares MEDIUM (derived from CBO Table 9 rate matrix);
+ * consumption MEDIUM (CES 2024, consumer units ≠ CBO households);
+ * healthRelief MEDIUM (CES 2024 outlay pattern; bottom-quintile relief is
+ * real — Medicare premiums, marketplace plans — even though most premium
+ * relief accrues to employer-covered middle groups). */
 
 /* ---- Economy-wide aggregates (2024$) ------------------------------------ */
 NHA.TAX.ECON = {
-  wagesB: 11600,        // total U.S. wages & salaries, $B (BEA 2024) [high]
-  aboveCapShare: 0.175, // share of wages above the SS taxable max (SSA) [medium]
-  realGrowth: 0.019,    // real growth of tax bases, matches healthcare model [high]
+  wagesB: 13700,        // Medicare (HI) taxable earnings 2024 ≈ $13.7T — the
+                        // uncapped payroll base (SSA contributions ÷ 2.9%)
+  aboveCapShare: 0.17,  // share of covered earnings above the SS cap (SSA: 83% below)
+  realGrowth: 0.019,    // real growth of tax bases; matches healthcare model
   baseYear: 2024
 };
 
 /* ---- Tax instruments -----------------------------------------------------
- * Each instrument:
- *   rev1x     — $B/yr at the default setting (scale=1), 2024 economy
- *   kind      — 'scale' (continuous slider, revenue linear in scale) or
- *               'toggle' (on/off)
- *   scaleMax  — slider max (in units of the default), for 'scale'
- *   incidence — {groupId: share of burden}, sums to 1.0
- *   phaseStart/phaseYears — default schedule (adjustable): revenue ramps
- *               linearly from phaseStart over phaseYears
- *   source/confidence — provenance of the revenue estimate
- * Incidence conventions (CBO/JCT): employer payroll → workers via wages;
- * corporate → 25% labor + 75% capital.
+ * rev1x — $B/yr at default setting (scale=1), 2024 economy (annualized from
+ * the cited 10-year scores). kind 'scale' (slider, linear) or 'toggle'.
+ * incidence sums to 1.0. phaseStart/phaseYears adjustable in the UI.
  * ------------------------------------------------------------------------ */
 (function () {
   var G = NHA.TAX.GROUPS;
   function mix(labor, capital) {
-    /* corporate-style blend: share × wageShare + share × capShare */
     var out = {};
     G.forEach(function (g) {
       out[g.id] = labor * g.wageShare + capital * g.capShare;
@@ -94,77 +100,77 @@ NHA.TAX.ECON = {
     {
       id: "surtax", label: "Progressive income surtax",
       desc: "Surtax on taxable income, rising by bracket: +1pp middle quintile, +2pp fourth, +3pp 80–90th, +5pp 90–99th, +8pp top 1% (at scale 1.0). Bottom two quintiles exempt.",
-      kind: "scale", default: 1.0, scaleMax: 2.5, rev1x: 630,
-      incidence: { q1: 0, q2: 0, q3: 0.037, q4: 0.116, d9: 0.125, p9199: 0.320, top1: 0.402 },
+      kind: "scale", default: 1.0, scaleMax: 2.5, rev1x: 527,
+      incidence: { q1: 0, q2: 0, q3: 0.038, q4: 0.112, d9: 0.123, p9199: 0.335, top1: 0.392 },
       phaseStart: 2029, phaseYears: 4,
-      source: "Computed from group taxable income (CBO distribution × ~75% taxable share)", confidence: "medium"
+      source: "Computed: CBO 2022 group incomes × 75% taxable share; cross-checked vs CBO Option 45 (+1pt all rates ≈ $118B/yr)", confidence: "medium"
     },
     {
       id: "payroll", label: "NHA payroll contribution (uncapped)",
-      desc: "Flat employer-side payroll rate on all wages, no cap — the premium-replacement workhorse. CBO convention: borne by workers via wages. Each 1pp ≈ $110B/yr.",
-      kind: "scale", default: 1.0, scaleMax: 3.0, rev1x: 440, /* default = 4pp */
+      desc: "Flat payroll rate on all earnings, no cap — the premium-replacement workhorse. CBO convention: borne by workers via wages. CBO Option 61: 1% ≈ $128B/yr.",
+      kind: "scale", default: 1.0, scaleMax: 3.0, rev1x: 512, /* default = 4pp */
       defaultNote: "default 4.0pp; slider is a multiple (max 12pp)",
       incidence: byCol("wageShare"),
       phaseStart: 2031, phaseYears: 4,
-      source: "BEA wage base × rate, 95% compliance; CBO payroll option scoring", confidence: "medium-high"
+      source: "CBO Options 2025–2034, Option 61 (payroll surtax on all earnings: $1,281.5B/10yr per point)", confidence: "high"
     },
     {
-      id: "sscap", label: "Eliminate Social Security payroll cap",
-      desc: "Apply the 12.4% OASDI rate to earnings above the taxable maximum (~17.5% of wages are above the cap today).",
-      kind: "toggle", default: true, rev1x: 150,
-      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0.10, p9199: 0.60, top1: 0.30 },
+      id: "sscap", label: "Tax earnings above the SS cap ($250k donut)",
+      desc: "Apply the 12.4% OASDI rate to earnings above $250,000 (CBO's donut design; ~17% of covered earnings are above today's cap).",
+      kind: "toggle", default: true, rev1x: 143,
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0.08, p9199: 0.62, top1: 0.30 },
       phaseStart: 2028, phaseYears: 2,
-      source: "CBO Options for Reducing the Deficit (payroll cap options)", confidence: "medium-high"
+      source: "CBO Options 2025–2034, Option 62 ($1,426.8B/10yr)", confidence: "high"
     },
     {
       id: "corp", label: "Corporate rate increase",
-      desc: "Points above the current 21% rate; ≈ $15B/yr per point (28% ≈ $105B/yr). Incidence per CBO/JCT: 25% labor, 75% capital.",
-      kind: "scale", default: 1.0, scaleMax: 2.0, rev1x: 105, /* default = +7pp */
+      desc: "Points above the current 21% rate; CBO Dec 2024: ≈ $13.6B/yr per point (21→28% ≈ $0.95T/10yr — older ~$1.3T scores used a pre-2024 base). Incidence per CBO/JCT: 25% labor, 75% capital.",
+      kind: "scale", default: 1.0, scaleMax: 2.0, rev1x: 95, /* default = +7pp */
       defaultNote: "default +7pp (→28%); slider is a multiple (max +14pp)",
       incidence: mix(0.25, 0.75),
       phaseStart: 2028, phaseYears: 1,
-      source: "CBO/JCT corporate rate scoring (~$1.3T/10yr for 21→28)", confidence: "medium-high"
+      source: "CBO Options 2025–2034, Option 64 ($135.7B/10yr per point); OBBBA expensing may lower near-term yield", confidence: "medium-high"
     },
     {
       id: "capgains", label: "Tax capital gains as ordinary income (>$1M)",
-      desc: "Ordinary rates on gains and dividends for incomes above $1M, with realization-elasticity haircut already applied.",
-      kind: "toggle", default: true, rev1x: 35,
+      desc: "Ordinary rates on gains and dividends for incomes above $1M. Only raises durable revenue when paired with taxing gains at death (Greenbook pairing) — standalone high rates lose money to realization deferral.",
+      kind: "toggle", default: true, rev1x: 29,
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.15, top1: 0.85 },
       phaseStart: 2028, phaseYears: 1,
-      source: "JCT-convention scoring with behavioral response; mark-to-market variants score far higher but are legally untested", confidence: "medium"
+      source: "Treasury FY2025 Greenbook ($288.5B/10yr); realization-elasticity caveat per CRS R41364", confidence: "medium"
     },
     {
       id: "wealth", label: "Extreme-wealth tax",
-      desc: "2% above $50M + 4% additional above $1B, at 85% collection efficiency (the framework's own instrument; Saez-Zucman gross ≈ $351B/yr).",
+      desc: "2% above $50M + 4% additional above $1B, at 85% collection efficiency. Saez–Zucman base: $10.97T above $50M, $3.28T above $1B (~100k households); gross ≈ $351B/yr.",
       kind: "scale", default: 1.0, scaleMax: 1.5, rev1x: 300,
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0, top1: 1.0 },
       phaseStart: 2028, phaseYears: 2,
-      source: "Saez–Zucman revenue memo (2021), 15% avoidance; legally contested — see framework's fallback matrix", confidence: "low-medium"
+      source: "Saez–Zucman revenue letter (Feb 2021), 15% avoidance; no official JCT/CBO score exists — legally contested (framework carries a fallback matrix)", confidence: "low-medium"
     },
     {
-      id: "estate", label: "Restore 2009 estate tax",
-      desc: "2009 exemption/rate parameters ($3.5M exemption, 45% rate).",
-      kind: "toggle", default: true, rev1x: 25,
+      id: "estate", label: "Estate tax restoration (99.5%-Act-style)",
+      desc: "Return toward a $3.5M exemption with graduated 45–65% rates. No current official score exists against the post-OBBBA $15M exemption; JCT scored the 2021 bill at ~$43B/yr against the old baseline.",
+      kind: "toggle", default: true, rev1x: 40,
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.10, top1: 0.90 },
       phaseStart: 2028, phaseYears: 1,
-      source: "CBO Options (estate tax variants)", confidence: "medium-high"
+      source: "JCT score of S.994 'For the 99.5 Percent Act' ($429.6B/10yr, 2021 baseline) — flagged gap, needs re-basing", confidence: "low-medium"
     },
     {
-      id: "ftt", label: "Financial transactions tax (0.1%)",
-      desc: "0.1% on securities transactions. Falls mostly on asset owners; a slice reaches pensions and 401(k)s across the distribution.",
-      kind: "toggle", default: true, rev1x: 60,
-      incidence: { q1: 0.01, q2: 0.02, q3: 0.04, q4: 0.08, d9: 0.12, p9199: 0.33, top1: 0.40 },
+      id: "ftt", label: "Financial transactions tax (0.01%, CBO option)",
+      desc: "1 basis point on securities and derivative payments — CBO's scored design (a 0.1% version is a different, larger proposal; TPC pegs the revenue-maximizing rate near 0.34%). Falls mostly on asset owners; a slice reaches pensions.",
+      kind: "toggle", default: true, rev1x: 30,
+      incidence: { q1: 0.013, q2: 0.032, q3: 0.068, q4: 0.14, d9: 0.10, p9199: 0.247, top1: 0.40 },
       phaseStart: 2029, phaseYears: 1,
-      source: "CBO Options (FTT, 0.1%)", confidence: "medium"
+      source: "CBO Options 2025–2034, Option 74 ($296.8B/10yr); incidence: TPC/Burman NTJ 2016 Table 6 (top quintile 74.7%, top 1% 40%)", confidence: "high"
     },
     {
       id: "vat", label: "Broad consumption tax (VAT)",
-      desc: "Broad-base VAT; ≈ $62B/yr per point. The regressive lever — burden follows consumption, which is a much larger share of income at the bottom. Use it to see the trade-off.",
-      kind: "scale", default: 0.0, scaleMax: 3.33, rev1x: 186, /* default 0; 1.0 = 3pp */
+      desc: "Broad-base VAT; CBO: 5% ≈ $3,380B/10yr, so ≈ $68B/yr per point. The regressive lever — CES: the bottom quintile consumes ~2× its income, the top ~57%. Use it to see the trade-off.",
+      kind: "scale", default: 0.0, scaleMax: 3.33, rev1x: 204, /* default 0; 1.0 = 3pp */
       defaultNote: "off by default; 1.0 on the slider = 3pp (max 10pp)",
       incidence: byCol("consumpShare"),
       phaseStart: 2032, phaseYears: 3,
-      source: "CBO Options (5% broad VAT ≈ $310B/yr)", confidence: "medium-high"
+      source: "CBO Options 2025–2034, Option 72 (broad base; narrow base scores $2,180B/10yr)", confidence: "high"
     },
     {
       id: "rents", label: "Health-sector rent taxes",
