@@ -145,6 +145,19 @@
     $("hero-range").textContent = bandTxt(
       { p10: tot.p10 * DEF, p90: tot.p90 * DEF },
       function (v) { return NHA.fmt.money(v); });
+
+    /* 2041 pair: NHA steady state next to the same-year status quo */
+    var ss = mc.steady.total;
+    var baseMature = mc.baseline[mc.years.length - 2] * DEF; // 2041
+    var delta = ss.p50 * DEF - baseMature;
+    $("hero-2041-nha").textContent = NHA.fmt.money(ss.p50 * DEF) + "/yr";
+    $("hero-2041-range").textContent = bandTxt(
+      { p10: ss.p10 * DEF, p90: ss.p90 * DEF },
+      function (v) { return NHA.fmt.money(v); }) +
+      " · " + (delta >= 0 ? "+" : "−") + NHA.fmt.moneyShort(Math.abs(delta)) +
+      " (" + (delta >= 0 ? "+" : "−") +
+      Math.abs(100 * delta / baseMature).toFixed(1) + "%) vs status quo";
+    $("hero-2041-base").textContent = NHA.fmt.money(baseMature) + "/yr";
   }
 
   function renderTiles() {
@@ -154,10 +167,6 @@
     var baseMature = mc.baseline[lastIdx] * DEF;
     var deltaVsBase = mc.steady.total.p50 * DEF - baseMature;
     var items = [
-      { label: "Steady state in 2041, at 2041's size (real 2024$)",
-        value: NHA.fmt.money(mc.steady.total.p50 * DEF) + "/yr",
-        range: bandTxt({ p10: mc.steady.total.p10 * DEF, p90: mc.steady.total.p90 * DEF }, NHA.fmt.moneyShort) +
-          " · status quo reaches " + NHA.fmt.money(baseMature) + " that year" },
       { label: "Share of GDP at maturity",
         value: NHA.fmt.pct(mc.steady.gdpPct.p50),
         range: NHA.fmt.pct(mc.steady.gdpPct.p10) + " – " + NHA.fmt.pct(mc.steady.gdpPct.p90) },

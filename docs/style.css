@@ -129,6 +129,13 @@ header.site .meta { color: var(--text-muted); font-size: 13px; margin-top: 10px;
 
 /* ---- Hero ---- */
 .hero { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.hero-pair-label {
+  font-size: 12.5px; font-weight: 650; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted);
+  margin: 18px 0 10px; padding-top: 14px;
+  border-top: 1px solid var(--gridline);
+}
+.hero-pair-label:first-of-type { border-top: none; padding-top: 0; margin-top: 8px; }
 .hero-num {
   font-size: 52px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.05;
 }
