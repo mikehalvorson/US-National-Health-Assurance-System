@@ -242,6 +242,14 @@ table.data th.num { text-align: right; }
   border-radius: 0 8px 8px 0;
 }
 
+/* ---- Units map ---- */
+.units-map { width: 100%; height: auto; }
+.map-state {
+  fill: var(--surface-1); stroke: var(--gridline-strong); stroke-width: 0.7;
+}
+.map-dot { cursor: pointer; }
+.map-dot:hover { fill-opacity: 0.9; stroke: var(--text-primary); stroke-width: 0.8; }
+
 /* ---- Story lists (levers, proposal) ---- */
 .lever-list {
   margin: 12px 0 4px 0; padding-left: 22px;

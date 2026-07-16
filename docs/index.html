@@ -32,6 +32,7 @@
   <nav class="tabs" aria-label="Dashboard sections">
     <button id="tab-health" class="active">Healthcare</button>
     <button id="tab-tax">Taxes &amp; Financing</button>
+    <button id="tab-units">Unit Network</button>
   </nav>
 
   <div id="view-health">
@@ -471,6 +472,76 @@
 
   </div><!-- /view-tax -->
 
+  <div id="view-units" hidden>
+
+  <!-- The network and the count -->
+  <section class="card">
+    <h2>The community diagnostic-treatment network, sized from need</h2>
+    <p class="desc">The framework calls for "at least 15,000 certified
+      units" (SR-ACC-010) but never derives that figure. This page derives
+      it: every U.S. county's demand is computed from its population and
+      rural share (Census 2024 estimates, 2020 rural classifications), the
+      network's expected share of the nation's ~1.1 billion annual
+      ambulatory encounters, and realistic per-unit throughput. Move the
+      absorption slider to see how the count responds.</p>
+    <div class="control" style="max-width:420px">
+      <label>Network absorption at maturity
+        <span class="val" id="units-vpc-val"></span></label>
+      <input type="range" id="units-vpc" min="1.2" max="1.8" step="0.05" value="1.5"
+        aria-label="Network visits per person per year">
+    </div>
+    <div class="tiles" id="unit-verdict"></div>
+    <p class="note">Assumptions: urban visits split 28% micro-units, 57%
+      neighborhood units, 15% urban public-health units (folded into
+      Type B where a county has under 200,000 urban residents); rural
+      visits split 30% neighborhood, 70% rural enhanced; throughputs of
+      15k / 30k / 12k / 40k visits per year per unit for Types A–D;
+      majority-rural and small counties keep at least one Type C, and
+      every county gets at least one unit. Cost benchmarks come from
+      urgent-care, retail-clinic, and FQHC economics in
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/02_hospital_clinical_workforce_education.md"
+        target="_blank" rel="noopener">research file 02</a>.</p>
+  </section>
+
+  <!-- The four types -->
+  <section class="card">
+    <h2>What each type is, does, and costs</h2>
+    <div class="care-grid" id="unit-type-cards"></div>
+  </section>
+
+  <!-- The map -->
+  <section class="card">
+    <h2>Where they go</h2>
+    <p class="desc">One dot per county; dot area scales with unit count.
+      In the all-types view each county is colored by its dominant type,
+      which makes the geography legible at a glance: rural-enhanced yellow
+      across the plains and mountain West, neighborhood blue in the
+      suburbs, red public-health units in the urban cores. Hover any dot
+      for the county's breakdown.</p>
+    <span class="mode-toggle" id="units-filter" role="group" aria-label="Unit type filter">
+      <button data-type="all" class="active">All types</button>
+      <button data-type="a">Type A</button>
+      <button data-type="b">Type B</button>
+      <button data-type="c">Type C</button>
+      <button data-type="d">Type D</button>
+    </span>
+    <div id="units-map" style="margin-top:12px"></div>
+    <p class="note" id="units-integrity"></p>
+    <details class="tableview"><summary>View allocation by state</summary>
+      <div class="tbl-scroll"><table class="data" id="units-state-table"></table></div>
+    </details>
+    <p class="note">Method limits: this is a capacity plan, not a siting
+      study. Within-county placement, drive-time modeling, tribal-land
+      coordination, and site-level feasibility all belong to the
+      framework's regional planning phase (Phase 4–5). County demand uses
+      resident population; commuter and seasonal populations are not
+      modeled. The rural floor guarantees a unit even where volume alone
+      would not justify one; that is a policy choice about access, priced
+      in, not hidden.</p>
+  </section>
+
+  </div><!-- /view-units -->
+
   <footer class="site">
     Built from the National Health Assurance Framework v2.0.0 and its research
     parameter base:
@@ -491,5 +562,7 @@
 <script src="js/taxcharts.js"></script>
 <script src="js/app.js"></script>
 <script src="js/taxapp.js"></script>
+<script src="js/unitsmap.js"></script>
+<script src="js/unitsapp.js"></script>
 </body>
 </html>

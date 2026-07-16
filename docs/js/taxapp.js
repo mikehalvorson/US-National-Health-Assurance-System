@@ -277,15 +277,18 @@
   }
 
   /* ---- tabs ---- */
+  var VIEWS = ["health", "tax", "units"];
   function showView(which) {
-    $("view-health").hidden = which !== "health";
-    $("view-tax").hidden = which !== "tax";
-    $("tab-health").className = which === "health" ? "active" : "";
-    $("tab-tax").className = which === "tax" ? "active" : "";
+    if (VIEWS.indexOf(which) < 0) which = "health";
+    VIEWS.forEach(function (v) {
+      $("view-" + v).hidden = v !== which;
+      $("tab-" + v).className = v === which ? "active" : "";
+    });
     if (history.replaceState) history.replaceState(null, "", "#" + which);
   }
-  $("tab-health").addEventListener("click", function () { showView("health"); });
-  $("tab-tax").addEventListener("click", function () { showView("tax"); });
+  VIEWS.forEach(function (v) {
+    $("tab-" + v).addEventListener("click", function () { showView(v); });
+  });
 
   /* healthcare model calls this after each recompute */
   NHA.TAX.onHealthUpdate = function () { refresh(); };
@@ -295,5 +298,5 @@
   wireProgramAdd();
   wireViewControls();
   refresh();
-  showView(location.hash === "#tax" ? "tax" : "health");
+  showView((location.hash || "#health").slice(1));
 })();
