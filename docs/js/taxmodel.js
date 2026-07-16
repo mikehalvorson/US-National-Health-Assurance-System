@@ -83,10 +83,12 @@
 
   /* ---- Distribution at one year ----
    * healthReliefB: aggregate household health spending replaced in that
-   * year ($B, 2024$) — from the healthcare model; 0 if not linked.
+   * year ($B, 2024$), from the healthcare model; 0 if not linked.
+   * wageGainB: wages passed through from employers' net premium savings
+   * ($B, 2024$), allocated to groups by wage share; 0 if not linked.
    * Returns rows per group + totals.
    */
-  T.distribution = function (settings, year, healthReliefB) {
+  T.distribution = function (settings, year, healthReliefB, wageGainB) {
     var rows = [];
     var g = growth(year);
     T.GROUPS.forEach(function (grp) {
@@ -97,14 +99,17 @@
         taxB += rev * (ins.incidence[grp.id] || 0);
       });
       var reliefB = (healthReliefB || 0) * grp.healthRelief;
+      var wageB = (wageGainB || 0) * grp.wageShare;
       var hh = grp.hhM * 1e6;
       var income = grp.avgIncome * g; /* incomes grow with the economy too */
       var taxPerHH = taxB * 1e9 / hh;
       var reliefPerHH = reliefB * 1e9 / hh;
-      var netPerHH = taxPerHH - reliefPerHH;
+      var wagePerHH = wageB * 1e9 / hh;
+      var netPerHH = taxPerHH - reliefPerHH - wagePerHH;
       rows.push({
-        group: grp, taxB: taxB, reliefB: reliefB,
-        taxPerHH: taxPerHH, reliefPerHH: reliefPerHH, netPerHH: netPerHH,
+        group: grp, taxB: taxB, reliefB: reliefB, wageB: wageB,
+        taxPerHH: taxPerHH, reliefPerHH: reliefPerHH, wagePerHH: wagePerHH,
+        netPerHH: netPerHH,
         netPctIncome: netPerHH / income,
         taxPctIncome: taxPerHH / income,
         curRate: grp.curRate,

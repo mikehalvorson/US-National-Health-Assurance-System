@@ -334,6 +334,15 @@ NHA.PARAM_DEFS = [
     adjustable: true, sliderMin: 30, sliderMax: 100
   },
   {
+    id: "wagePassThrough", group: "Financing", unit: "%",
+    label: "Employer premium savings passed through to wages",
+    low: 40, mode: 70, high: 95,
+    confidence: "medium",
+    source: "CBO convention holds that employer health costs come out of wages, so employer savings flow back as wages over time (Carloni, CBO Working Paper 2021-06 reviews the pass-through evidence; long-run convention is ~100%, short-run estimates are lower). Wage gains are then taxable: the model applies a 28% average marginal federal rate on the passed-through wages as a revenue feedback.",
+    url: "https://www.cbo.gov/publication/57089",
+    adjustable: true, sliderMin: 0, sliderMax: 100
+  },
+  {
     id: "wealthTaxPotential", group: "Financing", unit: "$B/yr",
     label: "Extreme-wealth + high-income tax package gross potential",
     low: 250, mode: 350, high: 450,
@@ -463,4 +472,53 @@ NHA.PROBLEM_STATS = [
     note: "150–210 have already closed since 2010 (Chartis; UNC Sheps Center)" },
   { value: "$26,993", label: "average family premium, 2025",
     note: "workers pay $6,850 of it, before any deductible or copay (KFF Employer Survey)" }
+];
+
+/* ---- Systemic correlation map for Monte Carlo draws ----------------------
+ * Real-world forecast errors are not independent: a world where benefit
+ * expansions run over budget is usually also a world where savings levers
+ * underdeliver. Each run draws one systemic factor z in [-1, 1]; parameters
+ * tagged +1 (cost side) shift toward their high end when z is positive,
+ * parameters tagged -1 (savings side) shift toward their low end, with
+ * weight CORR_WEIGHT. Untagged parameters stay independent.               */
+NHA.CORR_WEIGHT = 0.35;
+NHA.PARAM_CORR = {
+  utilIncrease: 1, providerPaymentFactor: 1, ltcExpansion: 1, bhExpansion: 1,
+  dvhExpansion: 1, emsPhExpansion: 1, unitsCost: 1, rdPublic: 1,
+  workforceEdu: 1, itOperating: 1, itCapital: 1, transitionTotal: 1,
+  publicAdminRate: 1, governanceRate: 1, legacyAdminFloor: 1,
+  drugPriceCut: -1, providerAdminSavings: -1, careModelSavings: -1,
+  lowValueCapture: -1, extractionSavings: -1
+};
+
+/* ---- Age structure and cost weights (demographic growth decomposition) --
+ * Shares: Census projections (2024 vs ~2041). Cost weights: relative
+ * per-capita personal health spending by age (CMS/MEPS age curves),
+ * normalized so the 2024-weighted average is ~1. Medium confidence.       */
+NHA.AGE_STRUCTURE = {
+  bands: [
+    { id: "0–18",  share2024: 0.217, share2041: 0.197, costw: 0.45 },
+    { id: "19–44", share2024: 0.345, share2041: 0.334, costw: 0.65 },
+    { id: "45–64", share2024: 0.243, share2041: 0.236, costw: 1.20 },
+    { id: "65–84", share2024: 0.176, share2041: 0.204, costw: 2.40 },
+    { id: "85+",   share2024: 0.019, share2041: 0.029, costw: 4.40 }
+  ],
+  source: "Census Bureau population projections; CMS/MEPS per-capita spending by age"
+};
+
+/* ---- Health outcomes the model does not price ----------------------------
+ * Displayed with sources; deliberately NOT monetized into system cost.    */
+NHA.OUTCOME_STATS = [
+  { value: "20,000–68,000", label: "deaths per year linked to being uninsured",
+    note: "coverage-mortality studies imply one death averted per ~830–1,600 people gaining coverage (Sommers et al.); Woolhandler & Himmelstein put it near 35,000/yr, Galvani et al. (Lancet, 2020) at 68,000/yr. Mechanism under NHA: universal automatic coverage.",
+    confidence: "medium" },
+  { value: "~530,000", label: "bankruptcies per year that filers tie to medical bills or illness-related work loss",
+    note: "Himmelstein et al., AJPH 2019; the causal share is debated, the association is not. Mechanism under NHA: medical debt for covered care is prohibited.",
+    confidence: "low-medium" },
+  { value: "100M people / ~$220B", label: "Americans carrying medical debt, and the total owed",
+    note: "KFF-NPR investigation, 2022. Mechanism under NHA: $0 point-of-care for covered care ends new covered-care debt.",
+    confidence: "medium-high" },
+  { value: "38%", label: "of adults delayed or skipped care over cost in 2024, a record high",
+    note: "Gallup/West Health survey. Mechanism under NHA: removing the price at the point of use; the model's utilization-increase parameter is this effect showing up as cost.",
+    confidence: "medium" }
 ];

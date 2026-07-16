@@ -148,6 +148,21 @@
     <div class="care-grid" id="care-cards"></div>
   </section>
 
+  <!-- Outcomes the model does not price -->
+  <section class="card">
+    <h2>Beyond dollars: what the model does not price</h2>
+    <p class="desc">Some effects of universal coverage are well documented
+      but deliberately kept out of the cost arithmetic, because turning
+      lives and solvency into dollars invites false precision. They belong
+      in the picture anyway. Each figure notes the NHA mechanism that
+      addresses it.</p>
+    <div class="tiles" id="outcome-tiles"></div>
+    <p class="note">The utilization-increase parameter in the model is the
+      cost side of these same effects: people who stop skipping care start
+      using it. The model prices that; it does not claim credit for the
+      health improvements that follow.</p>
+  </section>
+
   <!-- Household annual calculator -->
   <section class="card">
     <h2>Your household's annual healthcare bill</h2>
@@ -181,6 +196,16 @@
       </div>
     </div>
     <div class="tiles" id="tiles"></div>
+    <p class="note"><b>Reading the two big numbers:</b> the $5.3T-range
+      figures above answer "what would the mature system cost if it existed
+      today, at today's population and prices?" The steady-state figure in
+      the tiles answers a different question: "what will the annual bill be
+      in 2041, when the country is bigger and older?" The status quo grows
+      the same way (from ~$5.3T now to roughly $9.1T by 2041 on CMS's own
+      trajectory), so compare 2041 against 2041, not against today. Every
+      dollar on this page is inflation-adjusted to 2024 purchasing power;
+      the growth between the two numbers is more people, older people, and
+      more care per person, never inflation.</p>
   </section>
 
   <!-- Money flow: today vs NHA -->
@@ -239,6 +264,7 @@
       transition costs. The band is the 10th–90th percentile across Monte
       Carlo draws of every uncertain parameter.</p>
     <div id="path-chart"></div>
+    <p class="note" id="growth-decomp"></p>
     <details class="tableview"><summary>View as table</summary>
       <div class="tbl-scroll"><table class="data" id="path-table"></table></div>
     </details>
@@ -289,12 +315,17 @@
   <section class="card">
     <h2>Methodology and limits</h2>
     <div class="note">
-      <b>What this is:</b> a national-aggregate annual model (v1). It computes
+      <b>What this is:</b> a national-aggregate annual model. It computes
       the status-quo world and the NHA world category by category from CMS
       2023 calibration data, phases policy in over the framework's Phase 0–8
       roadmap, and samples every uncertain parameter from a sourced
-      low/central/high range (triangular distribution, independent draws).
-      Steady state is the 2040–2042 average.
+      low/central/high range (triangular distribution). Draws share a
+      systemic optimism/pessimism factor (weight 0.35): runs where benefit
+      expansions overrun also tend to be runs where savings levers
+      underdeliver, which widens the tails compared with independent
+      sampling. Employer premium savings pass through to wages (adjustable,
+      40–95%, CBO convention) and the resulting income/payroll tax revenue
+      feeds back into financing. Steady state is the 2040–2042 average.
     </div>
     <div class="note">
       <b>On the framework document's original figure:</b> earlier drafts
@@ -305,11 +336,18 @@
       parameter table and scenario presets, not in the headline.
     </div>
     <div class="note">
-      <b>What it is not:</b> it has no regional, demographic, or
-      specialty-level detail (planned v2); it does not model macroeconomic
-      feedback (wage pass-through, labor-market effects); parameter draws are
-      independent, which understates tail risk; and access/health-outcome
-      effects are represented only where they carry a cost.
+      <b>What it still is not:</b> specialty-level queues and wait-time
+      dynamics are not modeled, nor is provider behavioral response beyond
+      the payment factor. Macroeconomic feedback stops at first-order wage
+      pass-through with a fixed 28% marginal-rate revenue feedback; there
+      are no general-equilibrium or labor-supply effects. The correlation
+      structure is a single systemic factor, not a full covariance matrix.
+      Geographic detail exists for the unit network (see the Unit Network
+      tab) but the fiscal model's costs and prices remain national
+      averages. Health outcomes are displayed with sources in the section
+      above, not converted into dollars. Demographic aging is decomposed
+      and shown under the cost-path chart, but the model does not simulate
+      cohorts individually.
     </div>
     <div class="warnbox" id="gaps-box">
       <b>Weakest assumptions.</b> These parameters have no direct real-world

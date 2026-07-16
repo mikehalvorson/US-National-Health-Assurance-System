@@ -191,6 +191,10 @@
           Math.round(r.taxPerHH).toLocaleString("en-US") + "/hh/yr", false);
         tipRow(box, "var(--div-cool)", "Health costs eliminated", "−$" +
           Math.round(r.reliefPerHH).toLocaleString("en-US") + "/hh/yr", false);
+        if (r.wagePerHH > 0.5) {
+          tipRow(box, "var(--div-cool)", "Wages from employer pass-through", "−$" +
+            Math.round(r.wagePerHH).toLocaleString("en-US") + "/hh/yr", false);
+        }
         tipRow(box, "", "Net", (r.netPerHH > 0 ? "+$" : "−$") +
           Math.round(Math.abs(r.netPerHH)).toLocaleString("en-US") + "/hh/yr (" +
           (r.netPctIncome > 0 ? "+" : "") + (r.netPctIncome * 100).toFixed(1) + "% of income)", true);

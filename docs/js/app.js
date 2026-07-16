@@ -123,7 +123,8 @@
     NHA._healthPath = {
       years: mc.years.slice(),
       newRevenue: mc.modePath.detail.map(function (d) { return d.newRevenue * DEF; }),
-      relief: mc.modePath.detail.map(function (d) { return d.householdRelief * DEF; })
+      relief: mc.modePath.detail.map(function (d) { return d.householdRelief * DEF; }),
+      wageGain: mc.modePath.detail.map(function (d) { return (d.wageGain || 0) * DEF; })
     };
     if (NHA.TAX && NHA.TAX.onHealthUpdate) NHA.TAX.onHealthUpdate();
   }
@@ -153,9 +154,10 @@
     var baseMature = mc.baseline[lastIdx] * DEF;
     var deltaVsBase = mc.steady.total.p50 * DEF - baseMature;
     var items = [
-      { label: "Projected steady state (2040–42, with real growth)",
+      { label: "Steady state in 2041, at 2041's size (real 2024$)",
         value: NHA.fmt.money(mc.steady.total.p50 * DEF) + "/yr",
-        range: bandTxt({ p10: mc.steady.total.p10 * DEF, p90: mc.steady.total.p90 * DEF }, NHA.fmt.moneyShort) },
+        range: bandTxt({ p10: mc.steady.total.p10 * DEF, p90: mc.steady.total.p90 * DEF }, NHA.fmt.moneyShort) +
+          " · status quo reaches " + NHA.fmt.money(baseMature) + " that year" },
       { label: "Share of GDP at maturity",
         value: NHA.fmt.pct(mc.steady.gdpPct.p50),
         range: NHA.fmt.pct(mc.steady.gdpPct.p10) + " – " + NHA.fmt.pct(mc.steady.gdpPct.p90) },
@@ -286,13 +288,15 @@
     var fedUse = Math.min(d.fedRedirect, need);
     var stateUse = Math.min(d.stateMoe, Math.max(0, need - fedUse));
     var empUse = Math.min(d.empContrib, Math.max(0, need - fedUse - stateUse));
-    var newRev = Math.max(0, need - fedUse - stateUse - empUse);
+    var fbUse = Math.min(d.taxFeedback || 0, Math.max(0, need - fedUse - stateUse - empUse));
+    var newRev = Math.max(0, need - fedUse - stateUse - empUse - fbUse);
 
     NHA.renderFinancingChart($("financing-chart"), {
       segments: [
         { label: "Redirected federal spending", value: fedUse, color: "var(--series-1)" },
         { label: "State maintenance-of-effort", value: stateUse, color: "var(--series-2)" },
         { label: "Employer contribution", value: empUse, color: "var(--series-3)" },
+        { label: "Tax on wage pass-through", value: fbUse, color: "var(--series-7)" },
         { label: "New revenue needed", value: newRev, color: "var(--series-5)" }
       ],
       gap: { label: "New revenue needed", value: newRev },
@@ -319,6 +323,7 @@
     var tb = tbl.createTBody();
     [["Total public cost", need], ["Redirected federal spending", fedUse],
      ["State maintenance-of-effort", stateUse], ["Employer contribution", empUse],
+     ["Income/payroll tax on wages passed through from employer savings", fbUse],
      ["New revenue needed", newRev],
      ["...of which the wealth-tax package could cover", Math.min(newRev, d.wealthRevenue)]]
       .forEach(function (r) {
@@ -425,6 +430,46 @@
       "federal budget, not new cost to society. Most of it replaces the " +
       NHA.fmt.money(d.householdRelief * k) + "/yr households currently spend on premiums and " +
       "out-of-pocket care, which drops to roughly zero.";
+  }
+
+  /* Outcomes the model does not price (static, sourced) */
+  function renderOutcomeTiles() {
+    var host = $("outcome-tiles");
+    host.innerHTML = "";
+    NHA.OUTCOME_STATS.forEach(function (s) {
+      var tl = document.createElement("div"); tl.className = "tile";
+      var v = document.createElement("div"); v.className = "value"; v.textContent = s.value;
+      var l = document.createElement("div"); l.className = "label"; l.textContent = s.label;
+      var r = document.createElement("div"); r.className = "range"; r.textContent = s.note;
+      tl.appendChild(v); tl.appendChild(l); tl.appendChild(r);
+      var badge = document.createElement("span");
+      badge.className = "conf " + s.confidence;
+      badge.textContent = s.confidence;
+      r.appendChild(document.createTextNode(" "));
+      r.appendChild(badge);
+      host.appendChild(tl);
+    });
+  }
+
+  /* Demographic decomposition of baseline growth (static, computed once) */
+  function renderGrowthDecomp() {
+    var A = NHA.AGE_STRUCTURE.bands;
+    var idx24 = 0, idx41 = 0;
+    A.forEach(function (b) {
+      idx24 += b.share2024 * b.costw;
+      idx41 += b.share2041 * b.costw;
+    });
+    var agingPP = 100 * (Math.pow(idx41 / idx24, 1 / 17) - 1); /* per year, 2024→2041 */
+    var eff = NHA.effectiveParams(state.scenario, state.sliders);
+    var totalG = eff.baselineRealGrowth.mode;
+    $("growth-decomp").textContent =
+      "Where the growth comes from: shifting age structure alone (the 65+ share " +
+      "rises from ~19% to ~23% by 2041, and 85+ from ~1.9% to ~2.9%) contributes " +
+      "about " + agingPP.toFixed(1) + " points of the " + totalG.toFixed(1) +
+      "%/yr real growth assumption, computed from Census age projections and " +
+      "CMS/MEPS per-capita spending by age (85+ households use about 4.4 times " +
+      "the average). The rest is per-person cost growth: technology, intensity, " +
+      "and prices. Population growth adds ~0.4%/yr on top in the totals.";
   }
 
   /* "What's wrong, by the numbers" — static sourced stat tiles */
@@ -542,6 +587,8 @@
   buildControls();
   renderParamTable();
   renderProblemTiles();
+  renderOutcomeTiles();
+  renderGrowthDecomp();
   NHA.renderCareCards($("care-cards"));
   recompute(); // must run before the household calc first reads model numbers
   NHA.renderHouseholdCalc($("household-calc"), modelNumbersForHousehold);

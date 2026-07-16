@@ -45,12 +45,22 @@ NHA.makeRng = function (seed) {
   };
 };
 
-/* Sample a full parameter set: {id: value}. mode-only if rand === null. */
-NHA.sampleParams = function (effective, rand) {
+/* Sample a full parameter set: {id: value}. mode-only if rand === null.
+ * z (optional, in [-1,1]) is the run's systemic factor: parameters tagged
+ * in NHA.PARAM_CORR have their sampling quantile shifted by
+ * CORR_WEIGHT × sign × z, so cost-side surprises and savings-side
+ * disappointments arrive together (see params.js).                        */
+NHA.sampleParams = function (effective, rand, z) {
   var out = {};
   Object.keys(effective).forEach(function (id) {
     var e = effective[id];
-    out[id] = rand ? NHA.triangular(e.low, e.mode, e.high, rand) : e.mode;
+    if (!rand) { out[id] = e.mode; return; }
+    var u = rand();
+    var s = (z != null && NHA.PARAM_CORR) ? (NHA.PARAM_CORR[id] || 0) : 0;
+    if (s !== 0) {
+      u = Math.min(0.98, Math.max(0.02, u + NHA.CORR_WEIGHT * s * z));
+    }
+    out[id] = NHA.triangular(e.low, e.mode, e.high, function () { return u; });
   });
   return out;
 };
@@ -183,7 +193,13 @@ NHA.runPath = function (p, structural) {
     var fedRedirect = 0.32 * nheBase * covR;
     var stateMoe = 0.16 * nheBase * covR * 0.75 * stateMoeMult;
     var empContrib = 0.18 * nheBase * (p.employerCapture / 100) * covR;
-    var newRevenue = Math.max(0, pubCost - fedRedirect - stateMoe - empContrib);
+    /* Wage pass-through: employers' net premium savings (what EHAC doesn't
+       capture) flow to wages per CBO convention; those wages are taxed at
+       ~28% average marginal federal rate, feeding revenue back. */
+    var empRelief = Math.max(0, 0.18 * nheBase * covR * (1 - p.employerCapture / 100));
+    var wageGain = empRelief * ((p.wagePassThrough || 0) / 100);
+    var taxFeedback = wageGain * 0.28;
+    var newRevenue = Math.max(0, pubCost - fedRedirect - stateMoe - empContrib - taxFeedback);
     var wealthRevenue = p.wealthTaxPotential * (p.wealthCollectionEff / 100) * Ggdp;
     var householdRelief = 0.27 * nheBase * covR -
       (nheNha * (p.residualPrivateShare / 100) * 0.5); // half of residual is OOP
@@ -205,6 +221,7 @@ NHA.runPath = function (p, structural) {
       pubCost: pubCost, fedRedirect: fedRedirect, stateMoe: stateMoe,
       empContrib: empContrib, newRevenue: newRevenue,
       wealthRevenue: wealthRevenue, householdRelief: householdRelief,
+      wageGain: wageGain, taxFeedback: taxFeedback,
       pubShare: pubShare
     });
   }
@@ -280,7 +297,9 @@ NHA.runMonteCarlo = function (scenarioId, sliderModes, nRuns, seed) {
       steadyGdpPct = [], nhe2030delta = [], tenYearFedInc = [], matureToday = [];
 
   for (var r = 0; r < nRuns; r++) {
-    var p = NHA.sampleParams(effective, rand);
+    /* one systemic optimism/pessimism factor per run (triangular on [-1,1]) */
+    var z = NHA.triangular(-1, 0, 1, rand);
+    var p = NHA.sampleParams(effective, rand, z);
     var path = NHA.runPath(p, structural);
     nhaRuns.push(path.nha);
     matureToday.push(NHA.matureAtScale(p, structural, 1).nheNha); // 2024 scale
@@ -419,6 +438,33 @@ NHA.selfTest = function () {
     return b.p10 <= b.p50 + 1e-9 && b.p50 <= b.p90 + 1e-9;
   });
   check("Monte Carlo bands are ordered (p10 ≤ p50 ≤ p90)", ordered);
+
+  /* 7. Systemic correlation pushes cost-side up and savings-side down */
+  var fixed = function () { return 0.5; };
+  var pHi = NHA.sampleParams(effective, fixed, 1);
+  var pLo = NHA.sampleParams(effective, fixed, -1);
+  check("Correlated draws: z=+1 raises costs and cuts savings vs z=−1",
+    pHi.utilIncrease > pLo.utilIncrease && pHi.drugPriceCut < pLo.drugPriceCut,
+    "util " + pHi.utilIncrease.toFixed(1) + ">" + pLo.utilIncrease.toFixed(1) +
+    ", drugcut " + pHi.drugPriceCut.toFixed(1) + "<" + pLo.drugPriceCut.toFixed(1));
+
+  /* 8. Wage pass-through feedback lowers the new-revenue requirement */
+  var pw0 = NHA.sampleParams(effective, null); pw0.wagePassThrough = 0;
+  var pw9 = NHA.sampleParams(effective, null); pw9.wagePassThrough = 95;
+  var d0 = NHA.runPath(pw0, {}).detail[2041 - NHA.START_YEAR];
+  var d9 = NHA.runPath(pw9, {}).detail[2041 - NHA.START_YEAR];
+  check("Wage pass-through: feedback = 28% of wage gain and reduces new revenue",
+    d0.newRevenue > d9.newRevenue &&
+    Math.abs(d9.taxFeedback - 0.28 * d9.wageGain) < 0.01 &&
+    d0.wageGain === 0,
+    "newRev " + d0.newRevenue.toFixed(0) + "→" + d9.newRevenue.toFixed(0));
+
+  /* 9. Age-structure shares sum to 1 in both years */
+  var s24 = 0, s41 = 0;
+  NHA.AGE_STRUCTURE.bands.forEach(function (b) { s24 += b.share2024; s41 += b.share2041; });
+  check("Age-structure shares sum to 1 (2024 and 2041)",
+    Math.abs(s24 - 1) < 0.005 && Math.abs(s41 - 1) < 0.005,
+    "s24=" + s24.toFixed(3) + " s41=" + s41.toFixed(3));
 
   return results;
 };

@@ -29,6 +29,12 @@
     var i = hp.years.indexOf(year);
     return i >= 0 ? hp.relief[i] : 0;
   }
+  function healthWage(year) {
+    var hp = NHA._healthPath;
+    if (!hp || !hp.wageGain) return 0;
+    var i = hp.years.indexOf(year);
+    return i >= 0 ? hp.wageGain[i] : 0;
+  }
 
   function activePrograms() {
     var nha = {
@@ -191,9 +197,11 @@
       tiles.appendChild(tl);
     });
 
-    /* distribution: health relief only counts if the NHA program is on */
+    /* distribution: health relief and wage pass-through only count if the
+       NHA program is on */
     var reliefB = nhaEnabled ? healthRelief(distYear) : 0;
-    var rows = T.distribution(settings, distYear, reliefB);
+    var wageB = nhaEnabled ? healthWage(distYear) : 0;
+    var rows = T.distribution(settings, distYear, reliefB, wageB);
     NHA.renderNetImpactChart($("tax-impact-chart"), rows, distMode);
     NHA.renderRateCurve($("tax-rate-chart"), rows);
 
@@ -212,7 +220,7 @@
     var tbl = document.createElement("table");
     var hd = tbl.insertRow();
     ["Income group", "Avg income (" + distYear + ")", "New taxes /hh",
-     "Health savings /hh", "Net /hh", "Net % of income",
+     "Health savings /hh", "Wage gains /hh", "Net /hh", "Net % of income",
      "Avg fed rate: now → new"].forEach(function (h) {
       var th = document.createElement("th"); th.textContent = h; hd.appendChild(th);
     });
@@ -223,6 +231,7 @@
       cell("$" + Math.round(r.avgIncomeNow).toLocaleString("en-US"));
       cell("$" + Math.round(r.taxPerHH).toLocaleString("en-US"));
       cell("−$" + Math.round(r.reliefPerHH).toLocaleString("en-US"));
+      cell("−$" + Math.round(r.wagePerHH || 0).toLocaleString("en-US"));
       var net = cell((r.netPerHH >= 0 ? "+$" : "−$") +
         Math.round(Math.abs(r.netPerHH)).toLocaleString("en-US"));
       net.style.fontWeight = "650";
