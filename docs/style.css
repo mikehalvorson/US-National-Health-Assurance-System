@@ -249,6 +249,33 @@ table.data th.num { text-align: right; }
   border-radius: 0 8px 8px 0;
 }
 
+/* ---- Governance ---- */
+.org-wrap { margin-top: 14px; overflow-x: auto; }
+.org-chart { width: 100%; height: auto; min-width: 640px; }
+.org-line { stroke: var(--gridline-strong); stroke-width: 1.2; fill: none; }
+.org-box { cursor: pointer; }
+.org-box:hover rect, .org-box:focus rect { stroke-width: 2.4; }
+.org-code {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
+  fill: var(--text-secondary);
+}
+.org-name { font-size: 12.5px; font-weight: 600; fill: var(--text-primary); }
+.gov-cards { display: grid; gap: 10px; margin-top: 12px; }
+.gov-card {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 13px 16px; background: var(--surface-1);
+}
+.gov-card.flash { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gov-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.gov-card-name { font-weight: 650; font-size: 14px; }
+.gov-card-code {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px;
+  margin-left: auto; white-space: nowrap;
+}
+.gov-line { font-size: 13px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+.gov-line b { color: var(--text-primary); font-weight: 650; }
+
 /* ---- Units map ---- */
 .units-map { width: 100%; height: auto; }
 .map-state {

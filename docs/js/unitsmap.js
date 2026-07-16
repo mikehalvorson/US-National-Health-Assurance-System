@@ -22,7 +22,8 @@
     return function (lon, lat) {
       var theta = n * (normLon(lon) * RAD - l0);
       var rho = Math.sqrt(Math.max(0, C - 2 * n * Math.sin(lat * RAD))) / n;
-      return [rho * Math.sin(theta), -rho * Math.cos(theta)];
+      /* +rho·cos(theta): screen y grows southward (SVG y-down), north on top */
+      return [rho * Math.sin(theta), rho * Math.cos(theta)];
     };
   }
 
