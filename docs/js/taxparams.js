@@ -107,7 +107,7 @@ NHA.TAX.ECON = {
     },
     {
       id: "payroll", label: "NHA payroll contribution (uncapped)",
-      desc: "Flat payroll rate on all earnings, no cap — the premium-replacement workhorse. CBO convention: borne by workers via wages. CBO Option 61: 1% ≈ $128B/yr.",
+      desc: "Flat payroll rate on all earnings, no cap; the premium-replacement workhorse. CBO convention: borne by workers via wages. CBO Option 61: 1% ≈ $128B/yr.",
       kind: "scale", default: 1.0, scaleMax: 3.0, rev1x: 512, /* default = 4pp */
       defaultNote: "default 4.0pp; slider is a multiple (max 12pp)",
       incidence: byCol("wageShare"),
@@ -124,7 +124,7 @@ NHA.TAX.ECON = {
     },
     {
       id: "corp", label: "Corporate rate increase",
-      desc: "Points above the current 21% rate; CBO Dec 2024: ≈ $13.6B/yr per point (21→28% ≈ $0.95T/10yr — older ~$1.3T scores used a pre-2024 base). Incidence per CBO/JCT: 25% labor, 75% capital.",
+      desc: "Points above the current 21% rate; CBO Dec 2024: ≈ $13.6B/yr per point (21→28% ≈ $0.95T/10yr; older ~$1.3T scores used a pre-2024 base). Incidence per CBO/JCT: 25% labor, 75% capital.",
       kind: "scale", default: 1.0, scaleMax: 2.0, rev1x: 95, /* default = +7pp */
       defaultNote: "default +7pp (→28%); slider is a multiple (max +14pp)",
       incidence: mix(0.25, 0.75),
@@ -133,7 +133,7 @@ NHA.TAX.ECON = {
     },
     {
       id: "capgains", label: "Tax capital gains as ordinary income (>$1M)",
-      desc: "Ordinary rates on gains and dividends for incomes above $1M. Only raises durable revenue when paired with taxing gains at death (Greenbook pairing) — standalone high rates lose money to realization deferral.",
+      desc: "Ordinary rates on gains and dividends for incomes above $1M. Only raises durable revenue when paired with taxing gains at death (Greenbook pairing); standalone high rates lose money to realization deferral.",
       kind: "toggle", default: true, rev1x: 29,
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.15, top1: 0.85 },
       phaseStart: 2028, phaseYears: 1,
@@ -145,7 +145,7 @@ NHA.TAX.ECON = {
       kind: "scale", default: 1.0, scaleMax: 1.5, rev1x: 300,
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0, top1: 1.0 },
       phaseStart: 2028, phaseYears: 2,
-      source: "Saez–Zucman revenue letter (Feb 2021), 15% avoidance; no official JCT/CBO score exists — legally contested (framework carries a fallback matrix)", confidence: "low-medium"
+      source: "Saez–Zucman revenue letter (Feb 2021), 15% avoidance; no official JCT/CBO score exists and it is legally contested (the framework carries a fallback matrix)", confidence: "low-medium"
     },
     {
       id: "estate", label: "Estate tax restoration (99.5%-Act-style)",
@@ -153,11 +153,11 @@ NHA.TAX.ECON = {
       kind: "toggle", default: true, rev1x: 40,
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.10, top1: 0.90 },
       phaseStart: 2028, phaseYears: 1,
-      source: "JCT score of S.994 'For the 99.5 Percent Act' ($429.6B/10yr, 2021 baseline) — flagged gap, needs re-basing", confidence: "low-medium"
+      source: "JCT score of S.994 'For the 99.5 Percent Act' ($429.6B/10yr, 2021 baseline); flagged as a gap, needs re-basing", confidence: "low-medium"
     },
     {
       id: "ftt", label: "Financial transactions tax (0.01%, CBO option)",
-      desc: "1 basis point on securities and derivative payments — CBO's scored design (a 0.1% version is a different, larger proposal; TPC pegs the revenue-maximizing rate near 0.34%). Falls mostly on asset owners; a slice reaches pensions.",
+      desc: "1 basis point on securities and derivative payments, CBO's scored design (a 0.1% version is a different, larger proposal; TPC pegs the revenue-maximizing rate near 0.34%). Falls mostly on asset owners; a slice reaches pensions.",
       kind: "toggle", default: true, rev1x: 30,
       incidence: { q1: 0.013, q2: 0.032, q3: 0.068, q4: 0.14, d9: 0.10, p9199: 0.247, top1: 0.40 },
       phaseStart: 2029, phaseYears: 1,
@@ -165,7 +165,7 @@ NHA.TAX.ECON = {
     },
     {
       id: "vat", label: "Broad consumption tax (VAT)",
-      desc: "Broad-base VAT; CBO: 5% ≈ $3,380B/10yr, so ≈ $68B/yr per point. The regressive lever — CES: the bottom quintile consumes ~2× its income, the top ~57%. Use it to see the trade-off.",
+      desc: "Broad-base VAT; CBO: 5% ≈ $3,380B/10yr, so ≈ $68B/yr per point. This is the regressive lever: CES data shows the bottom quintile consumes about twice its income while the top consumes 57%. Turn it on to see the trade-off.",
       kind: "scale", default: 0.0, scaleMax: 3.33, rev1x: 204, /* default 0; 1.0 = 3pp */
       defaultNote: "off by default; 1.0 on the slider = 3pp (max 10pp)",
       incidence: byCol("consumpShare"),

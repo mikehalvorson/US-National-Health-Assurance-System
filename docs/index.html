@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance &amp; Public Financing Simulator</title>
-<meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it — every parameter sourced, every assumption adjustable.">
+<meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it. Every parameter is sourced and every major assumption can be adjusted.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,10 +13,10 @@
   <header class="site">
     <h1>National Health Assurance &amp; Public Financing Simulator</h1>
     <p class="sub">
-      Bottom-up policy simulations you can interrogate: a fiscal model of the
-      proposed National Health Assurance Framework — a public system replacing
+      Two working models built from public data: a fiscal simulation of the
+      proposed National Health Assurance Framework, a public system replacing
       U.S. private health insurance with automatic coverage and zero
-      point-of-care cost — and a general U.S. tax model showing how any
+      point-of-care cost, and a general U.S. tax model showing how any
       funding need can be financed, and who bears the burden across income
       groups. Every parameter is sourced; every major assumption is
       adjustable. The models compute their own answers.
@@ -39,7 +39,7 @@
   <!-- ACT 1: The system today -->
   <section class="card">
     <h2>The system today</h2>
-    <p class="desc">American healthcare is not one system — it's four
+    <p class="desc">American healthcare is not one system. It is four
       payment systems stapled together, with your coverage determined
       mostly by your job, your age, and your income. About 157 million
       people get insurance through an employer, who pays most of the
@@ -47,12 +47,12 @@
       million people over 65 or disabled, funded by payroll taxes, general
       federal revenue, and enrollee premiums. Medicaid &amp; CHIP cover ~72
       million lower-income people, funded jointly by Washington and the
-      states. Everyone also pays directly at the point of care —
+      states. Everyone also pays directly at the point of care:
       deductibles, copays, and uncovered bills totaled $506B in 2023. And
       ~26 million people have no coverage at all. Here is where the $4.87T
-      came from and where it went — hover any ribbon for what it contains.</p>
+      came from and where it went. Hover any ribbon for the details.</p>
     <div class="flow-panel" style="max-width:560px;margin:14px auto 0">
-      <div class="flow-title">Actual 2023 spending — $4.87T (CMS)</div>
+      <div class="flow-title">Actual 2023 spending: $4.87T (CMS)</div>
       <div id="flow-today-solo"></div>
     </div>
     <details class="tableview"><summary>View the distribution as a table</summary>
@@ -63,9 +63,9 @@
   <!-- ACT 2: What's wrong, by the numbers -->
   <section class="card">
     <h2>What's wrong, by the numbers</h2>
-    <p class="desc">The problem isn't that America spends on health — every
+    <p class="desc">The problem is not that America spends heavily on health; every
       rich country does. It's that America pays far more and gets less
-      coverage, less security, and staggering overhead. Every figure below
+      coverage, less security, and far more overhead. Every figure below
       is sourced (citations in the
       <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/tree/main/research"
          target="_blank" rel="noopener">research repository</a>).</p>
@@ -75,23 +75,23 @@
   <!-- ACT 3: The fixable part -->
   <section class="card">
     <h2>The fixable part</h2>
-    <p class="desc">Most of that dysfunction is structural, not medical —
-      which means it's addressable by redesigning how money moves, not by
+    <p class="desc">Most of that dysfunction is structural rather than medical,
+      which means it can be fixed by redesigning how money moves rather than by
       rationing care. Four levers do most of the work:</p>
     <ul class="lever-list">
       <li><b>Administrative consolidation.</b> One public payer and one
         claims rail replace ~900 insurers' duplicated overhead and the
-        billing bureaucracy providers maintain to fight them — recoverable
-        savings estimated at $200–500B/yr across the literature.</li>
+        billing bureaucracy providers maintain to fight them. Recoverable
+        savings estimates in the literature run $200 to $500B a year.</li>
       <li><b>Drug-price negotiation and public manufacturing.</b> The IRA
         already proved government negotiation works (CBO-scored, 38–79%
         price cuts on the first ten drugs). Applied system-wide against
-        prices 2.78× the international average — plus a public manufacturer
+        prices 2.78× the international average, plus a public manufacturer
         for essential generics, modeled on Civica Rx's real $30-a-vial
-        insulin — the model tests net price cuts of 25–55%.</li>
+        insulin. The model tests net price cuts of 25 to 55%.</li>
       <li><b>Hospital payment reform.</b> Global budgets replace per-claim
         billing, ending facility-fee markups, related-party extraction, and
-        a slice of the $76–101B/yr in scored low-value care — while
+        a slice of the $76–101B/yr in scored low-value care, while
         readiness funding protects ERs and rural service lines instead of
         letting them close.</li>
       <li><b>Front-door capacity.</b> A community diagnostic-treatment
@@ -100,8 +100,8 @@
         specialist queues.</li>
     </ul>
     <p class="note">The framework's bet: these levers can pay for most of
-      covering everyone with no bills. Whether the bet holds is exactly
-      what the model on this page computes — it is not assumed.</p>
+      covering everyone with no bills. Whether that holds is
+      what the model on this page computes; it is not assumed.</p>
   </section>
 
   <!-- ACT 4: The proposal -->
@@ -113,7 +113,7 @@
          target="_blank" rel="noopener">framework document</a> this
       dashboard simulates:</p>
     <ul class="lever-list">
-      <li><b>Automatic, continuous coverage</b> for every resident — no
+      <li><b>Automatic, continuous coverage</b> for every resident: no
         enrollment cliffs, no churn, no linkage to your job.</li>
       <li><b>$0 at the point of care</b> for covered medically necessary
         care; medical debt for covered care is prohibited (patient billing
@@ -121,13 +121,13 @@
       <li><b>National drug purchasing</b> through a real-time public
         pharmacy claims utility (replacing PBMs), plus a Public Medicines
         Corporation manufacturing essential generics.</li>
-      <li><b>Hospitals on global budgets</b> under public-service charters
-        — funded for readiness and essential service lines, not per-claim
+      <li><b>Hospitals on global budgets</b> under public-service charters,
+        funded for readiness and essential service lines, not per-claim
         revenue.</li>
       <li><b>A four-type community diagnostic-treatment network</b>
         (~15,000 units, from pharmacy micro-clinics to rural enhanced and
         urban public-health units) delivering same-day routine care.</li>
-      <li><b>A structured specialist backplane</b> — complete workups and
+      <li><b>A structured specialist backplane:</b> complete workups and
         24-hour e-consults before in-person referrals, with urgency classes
         and protected urgent capacity.</li>
       <li><b>Expanded benefits phased in:</b> long-term care (home-first),
@@ -143,7 +143,7 @@
     <h2>What you'd pay for care</h2>
     <p class="desc">Here is what that design means for real care episodes:
       today's typical cost with employer insurance, without insurance, and
-      under NHA — with the year each benefit arrives, assuming enactment in
+      under NHA, with the year each benefit arrives, assuming enactment in
       2027.</p>
     <div class="care-grid" id="care-cards"></div>
   </section>
@@ -152,7 +152,7 @@
   <section class="card">
     <h2>Your household's annual healthcare bill</h2>
     <p class="desc">Premiums plus out-of-pocket costs today, versus the
-      mature system — where the household-facing question becomes the tax
+      mature system, where the question for a household becomes the tax
       design. The tax line below is computed live from this model's financing
       results and the framework's own household-protection cap.</p>
     <div id="household-calc"></div>
@@ -163,7 +163,7 @@
     <h2>The system-level price tag</h2>
     <p class="desc">This model's own projection, computed bottom-up from
       sourced parameters: what the fully-mature system would cost at today's
-      (2024) scale — directly comparable with the ~$5.3T the U.S. actually
+      (2024) scale, directly comparable with the ~$5.3T the U.S. actually
       spends now. The savings levers (drug negotiation, administrative
       consolidation, payment reform) largely pay for the benefit expansions
       (universal coverage, $0 care, long-term care, dental/vision/hearing,
@@ -171,13 +171,13 @@
     <div class="hero">
       <div class="hero-block">
         <div class="label">Mature system at 2024 scale (median)</div>
-        <div class="hero-num" id="hero-value">—</div>
-        <div class="range" id="hero-range">—</div>
+        <div class="hero-num" id="hero-value">…</div>
+        <div class="range" id="hero-range">…</div>
       </div>
       <div class="hero-block">
         <div class="label">Actual U.S. health spending, 2024</div>
         <div class="hero-num" style="color:var(--text-secondary)">$5.3T/yr</div>
-        <div class="range">CMS preliminary — the status-quo comparison point</div>
+        <div class="range">CMS preliminary; the status-quo comparison point</div>
       </div>
     </div>
     <div class="tiles" id="tiles"></div>
@@ -186,19 +186,19 @@
   <!-- Money flow: today vs NHA -->
   <section class="card">
     <h2>How the money re-routes</h2>
-    <p class="desc">The single most misunderstood thing about a public
-      system: society's total spending barely changes — <em>the routes
+    <p class="desc">The most misunderstood part of a public
+      system: society's total spending barely changes; <em>the routes
       change</em>. Compare the flow you saw at the top of the page with the
       same flow under NHA. Premiums and point-of-care bills disappear; the
       same dollars reach the same doctors and hospitals through public
       financing instead. Hover any ribbon for what it contains.</p>
     <div class="flow-grid">
       <div class="flow-panel">
-        <div class="flow-title">Today — actual 2023 spending ($4.87T, CMS)</div>
+        <div class="flow-title">Today: actual 2023 spending ($4.87T, CMS)</div>
         <div id="flow-today"></div>
       </div>
       <div class="flow-panel">
-        <div class="flow-title" id="flow-nha-title">Under NHA — mature system at 2024 scale</div>
+        <div class="flow-title" id="flow-nha-title">Under NHA: mature system at 2024 scale</div>
         <div id="flow-nha"></div>
       </div>
     </div>
@@ -206,7 +206,7 @@
     <p class="note">Sponsor totals: CMS National Health Expenditure sponsor
       analysis, 2023 (households 27% · federal 32% · employers 18% ·
       state/local 16% · other private 7%). Ribbon-level splits are a derived
-      decomposition consistent with CMS row and column totals — hover for
+      decomposition consistent with CMS row and column totals; hover for
       each ribbon's contents. The NHA panel recomputes from the live model
       (current scenario and sliders); the household share of new taxes is
       drawn at the framework's 5% ordinary-household cap (KPP-C8), whose
@@ -220,7 +220,7 @@
       catalog, or adjust individual assumptions. Badges show evidence quality:
       <span class="conf high">high</span> = official statistic or scored estimate,
       <span class="conf medium">medium</span> = reputable study or survey,
-      <span class="conf low">low</span> = analyst assumption — no direct source exists.</p>
+      <span class="conf low">low</span> = analyst assumption with no direct source.</p>
     <div class="controls" id="controls"></div>
     <p class="scenario-desc" id="scenario-desc"></p>
     <div class="controls-foot">
@@ -249,7 +249,7 @@
     <h2>Why the total lands where it does</h2>
     <p class="desc">The bridge from the status-quo baseline at maturity (2041)
       to the NHA total, using central-estimate parameters. Each saving
-      mechanism appears exactly once — the model computes both worlds directly
+      mechanism appears exactly once: the model computes both worlds directly
       and derives these differences, so nothing can be double-counted.</p>
     <div id="bridge-chart"></div>
     <details class="tableview"><summary>View as table</summary>
@@ -262,7 +262,7 @@
     <h2>Who pays</h2>
     <p class="desc">Mature-year public cost funded by redirecting what
       government already spends, a state maintenance-of-effort contribution,
-      an employer contribution replacing today's premiums — and the remainder,
+      an employer contribution replacing today's premiums, and the remainder,
       which requires new revenue. The comparison shows how far the framework's
       extreme-wealth tax package goes toward that gap.</p>
     <div id="financing-chart"></div>
@@ -275,10 +275,10 @@
   <!-- Benchmarks -->
   <section class="card">
     <h2>Sanity checks against independent estimates</h2>
-    <p class="desc">Two different questions, two different panels — these
-      concepts are not interchangeable, which is exactly why the framework's
+    <p class="desc">Two different questions, two different panels. These
+      concepts are not interchangeable, which is why the framework's
       single asserted number needed this model.</p>
-    <h2 style="font-size:14.5px;margin-top:14px">Total system cost — mature system at 2024 scale, vs. today (all payers, $/yr)</h2>
+    <h2 style="font-size:14.5px;margin-top:14px">Total system cost: mature system at 2024 scale vs. today (all payers, $/yr)</h2>
     <div id="benchmark-nhe"></div>
     <h2 style="font-size:14.5px;margin-top:20px">Added federal cost (vs. current-law federal health spending, $/yr)</h2>
     <div id="benchmark-fed"></div>
@@ -287,7 +287,7 @@
 
   <!-- Methodology -->
   <section class="card">
-    <h2>Methodology, honestly</h2>
+    <h2>Methodology and limits</h2>
     <div class="note">
       <b>What this is:</b> a national-aggregate annual model (v1). It computes
       the status-quo world and the NHA world category by category from CMS
@@ -299,7 +299,7 @@
     <div class="note">
       <b>On the framework document's original figure:</b> earlier drafts
       asserted a mature cost of $4.75T/yr (2024 dollars) without a derivation.
-      That figure is superseded by this model's computed projections — under
+      That figure is superseded by this model's computed projections; under
       central assumptions the model lands somewhat above it, and reaches it
       only under the optimistic scenario. The full comparison lives in the
       parameter table and scenario presets, not in the headline.
@@ -312,7 +312,7 @@
       effects are represented only where they carry a cost.
     </div>
     <div class="warnbox" id="gaps-box">
-      <b>Weakest assumptions</b> — these parameters have no direct real-world
+      <b>Weakest assumptions.</b> These parameters have no direct real-world
       source and materially move the result. They are flagged
       <span class="conf low">low</span> in the controls and listed with their
       derivation anchors in the full parameter table below.
@@ -334,8 +334,8 @@
     <p class="desc">The tax model is general: it funds <em>programs</em>, each
       with its own need over time. National Health Assurance's new-revenue
       requirement flows in live from the healthcare model (change assumptions
-      or scenarios there and the need updates here). Add other programs —
-      childcare, climate, deficit reduction — to see combined financing
+      or scenarios there and the need updates here). Add other programs, such as
+      childcare, climate, or deficit reduction, to see combined financing
       demands.</p>
     <div class="program-list" id="program-list"></div>
     <div class="program-add">
@@ -351,11 +351,11 @@
   <!-- Instruments -->
   <section class="card">
     <h2>The tax package</h2>
-    <p class="desc">Ten instruments spanning the realistic menu — progressive
+    <p class="desc">Ten instruments spanning the realistic menu: progressive
       surtaxes, payroll, corporate, wealth, consumption. Each has a sourced
       revenue estimate, a start year, and (where continuous) a rate slider.
       Turn the regressive consumption tax on and watch the bottom quintiles'
-      net position flip — that trade-off is the point of this page.</p>
+      net position flip; that trade-off is what this page is for.</p>
     <div class="tax-controls" id="tax-instruments"></div>
   </section>
 
@@ -363,15 +363,15 @@
   <section class="card">
     <h2>Revenue vs. need, 2027–2042</h2>
     <p class="desc">Each instrument phases in on its own schedule; bases grow
-      with the economy. The ink line is the total funding need of every
-      enabled program — the stack has to reach it.</p>
+      with the economy. The dark line is the total funding need of every
+      enabled program; the stack has to reach it.</p>
     <div id="tax-path-chart"></div>
     <div class="tiles" id="tax-tiles"></div>
   </section>
 
   <!-- Distributional impact -->
   <section class="card">
-    <h2>Who bears the burden — and who comes out ahead</h2>
+    <h2>Who bears the burden, and who comes out ahead</h2>
     <p class="desc">The question that matters for lower-income Americans:
       new taxes <em>minus</em> the health costs this system eliminates
       (premiums, deductibles, copays), by income group. Bars left of zero
@@ -401,7 +401,7 @@
       <b>Structure:</b> income groups follow CBO's distribution format
       (quintiles, 80–90th, 90–99th, top 1%). Each instrument carries a sourced
       revenue estimate at 2024 scale (growing with the economy), a phase-in
-      schedule, and an incidence vector — who ultimately bears it — using
+      schedule, and an incidence vector (who ultimately bears it), using
       CBO/JCT conventions (employer payroll → workers' wages; corporate →
       25% labor / 75% capital; consumption taxes → consumption shares).
     </div>
@@ -413,13 +413,13 @@
       2025–2034</em> (December 2024, JCT staff), the Treasury FY2025
       Greenbook, and the Saez–Zucman wealth-tax letter; health spending by
       quintile is BLS Consumer Expenditure Survey 2024 (healthcare runs
-      20.7% of income in the lowest quintile vs 3.7% in the highest — the
+      20.7% of income in the lowest quintile vs 3.7% in the highest; that is the
       regressivity this system unwinds). Full citations in
       <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/06_tax_distribution_financing.md"
          target="_blank" rel="noopener">research file 06</a>.
     </div>
     <div class="note">
-      <b>Honest limits:</b> incidence is static (no behavioral responses
+      <b>Limits:</b> incidence is static (no behavioral responses
       beyond the haircuts already in each estimate); group boundaries don't
       capture within-group variation (a "middle quintile" family with high
       health costs gains far more than one without); the wealth tax has no
@@ -435,7 +435,7 @@
 
   <footer class="site">
     Built from the National Health Assurance Framework v2.0.0 and its research
-    parameter base —
+    parameter base:
     <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">source repository</a>.
     This is a policy model, not a prediction; all figures carry the
     uncertainty shown.

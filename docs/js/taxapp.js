@@ -176,7 +176,7 @@
       { label: "Funding need in " + distYear, value: NHA.fmt.money(comp.need[i]) + "/yr",
         range: progs.filter(function (p) { return p.enabled; }).length + " program(s)" },
       { label: "Coverage in " + distYear,
-        value: comp.need[i] > 0 ? Math.round(100 * comp.totalRev[i] / comp.need[i]) + "%" : "—",
+        value: comp.need[i] > 0 ? Math.round(100 * comp.totalRev[i] / comp.need[i]) + "%" : "n/a",
         range: comp.totalRev[i] >= comp.need[i] ? "fully funded" : "shortfall: " +
           NHA.fmt.money(comp.need[i] - comp.totalRev[i]) + "/yr" },
       { label: "Cumulative 2027–2042",
@@ -236,9 +236,9 @@
       ? "Health savings distribute the healthcare model's " + NHA.fmt.money(reliefB) +
         "/yr of replaced household health spending across groups per the BLS Consumer " +
         "Expenditure Survey 2024 pattern ($3,445/yr in the lowest quintile to $9,771 in the " +
-        "highest — 20.7% vs 3.7% of income). Shares are muted at the bottom because Medicaid " +
+        "highest, or 20.7% vs 3.7% of income). Shares are muted at the bottom because Medicaid " +
         "already covers many low-income households."
-      : "Health savings are zero because the NHA program is disabled — showing pure tax incidence.";
+      : "Health savings are zero because the NHA program is disabled; this shows pure tax incidence.";
     host.appendChild(note);
   }
 

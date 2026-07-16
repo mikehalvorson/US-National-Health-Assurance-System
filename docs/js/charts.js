@@ -30,7 +30,7 @@ window.NHA = NHA;
   NHA.fmt = {
     /* $B → compact string; keeps one decimal below 10T */
     money: function (b) {
-      if (!isFinite(b)) return "—";
+      if (!isFinite(b)) return "n/a";
       var neg = b < 0 ? "−" : "", a = Math.abs(b);
       if (a >= 1000) return neg + "$" + (a / 1000).toFixed(2) + "T";
       return neg + "$" + Math.round(a) + "B";
@@ -338,7 +338,7 @@ window.NHA = NHA;
     var barY = M.t + 10, barH = 24, iw = W - M.l - M.r;
     var xCur = M.l;
     var head = el("text", { x: M.l, y: M.t - 4, class: "row-label" }, svg);
-    head.textContent = "Mature-year public cost " + NHA.fmt.money(total * deflate) + " — funded by:";
+    head.textContent = "Mature-year public cost " + NHA.fmt.money(total * deflate) + ", funded by:";
 
     fin.segments.forEach(function (seg, i) {
       var w = iw * seg.value / total;

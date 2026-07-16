@@ -108,7 +108,7 @@ NHA.PARAM_DEFS = [
     label: "Utilization increase at mature NHA (universal coverage + zero point-of-care cost)",
     low: 6, mode: 10, high: 16,
     confidence: "low",
-    source: "DERIVED — no direct citation exists for this exact policy. Anchors: RAND Health Insurance Experiment arc elasticity ≈ −0.2; OOP is ~10.4% of NHE today; CBO single-payer working paper demand-increase discussion; 26.7M uninsured gaining full coverage (KFF 2024). Flagged in HANDOFF.md as the model's most consequential assumption.",
+    source: "DERIVED; no direct citation exists for this exact policy. Anchors: RAND Health Insurance Experiment arc elasticity ≈ −0.2; OOP is ~10.4% of NHE today; CBO single-payer working paper demand-increase discussion; 26.7M uninsured gaining full coverage (KFF 2024). Flagged in HANDOFF.md as the model's most consequential assumption.",
     url: "https://www.rand.org/health-care/projects/hie.html",
     adjustable: true, sliderMin: 0, sliderMax: 30
   },
@@ -117,7 +117,7 @@ NHA.PARAM_DEFS = [
     label: "Share of utilization increase attributable to covering the uninsured (vs. cost-sharing elimination)",
     low: 0.25, mode: 0.32, high: 0.40,
     confidence: "low",
-    source: "DERIVED — uninsured ≈8% of population using roughly half average care; remainder of demand response comes from eliminating cost sharing for the already-insured.",
+    source: "DERIVED; uninsured ≈8% of population using roughly half average care; remainder of demand response comes from eliminating cost sharing for the already-insured.",
     url: "https://www.kff.org/uninsured/key-facts-about-the-uninsured-population/",
     adjustable: false
   },
@@ -166,7 +166,7 @@ NHA.PARAM_DEFS = [
     label: "Residual legacy insurance admin persisting at maturity (supplemental plans etc.)",
     low: 0.05, mode: 0.08, high: 0.14,
     confidence: "low",
-    source: "ASSUMPTION — framework permits certified supplemental/substitute private plans (ASM-004); their overhead persists as a fraction of today's $302.9B net cost of insurance.",
+    source: "ASSUMPTION; the framework permits certified supplemental/substitute private plans (ASM-004); their overhead persists as a fraction of today's $302.9B net cost of insurance.",
     url: "",
     adjustable: false
   },
@@ -175,7 +175,7 @@ NHA.PARAM_DEFS = [
     label: "Provider-side billing/revenue-cycle savings (hospital + clinical budgets)",
     low: 2, mode: 4, high: 6,
     confidence: "medium",
-    source: "US hospital admin 25.3% of budgets vs. 15–20% single-payer peers (Himmelstein et al., Health Affairs 2014); physician billing cost $83k/yr vs. $22k in Ontario (Health Affairs). Scope: provider-internal costs ONLY — payer-side admin is computed separately, so no overlap.",
+    source: "US hospital admin 25.3% of budgets vs. 15–20% single-payer peers (Himmelstein et al., Health Affairs 2014); physician billing cost $83k/yr vs. $22k in Ontario (Health Affairs). Scope: provider-internal costs only; payer-side admin is computed separately, so no overlap.",
     url: "https://www.healthaffairs.org/doi/10.1377/hlthaff.2013.1327",
     adjustable: true, sliderMin: 0, sliderMax: 10
   },
@@ -260,7 +260,7 @@ NHA.PARAM_DEFS = [
     label: "Four-unit diagnostic-treatment network (15,000 units, operating + amortized capital)",
     low: 15, mode: 25, high: 36,
     confidence: "low",
-    source: "DERIVED — no direct analogue. Urgent-care visit economics ($150–200/visit, ~15% margin) and FQHC cost structures (research/02) imply ~$1–2M avg annual cost/unit × 15,000 units (SR-ACC-010) + capital.",
+    source: "DERIVED; no direct analogue exists. Urgent-care visit economics ($150–200/visit, ~15% margin) and FQHC cost structures (research/02) imply ~$1–2M avg annual cost/unit × 15,000 units (SR-ACC-010) + capital.",
     url: "",
     adjustable: true, sliderMin: 5, sliderMax: 60
   },
@@ -269,7 +269,7 @@ NHA.PARAM_DEFS = [
     label: "Public biomedical R&D (innovation delinkage replacing monopoly-price financing)",
     low: 50, mode: 85, high: 120,
     confidence: "medium",
-    source: "Pharma industry R&D $83–105B/yr (PhRMA/CBO); NIH base $47B. The framework replaces price-based R&D recovery with public funding (ASM-001/002) — this is the replacement cost.",
+    source: "Pharma industry R&D $83–105B/yr (PhRMA/CBO); NIH base $47B. The framework replaces price-based R&D recovery with public funding (ASM-001/002); this is the replacement cost.",
     url: "",
     adjustable: false
   },
@@ -287,7 +287,7 @@ NHA.PARAM_DEFS = [
     label: "Information mesh, cybersecurity & AI operations",
     low: 12, mode: 20, high: 35,
     confidence: "low",
-    source: "DERIVED — Epic/Cerner enterprise benchmarks, HIMSS cyber spend ratios, IBM breach costs (research/05). National federated mesh has no direct precedent.",
+    source: "DERIVED from Epic/Cerner enterprise benchmarks, HIMSS cyber spend ratios, IBM breach costs (research/05). National federated mesh has no direct precedent.",
     url: "",
     adjustable: false
   },
@@ -318,7 +318,7 @@ NHA.PARAM_DEFS = [
     label: "Residual private + out-of-pocket share at maturity (supplemental, non-covered care)",
     low: 4, mode: 6, high: 9,
     confidence: "low",
-    source: "ASSUMPTION — framework allows certified supplemental/substitute plans and some non-covered services; peers: Canada ~30% private (broader exclusions), Taiwan ~15%. Framework's benefit package is unusually comprehensive, so the residual is small.",
+    source: "ASSUMPTION; the framework allows certified supplemental/substitute plans and some non-covered services; peers: Canada ~30% private (broader exclusions), Taiwan ~15%. Framework's benefit package is unusually comprehensive, so the residual is small.",
     url: "",
     adjustable: false
   },
@@ -338,7 +338,7 @@ NHA.PARAM_DEFS = [
     label: "Extreme-wealth + high-income tax package gross potential",
     low: 250, mode: 350, high: 450,
     confidence: "medium",
-    source: "Saez–Zucman: 6% marginal wealth tax on >$1B + 2% >$50M ≈ $351B/yr (2023, 15% avoidance assumed). Disputed — avoidance may be far higher. Warren plan menu and PERI options bracket the range.",
+    source: "Saez–Zucman: 6% marginal wealth tax on >$1B + 2% >$50M ≈ $351B/yr (2023, 15% avoidance assumed). Disputed; avoidance may be far higher. Warren plan menu and PERI options bracket the range.",
     url: "https://eml.berkeley.edu/~saez/saez-zucman-wealthtax-warren-feb21.pdf",
     adjustable: false
   },
@@ -446,21 +446,21 @@ NHA.MONEYFLOW = {
  * Every figure traces to the research files in the repo (research/01–06). */
 NHA.PROBLEM_STATS = [
   { value: "17.6% of GDP", label: "U.S. health spending, 2023",
-    note: "$4.87T — $14,570 per person, the highest of any nation (CMS NHE)" },
+    note: "$4.87T, or $14,570 per person, the highest of any nation (CMS NHE)" },
   { value: "26.7M", label: "people uninsured",
     note: "rising again after Medicaid unwinding and ACA subsidy expiration (KFF/Census, 2024)" },
   { value: "20.7%", label: "of income goes to healthcare in the poorest fifth of households",
-    note: "vs 3.7% in the richest fifth — the same bills hit 16× harder at the bottom (BLS CES 2024)" },
+    note: "vs 3.7% in the richest fifth; the same bills hit 16 times harder at the bottom (BLS CES 2024)" },
   { value: "2.78×", label: "U.S. prescription drug prices vs 33 peer countries",
     note: "4.22× for brand-name drugs (RAND international price comparison, 2022 data)" },
   { value: "25.3%", label: "of U.S. hospital budgets go to administration",
     note: "vs ~15–20% in peer nations (Himmelstein et al., Health Affairs cross-national study)" },
-  { value: "$760–935B", label: "wasted every year — roughly a quarter of all health spending",
+  { value: "$760–935B", label: "wasted every year, roughly a quarter of all health spending",
     note: "administrative complexity, pricing failures, low-value care, fraud (JAMA 2019 synthesis)" },
   { value: "$83,000", label: "per physician, per year, spent on billing and insurance paperwork",
     note: "vs ~$22,000 for physicians in single-payer Ontario (Health Affairs)" },
   { value: "417", label: "rural hospitals at risk of closure",
     note: "150–210 have already closed since 2010 (Chartis; UNC Sheps Center)" },
   { value: "$26,993", label: "average family premium, 2025",
-    note: "workers pay $6,850 of it — before any deductible or copay (KFF Employer Survey)" }
+    note: "workers pay $6,850 of it, before any deductible or copay (KFF Employer Survey)" }
 ];

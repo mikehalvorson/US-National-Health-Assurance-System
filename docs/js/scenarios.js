@@ -75,7 +75,7 @@ NHA.SCENARIOS = [
   },
   {
     id: "SCN-HOSP-HIGH", name: "Hospital budgets overcalibrated",
-    desc: "Global budgets locked in above efficient cost — hospitals capture transition fear as permanent revenue.",
+    desc: "Global budgets locked in above efficient cost; hospitals capture transition fear as permanent revenue.",
     overrides: {
       providerPaymentFactor: [0.96, 1.02, 1.08],
       extractionSavings: { mult: 0.6 }
@@ -167,7 +167,7 @@ NHA.SCENARIOS = [
   },
   {
     id: "SCN-WF-SHORT", name: "Workforce shortages exceed plan",
-    desc: "Vacancies force premium pay and overtime; some induced demand goes unmet (lower spend, worse access — the access harm is qualitative, not priced).",
+    desc: "Vacancies force premium pay and overtime; some induced demand goes unmet (lower spend, worse access; the access harm is qualitative, not priced).",
     overrides: {
       providerPaymentFactor: [0.92, 0.99, 1.06],
       workforceEdu: { mult: 1.4 },

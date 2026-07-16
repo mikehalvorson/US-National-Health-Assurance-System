@@ -27,7 +27,7 @@
     sel.id = "scenario-select";
     NHA.SCENARIOS.forEach(function (s) {
       var o = document.createElement("option");
-      o.value = s.id; o.textContent = s.id.replace("SCN-", "") + " — " + s.name;
+      o.value = s.id; o.textContent = s.id.replace("SCN-", "") + ": " + s.name;
       sel.appendChild(o);
     });
     sel.value = state.scenario;
@@ -304,8 +304,8 @@
       "Under these assumptions the extreme-wealth package covers " +
       (newRev <= 0 ? "the entire gap (no new revenue needed)" :
         Math.min(999, Math.round(100 * covered)) + "% of the new-revenue requirement") +
-      ". The framework's remaining instruments — high-income and capital-income taxes, " +
-      "health-sector rent taxes, and the broad backstop — must cover the rest. " +
+      ". The framework's remaining instruments (high-income and capital-income taxes, " +
+      "health-sector rent taxes, and the broad backstop) must cover the rest. " +
       "The framework caps ordinary-household incremental burden at 5% (KPP-C8).";
 
     var tbl = $("financing-table");
@@ -320,7 +320,7 @@
     [["Total public cost", need], ["Redirected federal spending", fedUse],
      ["State maintenance-of-effort", stateUse], ["Employer contribution", empUse],
      ["New revenue needed", newRev],
-     ["— of which wealth-tax package could cover", Math.min(newRev, d.wealthRevenue)]]
+     ["...of which the wealth-tax package could cover", Math.min(newRev, d.wealthRevenue)]]
       .forEach(function (r) {
         var row = tb.insertRow();
         row.insertCell().textContent = r[0];
@@ -332,7 +332,7 @@
   /* ---------- Benchmarks ---------- */
   function renderBenchmarks() {
     NHA.renderBenchmarkChart($("benchmark-nhe"), [
-      { label: "This model — mature system at 2024 scale", note: "real 2024$",
+      { label: "This model: mature system at 2024 scale", note: "real 2024$",
         lo: mc.steady.matureToday.p10 * DEF, hi: mc.steady.matureToday.p90 * DEF,
         mid: mc.steady.matureToday.p50 * DEF, color: "var(--series-1)" },
       { label: "Actual U.S. health spending, 2024", note: "CMS preliminary",
@@ -360,7 +360,7 @@
       "−$700B to +$300B under its illustrative single-payer designs. This model's 2030 " +
       "change vs. baseline is " + NHA.fmt.moneyShort(d30.p10 * DEF) + " to " +
       NHA.fmt.moneyShort(d30.p90 * DEF) + " (median " + NHA.fmt.moneyShort(d30.p50 * DEF) +
-      ") — note 2030 is mid-transition here (coverage ~85%, expansions not yet phased in), " +
+      "). Note that 2030 is mid-transition here (coverage ~85%, expansions not yet phased in), " +
       "and published benchmarks are in each study's own dollars, so treat these as " +
       "order-of-magnitude checks, not exact comparisons.";
   }
@@ -389,7 +389,7 @@
     var residual = Math.max(0, d.nheNha - d.pubCost) * k;
 
     $("flow-nha-title").textContent =
-      "Under NHA — mature system at 2024 scale (" +
+      "Under NHA: mature system at 2024 scale (" +
       NHA.fmt.money(pub + residual) + ")";
 
     NHA.renderFlowDiagram($("flow-nha"), {
@@ -405,10 +405,10 @@
         { id: "res", label: "Residual private & OOP", value: residual }
       ],
       ribbons: [
-        { from: "fed",    to: "pub", value: fed,   note: "what Washington already spends on Medicare, Medicaid, ACA, VA — redirected" },
+        { from: "fed",    to: "pub", value: fed,   note: "what Washington already spends on Medicare, Medicaid, ACA, and VA care, redirected" },
         { from: "state",  to: "pub", value: state, note: "state maintenance-of-effort (today's Medicaid share)" },
         { from: "emp",    to: "pub", value: emp,   note: "payroll contribution replacing today's premium payments" },
-        { from: "wealth", to: "pub", value: progTax, note: "95% of new revenue from wealth, high-income, capital, and health-rent taxes — as designed; test achievability on the Taxes & Financing tab" },
+        { from: "wealth", to: "pub", value: progTax, note: "95% of new revenue from wealth, high-income, capital, and health-rent taxes, as designed; test achievability on the Taxes & Financing tab" },
         { from: "hh",     to: "pub", value: hhTax, note: "ordinary households capped at 5% of new financing (KPP-C8)" },
         { from: "hh",     to: "res", value: residual, note: "supplemental coverage and non-covered extras that stay private" }
       ],
@@ -418,11 +418,11 @@
     renderSponsorTable();
 
     $("flow-takeaway").textContent =
-      "Same care, same scale of total spending — different routes. Today a family pays " +
+      "Same care, roughly the same total spending, different routes. Today a family pays " +
       "premiums to an insurer and bills at the point of care; under NHA those payments stop, " +
       "and the money reaches the same doctors and hospitals through public financing instead. " +
       "The " + NHA.fmt.money(newRev) + "/yr of “new revenue” (at 2024 scale) is new to the " +
-      "federal budget, not new cost to society — most of it replaces the " +
+      "federal budget, not new cost to society. Most of it replaces the " +
       NHA.fmt.money(d.householdRelief * k) + "/yr households currently spend on premiums and " +
       "out-of-pocket care, which drops to roughly zero.";
   }
@@ -532,7 +532,7 @@
     var ul = document.createElement("ul");
     results.forEach(function (r) {
       var li = document.createElement("li");
-      li.textContent = (r.ok ? "✓ " : "✗ ") + r.name + (r.ok ? "" : " — " + r.note);
+      li.textContent = (r.ok ? "✓ " : "✗ ") + r.name + (r.ok ? "" : ": " + r.note);
       ul.appendChild(li);
     });
     host.appendChild(ul);

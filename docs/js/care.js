@@ -22,7 +22,7 @@ NHA.CARE_SCENARIOS = [
     id: "premium",
     title: "Health insurance premiums (family, per year)",
     todayInsured: { lo: 6850, hi: 6850, note: "worker's share of a $26,993 employer family premium" },
-    todayUninsured: { lo: 0, hi: 0, note: "no premium — and no coverage" },
+    todayUninsured: { lo: 0, hi: 0, note: "no premium, and no coverage" },
     nha: { amount: 0, fromYear: 2031, note: "no premiums once your coverage wave migrates (Years 4–8); employers pay a payroll contribution instead" },
     source: "KFF Employer Health Benefits Survey 2025",
     confidence: "high"
@@ -50,7 +50,7 @@ NHA.CARE_SCENARIOS = [
     title: "Insulin, one month (diabetes)",
     todayInsured: { lo: 35, hi: 100, note: "$35/mo caps now apply in Medicare & many plans" },
     todayUninsured: { lo: 70, hi: 300, note: "cash price after 2023–24 list-price cuts; production cost is $2–6/vial" },
-    nha: { amount: 0, fromYear: 2029, note: "$0 for ≥98% of essential formulary fills — arrives early, with the Phase 2 pharmacy utility" },
+    nha: { amount: 0, fromYear: 2029, note: "$0 for at least 98% of essential formulary fills; arrives early, with the Phase 2 pharmacy utility" },
     source: "Yale/BMJ Global Health production-cost study; Civica Rx $30/vial nonprofit price; ADA/manufacturer cap programs",
     confidence: "medium"
   },
@@ -66,7 +66,7 @@ NHA.CARE_SCENARIOS = [
   {
     id: "ambulance",
     title: "Ground ambulance ride",
-    todayInsured: { lo: 450, hi: 1300, note: "ground ambulance is NOT protected by the No Surprises Act — balance billing is common" },
+    todayInsured: { lo: 450, hi: 1300, note: "ground ambulance is not protected by the No Surprises Act, so balance billing is common" },
     todayUninsured: { lo: 1300, hi: 3000, note: "mean cost per transport ≈ $2,673" },
     nha: { amount: 0, fromYear: 2034, note: "EMS becomes a readiness-funded public service" },
     source: "Federal Ground Ambulance Data Collection System (GADCS)",
@@ -84,7 +84,7 @@ NHA.CARE_SCENARIOS = [
   {
     id: "therapy",
     title: "Therapy session (mental health)",
-    todayInsured: { lo: 20, hi: 75, note: "in-network copay — when an in-network therapist is available" },
+    todayInsured: { lo: 20, hi: 75, note: "in-network copay, when an in-network therapist can be found" },
     todayUninsured: { lo: 100, hi: 200, note: "typical cash price per session" },
     nha: { amount: 0, fromYear: 2034, note: "covered; behavioral-health expansion (48-hour first-contact standard) completes Years 10–12" },
     source: "SAMHSA spending data; typical market rates (plan- and market-dependent)",
@@ -93,8 +93,8 @@ NHA.CARE_SCENARIOS = [
   {
     id: "hearing",
     title: "Hearing aids (pair)",
-    todayInsured: { lo: 2000, hi: 8000, note: "rarely covered today — most people pay full price; average ≈ $4,672" },
-    todayUninsured: { lo: 2000, hi: 8000, note: "same — this is an uncovered market for nearly everyone" },
+    todayInsured: { lo: 2000, hi: 8000, note: "rarely covered today; most people pay full price, averaging about $4,672" },
+    todayUninsured: { lo: 2000, hi: 8000, note: "the same; this is an uncovered market for nearly everyone" },
     nha: { amount: 0, fromYear: 2036, note: "standard devices covered under the dental/vision/hearing expansion (Phase 7)" },
     source: "Hearing Industries Association pricing data",
     confidence: "high"
@@ -124,7 +124,7 @@ NHA.HOUSEHOLD_PROFILES = [
     id: "emp-family",
     label: "Family with employer coverage",
     premium: { lo: 6850, hi: 6850, note: "worker share of family premium (KFF 2025)" },
-    oop: { lo: 2500, hi: 5500, note: "deductibles, copays, coinsurance — household average ≈ $3,825 (derived from CMS)" },
+    oop: { lo: 2500, hi: 5500, note: "deductibles, copays, coinsurance; household average is about $3,825 (derived from CMS)" },
     confidence: "medium"
   },
   {
@@ -137,14 +137,14 @@ NHA.HOUSEHOLD_PROFILES = [
   {
     id: "marketplace",
     label: "Family buying marketplace coverage",
-    premium: { lo: 6000, hi: 18000, note: "varies enormously with age, state, and subsidy eligibility — enhanced subsidies expired in 2026" },
+    premium: { lo: 6000, hi: 18000, note: "varies enormously with age, state, and subsidy eligibility; enhanced subsidies expired in 2026" },
     oop: { lo: 3000, hi: 9000, note: "marketplace deductibles are typically much higher than employer plans" },
     confidence: "low"
   },
   {
     id: "uninsured",
     label: "Uninsured adult",
-    premium: { lo: 0, hi: 0, note: "no premium — no protection" },
+    premium: { lo: 0, hi: 0, note: "no premium, no protection" },
     oop: { lo: 500, hi: 5000, note: "averages hide the real risk: one hospitalization can mean five-figure debt" },
     confidence: "low"
   }
@@ -172,12 +172,12 @@ NHA.HOUSEHOLD_PROFILES = [
 
       var rows = div("care-rows", card);
       var r1 = div("care-row", rows);
-      div("care-row-label", r1, "Today — typical insured");
+      div("care-row-label", r1, "Today, typical insured");
       div("care-row-val", r1, moneyRange(s.todayInsured.lo, s.todayInsured.hi));
       var n1 = div("care-row-note", rows, s.todayInsured.note);
 
       var r2 = div("care-row", rows);
-      div("care-row-label", r2, "Today — uninsured");
+      div("care-row-label", r2, "Today, uninsured");
       div("care-row-val", r2, moneyRange(s.todayUninsured.lo, s.todayUninsured.hi));
       div("care-row-note", rows, s.todayUninsured.note);
 
@@ -259,11 +259,11 @@ NHA.HOUSEHOLD_PROFILES = [
       div("hh-line-note", nhaCol,
         "the framework caps ordinary households at 5% of new financing (KPP-C8): 5% of the model's " +
         NHA.fmt.money(m.newRevenueB) + "/yr new-revenue requirement ÷ " + NHA.HOUSEHOLDS_M + "M households. " +
-        "The rest falls on wealth, high-income, employer, and health-sector taxes — if those levers deliver.");
+        "The rest falls on wealth, high-income, employer, and health-sector taxes, if those levers deliver.");
 
       foot.textContent =
         "Honest caveats: employer payroll contributions are widely expected to show up partly in wages over time (not modeled); " +
-        "the uninsured today spend little on average because they skip care — the comparison understates what coverage is worth to them; " +
+        "the uninsured today spend little on average because they skip care, so the comparison understates what coverage is worth to them; " +
         "and the tax line depends entirely on Congress honoring the framework's household-protection cap.";
     }
     sel.addEventListener("change", render);

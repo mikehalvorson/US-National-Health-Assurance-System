@@ -105,7 +105,7 @@
       div("tip-head", box).textContent = years[i];
       tipRow(box, "", "Funding need", NHA.fmt.money(comp.need[i]), true);
       tipRow(box, "", "Total revenue", NHA.fmt.money(comp.totalRev[i]), true);
-      var cov = comp.need[i] > 0 ? Math.round(100 * comp.totalRev[i] / comp.need[i]) + "%" : "—";
+      var cov = comp.need[i] > 0 ? Math.round(100 * comp.totalRev[i] / comp.need[i]) + "%" : "n/a";
       tipRow(box, "", "Coverage", cov, false);
       STACK_ORDER.slice().reverse().forEach(function (id) {
         if (series[id][i] > 0.5) tipRow(box, SLOT[id], labelFor(id), NHA.fmt.money(series[id][i]), false);
