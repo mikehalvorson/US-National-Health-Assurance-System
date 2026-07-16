@@ -242,6 +242,27 @@ table.data th.num { text-align: right; }
   border-radius: 0 8px 8px 0;
 }
 
+/* ---- Money flow diagrams ---- */
+.flow-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 16px;
+}
+@media (max-width: 760px) { .flow-grid { grid-template-columns: 1fr; } }
+.flow-panel {
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 8px;
+}
+.flow-title {
+  font-weight: 650; font-size: 13.5px; margin-bottom: 6px; text-align: center;
+}
+.flow-ribbon { cursor: pointer; outline: none; }
+.flow-ribbon:hover, .flow-ribbon:focus { fill-opacity: 0.5; }
+.takeaway {
+  margin-top: 16px; padding: 13px 16px;
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-1));
+  border-radius: 0 10px 10px 0;
+  font-size: 14px; line-height: 1.55;
+}
+
 /* ---- Nav tabs ---- */
 nav.tabs {
   display: flex; gap: 4px; margin: 18px 0 6px;

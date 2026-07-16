@@ -113,6 +113,7 @@
     renderTiles();
     NHA.renderPathChart($("path-chart"), mc, DEF);
     renderPathTable();
+    renderMoneyFlow();
     renderBridge();
     renderFinancing();
     renderBenchmarks();
@@ -362,6 +363,88 @@
       ") — note 2030 is mid-transition here (coverage ~85%, expansions not yet phased in), " +
       "and published benchmarks are in each study's own dollars, so treat these as " +
       "order-of-magnitude checks, not exact comparisons.";
+  }
+
+  /* ---------- Money flow (today vs NHA) ---------- */
+  function renderMoneyFlow() {
+    /* Today: static CMS 2023 sponsor→channel map */
+    NHA.renderFlowDiagram($("flow-today"), {
+      sources: NHA.MONEYFLOW.sources,
+      channels: NHA.MONEYFLOW.channels,
+      ribbons: NHA.MONEYFLOW.ribbons,
+      aria: "How U.S. health spending is funded today: households, employers, federal, state, and other private sources flowing to private insurance, Medicare, Medicaid, out-of-pocket bills, and other programs"
+    });
+
+    /* NHA: mature-year financing scaled to 2024 economy (matches the hero) */
+    var i41 = mc.years.indexOf(2041);
+    var d = mc.modePath.detail[i41];
+    var k = (mc.steady.matureToday.p50 / d.nheNha) * DEF;
+    var fed = d.fedRedirect * k, state = d.stateMoe * k, emp = d.empContrib * k;
+    var newRev = d.newRevenue * k;
+    var hhTax = 0.05 * newRev, progTax = 0.95 * newRev;
+    var pub = d.pubCost * k;
+    var residual = Math.max(0, d.nheNha - d.pubCost) * k;
+
+    $("flow-nha-title").textContent =
+      "Under NHA — mature system at 2024 scale (" +
+      NHA.fmt.money(pub + residual) + ")";
+
+    NHA.renderFlowDiagram($("flow-nha"), {
+      sources: [
+        { id: "hh",     label: "Households",             value: hhTax + residual, color: "var(--series-1)" },
+        { id: "emp",    label: "Employers",              value: emp,   color: "var(--series-2)" },
+        { id: "wealth", label: "Wealth & high incomes",  value: progTax, color: "var(--series-6)" },
+        { id: "fed",    label: "Federal government",     value: fed,   color: "var(--series-5)" },
+        { id: "state",  label: "State & local",          value: state, color: "var(--series-3)" }
+      ],
+      channels: [
+        { id: "pub", label: "NHA public payer", value: pub },
+        { id: "res", label: "Residual private & OOP", value: residual }
+      ],
+      ribbons: [
+        { from: "fed",    to: "pub", value: fed,   note: "what Washington already spends on Medicare, Medicaid, ACA, VA — redirected" },
+        { from: "state",  to: "pub", value: state, note: "state maintenance-of-effort (today's Medicaid share)" },
+        { from: "emp",    to: "pub", value: emp,   note: "payroll contribution replacing today's premium payments" },
+        { from: "wealth", to: "pub", value: progTax, note: "95% of new revenue from wealth, high-income, capital, and health-rent taxes — as designed; test achievability on the Taxes & Financing tab" },
+        { from: "hh",     to: "pub", value: hhTax, note: "ordinary households capped at 5% of new financing (KPP-C8)" },
+        { from: "hh",     to: "res", value: residual, note: "supplemental coverage and non-covered extras that stay private" }
+      ],
+      aria: "How the mature NHA system would be funded: redirected federal and state spending, employer payroll contributions, progressive taxes, and a capped ordinary-household share, nearly all flowing to a single public payer"
+    });
+
+    renderSponsorTable();
+
+    $("flow-takeaway").textContent =
+      "Same care, same scale of total spending — different routes. Today a family pays " +
+      "premiums to an insurer and bills at the point of care; under NHA those payments stop, " +
+      "and the money reaches the same doctors and hospitals through public financing instead. " +
+      "The " + NHA.fmt.money(newRev) + "/yr of “new revenue” (at 2024 scale) is new to the " +
+      "federal budget, not new cost to society — most of it replaces the " +
+      NHA.fmt.money(d.householdRelief * k) + "/yr households currently spend on premiums and " +
+      "out-of-pocket care, which drops to roughly zero.";
+  }
+
+  /* Sponsor table: today's distribution with composition notes */
+  function renderSponsorTable() {
+    var tbl = $("sponsor-table");
+    if (tbl.rows.length) return; /* static — build once */
+    var hd = tbl.insertRow();
+    ["Who pays", "2023 amount", "Share", "What it consists of"].forEach(function (h) {
+      var th = document.createElement("th"); th.textContent = h; hd.appendChild(th);
+    });
+    NHA.MONEYFLOW.sources.forEach(function (s) {
+      var tr = tbl.insertRow();
+      tr.insertCell().textContent = s.label;
+      tr.insertCell().textContent = NHA.fmt.money(s.value);
+      tr.insertCell().textContent = Math.round(100 * s.value / NHA.MONEYFLOW.total) + "%";
+      var notes = NHA.MONEYFLOW.ribbons
+        .filter(function (r) { return r.from === s.id; })
+        .map(function (r) {
+          var ch = NHA.MONEYFLOW.channels.filter(function (c) { return c.id === r.to; })[0];
+          return ch.label + " " + NHA.fmt.moneyShort(r.value) + " (" + r.note + ")";
+        });
+      tr.insertCell().textContent = notes.join("; ");
+    });
   }
 
   /* ---------- Parameter table + gaps ---------- */

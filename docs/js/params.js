@@ -397,3 +397,47 @@ NHA.BENCHMARKS = {
     label: "Urban Institute / Mercatus: added federal cost (annualized from ~$32–34T/10yr)",
     url: "https://www.mercatus.org/research/working-papers/costs-national-single-payer-healthcare-system" }
 };
+
+/* ---- Money-flow map: who pays, through what channel (2023 actual) --------
+ * Sponsor totals are CMS NHE 2023 sponsor analysis (high confidence):
+ * households $1,314B (27%), private business $876B (18%), federal $1,557B
+ * (32%), state/local $779B (16%), other private $341B (7%). Channel totals
+ * are CMS payer categories: private insurance $1,464.6B, Medicare
+ * $1,029.8B, Medicaid/CHIP $871.7B, out-of-pocket $505.7B, other programs
+ * $994B (VA/DoD, ACA subsidies flow inside federal lines, public health,
+ * investment, philanthropy). Ribbon-level values are a derived
+ * decomposition consistent with those row/column totals (medium
+ * confidence): e.g., households → private insurance is the employee share
+ * of employer premiums plus individual-market premiums; households →
+ * Medicare is payroll tax employee share plus Part B/D premiums.        */
+NHA.MONEYFLOW = {
+  total: 4866.5,
+  sources: [
+    { id: "hh",    label: "Households",        value: 1314, color: "var(--series-1)" },
+    { id: "emp",   label: "Employers",         value: 876,  color: "var(--series-2)" },
+    { id: "fed",   label: "Federal government", value: 1557, color: "var(--series-5)" },
+    { id: "state", label: "State & local",     value: 779,  color: "var(--series-3)" },
+    { id: "oth",   label: "Other private",     value: 341,  color: "var(--series-7)" }
+  ],
+  channels: [
+    { id: "priv",     label: "Private insurance",   value: 1465 },
+    { id: "medicare", label: "Medicare",            value: 1030 },
+    { id: "medicaid", label: "Medicaid & CHIP",     value: 872 },
+    { id: "oop",      label: "Out-of-pocket bills", value: 506 },
+    { id: "other",    label: "Other programs",      value: 994 }
+  ],
+  ribbons: [
+    { from: "hh",    to: "priv",     value: 570, note: "employee premium shares + individual-market premiums" },
+    { from: "hh",    to: "oop",      value: 506, note: "deductibles, copays, uncovered care" },
+    { from: "hh",    to: "medicare", value: 238, note: "employee payroll tax + Part B/D premiums" },
+    { from: "emp",   to: "priv",     value: 726, note: "employer share of group premiums" },
+    { from: "emp",   to: "medicare", value: 150, note: "employer payroll tax" },
+    { from: "fed",   to: "medicare", value: 642, note: "general revenue + trust-fund draw" },
+    { from: "fed",   to: "medicaid", value: 558, note: "federal Medicaid/CHIP match" },
+    { from: "fed",   to: "other",    value: 357, note: "VA/DoD care, ACA subsidies, public health, research" },
+    { from: "state", to: "priv",     value: 169, note: "state/local employee premiums" },
+    { from: "state", to: "medicaid", value: 314, note: "state Medicaid share" },
+    { from: "state", to: "other",    value: 296, note: "public health, subsidies, facilities" },
+    { from: "oth",   to: "other",    value: 341, note: "philanthropy, investment income, workers' comp" }
+  ]
+};

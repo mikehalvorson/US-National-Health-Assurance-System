@@ -85,6 +85,44 @@
     <div class="tiles" id="tiles"></div>
   </section>
 
+  <!-- Money flow: today vs NHA -->
+  <section class="card">
+    <h2>Where the money comes from — today vs. NHA</h2>
+    <p class="desc"><b>How the current system works:</b> America already
+      spends ~$4.9T/yr on health care, routed through four big payment
+      streams. About 157 million people get insurance through an employer —
+      employers pay most of the premium and workers pay the rest, both
+      ultimately out of workers' compensation. Medicare (~67M people, 65+
+      and disabled) is funded by payroll taxes, general federal revenue, and
+      enrollee premiums. Medicaid & CHIP (~72M lower-income people) are
+      funded jointly by federal and state governments. Everyone also pays
+      directly at the point of care — deductibles, copays, and uncovered
+      bills totaled $506B in 2023 — and ~26 million people have no coverage
+      at all. Hover any ribbon for what it contains.</p>
+    <div class="flow-grid">
+      <div class="flow-panel">
+        <div class="flow-title">Today — actual 2023 spending ($4.87T, CMS)</div>
+        <div id="flow-today"></div>
+      </div>
+      <div class="flow-panel">
+        <div class="flow-title" id="flow-nha-title">Under NHA — mature system at 2024 scale</div>
+        <div id="flow-nha"></div>
+      </div>
+    </div>
+    <div class="takeaway" id="flow-takeaway"></div>
+    <p class="note">Sponsor totals: CMS National Health Expenditure sponsor
+      analysis, 2023 (households 27% · federal 32% · employers 18% ·
+      state/local 16% · other private 7%). Ribbon-level splits are a derived
+      decomposition consistent with CMS row and column totals — hover for
+      each ribbon's contents. The NHA panel recomputes from the live model
+      (current scenario and sliders); the household share of new taxes is
+      drawn at the framework's 5% ordinary-household cap (KPP-C8), whose
+      achievability you can test on the Taxes &amp; Financing tab.</p>
+    <details class="tableview"><summary>View today's distribution as a table</summary>
+      <div class="tbl-scroll"><table class="data" id="sponsor-table"></table></div>
+    </details>
+  </section>
+
   <!-- Controls -->
   <section class="card">
     <h2>Assumptions</h2>

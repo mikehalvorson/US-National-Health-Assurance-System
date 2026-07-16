@@ -439,3 +439,94 @@ window.NHA = NHA;
   NHA._chartUtil = { el: el, div: div, niceTicks: niceTicks,
     showTip: showTip, hideTip: hideTip, tipRow: tipRow, barPath: barPath };
 })();
+
+/* ---- Money-flow diagram (two-stage Sankey: sources → channels) ----------
+ * spec: { sources: [{id,label,value,color}], channels: [{id,label,value}],
+ *         ribbons: [{from,to,value,note}], total, unit, aria }
+ * Values in $B. Ribbons render as bezier bands in the source color; node
+ * bars are thin marks; per-ribbon tooltips; all text in ink tokens.      */
+(function () {
+  var U = NHA._chartUtil;
+  var el = U.el, div = U.div, showTip = U.showTip, hideTip = U.hideTip, tipRow = U.tipRow;
+
+  NHA.renderFlowDiagram = function (container, spec) {
+    container.innerHTML = "";
+    var W = 430, H = 330;
+    var M = { t: 8, b: 8 };
+    var LX = 148, RX = 282, BW = 14;      // node-bar x positions and width
+    var GAP = 5;                           // px gap between node bars
+
+    function layout(nodes) {
+      var sum = nodes.reduce(function (a, n) { return a + n.value; }, 0);
+      var avail = H - M.t - M.b - GAP * (nodes.length - 1);
+      var y = M.t, out = {};
+      nodes.forEach(function (n) {
+        var h = Math.max(3, avail * n.value / sum);
+        out[n.id] = { y0: y, y1: y + h, used: 0, node: n };
+        y += h + GAP;
+      });
+      return out;
+    }
+    var L = layout(spec.sources), R = layout(spec.channels);
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg",
+      role: "img", "aria-label": spec.aria || "Money flow diagram" }, container);
+
+    /* ribbons first (under the bars) */
+    spec.ribbons.forEach(function (rb) {
+      var s = L[rb.from], t = R[rb.to];
+      if (!s || !t) return;
+      var sh = (s.y1 - s.y0) * rb.value / s.node.value;
+      var th = (t.y1 - t.y0) * rb.value /
+               spec.ribbons.filter(function (x) { return x.to === rb.to; })
+                 .reduce(function (a, x) { return a + x.value; }, 0);
+      var sy0 = s.y0 + s.used, sy1 = sy0 + sh;
+      var ty0 = t.y0 + t.used, ty1 = ty0 + th;
+      s.used += sh; t.used += th;
+      var x0 = LX + BW, x1 = RX, mid = (x0 + x1) / 2;
+      var d = "M" + x0 + " " + sy0 +
+              " C" + mid + " " + sy0 + " " + mid + " " + ty0 + " " + x1 + " " + ty0 +
+              " L" + x1 + " " + ty1 +
+              " C" + mid + " " + ty1 + " " + mid + " " + sy1 + " " + x0 + " " + sy1 + " Z";
+      var band = el("path", { d: d, fill: s.node.color, "fill-opacity": 0.30,
+        class: "flow-ribbon", tabindex: 0 }, svg);
+      function tipIt(evt) {
+        var box = document.createElement("div");
+        div("tip-head", box).textContent = s.node.label + " → " + t.node.label;
+        tipRow(box, s.node.color, "", NHA.fmt.money(rb.value) + "/yr", true);
+        if (rb.note) tipRow(box, "", "", rb.note, false);
+        showTip(box, evt.clientX, evt.clientY);
+      }
+      band.addEventListener("pointermove", tipIt);
+      band.addEventListener("focus", function (e) {
+        var r = band.getBoundingClientRect(); tipIt({ clientX: r.right, clientY: r.top });
+      });
+      band.addEventListener("pointerleave", hideTip);
+      band.addEventListener("blur", hideTip);
+    });
+
+    /* node bars + labels */
+    Object.keys(L).forEach(function (k) {
+      var n = L[k];
+      el("rect", { x: LX, y: n.y0, width: BW, height: n.y1 - n.y0, rx: 3,
+        fill: n.node.color }, svg);
+      var lab = el("text", { x: LX - 8, y: (n.y0 + n.y1) / 2 - 2,
+        class: "row-label", "text-anchor": "end" }, svg);
+      lab.textContent = n.node.label;
+      var val = el("text", { x: LX - 8, y: (n.y0 + n.y1) / 2 + 12,
+        class: "row-note", "text-anchor": "end" }, svg);
+      val.textContent = NHA.fmt.moneyShort(n.node.value);
+    });
+    Object.keys(R).forEach(function (k) {
+      var n = R[k];
+      el("rect", { x: RX, y: n.y0, width: BW, height: n.y1 - n.y0, rx: 3,
+        fill: "var(--total-bar)" }, svg);
+      var lab = el("text", { x: RX + BW + 8, y: (n.y0 + n.y1) / 2 - 2,
+        class: "row-label" }, svg);
+      lab.textContent = n.node.label;
+      var val = el("text", { x: RX + BW + 8, y: (n.y0 + n.y1) / 2 + 12,
+        class: "row-note" }, svg);
+      val.textContent = NHA.fmt.moneyShort(n.node.value);
+    });
+  };
+})();
