@@ -31,6 +31,7 @@
 
   <nav class="tabs" aria-label="Dashboard sections">
     <button id="tab-health" class="active">Healthcare</button>
+    <button id="tab-rollout">Phased Rollout</button>
     <button id="tab-tax">Taxes &amp; Financing</button>
     <button id="tab-units">Unit Network</button>
     <button id="tab-gov">Governance</button>
@@ -619,6 +620,132 @@
 
   </div><!-- /view-gov -->
 
+  <div id="view-rollout" hidden>
+
+  <section class="card">
+    <h2>Twelve years, sequenced by readiness</h2>
+    <p class="desc">The framework defines a foundational Phase 0 followed by
+      eight delivery phases. The dates are anchors, not automatic deadlines:
+      independent readiness gates can hold, resize, or roll back a wave before
+      the next major commitment. Select a milestone to see what is built and
+      what evidence permits the program to continue.</p>
+    <div class="tiles rollout-summary" aria-label="Rollout headline milestones">
+      <div class="tile">
+        <div class="label">Controlled roadmap</div>
+        <div class="value">P0–P8</div>
+        <div class="range">foundation plus eight delivery phases</div>
+      </div>
+      <div class="tile">
+        <div class="label">Public default coverage</div>
+        <div class="value">Year 8</div>
+        <div class="range">after claims, capacity, rights, and continuity checks</div>
+      </div>
+      <div class="tile">
+        <div class="label">Expanded benefits</div>
+        <div class="value">Year 10</div>
+        <div class="range">LTC, behavioral health, dental, vision, hearing, EMS</div>
+      </div>
+      <div class="tile">
+        <div class="label">Maturity certification</div>
+        <div class="value">Year 12</div>
+        <div class="range">full integration, manufacturing, records, and payment</div>
+      </div>
+    </div>
+    <div id="rollout-timeline" class="rollout-timeline"
+      aria-label="Interactive twelve-year phase timeline"></div>
+    <div id="rollout-detail" class="rollout-detail" aria-live="polite"></div>
+    <p class="note">Year numbers are relative implementation anchors. They do
+      not assign a calendar start date or override a failed readiness gate.</p>
+  </section>
+
+  <section class="card">
+    <h2>How the whole system moves together</h2>
+    <p class="desc">Coverage cannot outrun identity and payment; cost-sharing
+      cannot disappear before staffed diagnostic and specialist capacity
+      exists; expanded benefits cannot outrun workforce and home-care
+      readiness. The lanes below preserve all thirteen domain workstreams in
+      the framework's integrated roadmap.</p>
+    <div class="tbl-scroll">
+      <table class="data rollout-matrix" id="rollout-domain-matrix">
+        <caption class="sr-only">Thirteen rollout domains across five phase bands</caption>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>The two largest physical buildouts</h2>
+    <p class="desc">The delivery network and public medicines capacity start
+      before national coverage conversion and keep scaling after it. Numeric
+      unit-network thresholds are readiness floors, while the manufacturing
+      sequence is capability-based.</p>
+    <div class="buildout-grid">
+      <div class="buildout-panel">
+        <h3>Community diagnostic-treatment network</h3>
+        <div id="unit-ramp" class="unit-ramp"
+          aria-label="Diagnostic-treatment unit network scale-up"></div>
+        <p class="note">Type A micro, Type B neighborhood, Type C rural
+          enhanced, and Type D urban/public-health units. Phase 5 reaches at
+          least 65% population coverage; Gate 2 requires at least 80% before
+          broad cost-sharing elimination; maturity requires at least 95%
+          within the access standard and at least 15,000 certified units.</p>
+      </div>
+      <div class="buildout-panel">
+        <h3>Medicines, diagnostics, and public production</h3>
+        <div id="drug-pipeline" class="drug-pipeline"
+          aria-label="Public drug purchasing and manufacturing rollout"></div>
+        <p class="note">The pharmacy claims utility, national purchasing,
+          public manufacturing, formulary governance, shortage controls,
+          supplier qualification, inventory visibility, and backup supply
+          scale as one connected capability—not as a stand-alone factory.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Who carries the rollout</h2>
+    <p class="desc">The changeover deliberately separates transition command,
+      daily operations and payment, and independent rights and verification.
+      That prevents the organization being evaluated from grading its own
+      readiness.</p>
+    <div id="rollout-agencies" class="agency-grid"></div>
+  </section>
+
+  <section class="card">
+    <h2>Eight gates that can stop the clock</h2>
+    <p class="desc">A gate is a decision, not a date. If evidence is below the
+      floor, the framework preserves care and payment, invokes a manual or
+      legacy fallback, repairs the defect, and re-enters review.</p>
+    <div id="rollout-gates" class="gate-grid"></div>
+  </section>
+
+  <section class="card">
+    <h2>Protected transition work</h2>
+    <p class="desc">The framework assumes $1.2–$2.0 trillion of incremental
+      transition and implementation cost over 10–12 years, but explicitly
+      does not invent phase shares or straight-line the total. Every dollar
+      must attach to a costed work package, deliverable, owner, gate,
+      contingency, and transfer into mature operations.</p>
+    <div class="transition-envelope" aria-label="Transition cost envelope">
+      <div class="transition-envelope-value">$1.2T–$2.0T</div>
+      <div>
+        <b>Cumulative transition envelope</b>
+        <span>continuity, infrastructure, capacity, migration, stabilization,
+          workforce, and wind-down—not mature annual operating cost</span>
+      </div>
+    </div>
+    <div id="rollout-workstreams" class="workstream-grid"></div>
+    <p class="note">A gate hold cannot cut mandatory care, medication,
+      provider-payment, appeal, or continuity fallbacks. It changes the pace
+      or scope of new deployment and triggers repair.</p>
+  </section>
+
+  <p class="rollout-source">Roadmap content follows Framework v2.0.0,
+    Tables D5C6A-14, D5C6A-18, D5C6A-21, and D6B-15.
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/National_Health_Assurance_Framework_v2.0.0_FINAL.pdf"
+      target="_blank" rel="noopener">Read the full framework</a>.</p>
+
+  </div><!-- /view-rollout -->
+
   <footer class="site">
     Built from the National Health Assurance Framework v2.0.0 and its research
     parameter base:
@@ -643,5 +770,6 @@
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
+<script src="js/rollout.js"></script>
 </body>
 </html>
