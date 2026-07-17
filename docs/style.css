@@ -633,7 +633,7 @@ footer.site a { color: var(--text-muted); }
   letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 3px;
 }
 .data-acronym {
-  color: inherit; cursor: help; text-decoration-line: underline;
+  color: inherit; cursor: text; text-decoration-line: underline;
   text-decoration-style: dotted; text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
