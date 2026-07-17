@@ -158,6 +158,26 @@
       " (" + (delta >= 0 ? "+" : "−") +
       Math.abs(100 * delta / baseMature).toFixed(1) + "%) vs status quo";
     $("hero-2041-base").textContent = NHA.fmt.money(baseMature) + "/yr";
+
+    /* Family burden: where the status quo's growth actually lands.
+       Households sponsor 27% of NHE (CMS); ~141M households by 2041. */
+    var famNow = 0.27 * 5300, fam2041 = 0.27 * baseMature;
+    var hhNow = 132.2, hh2041 = 141;
+    var d41 = mc.modePath.detail[mc.years.length - 2];
+    var kppPerHH = 0.05 * d41.newRevenue * DEF * 1e9 / (hh2041 * 1e6);
+    $("family-burden-note").textContent =
+      "Where that growth lands on families: households sponsor about 27% of " +
+      "American health spending through premiums, payroll deductions, and " +
+      "bills. Doing nothing means that family share grows from roughly " +
+      NHA.fmt.money(famNow) + " today to " + NHA.fmt.money(fam2041) + " by 2041, " +
+      "from about $" + Math.round(famNow * 1e9 / (hhNow * 1e6)).toLocaleString("en-US") +
+      " to $" + Math.round(fam2041 * 1e9 / (hh2041 * 1e6)).toLocaleString("en-US") +
+      " per household per year, with no new coverage to show for it. Under NHA " +
+      "in the same year, covered care costs $0 at the point of use and the " +
+      "framework caps ordinary households at 5% of the new financing " +
+      "(about $" + Math.round(kppPerHH).toLocaleString("en-US") + " per household); " +
+      "the rest shifts to the tax side, weighted toward the top. Who pays what " +
+      "is the Taxes & Financing tab.";
   }
 
   function renderTiles() {

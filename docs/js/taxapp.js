@@ -290,6 +290,45 @@
     $("tab-" + v).addEventListener("click", function () { showView(v); });
   });
 
+  /* ---- inequality story (static, rendered once) ---- */
+  function renderInequality() {
+    NHA.renderTopRateChart($("toprate-chart"));
+    NHA.renderWealthChart($("wealth-chart"));
+
+    var Wd = NHA.TAX.WEALTH_DIST;
+    function grp(id) {
+      return Wd.groups.filter(function (g) { return g.id === id; })[0];
+    }
+    var t001 = grp("top001"), t999 = grp("p9999"), b50 = grp("b50");
+    var top01T = t001.wealthT + t999.wealthT;                 /* top 0.1% */
+    var top05T = top01T + grp("p9990").wealthT;               /* top 0.5% */
+    var avg001 = t001.wealthT * 1e12 / (t001.hhM * 1e6);
+    var host = $("inequality-tiles");
+    host.innerHTML = "";
+    [
+      { label: "The top 0.01% vs the bottom half",
+        value: "$" + t001.wealthT.toFixed(1) + "T vs $" + b50.wealthT.toFixed(1) + "T",
+        range: "about 13,200 households hold three times the combined wealth of 66 million households" },
+      { label: "One average top-0.01% household",
+        value: "$" + (avg001 / 1e9).toFixed(1) + "B",
+        range: "roughly " + Math.round(avg001 / Wd.medianHH).toLocaleString("en-US") +
+          " times the median household's $205k" },
+      { label: "The top 0.5% together",
+        value: "$" + top05T.toFixed(0) + "T",
+        range: Math.round(100 * top05T / Wd.totalT) + "% of all U.S. household wealth, held by half of one percent of households" },
+      { label: "The top 0.1%",
+        value: "$" + top01T.toFixed(1) + "T",
+        range: "nearly 6 times the entire bottom half; this is why the model taxes bands, not 'the rich'" }
+    ].forEach(function (it) {
+      var tl = document.createElement("div"); tl.className = "tile";
+      var l = document.createElement("div"); l.className = "label"; l.textContent = it.label;
+      var v = document.createElement("div"); v.className = "value"; v.textContent = it.value;
+      var r = document.createElement("div"); r.className = "range"; r.textContent = it.range;
+      tl.appendChild(l); tl.appendChild(v); tl.appendChild(r);
+      host.appendChild(tl);
+    });
+  }
+
   /* healthcare model calls this after each recompute */
   NHA.TAX.onHealthUpdate = function () { refresh(); };
 
@@ -297,6 +336,7 @@
   buildInstrumentControls();
   wireProgramAdd();
   wireViewControls();
+  renderInequality();
   refresh();
   showView((location.hash || "#health").slice(1));
 })();

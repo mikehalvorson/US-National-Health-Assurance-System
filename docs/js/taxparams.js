@@ -57,8 +57,25 @@ NHA.TAX.GROUPS = [
     curRate: 0.208, wageShare: 0.17,  capShare: 0.105, consumpShare: 0.155, healthRelief: 0.14 },
   { id: "p9199", label: "90–99%",      hhM: 11.4, avgIncome: 413400,
     curRate: 0.247, wageShare: 0.235, capShare: 0.225, consumpShare: 0.18,  healthRelief: 0.15 },
-  { id: "top1",  label: "Top 1%",      hhM: 1.2,  avgIncome: 2873800,
-    curRate: 0.315, wageShare: 0.045, capShare: 0.46,  consumpShare: 0.045, healthRelief: 0.025 }
+  /* The top 1% split into five bands so the ultra-wealthy are visible.
+   * Household counts are proportional slices of CBO's 1.2M top-1%
+   * households; band average incomes are derived from IRS SOI's shape of
+   * the top tail, constrained to reproduce CBO's top-1% aggregate income
+   * ($3.44T) exactly. Current-law rates follow the documented pattern of
+   * DECLINING effective rates at the extreme top (capital gains dominate;
+   * IRS top-400 data shows ~23-26%). Wage/capital/consumption/relief
+   * shares are the old top-1% totals allocated across bands by labor
+   * income and Fed DFA wealth. Derived, medium confidence.               */
+  { id: "t9950", label: "99–99.5%",    hhM: 0.60,  avgIncome: 1300000,
+    curRate: 0.325, wageShare: 0.022, capShare: 0.109, consumpShare: 0.020, healthRelief: 0.013 },
+  { id: "t9970", label: "99.5–99.7%",  hhM: 0.24,  avgIncome: 2000000,
+    curRate: 0.330, wageShare: 0.008, capShare: 0.071, consumpShare: 0.008, healthRelief: 0.005 },
+  { id: "t9990", label: "99.7–99.9%",  hhM: 0.24,  avgIncome: 3350000,
+    curRate: 0.325, wageShare: 0.008, capShare: 0.071, consumpShare: 0.008, healthRelief: 0.004 },
+  { id: "t9999", label: "99.9–99.99%", hhM: 0.108, avgIncome: 8200000,
+    curRate: 0.300, wageShare: 0.005, capShare: 0.100, consumpShare: 0.006, healthRelief: 0.002 },
+  { id: "t10000", label: "Top 0.01%",  hhM: 0.012, avgIncome: 41000000,
+    curRate: 0.260, wageShare: 0.002, capShare: 0.109, consumpShare: 0.003, healthRelief: 0.001 }
 ];
 /* Provenance: incomes/rates/households HIGH confidence (CBO workbook);
  * wage & capital shares MEDIUM (derived from CBO Table 9 rate matrix);
@@ -99,9 +116,10 @@ NHA.TAX.ECON = {
   NHA.TAX.INSTRUMENTS = [
     {
       id: "surtax", label: "Progressive income surtax",
-      desc: "Surtax on taxable income, rising by bracket: +1pp middle quintile, +2pp fourth, +3pp 80–90th, +5pp 90–99th, +8pp top 1% (at scale 1.0). Bottom two quintiles exempt.",
+      desc: "Surtax on taxable income, rising by bracket: +1pp middle quintile, +2pp fourth, +3pp 80–90th, +5pp 90–99th, +8pp above the 99th percentile (at scale 1.0). Bottom two quintiles exempt.",
       kind: "scale", default: 1.0, scaleMax: 2.5, rev1x: 527,
-      incidence: { q1: 0, q2: 0, q3: 0.038, q4: 0.112, d9: 0.123, p9199: 0.335, top1: 0.392 },
+      incidence: { q1: 0, q2: 0, q3: 0.038, q4: 0.112, d9: 0.123, p9199: 0.335,
+        t9950: 0.088, t9970: 0.055, t9990: 0.092, t9999: 0.101, t10000: 0.056 },
       phaseStart: 2029, phaseYears: 4,
       source: "Computed: CBO 2022 group incomes × 75% taxable share; cross-checked vs CBO Option 45 (+1pt all rates ≈ $118B/yr)", confidence: "medium"
     },
@@ -118,7 +136,8 @@ NHA.TAX.ECON = {
       id: "sscap", label: "Tax earnings above the SS cap ($250k donut)",
       desc: "Apply the 12.4% OASDI rate to earnings above $250,000 (CBO's donut design; ~17% of covered earnings are above today's cap).",
       kind: "toggle", default: true, rev1x: 143,
-      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0.08, p9199: 0.62, top1: 0.30 },
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0.08, p9199: 0.62,
+        t9950: 0.15, t9970: 0.06, t9990: 0.05, t9999: 0.03, t10000: 0.01 },
       phaseStart: 2028, phaseYears: 2,
       source: "CBO Options 2025–2034, Option 62 ($1,426.8B/10yr)", confidence: "high"
     },
@@ -135,7 +154,8 @@ NHA.TAX.ECON = {
       id: "capgains", label: "Tax capital gains as ordinary income (>$1M)",
       desc: "Ordinary rates on gains and dividends for incomes above $1M. Only raises durable revenue when paired with taxing gains at death (Greenbook pairing); standalone high rates lose money to realization deferral.",
       kind: "toggle", default: true, rev1x: 29,
-      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.15, top1: 0.85 },
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.15,
+        t9950: 0.15, t9970: 0.10, t9990: 0.20, t9999: 0.25, t10000: 0.15 },
       phaseStart: 2028, phaseYears: 1,
       source: "Treasury FY2025 Greenbook ($288.5B/10yr); realization-elasticity caveat per CRS R41364", confidence: "medium"
     },
@@ -143,7 +163,8 @@ NHA.TAX.ECON = {
       id: "wealth", label: "Extreme-wealth tax",
       desc: "2% above $50M + 4% additional above $1B, at 85% collection efficiency. Saez–Zucman base: $10.97T above $50M, $3.28T above $1B (~100k households); gross ≈ $351B/yr.",
       kind: "scale", default: 1.0, scaleMax: 1.5, rev1x: 300,
-      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0, top1: 1.0 },
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
+        t9950: 0, t9970: 0, t9990: 0.10, t9999: 0.45, t10000: 0.45 },
       phaseStart: 2028, phaseYears: 2,
       source: "Saez–Zucman revenue letter (Feb 2021), 15% avoidance; no official JCT/CBO score exists and it is legally contested (the framework carries a fallback matrix)", confidence: "low-medium"
     },
@@ -151,15 +172,35 @@ NHA.TAX.ECON = {
       id: "estate", label: "Estate tax restoration (99.5%-Act-style)",
       desc: "Return toward a $3.5M exemption with graduated 45–65% rates. No current official score exists against the post-OBBBA $15M exemption; JCT scored the 2021 bill at ~$43B/yr against the old baseline.",
       kind: "toggle", default: true, rev1x: 40,
-      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.10, top1: 0.90 },
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.10,
+        t9950: 0.10, t9970: 0.10, t9990: 0.20, t9999: 0.30, t10000: 0.20 },
       phaseStart: 2028, phaseYears: 1,
       source: "JCT score of S.994 'For the 99.5 Percent Act' ($429.6B/10yr, 2021 baseline); flagged as a gap, needs re-basing", confidence: "low-medium"
+    },
+    {
+      id: "msurtax", label: "Millionaires surtax (+10pp over $2M income)",
+      desc: "A 10-point surtax on all income, wages and capital alike, above $2M ($1M single). Hits roughly the top 0.2% of households; simple to administer because it rides the existing income tax.",
+      kind: "toggle", default: true, rev1x: 64,
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
+        t9950: 0.18, t9970: 0.14, t9990: 0.26, t9999: 0.27, t10000: 0.15 },
+      phaseStart: 2029, phaseYears: 1,
+      source: "TPC score of the Millionaires Surtax Act (Van Hollen–Beyer): ~$635B/10yr", confidence: "medium-high"
+    },
+    {
+      id: "bmin", label: "Billionaire minimum income tax (25% incl. unrealized gains)",
+      desc: "A 25% minimum rate on total income including unrealized gains, for households worth over $100M (roughly the top 0.01–0.02%). Ends 'buy, borrow, die'. Overlaps the wealth tax and the capital-gains reform; running all three at once overstates combined revenue, so treat them as alternatives plus toppers, not a simple sum.",
+      kind: "toggle", default: true, rev1x: 50,
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
+        t9950: 0, t9970: 0, t9990: 0, t9999: 0.35, t10000: 0.65 },
+      phaseStart: 2029, phaseYears: 2,
+      source: "Treasury FY2025 Greenbook, Billionaire Minimum Income Tax: $503B/10yr", confidence: "medium"
     },
     {
       id: "ftt", label: "Financial transactions tax (0.01%, CBO option)",
       desc: "1 basis point on securities and derivative payments, CBO's scored design (a 0.1% version is a different, larger proposal; TPC pegs the revenue-maximizing rate near 0.34%). Falls mostly on asset owners; a slice reaches pensions.",
       kind: "toggle", default: true, rev1x: 30,
-      incidence: { q1: 0.013, q2: 0.032, q3: 0.068, q4: 0.14, d9: 0.10, p9199: 0.247, top1: 0.40 },
+      incidence: { q1: 0.013, q2: 0.032, q3: 0.068, q4: 0.14, d9: 0.10, p9199: 0.247,
+        t9950: 0.09, t9970: 0.05, t9990: 0.06, t9999: 0.10, t10000: 0.10 },
       phaseStart: 2029, phaseYears: 1,
       source: "CBO Options 2025–2034, Option 74 ($296.8B/10yr); incidence: TPC/Burman NTJ 2016 Table 6 (top quintile 74.7%, top 1% 40%)", confidence: "high"
     },
@@ -217,4 +258,56 @@ NHA.TAX.makeCustomProgram = function (label, amountB, start, rampYears) {
     },
     source: "User-defined"
   };
+};
+
+/* ---- Top marginal income tax rate, 1913-2025 -----------------------------
+ * Step series: each entry applies from year y until the next entry.
+ * Source: IRS SOI historical Table 23 / Tax Foundation "Historical U.S.
+ * Federal Individual Income Tax Rates". The 1946-1951 values reflect the
+ * statutory maximum-effective-rate cap. High confidence.                  */
+NHA.TAX.TOP_RATE_HISTORY = [
+  { y: 1913, r: 7 },   { y: 1916, r: 15 },  { y: 1917, r: 67 },
+  { y: 1918, r: 77 },  { y: 1919, r: 73 },  { y: 1922, r: 58 },
+  { y: 1924, r: 46 },  { y: 1925, r: 25 },  { y: 1930, r: 25 },
+  { y: 1932, r: 63 },  { y: 1936, r: 79 },  { y: 1941, r: 81 },
+  { y: 1942, r: 88 },  { y: 1944, r: 94 },  { y: 1946, r: 86.45 },
+  { y: 1948, r: 82.13 },{ y: 1950, r: 84.36 },{ y: 1951, r: 91 },
+  { y: 1952, r: 92 },  { y: 1954, r: 91 },  { y: 1964, r: 77 },
+  { y: 1965, r: 70 },  { y: 1982, r: 50 },  { y: 1987, r: 38.5 },
+  { y: 1988, r: 28 },  { y: 1991, r: 31 },  { y: 1993, r: 39.6 },
+  { y: 2003, r: 35 },  { y: 2013, r: 39.6 }, { y: 2018, r: 37 },
+  { y: 2025, r: 37 }
+];
+/* Presidencies for the chart's era labels (label: short display name) */
+NHA.TAX.PRESIDENTS = [
+  { y: 1913, name: "Wilson" },   { y: 1921, name: "Harding" },
+  { y: 1923, name: "Coolidge" }, { y: 1929, name: "Hoover" },
+  { y: 1933, name: "FDR" },      { y: 1945, name: "Truman" },
+  { y: 1953, name: "Eisenhower" }, { y: 1961, name: "JFK" },
+  { y: 1963, name: "LBJ" },      { y: 1969, name: "Nixon" },
+  { y: 1974, name: "Ford" },     { y: 1977, name: "Carter" },
+  { y: 1981, name: "Reagan" },   { y: 1989, name: "Bush" },
+  { y: 1993, name: "Clinton" },  { y: 2001, name: "Bush 43" },
+  { y: 2009, name: "Obama" },    { y: 2017, name: "Trump" },
+  { y: 2021, name: "Biden" },    { y: 2025, name: "Trump" }
+];
+
+/* ---- Wealth concentration (Fed DFA 2026:Q1; top-tail split derived) ------
+ * DFA publishes bottom 50 / 50-90 / 90-99 / 99-99.9 / top 0.1% ($174.0T
+ * total). The 99.9-99.99 vs top-0.01% split and the 99-99.9 interior split
+ * are derived from Saez-Zucman capitalization estimates and Forbes-list
+ * aggregates (US billionaires ~$5.5-7T), constrained to DFA band totals.
+ * avgWealth = wealth / households. Median household net worth ~$205k
+ * (SCF 2022, inflated). Bands medium-high; interior splits medium.        */
+NHA.TAX.WEALTH_DIST = {
+  totalT: 174.0, medianHH: 205000,
+  groups: [
+    { id: "b50",   label: "Bottom 50%",   hhM: 66.2,  wealthT: 4.27 },
+    { id: "m4090", label: "50–90%",       hhM: 52.9,  wealthT: 51.5 },
+    { id: "p9099", label: "90–99%",       hhM: 11.9,  wealthT: 63.2 },
+    { id: "p9950", label: "99–99.5%",     hhM: 0.60,  wealthT: 13.0 },
+    { id: "p9990", label: "99.5–99.9%",   hhM: 0.48,  wealthT: 17.0 },
+    { id: "p9999", label: "99.9–99.99%",  hhM: 0.119, wealthT: 12.0 },
+    { id: "top001", label: "Top 0.01%",   hhM: 0.0132, wealthT: 13.1 }
+  ]
 };

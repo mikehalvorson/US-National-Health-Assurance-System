@@ -16,10 +16,10 @@
     vat: "var(--series-4)", sscap: "var(--series-5)", corp: "var(--series-6)",
     ftt: "var(--series-7)", _other: "var(--series-8)"
   };
-  var OTHER_IDS = ["capgains", "estate", "rents"];
+  var OTHER_IDS = ["capgains", "estate", "rents", "msurtax", "bmin"];
 
   function labelFor(id) {
-    if (id === "_other") return "Other levies (cap-gains, estate, rents)";
+    if (id === "_other") return "Other levies (cap-gains, estate, rents, millionaire surtax, billionaire minimum)";
     var ins = NHA.TAX.INSTRUMENTS.filter(function (i) { return i.id === id; })[0];
     return ins ? ins.label : id;
   }
@@ -266,5 +266,148 @@
       item.appendChild(sw);
       item.appendChild(document.createTextNode(p[1]));
     });
+  };
+})();
+
+/* ---- Inequality story charts -------------------------------------------- */
+(function () {
+  var U = NHA._chartUtil;
+  var el = U.el, div = U.div, niceTicks = U.niceTicks,
+      showTip = U.showTip, hideTip = U.hideTip, tipRow = U.tipRow, barPath = U.barPath;
+
+  /* Top marginal income tax rate, 1913-2025, with presidency labels */
+  NHA.renderTopRateChart = function (container) {
+    container.innerHTML = "";
+    var H0 = NHA.TAX.TOP_RATE_HISTORY, P = NHA.TAX.PRESIDENTS;
+    var W = 900, H = 380, M = { l: 52, r: 18, t: 64, b: 30 };
+    var y0 = 1913, y1 = 2026;
+    var x = function (yr) { return M.l + (W - M.l - M.r) * ((yr - y0) / (y1 - y0)); };
+    var y = function (r) { return M.t + (H - M.t - M.b) * (1 - r / 100); };
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img",
+      "aria-label": "Top marginal federal income tax rate from 1913 to 2025 with presidencies" }, container);
+
+    [0, 25, 50, 75, 100].forEach(function (tv) {
+      el("line", { x1: M.l, x2: W - M.r, y1: y(tv), y2: y(tv), class: "gridline" }, svg);
+      var t = el("text", { x: M.l - 8, y: y(tv) + 4, class: "axis-text", "text-anchor": "end" }, svg);
+      t.textContent = tv + "%";
+    });
+    [1920, 1940, 1960, 1980, 2000, 2020].forEach(function (yr) {
+      var t = el("text", { x: x(yr), y: H - 8, class: "axis-text", "text-anchor": "middle" }, svg);
+      t.textContent = yr;
+    });
+
+    /* presidency boundaries + alternating labels */
+    P.forEach(function (p, i) {
+      el("line", { x1: x(p.y), x2: x(p.y), y1: M.t - 6, y2: H - M.b, class: "gridline" }, svg);
+      var end = i + 1 < P.length ? P[i + 1].y : y1;
+      if (end - p.y < 3.5) return; /* too narrow to label */
+      var lx = x((p.y + end) / 2);
+      var ly = (i % 2 === 0) ? 16 : 34;
+      var t = el("text", { x: lx, y: ly, class: "pres-label", "text-anchor": "middle" }, svg);
+      t.textContent = p.name;
+    });
+
+    /* step path */
+    var d = "";
+    for (var i = 0; i < H0.length; i++) {
+      var yr = H0[i].y, r = H0[i].r;
+      var end = (i + 1 < H0.length) ? H0[i + 1].y : y1;
+      d += (i === 0 ? "M" : "L") + x(yr) + " " + y(r) + " L" + x(end) + " " + y(r);
+    }
+    el("path", { d: d, fill: "none", stroke: "var(--series-1)", "stroke-width": 2.5,
+      "stroke-linejoin": "round" }, svg);
+
+    /* annotations: the Eisenhower plateau and today */
+    var a1 = el("text", { x: x(1957), y: y(92) - 10, class: "direct-label",
+      "text-anchor": "middle" }, svg);
+    a1.textContent = "91–92% for two decades";
+    var a2 = el("text", { x: x(2021), y: y(37) - 10, class: "direct-label",
+      "text-anchor": "end" }, svg);
+    a2.textContent = "37% today";
+
+    /* crosshair */
+    var hair = el("line", { y1: M.t, y2: H - M.b, class: "crosshair", visibility: "hidden" }, svg);
+    var overlay = el("rect", { x: M.l, y: M.t, width: W - M.l - M.r, height: H - M.t - M.b,
+      fill: "transparent" }, svg);
+    function rateAt(yr) {
+      var r = H0[0].r;
+      H0.forEach(function (h) { if (h.y <= yr) r = h.r; });
+      return r;
+    }
+    function presAt(yr) {
+      var name = P[0].name;
+      P.forEach(function (p) { if (p.y <= yr) name = p.name; });
+      return name;
+    }
+    overlay.addEventListener("pointermove", function (evt) {
+      var rct = svg.getBoundingClientRect();
+      var px = (evt.clientX - rct.left) * (W / rct.width);
+      var yr = Math.round(y0 + (px - M.l) / (W - M.l - M.r) * (y1 - y0));
+      yr = Math.max(y0, Math.min(2025, yr));
+      hair.setAttribute("x1", x(yr)); hair.setAttribute("x2", x(yr));
+      hair.setAttribute("visibility", "visible");
+      var box = document.createElement("div");
+      div("tip-head", box).textContent = yr + " (" + presAt(yr) + ")";
+      tipRow(box, "var(--series-1)", "Top marginal rate", rateAt(yr) + "%", true);
+      showTip(box, evt.clientX, evt.clientY);
+    });
+    overlay.addEventListener("pointerleave", function () {
+      hair.setAttribute("visibility", "hidden"); hideTip();
+    });
+  };
+
+  /* Average wealth per household by group, linear scale on purpose:
+     the bottom bars vanish, and that is the finding. */
+  NHA.renderWealthChart = function (container) {
+    container.innerHTML = "";
+    var Wd = NHA.TAX.WEALTH_DIST;
+    var rows = Wd.groups.map(function (g) {
+      return { label: g.label, hhM: g.hhM, wealthT: g.wealthT,
+               avg: g.wealthT * 1e12 / (g.hhM * 1e6),
+               share: 100 * g.wealthT / Wd.totalT };
+    });
+    var W = 900, rowH = 42, M = { l: 128, r: 150, t: 8, b: 30 };
+    var H = M.t + rows.length * rowH + M.b;
+    var maxAvg = Math.max.apply(null, rows.map(function (r) { return r.avg; }));
+    var x = function (v) { return M.l + (W - M.l - M.r) * (v / maxAvg); };
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img",
+      "aria-label": "Average net worth per household by wealth group, linear scale" }, container);
+
+    rows.forEach(function (r, i) {
+      var cy = M.t + i * rowH + rowH / 2;
+      var lab = el("text", { x: M.l - 10, y: cy + 4, class: "row-label", "text-anchor": "end" }, svg);
+      lab.textContent = r.label;
+      var w = Math.max(1.5, x(r.avg) - M.l);
+      var g = el("g", { class: "bench-row", tabindex: 0 }, svg);
+      el("path", { d: barPath(M.l, cy - 11, w, 22, 4, "right"),
+        fill: "var(--series-1)", "fill-opacity": 0.85 }, g);
+      function fmtW(v) {
+        if (v >= 1e9) return "$" + (v / 1e9).toFixed(1) + "B";
+        if (v >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
+        return "$" + Math.round(v / 1000) + "k";
+      }
+      var vt = el("text", { x: M.l + w + 8, y: cy + 4, class: "direct-label" }, svg);
+      var mult = r.avg / Wd.medianHH;
+      vt.textContent = fmtW(r.avg) + " avg (" +
+        (mult >= 10 ? Math.round(mult).toLocaleString("en-US") : mult.toFixed(1)) + "× median)";
+
+      function tipIt(evt) {
+        var box = document.createElement("div");
+        div("tip-head", box).textContent = r.label;
+        tipRow(box, "var(--series-1)", "Average net worth", fmtW(r.avg) + " per household", true);
+        tipRow(box, "", "Households", (r.hhM >= 1 ? r.hhM.toFixed(1) + "M" :
+          Math.round(r.hhM * 1000) + "k"), false);
+        tipRow(box, "", "Total held", "$" + r.wealthT.toFixed(1) + "T (" +
+          r.share.toFixed(1) + "% of all U.S. household wealth)", false);
+        showTip(box, evt.clientX, evt.clientY);
+      }
+      g.addEventListener("pointermove", tipIt);
+      g.addEventListener("pointerleave", hideTip);
+    });
+
+    var note = el("text", { x: M.l, y: H - 8, class: "axis-text" }, svg);
+    note.textContent = "Linear scale, deliberately: most of America is invisible next to the top 0.01%. That is the chart.";
   };
 })();

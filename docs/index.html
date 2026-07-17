@@ -211,6 +211,7 @@
         <div class="range">CMS's own trajectory, no reform; the country is bigger and older either way</div>
       </div>
     </div>
+    <div class="takeaway" id="family-burden-note"></div>
     <div class="tiles" id="tiles"></div>
     <p class="note"><b>Reading the pairs:</b> each row compares like with
       like. The first row asks what the mature system would cost if it
@@ -380,6 +381,36 @@
 
   <div id="view-tax" hidden>
 
+  <!-- The inequality context -->
+  <section class="card">
+    <h2>Start with where the money is</h2>
+    <p class="desc">Any honest financing conversation starts with two facts.
+      First, America has taxed its top earners far harder than it does now,
+      for decades, through its strongest growth years: the top marginal rate
+      stayed at 91 to 92 percent through the entire Eisenhower
+      administration and did not fall below 70 percent until 1982. It is 37
+      percent today. Second, wealth has concentrated to a degree the words
+      "top 1%" no longer describe; the action is inside the top tenth and
+      hundredth of a percent. That is why the model below breaks the top 1%
+      into five bands and includes instruments aimed specifically at them.</p>
+    <h2 style="font-size:14.5px;margin-top:16px">Top marginal federal income tax rate, 1913–2025</h2>
+    <div id="toprate-chart"></div>
+    <p class="note">Source: IRS Statistics of Income historical tables.
+      Effective rates paid were lower than statutory rates in every era
+      (deductions, exclusions, capital gains); the line shows what the law
+      asked of the next dollar at the very top, which is the policy choice
+      Congress controls.</p>
+    <h2 style="font-size:14.5px;margin-top:20px">What the top actually holds</h2>
+    <div class="tiles" id="inequality-tiles"></div>
+    <div id="wealth-chart"></div>
+    <p class="note">Sources: Federal Reserve Distributional Financial
+      Accounts (2026:Q1, $174.0T total household wealth) for the published
+      bands; the splits inside the top 1% are derived from Saez–Zucman
+      capitalization estimates and Forbes-list aggregates, constrained to
+      the Fed's band totals (medium confidence). Median household net worth
+      from the Survey of Consumer Finances.</p>
+  </section>
+
   <!-- Funding programs -->
   <section class="card">
     <h2>What needs funding</h2>
@@ -426,7 +457,12 @@
     <h2>Who bears the burden, and who comes out ahead</h2>
     <p class="desc">The question that matters for lower-income Americans:
       new taxes <em>minus</em> the health costs this system eliminates
-      (premiums, deductibles, copays), by income group. Bars left of zero
+      (premiums, deductibles, copays), by income group. The top 1% is
+      broken into five bands, down to the 13,200 households of the top
+      0.01%, because that is where the wealth actually sits; the
+      millionaire surtax, billionaire minimum tax, wealth tax, estate
+      restoration, and capital-gains reform in the package above land
+      almost entirely on those bands. Bars left of zero
       mean a group's total annual costs go <em>down</em>. View in
       <label style="display:inline">
         year <select id="dist-year" aria-label="Distribution year"></select>
