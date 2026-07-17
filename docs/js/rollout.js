@@ -398,13 +398,15 @@
     var ramp = $("unit-ramp");
     var chart = document.createElement("div");
     chart.className = "unit-ramp-chart";
-    [
+    chart.setAttribute("aria-hidden", "true");
+    var unitSteps = [
       { value: "Plan", label: "standards, siting, workforce, prototypes", phase: "P0–P3", level: "24%", qual: true },
       { value: "Pilot", label: "all four unit types in representative regions", phase: "P4", level: "34%", qual: true },
       { value: "≥65%", label: "population coverage by phase end", phase: "P5", level: "65%" },
       { value: "≥80%", label: "Gate 2 floor before broad $0 care", phase: "P6", level: "80%" },
       { value: "≥95%", label: "within access-time standard", phase: "P8", level: "95%" }
-    ].forEach(function (step) {
+    ];
+    unitSteps.forEach(function (step) {
       var el = document.createElement("div");
       el.className = "unit-ramp-step";
       var plot = document.createElement("div");
@@ -415,20 +417,33 @@
       var value = document.createElement("div");
       value.className = "unit-ramp-value";
       value.textContent = step.value;
-      var label = document.createElement("div");
-      label.className = "unit-ramp-label";
-      label.textContent = step.label;
       var phase = document.createElement("div");
       phase.className = "unit-ramp-phase";
       phase.textContent = step.phase;
       bar.appendChild(value);
       plot.appendChild(bar);
       el.appendChild(plot);
-      el.appendChild(label);
       el.appendChild(phase);
       chart.appendChild(el);
     });
     ramp.appendChild(chart);
+
+    var legend = document.createElement("div");
+    legend.className = "unit-ramp-legend";
+    unitSteps.forEach(function (step) {
+      var item = document.createElement("div");
+      item.className = "unit-ramp-legend-item";
+      var key = document.createElement("div");
+      key.className = "unit-ramp-legend-key";
+      key.textContent = step.phase + " · " + step.value;
+      var text = document.createElement("div");
+      text.className = "unit-ramp-legend-text";
+      text.textContent = step.label;
+      item.appendChild(key);
+      item.appendChild(text);
+      legend.appendChild(item);
+    });
+    ramp.appendChild(legend);
 
     var pipeline = $("drug-pipeline");
     [
