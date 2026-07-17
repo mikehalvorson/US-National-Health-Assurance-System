@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance &amp; Public Financing Simulator</title>
 <meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it. Every parameter is sourced and every major assumption can be adjusted.">
-<link rel="stylesheet" href="style.css?v=20260716b">
+<link rel="stylesheet" href="style.css?v=20260717-data1">
 </head>
 <body>
 <div class="wrap">
@@ -32,6 +32,7 @@
   <nav class="tabs" aria-label="Dashboard sections">
     <button id="tab-health" class="active">Healthcare</button>
     <button id="tab-rollout">Phased Rollout</button>
+    <button id="tab-data">Data</button>
     <button id="tab-tax">Taxes &amp; Financing</button>
     <button id="tab-units">Unit Network</button>
     <button id="tab-gov">Governance</button>
@@ -746,6 +747,195 @@
 
   </div><!-- /view-rollout -->
 
+  <div id="view-data" hidden>
+
+  <section class="card">
+    <h2>Why the current health-data system fails</h2>
+    <p class="desc">The United States has many capable electronic record
+      systems, but not a dependable system-level record. Data exchange varies
+      by vendor, payer, facility, and setting. A person can therefore have
+      several incomplete versions of the same history while clinicians still
+      lack the medication, result, discharge, or referral information needed
+      for the next decision.</p>
+    <div id="data-fixes" class="data-fix-grid"
+      aria-label="Current health-data failures and the framework controls that correct them"></div>
+    <p class="note">The framework treats this as a safety and continuity
+      problem, not merely an IT inconvenience. Its comparator records
+      incomplete interoperability as a cause of duplicate testing, missing
+      medication and history, failed follow-up, and migration risk. It also
+      treats concentrated cyber and payment-rail failures as a separate
+      national continuity hazard.</p>
+  </section>
+
+  <section class="card">
+    <h2>One national system, many authoritative nodes</h2>
+    <p class="desc">The proposed National Health Assurance Information Mesh is
+      a single governed data system, but deliberately not one giant database.
+      Hospitals, laboratories, pharmacies, clinicians, regional systems, and
+      public agencies may retain the records they are responsible for. The
+      mesh supplies the common identity, locator, vocabulary, API, access,
+      audit, correction, and cybersecurity rules that make those records work
+      as one longitudinal system.</p>
+    <div class="data-thesis">
+      <div>
+        <span class="data-kicker">One coherent public rail</span>
+        <strong>Shared meaning, identity, rights, and accountability</strong>
+      </div>
+      <div class="data-thesis-divider" aria-hidden="true">≠</div>
+      <div>
+        <span class="data-kicker">Not one uncontrolled store</span>
+        <strong>Source custody stays distributed and attributable</strong>
+      </div>
+    </div>
+    <div class="data-lifecycle" aria-label="How a record moves through the information mesh">
+      <div class="data-life-step">
+        <span>1</span><b>Resolve</b>
+        <small>Match the patient, provider, facility, and acting role.</small>
+      </div>
+      <div class="data-life-step">
+        <span>2</span><b>Locate</b>
+        <small>Find the governed source records needed for this purpose.</small>
+      </div>
+      <div class="data-life-step">
+        <span>3</span><b>Exchange</b>
+        <small>Move the minimum necessary fields through a certified API.</small>
+      </div>
+      <div class="data-life-step">
+        <span>4</span><b>Use and write</b>
+        <small>Read the longitudinal view and record the new event once.</small>
+      </div>
+      <div class="data-life-step">
+        <span>5</span><b>Audit and reconcile</b>
+        <small>Log access, close follow-up, correct errors, and sync after outages.</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>What the system stores</h2>
+    <p class="desc">The framework defines logical records rather than a
+      vendor-specific database. Every record carries its authority, steward,
+      schema version, event and effective times, provenance, access class,
+      consent or purpose, correction chain, quality flags, and retention
+      state. That makes a clinical fact, payment, appeal, or published metric
+      reproducible instead of silently overwritable.</p>
+    <div id="data-planes" class="data-plane-grid"
+      aria-label="Six logical data planes in the national information mesh"></div>
+    <div class="tbl-scroll data-store-wrap">
+      <table class="data data-store-table" id="data-store-table">
+        <caption class="sr-only">Major information-mesh datasets and examples</caption>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>How healthcare providers interact with it</h2>
+    <p class="desc">Providers do not abandon every local workflow or type into
+      a separate federal portal. A certified local EHR, hospital system,
+      pharmacy terminal, laboratory system, or diagnostic-treatment unit
+      workstation connects through the national gateway. The shared layer
+      supplies the current permitted view and receives the new care event,
+      while the creating source remains attributable.</p>
+    <div class="provider-flow" aria-label="Provider workflow with the national information mesh">
+      <div class="provider-step">
+        <span>01</span><b>Authenticate</b>
+        <p>Verify clinician identity, credentials, facility, role, and declared purpose.</p>
+      </div>
+      <div class="provider-step">
+        <span>02</span><b>Open the permitted view</b>
+        <p>Locate medications, allergies, results, care plans, prior encounters, and active referrals.</p>
+      </div>
+      <div class="provider-step">
+        <span>03</span><b>Deliver and record care</b>
+        <p>Write the encounter, order, result, treatment, medication, disposition, and accountable owner.</p>
+      </div>
+      <div class="provider-step">
+        <span>04</span><b>Route and close the loop</b>
+        <p>Send structured referrals, handoffs, urgency, results, returned plans, and follow-up closure.</p>
+      </div>
+      <div class="provider-step">
+        <span>05</span><b>Correct or recover</b>
+        <p>Supersede errors without erasing history; queue bounded offline events and reconcile on recovery.</p>
+      </div>
+    </div>
+    <div class="data-provider-notes">
+      <div>
+        <b>Diagnostic-treatment units</b>
+        <p>Every Type A-D encounter writes request, acuity, tests, treatment,
+          escalation, and follow-up state into the shared record by design.</p>
+      </div>
+      <div>
+        <b>Patients</b>
+        <p>The Patient Access and Consent Portal provides the longitudinal
+          view, usable export, correction request, segmentation controls, and
+          a visible accounting of who accessed which data and why.</p>
+      </div>
+      <div>
+        <b>Emergency and downtime care</b>
+        <p>Emergency routing, medication access, minimal record lookup,
+          claims intake, and payment keep bounded offline or manual paths;
+          every event is reconciled after service returns.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Data transfer across the national information mesh</h2>
+    <p class="desc">The center is the shared coordination layer. The care
+      network on the left creates and consumes person-level clinical events.
+      Public operating, rights, payment, oversight, and research institutions
+      on the right exchange only the fields their lawful function requires.
+      Each connection is attributable, purpose-bound, and auditable.</p>
+    <div class="data-map-legend" aria-label="Data transfer legend">
+      <span><i class="legend-line bidir" aria-hidden="true">↔</i> governed read and write</span>
+      <span><i class="legend-line source" aria-hidden="true"></i> authoritative source remains identified</span>
+      <span><i class="legend-line segment" aria-hidden="true"></i> segmented or aggregate-only where required</span>
+    </div>
+    <div id="data-transfer-map" class="data-transfer-map"
+      aria-label="Map of data exchange between the national information mesh and interacting facilities and institutions"></div>
+  </section>
+
+  <section class="card">
+    <h2>Cyber safety is part of care delivery</h2>
+    <p class="desc">Because the information mesh becomes critical national
+      infrastructure, privacy alone is not enough. Confidentiality, integrity,
+      availability, safe degraded operation, and accountable recovery are all
+      clinical requirements. A system that is online but serving stale,
+      incomplete, or corrupted data is treated as degraded.</p>
+    <div id="cyber-controls" class="cyber-control-grid"
+      aria-label="Required cybersecurity and continuity controls"></div>
+    <div class="tiles cyber-targets" aria-label="Framework cybersecurity performance targets">
+      <div class="tile">
+        <div class="label">Critical-system uptime</div>
+        <div class="value">≥99.97%</div>
+        <div class="range">with unsafe or stale service classified as degraded</div>
+      </div>
+      <div class="tile">
+        <div class="label">Downtime continuity</div>
+        <div class="value">≥98%</div>
+        <div class="range">of essential-care and payment drills passed</div>
+      </div>
+      <div class="tile">
+        <div class="label">Critical remediation</div>
+        <div class="value">≥99%</div>
+        <div class="range">of critical vulnerabilities fixed within 15 days</div>
+      </div>
+      <div class="tile">
+        <div class="label">Sensitive-access audits</div>
+        <div class="value">≥99%</div>
+        <div class="range">of required cases completed and reviewable</div>
+      </div>
+    </div>
+  </section>
+
+  <p class="rollout-source">Data-system content follows Framework v2.0.0,
+    Sections 2.4, 5.1-5.2, and 6.8; requirements SR-DATA-001 through
+    SR-DATA-012; and Tables D4-5 through D4-9 and D5B-16 through D5B-21.
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/National_Health_Assurance_Framework_v2.0.0_FINAL.pdf"
+      target="_blank" rel="noopener">Read the full framework</a>.</p>
+
+  </div><!-- /view-data -->
+
   <footer class="site">
     Built from the National Health Assurance Framework v2.0.0 and its research
     parameter base:
@@ -766,10 +956,11 @@
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js"></script>
 <script src="js/app.js"></script>
-<script src="js/taxapp.js"></script>
+<script src="js/taxapp.js?v=20260717-data1"></script>
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
 <script src="js/rollout.js?v=20260716b"></script>
+<script src="js/data.js?v=20260717-data1"></script>
 </body>
 </html>
