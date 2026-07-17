@@ -390,20 +390,27 @@
 
   function renderFixes() {
     var host = $("data-fixes");
-    FIXES.forEach(function (item) {
+    FIXES.forEach(function (item, index) {
       var row = document.createElement("article");
       row.className = "data-fix-row";
+      row.setAttribute(
+        "aria-label",
+        "Problem: " + item.problem + ". Framework response: " + item.fix + "."
+      );
 
       var problem = document.createElement("div");
       problem.className = "data-fix-side problem";
-      var pk = document.createElement("span");
-      pk.className = "data-kicker";
-      pk.textContent = "Current failure";
+      var number = document.createElement("span");
+      number.className = "data-fix-number";
+      number.setAttribute("aria-hidden", "true");
+      number.textContent = String(index + 1).padStart(2, "0");
+      var problemBody = document.createElement("div");
       var ph = document.createElement("h3");
       ph.textContent = item.problem;
       var pp = document.createElement("p");
       pp.textContent = item.mechanism;
-      problem.appendChild(pk); problem.appendChild(ph); problem.appendChild(pp);
+      problemBody.appendChild(ph); problemBody.appendChild(pp);
+      problem.appendChild(number); problem.appendChild(problemBody);
 
       var arrow = document.createElement("div");
       arrow.className = "data-fix-arrow";
@@ -412,14 +419,11 @@
 
       var fix = document.createElement("div");
       fix.className = "data-fix-side fix";
-      var fk = document.createElement("span");
-      fk.className = "data-kicker";
-      fk.textContent = "Framework control";
       var fh = document.createElement("h3");
       fh.textContent = item.fix;
       var fp = document.createElement("p");
       fp.textContent = item.result;
-      fix.appendChild(fk); fix.appendChild(fh); fix.appendChild(fp);
+      fix.appendChild(fh); fix.appendChild(fp);
 
       row.appendChild(problem); row.appendChild(arrow); row.appendChild(fix);
       host.appendChild(row);
