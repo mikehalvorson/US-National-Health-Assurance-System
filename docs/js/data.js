@@ -6,6 +6,59 @@
 (function () {
   function $(id) { return document.getElementById(id); }
 
+  var ACRONYMS = {
+    "ACDRH": "Administration for Care Delivery and Regional Health",
+    "AHIRC": "Administration for Health Information, Records, and Cybersecurity",
+    "AICIO": "Artificial Intelligence Clinical Integration Office",
+    "AI": "Artificial Intelligence",
+    "AMDDT": "Administration for Medicines, Devices, Diagnostics, and Therapeutics",
+    "API": "Application Programming Interface",
+    "BH": "Behavioral Health",
+    "CHAO": "Congressional Health Accountability Office",
+    "CIRBAS": "Clinician Identity and Role-Based Access System",
+    "DMRCO": "Data Migration and Records Continuity Office",
+    "DNHA": "Department of National Health Assurance",
+    "DVH": "Dental, Vision, and Hearing",
+    "EHR": "Electronic Health Record",
+    "EMS": "Emergency Medical Services",
+    "FTE": "Full-Time Equivalent",
+    "HCCA": "Health Cybersecurity and Continuity Authority",
+    "HIV": "Human Immunodeficiency Virus",
+    "HRPO": "Health Rights and Privacy Office",
+    "IT": "Information Technology",
+    "LDA": "Laboratory and Diagnostics Authority",
+    "LTC": "Long-Term Care",
+    "NAIG": "National API and Interoperability Gateway",
+    "NBIA": "National Biomedical Innovation Agency",
+    "NCCA": "National Coverage and Claims Authority",
+    "NCDSO": "National Clinical Data Standards Office",
+    "NCDTN": "National Community Diagnostic and Treatment Network",
+    "NEEA": "National Enrollment and Eligibility Authority",
+    "NHAC": "National Health Accountability Commission",
+    "NHASB": "National Health Adaptation and Scorekeeping Board",
+    "NHIS": "National Health Identifier Service",
+    "NHRA": "National Health Records Authority",
+    "NHSA": "National Hospital Stewardship Authority",
+    "NHTCA": "National Health Transition and Continuity Authority",
+    "NHWB": "National Health Workforce Board",
+    "NLLHR": "National Longitudinal Health Record",
+    "NMPI": "National Master Patient Index",
+    "NPSMIB": "National Patient Safety and Medical Injury Board",
+    "NRLS": "National Record Locator Service",
+    "NSAA": "National Specialty Access Authority",
+    "OCDTI": "Office of Community Diagnostic and Treatment Infrastructure",
+    "PACP": "Patient Access and Consent Portal",
+    "PCU": "National Pharmacy Claims Utility",
+    "PMC": "Public Medicines Corporation",
+    "PRTO": "Public Reporting and Transparency Office",
+    "RHA": "Regional Health Administrators",
+    "SRAE": "Secure Research and Analytics Enclave",
+    "SR-DATA": "System Requirement - Data",
+    "STI": "Sexually Transmitted Infection",
+    "SUD": "Substance Use Disorder",
+    "THDO": "Treasury Health Disbursement Office"
+  };
+
   var FIXES = [
     {
       problem: "Records stop at organizational boundaries",
@@ -368,9 +421,53 @@
     });
   }
 
+  function addAcronymHovers() {
+    var root = $("view-data");
+    var keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
+    var escaped = keys.map(function (key) {
+      return key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    });
+    var pattern = new RegExp("\\b(" + escaped.join("|") + ")\\b", "g");
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    var textNodes = [];
+
+    while (walker.nextNode()) {
+      var node = walker.currentNode;
+      var parent = node.parentElement;
+      if (!parent || parent.closest("abbr, script, style")) continue;
+      pattern.lastIndex = 0;
+      if (pattern.test(node.nodeValue)) textNodes.push(node);
+    }
+
+    textNodes.forEach(function (node) {
+      var text = node.nodeValue;
+      var fragment = document.createDocumentFragment();
+      var lastIndex = 0;
+      pattern.lastIndex = 0;
+      text.replace(pattern, function (match, acronym, offset) {
+        if (offset > lastIndex) {
+          fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+        }
+        var abbr = document.createElement("abbr");
+        abbr.className = "data-acronym";
+        abbr.title = ACRONYMS[acronym];
+        abbr.setAttribute("aria-label", acronym + ": " + ACRONYMS[acronym]);
+        abbr.textContent = acronym;
+        fragment.appendChild(abbr);
+        lastIndex = offset + match.length;
+        return match;
+      });
+      if (lastIndex < text.length) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+      }
+      node.parentNode.replaceChild(fragment, node);
+    });
+  }
+
   renderFixes();
   renderPlanes();
   renderStoreTable();
   renderTransferMap();
   renderCyberControls();
+  addAcronymHovers();
 })();

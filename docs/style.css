@@ -632,6 +632,11 @@ footer.site a { color: var(--text-muted); }
   display: block; color: var(--text-muted); font-size: 11px; font-weight: 700;
   letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 3px;
 }
+.data-acronym {
+  color: inherit; cursor: help; text-decoration-line: underline;
+  text-decoration-style: dotted; text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
 .data-fix-grid { display: grid; }
 .data-fix-row {
   display: grid; grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
