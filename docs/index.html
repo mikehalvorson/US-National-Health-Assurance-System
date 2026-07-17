@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance &amp; Public Financing Simulator</title>
 <meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it. Every parameter is sourced and every major assumption can be adjusted.">
-<link rel="stylesheet" href="style.css?v=20260717-quality1">
+<link rel="stylesheet" href="style.css?v=20260717-data-phase1">
 </head>
 <body>
 <div class="wrap">
@@ -816,6 +816,29 @@
 
   <div id="view-data" hidden>
 
+  <section class="card data-roadmap-card">
+    <h2>How the data system comes online</h2>
+    <p class="desc">The information mesh is not switched on nationally in
+      one step. Select a phase to see the data capabilities built in that
+      period and the KPP and TPP records that should govern progression. Values
+      marked <b>Framework</b> are controlled milestones or source targets;
+      values marked <b>Derived</b> are proposed interim thresholds with a
+      documented rationale.</p>
+    <div class="data-target-legend" aria-label="Phase target status legend">
+      <span><i class="data-basis framework">Framework</i> controlled value</span>
+      <span><i class="data-basis derived">Derived</i> proposed interim value</span>
+    </div>
+    <div id="data-phase-timeline" class="rollout-timeline data-phase-timeline"
+      aria-label="Interactive data-system rollout timeline"></div>
+    <div id="data-phase-detail" class="rollout-detail data-phase-detail"
+      aria-live="polite"></div>
+    <p class="note">Early-phase derived targets apply to the stated test,
+      pilot, participating-provider, or Wave I cohort. They are not national
+      claims. <a id="data-methodology-link"
+        href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#p0"
+        target="_blank" rel="noopener">See every derivation and justification</a>.</p>
+  </section>
+
   <section class="card">
     <h2>Why the current health-data system fails</h2>
     <p class="desc">The United States has many capable electronic record
@@ -998,6 +1021,9 @@
   <p class="rollout-source">Data-system content follows Framework v2.0.0,
     Sections 2.4, 5.1-5.2, and 6.8; requirements SR-DATA-001 through
     SR-DATA-012; and Tables D4-5 through D4-9 and D5B-16 through D5B-21.
+    Derived phase targets and their assumptions are documented in the
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md"
+      target="_blank" rel="noopener">data phase-target methodology</a>.
     <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/National_Health_Assurance_Framework_v2.0.0_FINAL.pdf"
       target="_blank" rel="noopener">Read the full framework</a>.</p>
 
@@ -1144,8 +1170,9 @@
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
 <script src="js/rollout.js?v=20260716b"></script>
-<script src="js/data.js?v=20260717-data2"></script>
 <script src="js/qualitydata.js?v=20260717-quality1"></script>
+<script src="js/dataphases.js?v=20260717-data-phase1"></script>
+<script src="js/data.js?v=20260717-data-phase1"></script>
 <script src="js/quality.js?v=20260717-quality1"></script>
 </body>
 </html>

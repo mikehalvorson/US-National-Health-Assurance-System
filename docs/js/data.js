@@ -5,6 +5,7 @@
 "use strict";
 (function () {
   function $(id) { return document.getElementById(id); }
+  var DATA_PHASES = window.NHA_DATA_PHASES ? window.NHA_DATA_PHASES.phases : [];
 
   var ACRONYMS = {
     "ACDRH": "Administration for Care Delivery and Regional Health",
@@ -26,6 +27,7 @@
     "HIV": "Human Immunodeficiency Virus",
     "HRPO": "Health Rights and Privacy Office",
     "IT": "Information Technology",
+    "KPP": "Key Performance Parameter",
     "LDA": "Laboratory and Diagnostics Authority",
     "LTC": "Long-Term Care",
     "NAIG": "National API and Interoperability Gateway",
@@ -56,7 +58,8 @@
     "SR-DATA": "System Requirement - Data",
     "STI": "Sexually Transmitted Infection",
     "SUD": "Substance Use Disorder",
-    "THDO": "Treasury Health Disbursement Office"
+    "THDO": "Treasury Health Disbursement Office",
+    "TPP": "Technical Performance Parameter"
   };
 
   var FIXES = [
@@ -231,6 +234,159 @@
     ["Rapid remediation and incident command", "Continuously find vulnerabilities, contain incidents, notify affected people, protect care, correct records, and reconcile every queued or duplicate event."],
     ["Independent drills and verification", "Exercise cyber outage, corrupted data, lost connectivity, vendor failure, and recovery; a drill fails if care is unsafe or reconciliation is incomplete."]
   ];
+
+  function renderDataPhaseTimeline() {
+    var host = $("data-phase-timeline");
+    if (!host || !DATA_PHASES.length) return;
+    DATA_PHASES.forEach(function (phase) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "phase-node data-phase-node";
+      button.style.gridColumn = String(phase.year);
+      button.dataset.phaseId = phase.id;
+      button.setAttribute("aria-pressed", phase.id === "P0" ? "true" : "false");
+      button.setAttribute("aria-label",
+        phase.id + ", Year " + phase.year + ": " + phase.title);
+
+      var dot = document.createElement("span");
+      dot.className = "phase-node-dot";
+      dot.setAttribute("aria-hidden", "true");
+      var id = document.createElement("span");
+      id.className = "phase-node-phase";
+      id.textContent = phase.id;
+      var year = document.createElement("span");
+      year.className = "phase-node-year";
+      year.textContent = "Year " + phase.year;
+      button.appendChild(dot); button.appendChild(id); button.appendChild(year);
+      button.addEventListener("click", function () { selectDataPhase(phase.id); });
+      host.appendChild(button);
+    });
+    selectDataPhase("P0");
+  }
+
+  function selectDataPhase(id) {
+    var phase = DATA_PHASES.filter(function (candidate) {
+      return candidate.id === id;
+    })[0] || DATA_PHASES[0];
+    var buttons = $("data-phase-timeline").querySelectorAll(".data-phase-node");
+    Array.prototype.forEach.call(buttons, function (button) {
+      button.setAttribute("aria-pressed",
+        button.dataset.phaseId === phase.id ? "true" : "false");
+    });
+
+    var metricCount = 0;
+    var derivedCount = 0;
+    phase.groups.forEach(function (group) {
+      metricCount += group.metrics.length;
+      group.metrics.forEach(function (metric) {
+        if (metric.basis === "derived") derivedCount += 1;
+      });
+    });
+
+    var detail = $("data-phase-detail");
+    detail.innerHTML = "";
+    var head = document.createElement("div");
+    head.className = "rollout-detail-head data-phase-detail-head";
+    var titleWrap = document.createElement("div");
+    var kicker = document.createElement("div");
+    kicker.className = "rollout-detail-kicker";
+    kicker.textContent = phase.id + " · Year " + phase.year;
+    var title = document.createElement("h3");
+    title.textContent = phase.title;
+    titleWrap.appendChild(kicker); titleWrap.appendChild(title);
+    var count = document.createElement("span");
+    count.className = "data-phase-count";
+    count.textContent = metricCount + " priority measures · " +
+      derivedCount + " derived";
+    head.appendChild(titleWrap); head.appendChild(count);
+    detail.appendChild(head);
+
+    var overview = document.createElement("div");
+    overview.className = "data-phase-overview";
+    var work = document.createElement("div");
+    var summary = document.createElement("p");
+    summary.className = "rollout-detail-summary";
+    summary.textContent = phase.summary;
+    var list = document.createElement("ul");
+    phase.work.forEach(function (item) {
+      var li = document.createElement("li");
+      li.textContent = item;
+      list.appendChild(li);
+    });
+    work.appendChild(summary); work.appendChild(list);
+    var scope = document.createElement("div");
+    scope.className = "data-phase-scope";
+    var scopeTitle = document.createElement("b");
+    scopeTitle.textContent = "How to read this phase";
+    var scopeText = document.createElement("p");
+    scopeText.textContent = phase.id === "P8"
+      ? "Targets are controlled national maturity values."
+      : "Derived values apply only to the named test, pilot, Wave I, scaled, or national denominator. Framework values remain controlling where shown.";
+    var method = document.createElement("a");
+    method.href = "https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#" + phase.id.toLowerCase();
+    method.target = "_blank";
+    method.rel = "noopener";
+    method.textContent = "Open this phase's derivation register";
+    scope.appendChild(scopeTitle); scope.appendChild(scopeText); scope.appendChild(method);
+    overview.appendChild(work); overview.appendChild(scope);
+    detail.appendChild(overview);
+
+    var scorecards = document.createElement("div");
+    scorecards.className = "data-scorecard-grid";
+    phase.groups.forEach(function (group) {
+      var section = document.createElement("section");
+      section.className = "data-score-section";
+      var sectionTitle = document.createElement("h4");
+      sectionTitle.textContent = group.section;
+      var why = document.createElement("p");
+      why.className = "data-score-why";
+      why.textContent = group.why;
+      section.appendChild(sectionTitle); section.appendChild(why);
+
+      group.metrics.forEach(function (metric) {
+        var row = document.createElement("article");
+        row.className = "data-target-row";
+        var identity = document.createElement("div");
+        identity.className = "data-target-identity";
+        var metricId = document.createElement("b");
+        metricId.textContent = metric.id;
+        var basis = document.createElement("span");
+        basis.className = "data-basis " + metric.basis;
+        basis.textContent = metric.basis === "framework" ? "Framework" : "Derived";
+        identity.appendChild(metricId); identity.appendChild(basis);
+
+        var body = document.createElement("div");
+        body.className = "data-target-body";
+        var name = document.createElement("h5");
+        name.textContent = metric.name;
+        var target = document.createElement("p");
+        target.className = "data-phase-target-value";
+        target.textContent = metric.phaseTarget;
+        var mature = document.createElement("p");
+        mature.className = "data-mature-target";
+        mature.textContent = "Mature: " + metric.matureTarget;
+        var rationale = document.createElement("details");
+        rationale.className = "data-target-rationale";
+        var rationaleLabel = document.createElement("summary");
+        rationaleLabel.textContent = "Why this value";
+        var rationaleText = document.createElement("p");
+        rationaleText.textContent = metric.justification;
+        rationale.appendChild(rationaleLabel); rationale.appendChild(rationaleText);
+        body.appendChild(name); body.appendChild(target); body.appendChild(mature);
+        body.appendChild(rationale);
+        row.appendChild(identity); row.appendChild(body);
+        section.appendChild(row);
+      });
+      scorecards.appendChild(section);
+    });
+    detail.appendChild(scorecards);
+
+    var methodology = $("data-methodology-link");
+    if (methodology) {
+      methodology.href = "https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#" + phase.id.toLowerCase();
+    }
+    addAcronymHovers(detail);
+  }
 
   function renderFixes() {
     var host = $("data-fixes");
@@ -421,8 +577,8 @@
     });
   }
 
-  function addAcronymHovers() {
-    var root = $("view-data");
+  function addAcronymHovers(root) {
+    root = root || $("view-data");
     var keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
     var escaped = keys.map(function (key) {
       return key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -464,6 +620,7 @@
     });
   }
 
+  renderDataPhaseTimeline();
   renderFixes();
   renderPlanes();
   renderStoreTable();
