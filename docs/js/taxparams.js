@@ -66,15 +66,15 @@ NHA.TAX.GROUPS = [
    * IRS top-400 data shows ~23-26%). Wage/capital/consumption/relief
    * shares are the old top-1% totals allocated across bands by labor
    * income and Fed DFA wealth. Derived, medium confidence.               */
-  { id: "t9950", label: "99–99.5%",    hhM: 0.60,  avgIncome: 1300000,
+  { id: "t9950", label: "99–99.5%",    hhM: 0.60,  avgIncome: 1300000, g: "top",
     curRate: 0.325, wageShare: 0.022, capShare: 0.109, consumpShare: 0.020, healthRelief: 0.013 },
-  { id: "t9970", label: "99.5–99.7%",  hhM: 0.24,  avgIncome: 2000000,
+  { id: "t9970", label: "99.5–99.7%",  hhM: 0.24,  avgIncome: 2000000, g: "top",
     curRate: 0.330, wageShare: 0.008, capShare: 0.071, consumpShare: 0.008, healthRelief: 0.005 },
-  { id: "t9990", label: "99.7–99.9%",  hhM: 0.24,  avgIncome: 3350000,
+  { id: "t9990", label: "99.7–99.9%",  hhM: 0.24,  avgIncome: 3350000, g: "top",
     curRate: 0.325, wageShare: 0.008, capShare: 0.071, consumpShare: 0.008, healthRelief: 0.004 },
-  { id: "t9999", label: "99.9–99.99%", hhM: 0.108, avgIncome: 8200000,
+  { id: "t9999", label: "99.9–99.99%", hhM: 0.108, avgIncome: 8200000, g: "top",
     curRate: 0.300, wageShare: 0.005, capShare: 0.100, consumpShare: 0.006, healthRelief: 0.002 },
-  { id: "t10000", label: "Top 0.01%",  hhM: 0.012, avgIncome: 41000000,
+  { id: "t10000", label: "Top 0.01%",  hhM: 0.012, avgIncome: 41000000, g: "top",
     curRate: 0.260, wageShare: 0.002, capShare: 0.109, consumpShare: 0.003, healthRelief: 0.001 }
 ];
 /* Provenance: incomes/rates/households HIGH confidence (CBO workbook);
@@ -89,8 +89,15 @@ NHA.TAX.ECON = {
   wagesB: 13700,        // Medicare (HI) taxable earnings 2024 ≈ $13.7T — the
                         // uncapped payroll base (SSA contributions ÷ 2.9%)
   aboveCapShare: 0.17,  // share of covered earnings above the SS cap (SSA: 83% below)
-  realGrowth: 0.019,    // real growth of tax bases; matches healthcare model
-  baseYear: 2024
+  realGrowth: 0.019,    // legacy default (GDP class); kept for compatibility
+  baseYear: 2024,
+  /* Real growth by base class. Top capital compounds faster than the
+   * economy; that is the concentration story in the charts above, and the
+   * revenue model has to reflect it. Fed DFA: top-0.1% net worth grew at
+   * ~7% nominal CAGR 1989-2025, roughly 4.3% real; 4.0% used here as a
+   * conservative round figure. Wages follow the healthcare model's 1.2%
+   * real wage-cost growth; broad income/GDP bases grow at 1.9% (CBO).   */
+  growthRates: { gdp: 0.019, wages: 0.012, top: 0.040 }
 };
 
 /* ---- Tax instruments -----------------------------------------------------
@@ -117,7 +124,7 @@ NHA.TAX.ECON = {
     {
       id: "surtax", label: "Progressive income surtax",
       desc: "Surtax on taxable income, rising by bracket: +1pp middle quintile, +2pp fourth, +3pp 80–90th, +5pp 90–99th, +8pp above the 99th percentile (at scale 1.0). Bottom two quintiles exempt.",
-      kind: "scale", default: 1.0, scaleMax: 2.5, rev1x: 527,
+      kind: "scale", default: 1.0, scaleMax: 2.5, rev1x: 527, growth: "gdp",
       incidence: { q1: 0, q2: 0, q3: 0.038, q4: 0.112, d9: 0.123, p9199: 0.335,
         t9950: 0.088, t9970: 0.055, t9990: 0.092, t9999: 0.101, t10000: 0.056 },
       phaseStart: 2029, phaseYears: 4,
@@ -126,7 +133,7 @@ NHA.TAX.ECON = {
     {
       id: "payroll", label: "NHA payroll contribution (uncapped)",
       desc: "Flat payroll rate on all earnings, no cap; the premium-replacement workhorse. CBO convention: borne by workers via wages. CBO Option 61: 1% ≈ $128B/yr.",
-      kind: "scale", default: 1.0, scaleMax: 3.0, rev1x: 512, /* default = 4pp */
+      kind: "scale", default: 1.0, scaleMax: 3.0, rev1x: 512, growth: "wages", /* default = 4pp */
       defaultNote: "default 4.0pp; slider is a multiple (max 12pp)",
       incidence: byCol("wageShare"),
       phaseStart: 2031, phaseYears: 4,
@@ -135,7 +142,7 @@ NHA.TAX.ECON = {
     {
       id: "sscap", label: "Tax earnings above the SS cap ($250k donut)",
       desc: "Apply the 12.4% OASDI rate to earnings above $250,000 (CBO's donut design; ~17% of covered earnings are above today's cap).",
-      kind: "toggle", default: true, rev1x: 143,
+      kind: "toggle", default: true, rev1x: 143, growth: "wages",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0.08, p9199: 0.62,
         t9950: 0.15, t9970: 0.06, t9990: 0.05, t9999: 0.03, t10000: 0.01 },
       phaseStart: 2028, phaseYears: 2,
@@ -144,7 +151,7 @@ NHA.TAX.ECON = {
     {
       id: "corp", label: "Corporate rate increase",
       desc: "Points above the current 21% rate; CBO Dec 2024: ≈ $13.6B/yr per point (21→28% ≈ $0.95T/10yr; older ~$1.3T scores used a pre-2024 base). Incidence per CBO/JCT: 25% labor, 75% capital.",
-      kind: "scale", default: 1.0, scaleMax: 2.0, rev1x: 95, /* default = +7pp */
+      kind: "scale", default: 1.0, scaleMax: 2.0, rev1x: 95, growth: "gdp", /* default = +7pp */
       defaultNote: "default +7pp (→28%); slider is a multiple (max +14pp)",
       incidence: mix(0.25, 0.75),
       phaseStart: 2028, phaseYears: 1,
@@ -153,7 +160,7 @@ NHA.TAX.ECON = {
     {
       id: "capgains", label: "Tax capital gains as ordinary income (>$1M)",
       desc: "Ordinary rates on gains and dividends for incomes above $1M. Only raises durable revenue when paired with taxing gains at death (Greenbook pairing); standalone high rates lose money to realization deferral.",
-      kind: "toggle", default: true, rev1x: 29,
+      kind: "toggle", default: true, rev1x: 29, growth: "top",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.15,
         t9950: 0.15, t9970: 0.10, t9990: 0.20, t9999: 0.25, t10000: 0.15 },
       phaseStart: 2028, phaseYears: 1,
@@ -162,7 +169,7 @@ NHA.TAX.ECON = {
     {
       id: "wealth", label: "Extreme-wealth tax",
       desc: "2% above $50M + 4% additional above $1B, at 85% collection efficiency. Saez–Zucman base: $10.97T above $50M, $3.28T above $1B (~100k households); gross ≈ $351B/yr.",
-      kind: "scale", default: 1.0, scaleMax: 1.5, rev1x: 300,
+      kind: "scale", default: 1.0, scaleMax: 1.5, rev1x: 300, growth: "top",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
         t9950: 0, t9970: 0, t9990: 0.10, t9999: 0.45, t10000: 0.45 },
       phaseStart: 2028, phaseYears: 2,
@@ -171,7 +178,7 @@ NHA.TAX.ECON = {
     {
       id: "estate", label: "Estate tax restoration (99.5%-Act-style)",
       desc: "Return toward a $3.5M exemption with graduated 45–65% rates. No current official score exists against the post-OBBBA $15M exemption; JCT scored the 2021 bill at ~$43B/yr against the old baseline.",
-      kind: "toggle", default: true, rev1x: 40,
+      kind: "toggle", default: true, rev1x: 40, growth: "top",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.10,
         t9950: 0.10, t9970: 0.10, t9990: 0.20, t9999: 0.30, t10000: 0.20 },
       phaseStart: 2028, phaseYears: 1,
@@ -180,7 +187,7 @@ NHA.TAX.ECON = {
     {
       id: "msurtax", label: "Millionaires surtax (+10pp over $2M income)",
       desc: "A 10-point surtax on all income, wages and capital alike, above $2M ($1M single). Hits roughly the top 0.2% of households; simple to administer because it rides the existing income tax.",
-      kind: "toggle", default: true, rev1x: 64,
+      kind: "toggle", default: true, rev1x: 64, growth: "top",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
         t9950: 0.18, t9970: 0.14, t9990: 0.26, t9999: 0.27, t10000: 0.15 },
       phaseStart: 2029, phaseYears: 1,
@@ -189,16 +196,50 @@ NHA.TAX.ECON = {
     {
       id: "bmin", label: "Billionaire minimum income tax (25% incl. unrealized gains)",
       desc: "A 25% minimum rate on total income including unrealized gains, for households worth over $100M (roughly the top 0.01–0.02%). Ends 'buy, borrow, die'. Overlaps the wealth tax and the capital-gains reform; running all three at once overstates combined revenue, so treat them as alternatives plus toppers, not a simple sum.",
-      kind: "toggle", default: true, rev1x: 50,
+      kind: "toggle", default: true, rev1x: 50, growth: "top",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
         t9950: 0, t9970: 0, t9990: 0, t9999: 0.35, t10000: 0.65 },
       phaseStart: 2029, phaseYears: 2,
       source: "Treasury FY2025 Greenbook, Billionaire Minimum Income Tax: $503B/10yr", confidence: "medium"
     },
     {
-      id: "ftt", label: "Financial transactions tax (0.01%, CBO option)",
-      desc: "1 basis point on securities and derivative payments, CBO's scored design (a 0.1% version is a different, larger proposal; TPC pegs the revenue-maximizing rate near 0.34%). Falls mostly on asset owners; a slice reaches pensions.",
-      kind: "toggle", default: true, rev1x: 30,
+      id: "inherit", label: "Inheritance income tax (heirs pay above $2M received)",
+      desc: "Taxes large inheritances as ordinary income to the heir, above a $2M lifetime exemption. Constitutionally solid (it is an income tax on the recipient), hard to avoid, and aimed at dynastic transfers rather than earned success.",
+      kind: "toggle", default: false, rev1x: 40, growth: "top",
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0.10,
+        t9950: 0.15, t9970: 0.15, t9990: 0.25, t9999: 0.25, t10000: 0.10 },
+      phaseStart: 2029, phaseYears: 1,
+      source: "Batchelder (NYU/Treasury, 2020): inheritance-as-income proposals score $34-90B/yr depending on exemption; $40B/yr used", confidence: "medium"
+    },
+    {
+      id: "intl", label: "International minimum tax and anti-shifting package",
+      desc: "Pillar-2-style undertaxed-profits rule, tightened offshore rules, and information-exchange enforcement, so corporate and capital taxes cannot be dodged by moving paper profits abroad. A multiplier on every other capital-side instrument as much as a tax itself.",
+      kind: "toggle", default: false, rev1x: 37, growth: "gdp",
+      incidence: mix(0.10, 0.90),
+      phaseStart: 2028, phaseYears: 2,
+      source: "Treasury FY2025 Greenbook international reforms: ~$374B/10yr", confidence: "medium"
+    },
+    {
+      id: "enforce", label: "High-end IRS enforcement (close the top tax gap)",
+      desc: "Sustained audit and collections capacity aimed at pass-throughs, partnerships, and high-wealth returns, where most of the ~$600B/yr gross tax gap sits. Every dollar here is tax already owed under current law.",
+      kind: "toggle", default: false, rev1x: 35, growth: "gdp",
+      incidence: { q1: 0, q2: 0, q3: 0, q4: 0.02, d9: 0.05, p9199: 0.23,
+        t9950: 0.20, t9970: 0.12, t9990: 0.15, t9999: 0.13, t10000: 0.10 },
+      phaseStart: 2028, phaseYears: 3,
+      source: "CBO and Treasury estimates of IRS enforcement ROI; net revenue $15-40B/yr at scale, $35B used", confidence: "low-medium"
+    },
+    {
+      id: "buyback", label: "Stock buyback excise, 1% to 4%",
+      desc: "Raises the existing buyback excise to parity with dividend taxation. Small but clean: entirely capital-side, already administered.",
+      kind: "toggle", default: false, rev1x: 17, growth: "top",
+      incidence: mix(0, 1),
+      phaseStart: 2028, phaseYears: 1,
+      source: "JCT-basis scoring of the enacted 1% excise scaled to 4% (~$166B/10yr additional)", confidence: "medium"
+    },
+    {
+      id: "ftt", label: "Financial transactions tax",
+      desc: "Securities and derivatives tax. Slider 1.0 is CBO's scored 0.01% design (~$30B/yr); 2.3 approximates a 0.1% rate after trading-volume response, per TPC (~$69B/yr). The slider is revenue-calibrated rather than rate-linear because volume falls as the rate rises. Falls mostly on asset owners; a slice reaches pensions.",
+      kind: "scale", default: 1.0, scaleMax: 2.3, rev1x: 30, growth: "top",
       incidence: { q1: 0.013, q2: 0.032, q3: 0.068, q4: 0.14, d9: 0.10, p9199: 0.247,
         t9950: 0.09, t9970: 0.05, t9990: 0.06, t9999: 0.10, t10000: 0.10 },
       phaseStart: 2029, phaseYears: 1,
@@ -207,7 +248,7 @@ NHA.TAX.ECON = {
     {
       id: "vat", label: "Broad consumption tax (VAT)",
       desc: "Broad-base VAT; CBO: 5% ≈ $3,380B/10yr, so ≈ $68B/yr per point. This is the regressive lever: CES data shows the bottom quintile consumes about twice its income while the top consumes 57%. Turn it on to see the trade-off.",
-      kind: "scale", default: 0.0, scaleMax: 3.33, rev1x: 204, /* default 0; 1.0 = 3pp */
+      kind: "scale", default: 0.0, scaleMax: 3.33, rev1x: 204, growth: "gdp", /* default 0; 1.0 = 3pp */
       defaultNote: "off by default; 1.0 on the slider = 3pp (max 10pp)",
       incidence: byCol("consumpShare"),
       phaseStart: 2032, phaseYears: 3,
@@ -216,7 +257,7 @@ NHA.TAX.ECON = {
     {
       id: "rents", label: "Health-sector rent taxes",
       desc: "Windfall/extraction levies on monopoly rents in the health sector during transition (framework Title XIV).",
-      kind: "toggle", default: true, rev1x: 20,
+      kind: "toggle", default: true, rev1x: 20, growth: "gdp",
       incidence: mix(0.10, 0.90),
       phaseStart: 2029, phaseYears: 2,
       source: "Framework design; order-of-magnitude only", confidence: "low"
@@ -311,3 +352,62 @@ NHA.TAX.WEALTH_DIST = {
     { id: "top001", label: "Top 0.01%",   hhM: 0.0132, wealthT: 13.1 }
   ]
 };
+
+/* ---- Financing scenarios that MEET the goal ------------------------------
+ * Each scenario is a full instrument configuration plus a designated
+ * "balancer" instrument whose slider is solved automatically so revenue
+ * covers the funding need (102% of the mature-year need and 100%
+ * cumulatively, whichever binds harder). Selecting a scenario applies and
+ * solves it; every control stays editable afterward, and the coverage
+ * tiles keep telling the truth. The VAT is excluded from all goal
+ * scenarios because consumption taxes are regressive; it remains
+ * available manually for anyone who wants to see that trade-off.        */
+NHA.TAX.SCENARIOS = [
+  {
+    id: "goal-top", name: "Wealth-first", balancer: "surtax",
+    desc: "Leans hardest on where the money is: wealth tax at 1.2x, billionaire minimum, millionaires surtax, inheritance-as-income, buyback parity, the 0.1%-equivalent transactions tax, and the full enforcement and international packages. The progressive income surtax (bottom 40% exempt) auto-scales to close whatever gap remains.",
+    settings: {
+      surtax: { value: 1.0 }, payroll: { value: 1.0 }, sscap: { enabled: true, value: 1 },
+      corp: { value: 1.0 }, capgains: { enabled: true, value: 1 },
+      wealth: { value: 1.2 }, estate: { enabled: true, value: 1 },
+      msurtax: { enabled: true, value: 1 }, bmin: { enabled: true, value: 1 },
+      ftt: { value: 2.3 }, inherit: { enabled: true, value: 1 },
+      intl: { enabled: true, value: 1 }, enforce: { enabled: true, value: 1 },
+      buyback: { enabled: true, value: 1 }, vat: { value: 0, enabled: false },
+      rents: { enabled: true, value: 1 }
+    }
+  },
+  {
+    id: "goal-shared", name: "Broad shoulders", balancer: "payroll",
+    desc: "The uncapped payroll contribution carries more of the load alongside the full top-end package, trading some progressivity for a revenue base that cannot flee or defer. The bottom quintiles still finish far ahead: their premiums and bills disappear while their payroll share stays small. Payroll auto-scales to close the gap.",
+    settings: {
+      surtax: { value: 1.0 }, payroll: { value: 1.25 }, sscap: { enabled: true, value: 1 },
+      corp: { value: 1.0 }, capgains: { enabled: true, value: 1 },
+      wealth: { value: 1.0 }, estate: { enabled: true, value: 1 },
+      msurtax: { enabled: true, value: 1 }, bmin: { enabled: true, value: 1 },
+      ftt: { value: 1.0 }, inherit: { enabled: true, value: 1 },
+      intl: { enabled: true, value: 1 }, enforce: { enabled: true, value: 1 },
+      buyback: { enabled: true, value: 1 }, vat: { value: 0, enabled: false },
+      rents: { enabled: true, value: 1 }
+    }
+  },
+  {
+    id: "goal-realist", name: "Avoidance-skeptic", balancer: "payroll",
+    desc: "Assumes the contested instruments underdeliver: the wealth tax at 60% of its estimate, and the weight shifted to the taxes hardest to dodge, the billionaire minimum, inheritance-as-income, enforcement of tax already owed, international coordination, and payroll. Less elegant, harder to strike down. Payroll auto-scales to close the gap.",
+    settings: {
+      surtax: { value: 1.3 }, payroll: { value: 1.25 }, sscap: { enabled: true, value: 1 },
+      corp: { value: 1.3 }, capgains: { enabled: true, value: 1 },
+      wealth: { value: 0.6 }, estate: { enabled: true, value: 1 },
+      msurtax: { enabled: true, value: 1 }, bmin: { enabled: true, value: 1 },
+      ftt: { value: 2.3 }, inherit: { enabled: true, value: 1 },
+      intl: { enabled: true, value: 1 }, enforce: { enabled: true, value: 1 },
+      buyback: { enabled: true, value: 1 }, vat: { value: 0, enabled: false },
+      rents: { enabled: true, value: 1 }
+    }
+  },
+  {
+    id: "custom", name: "Custom (no auto-balance)", balancer: null,
+    desc: "The original default package with no balancing: the wealth tax, surtax, payroll at 4 points, and the scored standards, with the newer ultra-wealth instruments off. Edit freely; the coverage tile tells you where you stand.",
+    settings: {}
+  }
+];

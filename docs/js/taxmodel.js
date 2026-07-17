@@ -42,6 +42,14 @@
   function growth(year) {
     return Math.pow(1 + T.ECON.realGrowth, year - T.ECON.baseYear);
   }
+  /* Per-class base growth: broad income/GDP 1.9%, wages 1.2%, top capital
+   * 4.0% real (see ECON.growthRates). Wealth-side instruments compound
+   * faster than the economy because their base does. */
+  function classGrowth(cls, year) {
+    var r = (T.ECON.growthRates && T.ECON.growthRates[cls || "gdp"]);
+    if (r == null) r = T.ECON.realGrowth;
+    return Math.pow(1 + r, year - T.ECON.baseYear);
+  }
   function ramp(year, start, years) {
     if (year < start) return 0;
     if (years <= 0) return 1;
@@ -51,7 +59,8 @@
   /* Revenue for one instrument in one year, $B (2024$) */
   T.instrumentRevenue = function (ins, st, year) {
     if (!st.enabled || st.value <= 0) return 0;
-    return ins.rev1x * st.value * ramp(year, st.phaseStart, st.phaseYears) * growth(year);
+    return ins.rev1x * st.value * ramp(year, st.phaseStart, st.phaseYears) *
+           classGrowth(ins.growth, year);
   };
 
   /* Full computation over the horizon */
@@ -90,8 +99,10 @@
    */
   T.distribution = function (settings, year, healthReliefB, wageGainB) {
     var rows = [];
-    var g = growth(year);
     T.GROUPS.forEach(function (grp) {
+      /* incomes grow with each band's own base class: the top bands'
+         incomes compound at the capital rate, everyone else at GDP */
+      var g = classGrowth(grp.g || "gdp", year);
       var taxB = 0;
       T.INSTRUMENTS.forEach(function (ins) {
         var st = settings.instruments[ins.id];
@@ -118,6 +129,47 @@
       });
     });
     return rows;
+  };
+
+  /* ---- Scenario application with auto-balancing solver -------------------
+   * Applies a scenario's instrument settings over the defaults, then (if
+   * the scenario names a balancer) solves the balancer's scale linearly so
+   * revenue reaches 102% of the mature-year (2041) need and 100% of the
+   * cumulative 2027-2042 need, whichever requires more. Returns the
+   * settings plus a _balanced report {id, value, clamped}.               */
+  T.solveScenario = function (scn, programs) {
+    var s = T.defaultSettings();
+    Object.keys(scn.settings || {}).forEach(function (id) {
+      var o = scn.settings[id], st = s.instruments[id];
+      if (!st) return;
+      if (o.value != null) { st.value = o.value; st.enabled = o.value > 0 || o.enabled === true; }
+      if (o.enabled != null) { st.enabled = o.enabled; if (o.enabled && st.value <= 0) st.value = 1; }
+      if (o.phaseStart != null) st.phaseStart = o.phaseStart;
+    });
+    if (!scn.balancer) return s;
+
+    var bal = s.instruments[scn.balancer];
+    var baseVal = bal.value;
+    bal.enabled = true;
+
+    bal.value = 0;
+    var c0 = T.compute(s, programs);
+    bal.value = 1;
+    var c1 = T.compute(s, programs);
+
+    var i41 = c0.years.indexOf(2041);
+    function sum(a) { return a.reduce(function (x, y) { return x + y; }, 0); }
+    var u41 = c1.totalRev[i41] - c0.totalRev[i41];
+    var uCum = sum(c1.totalRev) - sum(c0.totalRev);
+    var need41 = (c0.need[i41] * 1.02 - c0.totalRev[i41]) / (u41 || 1);
+    var needCum = (sum(c0.need) - sum(c0.totalRev)) / (uCum || 1);
+    var v = Math.max(need41, needCum, baseVal, 0);
+
+    var ins = T.INSTRUMENTS.filter(function (i) { return i.id === scn.balancer; })[0];
+    var clamped = v > ins.scaleMax;
+    bal.value = Math.min(v, ins.scaleMax);
+    s._balanced = { id: scn.balancer, value: bal.value, clamped: clamped };
+    return s;
   };
 
   /* ---- Self-tests (register with the shared harness) ---- */
@@ -168,6 +220,29 @@
       var a = T.instrumentRevenue(ins, s1.instruments.payroll, 2040);
       var b = T.instrumentRevenue(ins, s2.instruments.payroll, 2040);
       return Math.abs(b - 2 * a) < 1e-9;
+    }
+  });
+
+  NHA.SELFTESTS.push({
+    name: "Tax: every goal scenario meets the funding goal (fallback need path)",
+    run: function () {
+      return T.SCENARIOS.filter(function (sc) { return sc.balancer; })
+        .every(function (sc) {
+          var s = T.solveScenario(sc, T.PROGRAMS);
+          var c = T.compute(s, T.PROGRAMS);
+          var i41 = c.years.indexOf(2041);
+          function sum(a) { return a.reduce(function (x, y) { return x + y; }, 0); }
+          return c.totalRev[i41] >= c.need[i41] && sum(c.totalRev) >= sum(c.need);
+        });
+    }
+  });
+
+  NHA.SELFTESTS.push({
+    name: "Tax: every instrument has a valid growth class",
+    run: function () {
+      return T.INSTRUMENTS.every(function (ins) {
+        return T.ECON.growthRates[ins.growth || "gdp"] != null;
+      });
     }
   });
 

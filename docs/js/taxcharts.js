@@ -16,10 +16,11 @@
     vat: "var(--series-4)", sscap: "var(--series-5)", corp: "var(--series-6)",
     ftt: "var(--series-7)", _other: "var(--series-8)"
   };
-  var OTHER_IDS = ["capgains", "estate", "rents", "msurtax", "bmin"];
+  var OTHER_IDS = ["capgains", "estate", "rents", "msurtax", "bmin",
+                   "inherit", "intl", "enforce", "buyback"];
 
   function labelFor(id) {
-    if (id === "_other") return "Other levies (cap-gains, estate, rents, millionaire surtax, billionaire minimum)";
+    if (id === "_other") return "Other levies (cap-gains, estate, inheritance, millionaire & billionaire taxes, enforcement, international, buybacks, rents)";
     var ins = NHA.TAX.INSTRUMENTS.filter(function (i) { return i.id === id; })[0];
     return ins ? ins.label : id;
   }

@@ -15,6 +15,7 @@
   var customPrograms = [];
   var distYear = 2041;
   var distMode = "dollars";
+  var activeScenario = "goal-top";
 
   /* ---- health link (live from the healthcare model) ---- */
   function healthNeed(year) {
@@ -290,6 +291,41 @@
     $("tab-" + v).addEventListener("click", function () { showView(v); });
   });
 
+  /* ---- financing scenario picker (selectable, then fully editable) ---- */
+  function applyScenario(id) {
+    activeScenario = id;
+    var scn = T.SCENARIOS.filter(function (s) { return s.id === id; })[0];
+    if (!scn) return;
+    settings = T.solveScenario(scn, activePrograms());
+    var desc = $("tax-scenario-desc");
+    var balNote = "";
+    if (settings._balanced) {
+      var ins = T.INSTRUMENTS.filter(function (i) { return i.id === settings._balanced.id; })[0];
+      balNote = " Auto-balanced: " + ins.label + " set to " +
+        settings._balanced.value.toFixed(2) + "× to meet the goal" +
+        (settings._balanced.clamped ?
+          " (hit its ceiling; the goal may still be short, check the tiles)" : "") + ".";
+    } else if (scn.balancer === null) {
+      balNote = " No auto-balancing.";
+    }
+    desc.textContent = scn.desc + balNote +
+      " Everything below remains editable; re-select the scenario to re-balance " +
+      "after changing healthcare assumptions.";
+    buildInstrumentControls();
+    refresh();
+  }
+
+  function wireScenarioPicker() {
+    var sel = $("tax-scenario");
+    T.SCENARIOS.forEach(function (s) {
+      var o = document.createElement("option");
+      o.value = s.id; o.textContent = s.name;
+      if (s.id === activeScenario) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", function () { applyScenario(sel.value); });
+  }
+
   /* ---- inequality story (static, rendered once) ---- */
   function renderInequality() {
     NHA.renderTopRateChart($("toprate-chart"));
@@ -333,10 +369,10 @@
   NHA.TAX.onHealthUpdate = function () { refresh(); };
 
   /* ---- boot ---- */
-  buildInstrumentControls();
   wireProgramAdd();
   wireViewControls();
+  wireScenarioPicker();
   renderInequality();
-  refresh();
+  applyScenario(activeScenario); /* builds controls + refreshes, goal met */
   showView((location.hash || "#health").slice(1));
 })();

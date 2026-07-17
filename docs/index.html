@@ -387,23 +387,13 @@
   <!-- The inequality context -->
   <section class="card">
     <h2>Start with where the money is</h2>
-    <p class="desc">Any honest financing conversation starts with two facts.
-      First, America has taxed its top earners far harder than it does now,
-      for decades, through its strongest growth years: the top marginal rate
-      stayed at 91 to 92 percent through the entire Eisenhower
-      administration and did not fall below 70 percent until 1982. It is 37
-      percent today. Second, wealth has concentrated to a degree the words
-      "top 1%" no longer describe; the action is inside the top tenth and
-      hundredth of a percent. That is why the model below breaks the top 1%
-      into five bands and includes instruments aimed specifically at them.</p>
-    <h2 style="font-size:14.5px;margin-top:16px">Top marginal federal income tax rate, 1913–2025</h2>
-    <div id="toprate-chart"></div>
-    <p class="note">Source: IRS Statistics of Income historical tables.
-      Effective rates paid were lower than statutory rates in every era
-      (deductions, exclusions, capital gains); the line shows what the law
-      asked of the next dollar at the very top, which is the policy choice
-      Congress controls.</p>
-    <h2 style="font-size:14.5px;margin-top:20px">What the top actually holds</h2>
+    <p class="desc">Any honest financing conversation starts here. American
+      wealth has concentrated to a degree the words "top 1%" no longer
+      describe; the action is inside the top tenth and hundredth of a
+      percent. That is why the model on this page breaks the top 1% into
+      five bands, grows their capital faster than the economy (because it
+      does grow faster), and includes instruments aimed specifically at
+      them.</p>
     <div class="tiles" id="inequality-tiles"></div>
     <div id="wealth-chart"></div>
     <p class="note">Sources: Federal Reserve Distributional Financial
@@ -412,6 +402,70 @@
       capitalization estimates and Forbes-list aggregates, constrained to
       the Fed's band totals (medium confidence). Median household net worth
       from the Survey of Consumer Finances.</p>
+
+    <h2 style="font-size:15px;margin-top:24px">Why the ultra-wealthy are hard to tax</h2>
+    <ul class="lever-list">
+      <li><b>Income is optional at the top.</b> The tax code mostly taxes
+        realized income, and a billionaire can simply not realize any:
+        hold appreciating assets, borrow against them for spending, and
+        let the step-up at death erase the gain entirely. "Buy, borrow,
+        die" is why measured top-0.01% tax rates fall below the merely
+        rich.</li>
+      <li><b>Valuation and liquidity.</b> Private businesses, art, and
+        carried interests are hard to appraise annually, and taxing them
+        can force sales; every wealth-tax design fights this.</li>
+      <li><b>A planning industry.</b> Grantor trusts, dynasty trusts,
+        valuation discounts, and pass-through games exist to move wealth
+        around any single-instrument tax; the estate tax raises a fifth of
+        what a static calculation says it should.</li>
+      <li><b>Legal uncertainty.</b> A federal wealth tax faces the
+        Constitution's direct-tax apportionment clause, and taxing
+        unrealized gains tests the 16th Amendment's meaning of income
+        (Moore v. United States left the question open, not answered).</li>
+      <li><b>Enforcement asymmetry.</b> Audit rates on the largest returns
+        collapsed for a decade; the IRS was outgunned by the taxpayers with
+        the most complex returns and the most to gain from opacity.</li>
+    </ul>
+    <h2 style="font-size:15px;margin-top:18px">How it can realistically be done</h2>
+    <ul class="lever-list">
+      <li><b>Tax what cannot flee or hide.</b> Withholding and third-party
+        reporting on capital income, an uncapped payroll base, and
+        transaction taxes collect at the source, before planning starts.</li>
+      <li><b>Close the death loophole first.</b> Ending stepped-up basis
+        and taxing gains at death removes the exit that makes deferral a
+        permanent escape; every rate increase works better once it is
+        shut.</li>
+      <li><b>Minimum taxes on comprehensive income.</b> The billionaire
+        minimum tax sidesteps game-by-game whack-a-mole by asking one
+        question: did you pay at least 25% on your true economic gain?</li>
+      <li><b>Tax inheritances as income to heirs.</b> Constitutionally
+        clean (it is income), progressive by construction, and aimed at
+        dynasties rather than founders.</li>
+      <li><b>Fund the referees.</b> High-end enforcement collects tax
+        already owed; the return on IRS funding at the top is documented
+        and large.</li>
+      <li><b>Coordinate internationally and at the exit.</b> Pillar-2
+        minimum taxes, information exchange, and a real exit tax shrink
+        the run-away option.</li>
+      <li><b>Build a legal ladder, not a single rung.</b> The framework's
+        own contingency matrix: if the wealth tax falls in court, fall back
+        to mark-to-market; then to realization-at-death plus minimum
+        taxes. Every scenario below survives losing its most contested
+        instrument.</li>
+    </ul>
+
+    <h2 style="font-size:15px;margin-top:24px">It has been done before</h2>
+    <p class="desc">America taxed its top earners far harder than it does
+      now, for decades, through its strongest growth years: the top
+      marginal rate stayed at 91 to 92 percent through the entire
+      Eisenhower administration and did not fall below 70 percent until
+      1982. It is 37 percent today.</p>
+    <div id="toprate-chart"></div>
+    <p class="note">Source: IRS Statistics of Income historical tables.
+      Effective rates paid were lower than statutory rates in every era
+      (deductions, exclusions, capital gains); the line shows what the law
+      asked of the next dollar at the very top, which is the policy choice
+      Congress controls.</p>
   </section>
 
   <!-- Funding programs -->
@@ -436,13 +490,25 @@
 
   <!-- Instruments -->
   <section class="card">
-    <h2>The tax package</h2>
-    <p class="desc">Ten instruments spanning the realistic menu: progressive
-      surtaxes, payroll, corporate, wealth, consumption. Each has a sourced
-      revenue estimate, a start year, and (where continuous) a rate slider.
-      Turn the regressive consumption tax on and watch the bottom quintiles'
-      net position flip; that trade-off is what this page is for.</p>
+    <h2>The tax package: pick a scenario that meets the goal, then make it yours</h2>
+    <p class="desc">Sixteen instruments spanning the realistic menu, from
+      progressive surtaxes and uncapped payroll to the wealth tax,
+      billionaire minimum, and inheritance-as-income. Each carries a sourced
+      revenue estimate, its own base-growth rate (top-capital bases compound
+      at 4% real, wages at 1.2%, broad income at 1.9%), a start year, and a
+      slider or toggle. The scenarios below are solved to actually cover the
+      funding need; select one, then edit anything.</p>
+    <div class="control" style="max-width:520px">
+      <label for="tax-scenario">Financing scenario</label>
+      <select id="tax-scenario" aria-label="Financing scenario"></select>
+    </div>
+    <p class="scenario-desc" id="tax-scenario-desc"></p>
     <div class="tax-controls" id="tax-instruments"></div>
+    <p class="note">None of the goal scenarios uses the consumption tax:
+      a VAT is regressive (the bottom quintile consumes about twice its
+      income), so it stays out of every preset. It remains available above
+      for anyone who wants to see exactly what that trade-off does to the
+      burden chart below.</p>
   </section>
 
   <!-- Revenue vs need over time -->
