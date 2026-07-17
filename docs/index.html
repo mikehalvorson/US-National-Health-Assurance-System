@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance &amp; Public Financing Simulator</title>
 <meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it. Every parameter is sourced and every major assumption can be adjusted.">
-<link rel="stylesheet" href="style.css?v=20260717-data3">
+<link rel="stylesheet" href="style.css?v=20260717-quality1">
 </head>
 <body>
 <div class="wrap">
@@ -33,6 +33,7 @@
     <button id="tab-health" class="active">Healthcare</button>
     <button id="tab-rollout">Phased Rollout</button>
     <button id="tab-data">Data</button>
+    <button id="tab-quality">Quality</button>
     <button id="tab-tax">Taxes &amp; Financing</button>
     <button id="tab-units">Unit Network</button>
     <button id="tab-gov">Governance</button>
@@ -936,6 +937,122 @@
 
   </div><!-- /view-data -->
 
+  <div id="view-quality" hidden>
+
+  <section class="card">
+    <h2>The complete controlled parameter catalog</h2>
+    <p class="desc">The framework controls three different kinds of
+      parameters. Key performance parameters define system outcomes,
+      technical performance parameters define operating performance, and
+      cost parameters define the quantities required to cost, calibrate, and
+      stress-test the system. This view lists all 430 records in the
+      controlled dictionaries and groups them by where they matter.</p>
+    <div class="quality-counts" aria-label="Controlled parameter counts">
+      <div class="quality-count">
+        <span class="quality-kicker">System outcomes</span>
+        <strong>41</strong>
+        <b>KPP records</b>
+        <small>Coverage, access, quality, equity, fiscal, transition, workforce, and legitimacy outcomes</small>
+      </div>
+      <div class="quality-count">
+        <span class="quality-kicker">Operating performance</span>
+        <strong>79</strong>
+        <b>TPP records</b>
+        <small>Eligibility, payment, medicines, facilities, workforce, benefits, data, cyber, rights, and innovation</small>
+      </div>
+      <div class="quality-count">
+        <span class="quality-kicker">Cost and model control</span>
+        <strong>310</strong>
+        <b>CP records in 20 families</b>
+        <small>Inputs, states, ledgers, derived outputs, offsets, units, owners, and calibration status</small>
+      </div>
+    </div>
+    <p class="note"><b>How to read “target.”</b> KPP and TPP source targets
+      are maturity targets unless the rollout plan assigns an earlier
+      milestone or gate floor. CP records are model controls rather than
+      performance targets; the catalog preserves their value/calibration
+      status and never invents a phase value.</p>
+  </section>
+
+  <section class="card">
+    <h2>Targets across the twelve-year rollout</h2>
+    <p class="desc">Most catalog targets are assessed at full integration in
+      Phase 8. Earlier phases establish, pilot, and scale the measurement
+      systems. The framework specifies only seven numeric progression floors
+      before or at maturity; every other blank phase means no numeric interim
+      value was defined, not zero activity.</p>
+    <div id="quality-phase-overview" class="quality-phase-overview"
+      aria-label="Numeric parameter milestones and gate floors across rollout phases"></div>
+    <div id="quality-floor-table" class="tbl-scroll quality-floor-wrap"></div>
+  </section>
+
+  <section class="card">
+    <h2>Explore all 430 parameters</h2>
+    <p class="desc">Search the controlled identifier or text, narrow the
+      catalog by parameter type or concept, and choose a rollout phase. Select
+      any row for its calculation, owner, datasets, status, and complete
+      phase-by-phase target strip.</p>
+    <div class="quality-controls" role="group" aria-label="Quality catalog filters">
+      <label class="quality-control quality-search">
+        <span>Search</span>
+        <input id="quality-search" type="search"
+          placeholder="ID, metric, owner, dataset, family…">
+      </label>
+      <label class="quality-control">
+        <span>Parameter type</span>
+        <select id="quality-type">
+          <option value="all">All types</option>
+          <option value="KPP">KPP — key performance</option>
+          <option value="TPP">TPP — technical performance</option>
+          <option value="CP">CP — cost/model parameter</option>
+        </select>
+      </label>
+      <label class="quality-control">
+        <span>Concept or application</span>
+        <select id="quality-concept">
+          <option value="all">All concepts</option>
+        </select>
+      </label>
+      <label class="quality-control">
+        <span>Rollout phase shown</span>
+        <select id="quality-phase">
+          <option value="all">Source / maturity value</option>
+          <option value="P0">P0 — Year 1</option>
+          <option value="P1">P1 — Year 2</option>
+          <option value="P2">P2 — Year 3</option>
+          <option value="P3">P3 — Year 4</option>
+          <option value="P4">P4 — Year 6</option>
+          <option value="P5">P5 — Year 7</option>
+          <option value="P6">P6 — Year 8</option>
+          <option value="P7">P7 — Year 10</option>
+          <option value="P8">P8 — Year 12</option>
+        </select>
+      </label>
+    </div>
+    <div class="quality-filter-foot">
+      <p id="quality-results" aria-live="polite"></p>
+      <button id="quality-reset" class="btn" type="button">Reset filters</button>
+    </div>
+
+    <div id="quality-selected" class="quality-selected"
+      aria-live="polite" aria-label="Selected parameter details"></div>
+
+    <div class="tbl-scroll quality-table-wrap">
+      <table class="data quality-table" id="quality-table">
+        <caption class="sr-only">Complete controlled quality and cost parameter catalog</caption>
+      </table>
+    </div>
+  </section>
+
+  <p class="rollout-source">Quality catalog content follows Framework
+    v2.0.0, the complete KPP and TPP dictionaries, the 310-record cost
+    parameter registry, and the controlled phase and gate tables.
+    Requirements are trace links rather than additional parameters.
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/National_Health_Assurance_Framework_v2.0.0_FINAL.pdf"
+      target="_blank" rel="noopener">Read the full framework</a>.</p>
+
+  </div><!-- /view-quality -->
+
   <footer class="site">
     Built from the National Health Assurance Framework v2.0.0 and its research
     parameter base:
@@ -956,11 +1073,13 @@
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js"></script>
 <script src="js/app.js"></script>
-<script src="js/taxapp.js?v=20260717-data1"></script>
+<script src="js/taxapp.js?v=20260717-quality1"></script>
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
 <script src="js/rollout.js?v=20260716b"></script>
 <script src="js/data.js?v=20260717-data2"></script>
+<script src="js/qualitydata.js?v=20260717-quality1"></script>
+<script src="js/quality.js?v=20260717-quality1"></script>
 </body>
 </html>
