@@ -406,8 +406,12 @@
       { value: "≥95%", label: "within access-time standard", phase: "P8", level: "95%" }
     ].forEach(function (step) {
       var el = document.createElement("div");
-      el.className = "unit-ramp-step" + (step.qual ? " qualitative" : "");
-      el.style.setProperty("--level", step.level);
+      el.className = "unit-ramp-step";
+      var plot = document.createElement("div");
+      plot.className = "unit-ramp-plot";
+      var bar = document.createElement("div");
+      bar.className = "unit-ramp-bar" + (step.qual ? " qualitative" : "");
+      bar.style.setProperty("--level", step.level);
       var value = document.createElement("div");
       value.className = "unit-ramp-value";
       value.textContent = step.value;
@@ -417,7 +421,9 @@
       var phase = document.createElement("div");
       phase.className = "unit-ramp-phase";
       phase.textContent = step.phase;
-      el.appendChild(value);
+      bar.appendChild(value);
+      plot.appendChild(bar);
+      el.appendChild(plot);
       el.appendChild(label);
       el.appendChild(phase);
       chart.appendChild(el);

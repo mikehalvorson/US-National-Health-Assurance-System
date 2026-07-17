@@ -527,15 +527,21 @@ footer.site a { color: var(--text-muted); }
 .buildout-panel h3 { font-size: 14px; margin-bottom: 13px; }
 .unit-ramp-chart {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 7px; height: 185px; align-items: end; padding-top: 22px;
-  border-bottom: 1px solid var(--gridline-strong);
+  gap: 8px; align-items: stretch; margin: 4px 0 12px;
 }
 .unit-ramp-step {
-  height: var(--level); min-height: 26px; position: relative;
+  display: flex; min-width: 0; flex-direction: column; gap: 6px;
+}
+.unit-ramp-plot {
+  display: flex; align-items: flex-end; height: 118px;
+  border-bottom: 1px solid var(--gridline-strong);
+}
+.unit-ramp-bar {
+  width: 100%; height: var(--level); min-height: 40px; overflow: hidden;
   background: color-mix(in srgb, var(--series-1) 18%, var(--surface-1));
   border-top: 3px solid var(--series-1); padding: 6px 5px;
 }
-.unit-ramp-step.qualitative {
+.unit-ramp-bar.qualitative {
   background: repeating-linear-gradient(
     -45deg,
     color-mix(in srgb, var(--series-1) 12%, var(--surface-1)) 0 6px,
@@ -544,10 +550,13 @@ footer.site a { color: var(--text-muted); }
   border-top-color: var(--baseline-series);
 }
 .unit-ramp-value { font-size: 15px; font-weight: 700; }
-.unit-ramp-label { font-size: 10.5px; line-height: 1.25; color: var(--text-secondary); }
+.unit-ramp-label {
+  min-height: 55px; overflow-wrap: anywhere;
+  font-size: 11px; line-height: 1.25; color: var(--text-secondary);
+}
 .unit-ramp-phase {
-  position: absolute; left: 4px; top: calc(100% + 6px);
-  font-size: 10.5px; color: var(--text-muted); white-space: nowrap;
+  padding-top: 5px; border-top: 1px solid var(--gridline);
+  font-size: 11px; color: var(--text-muted); white-space: nowrap;
 }
 .drug-pipeline { display: grid; gap: 8px; }
 .drug-stage {
