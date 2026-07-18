@@ -139,7 +139,7 @@
    * net cost (warm pole), neutral gray zero axis. */
   NHA.renderNetImpactChart = function (container, rows, mode) {
     container.innerHTML = "";
-    var W = 860, rowH = 40, M = { l: 150, r: 110, t: 8, b: 34 };
+    var W = 860, rowH = 40, M = { l: 150, r: 150, t: 8, b: 34 };
     var H = M.t + rows.length * rowH + M.b;
 
     var vals = rows.map(function (r) {
@@ -178,9 +178,10 @@
       var valTxt = mode === "pct"
         ? (v > 0 ? "+" : "") + v.toFixed(1) + "% of income"
         : (v > 0 ? "+$" : "−$") + Math.round(Math.abs(v)).toLocaleString("en-US");
+      /* all value labels in a single right-side gutter, clear of every bar */
       var vt = el("text", {
-        x: isCost ? x1 + 8 : x0 - 8, y: cy + 4,
-        class: "direct-label", "text-anchor": isCost ? "start" : "end"
+        x: W - M.r + 10, y: cy + 4,
+        class: "direct-label", "text-anchor": "start"
       }, svg);
       vt.textContent = valTxt;
 
