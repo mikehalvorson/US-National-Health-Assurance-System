@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance &amp; Public Financing Simulator</title>
 <meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it. Every parameter is sourced and every major assumption can be adjusted.">
-<link rel="stylesheet" href="style.css?v=20260717-data-layout2">
+<link rel="stylesheet" href="style.css?v=20260717-hardening1">
 </head>
 <body>
 <div class="wrap">
@@ -37,6 +37,7 @@
     <button id="tab-tax">Taxes &amp; Financing</button>
     <button id="tab-units">Unit Network</button>
     <button id="tab-gov">Governance</button>
+    <button id="tab-hardening">Executive Hardening</button>
   </nav>
 
   <div id="view-health">
@@ -711,6 +712,270 @@
 
   </div><!-- /view-gov -->
 
+  <div id="view-hardening" hidden>
+
+  <section class="card">
+    <h2>The threat: dismantlement without repeal</h2>
+    <p class="desc">A hostile executive would not need to win an immediate
+      vote to repeal National Health Assurance. It could try to make the
+      entitlement fail in practice: hold back money, leave leadership posts
+      empty, hollow out staffing, delay or withdraw rules, suppress performance
+      evidence, decline enforcement, or let contractors and state partners
+      obstruct essential systems. The first harms would appear as interrupted
+      medication, unpaid providers, closed services, broken appeals, and
+      missing public reports.</p>
+    <div class="hardening-boundary">
+      <span>Design boundary</span>
+      <p><strong>Make unilateral executive hollowing visible, temporary, and
+        remediable.</strong> The architecture cannot prevent Congress from
+        changing the statute or a court from invalidating an authority. It can
+        prevent ordinary executive inaction from quietly operating as repeal
+        and can preserve lawful continuity while Congress and courts respond.</p>
+    </div>
+    <div class="hardening-threat-grid"
+      aria-label="Ways a hostile executive could try to hollow out the system">
+      <article class="hardening-threat">
+        <span>01</span>
+        <div>
+          <h3>Starve lawful payments</h3>
+          <p>Withhold or defer funds, delay apportionment, transfer balances,
+            or pressure the payment rail to reprice certified obligations.</p>
+          <small>First visible harm: pharmacies, hospitals, and clinicians go unpaid.</small>
+        </div>
+      </article>
+      <article class="hardening-threat">
+        <span>02</span>
+        <div>
+          <h3>Empty the offices</h3>
+          <p>Decline appointments, manufacture quorum failure, impose a hiring
+            freeze, or use a reduction in force below operating floors.</p>
+          <small>First visible harm: coverage, appeals, safety, and oversight clocks stop.</small>
+        </div>
+      </article>
+      <article class="hardening-threat">
+        <span>03</span>
+        <div>
+          <h3>Sabotage by rule delay</h3>
+          <p>Miss mandatory rule deadlines, withdraw implementing rules, or
+            use new interpretations to narrow benefits and payment duties.</p>
+          <small>First visible harm: the same right produces different answers or no answer.</small>
+        </div>
+      </article>
+      <article class="hardening-threat">
+        <span>04</span>
+        <div>
+          <h3>Stop enforcing the law</h3>
+          <p>Ignore rights violations, staffing breaches, extraction, fraud,
+            payment obstruction, or required corrective actions.</p>
+          <small>First visible harm: prohibited conduct becomes the operating norm.</small>
+        </div>
+      </article>
+      <article class="hardening-threat">
+        <span>05</span>
+        <div>
+          <h3>Hide the evidence</h3>
+          <p>Suppress required reports, block audit feeds, erase delay flags,
+            or prevent independent bodies from seeing operational records.</p>
+          <small>First visible harm: deterioration cannot be proved or challenged quickly.</small>
+        </div>
+      </article>
+      <article class="hardening-threat">
+        <span>06</span>
+        <div>
+          <h3>Break systems and partnerships</h3>
+          <p>Terminate continuity contracts, let vendors retain data or code,
+            obstruct state compacts, or disable the systems that move records
+            and money.</p>
+          <small>First visible harm: local outages cascade into national service interruption.</small>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Defense in depth</h2>
+    <p class="desc">No single official, office, rule, contract, or court route
+      is expected to carry the whole defense. Select a layer to see the attack
+      it blocks, the continuity action that occurs without permission from the
+      obstructing official, and the independent body that checks the result.</p>
+    <div id="hardening-stepper" class="hardening-stepper"
+      aria-label="Seven layers of executive-branch hardening"></div>
+    <div id="hardening-detail" class="hardening-detail"
+      aria-live="polite"></div>
+  </section>
+
+  <section class="card">
+    <h2>From interference to continuity</h2>
+    <p class="desc">The framework does not wait for a discretionary
+      self-report from the same chain of command accused of obstruction. It
+      specifies a detection-to-remedy workflow driven by clocks, logs,
+      obligations, staffing records, public-data completeness, escrow status,
+      and complaints.</p>
+    <div class="hardening-response-flow"
+      aria-label="Detection-to-remedy workflow for executive interference">
+      <article>
+        <span>01</span><h3>Detect</h3>
+        <p>Automatic clocks and protected records identify a missed payment,
+          vacancy, missing rule, suppressed report, or vendor refusal.</p>
+      </article>
+      <article>
+        <span>02</span><h3>Classify</h3>
+        <p>Separate lawful adjustment and ordinary incident from unlawful
+          delay, nonfeasance, obstruction, suppression, or legal constraint.</p>
+      </article>
+      <article>
+        <span>03</span><h3>Continue</h3>
+        <p>Use the narrowest lawful default immediately: payment, succession,
+          last-lawful rule, escrow release, offline mode, or federal step-in.</p>
+      </article>
+      <article>
+        <span>04</span><h3>Compel</h3>
+        <p>Start anti-impoundment or administrative action within 24 hours and
+          notify the congressional, scorekeeping, and rights bodies.</p>
+      </article>
+      <article>
+        <span>05</span><h3>Reconcile</h3>
+        <p>Correct provisional actions without shifting error costs to
+          patients, then publish the event, duration, remedy, and result.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Hardening has measurable acceptance tests</h2>
+    <p class="desc">These are controlled Phase 8 targets, not claims about
+      achieved performance. Independent evidence must show that the defenses
+      actually work under vacancy, withholding, rule-failure, data-suppression,
+      and vendor-obstruction exercises.</p>
+    <div class="hardening-target-grid"
+      aria-label="Executive-hardening performance targets">
+      <article>
+        <strong>&ge;99.5%</strong>
+        <span>core spending under mandatory payment protection</span>
+        <small>TPP-12.1 / SR-LAW-001</small>
+      </article>
+      <article>
+        <strong>&ge;98%</strong>
+        <span>critical-office staffing floor compliance</span>
+        <small>TPP-12.2 / SR-LAW-002</small>
+      </article>
+      <article>
+        <strong>&ge;99%</strong>
+        <span>critical functions continuing through leadership vacancies</span>
+        <small>TPP-12.3 / SR-LAW-003</small>
+      </article>
+      <article>
+        <strong>&le;24 hours</strong>
+        <span>to initiate action after an unlawful delay flag</span>
+        <small>TPP-12.5 / SR-LAW-004</small>
+      </article>
+      <article>
+        <strong>&ge;99%</strong>
+        <span>required public data published on time</span>
+        <small>TPP-12.4</small>
+      </article>
+      <article>
+        <strong>&ge;99%</strong>
+        <span>critical legal provisions covered by a tested contingency</span>
+        <small>SR-LAW-009 / verification package</small>
+      </article>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>The design is deliberately not one chain of command</h2>
+    <p class="desc">The operating department may administer coverage, but it
+      cannot be the sole holder of the money, the only source of performance
+      evidence, the final reviewer of rights violations, or the court that
+      orders relief. The separation below makes capture of one institution
+      insufficient to disable the system.</p>
+    <div class="tbl-scroll">
+      <table class="data hardening-authority-table">
+        <caption class="sr-only">Executive attack paths, independent checks, and continuity remedies</caption>
+        <thead>
+          <tr>
+            <th>Attack path</th>
+            <th>Operational boundary</th>
+            <th>Independent check</th>
+            <th>Continuity or remedy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Benefit narrowing</th>
+            <td>DNHA cannot rewrite the statutory entitlement.</td>
+            <td>NHAC protects rights; NHASB controls scorekeeping and formulas.</td>
+            <td>A1-HCAC or district-court review; continued lawful default.</td>
+          </tr>
+          <tr>
+            <th>Payment obstruction</th>
+            <td>THDO executes certified obligations without policy repricing.</td>
+            <td>CHAO receives payment and interference evidence.</td>
+            <td>Deemed or provisional payment, interest, injunction, or payment order.</td>
+          </tr>
+          <tr>
+            <th>False readiness</th>
+            <td>DNHA and NHTCA cannot certify their own phase success.</td>
+            <td>NHASB independently verifies gates and corrective actions.</td>
+            <td>Hold, resize, repair, or roll back the affected implementation wave.</td>
+          </tr>
+          <tr>
+            <th>Data suppression</th>
+            <td>Required feeds and publication duties do not depend on operator preference.</td>
+            <td>CHAO, NHAC, and NHASB receive records appropriate to their authority.</td>
+            <td>Escrow release, protected reporting, standing, and expedited relief.</td>
+          </tr>
+          <tr>
+            <th>State or vendor refusal</th>
+            <td>National rights and payment duties do not depend on one compact or contractor.</td>
+            <td>NHASB and CHAO record the breach and activation evidence.</td>
+            <td>Portable records, step-in rights, continuity contracts, and temporary federal operation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Limits and unfinished statutory work</h2>
+    <div class="hardening-limit-grid">
+      <article>
+        <span>Open legal design</span>
+        <h3>Leadership rules still require legislation</h3>
+        <p>Framework open issue OI-019 leaves governing-body composition,
+          appointment, terms, removal, quorum, conflicts, vacancy, and
+          succession for final statutory design. This tab does not invent
+          fixed terms or for-cause removal where the framework has not adopted
+          them.</p>
+      </article>
+      <article>
+        <span>Operational proof</span>
+        <h3>A fallback on paper is not enough</h3>
+        <p>Each fallback still needs authority, an owner, funds, staff,
+          systems, data, contracts, an activation clock, exercises, and a
+          return-and-reconciliation path. Legal contingency instruments and
+          recovery-time objectives remain subjects for specialized analysis.</p>
+      </article>
+      <article>
+        <span>Constitutional boundary</span>
+        <h3>Hardening is not permanent entrenchment</h3>
+        <p>A later Congress may amend or repeal the statute, and courts may
+          constrain particular authorities. The design instead makes those
+          changes formal and reviewable while severability and scoped
+          fallbacks preserve unrelated coverage, payment, rights, and
+          continuity functions.</p>
+      </article>
+    </div>
+    <p class="rollout-source">Framework basis: Sections 4.3-4.4 and 9.1-9.5;
+      executive-hardening controls EH-01 through EH-12; requirements
+      SR-LAW-001 through SR-LAW-010; TPP-12.1 through TPP-12.5; and Appendix S
+      open issue OI-019.
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/National_Health_Assurance_Framework_v2.0.0_FINAL.pdf"
+        target="_blank" rel="noopener">Read the full framework</a>.</p>
+  </section>
+
+  </div><!-- /view-hardening -->
+
   <div id="view-rollout" hidden>
 
   <section class="card">
@@ -1193,7 +1458,7 @@
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js"></script>
 <script src="js/app.js"></script>
-<script src="js/taxapp.js?v=20260717-quality1"></script>
+<script src="js/taxapp.js?v=20260717-hardening1"></script>
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
@@ -1202,5 +1467,6 @@
 <script src="js/dataphases.js?v=20260717-data-phase1"></script>
 <script src="js/data.js?v=20260717-data-layout2"></script>
 <script src="js/quality.js?v=20260717-quality1"></script>
+<script src="js/hardening.js?v=20260717-hardening1"></script>
 </body>
 </html>

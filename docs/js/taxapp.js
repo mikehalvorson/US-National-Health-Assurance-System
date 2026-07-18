@@ -281,7 +281,7 @@
   }
 
   /* ---- tabs ---- */
-  var VIEWS = ["health", "rollout", "data", "quality", "tax", "units", "gov"];
+  var VIEWS = ["health", "rollout", "data", "quality", "tax", "units", "gov", "hardening"];
   function showView(which) {
     if (VIEWS.indexOf(which) < 0) which = "health";
     VIEWS.forEach(function (v) {
