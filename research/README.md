@@ -17,6 +17,7 @@ those as open research items, not silent gaps.
 | [05_it_governance_rd_transition.md](05_it_governance_rd_transition.md) | Health IT/records/cyber infrastructure precedents, governance/oversight agency cost ratios, biomedical R&D funding, transition/migration program costs | CP-IT, CP-GOV, CP-RD, CP-TRN |
 | [06_tax_distribution_financing.md](06_tax_distribution_financing.md) | Tax model baselines: CBO 2022 household income/tax distribution (from CBO's own workbook), FY2024–25 Treasury receipts, Fed DFA wealth distribution (2026:Q1), CBO Dec 2024 revenue-options scores, CBO/JCT/TPC incidence conventions, CES 2024 health spending by income quintile | tax model (docs/js/taxparams.js) |
 | [data_phase_target_methodology.md](data_phase_target_methodology.md) | Exact and derived KPP/TPP targets used by the Data tab for P0 through P8, with denominator scope and a row-level justification for every derived value | data rollout scorecard (docs/js/dataphases.js) |
+| [workforce_transition_methodology.md](workforce_transition_methodology.md) | BLS anchors, overlap controls, lower/planning/stress job-displacement cases, internal role matching, quantified new-position floor, and rural flex/travel-pool derivation | Workforce tab (docs/js/workforce.js) |
 
 [parameter_baseline_seed.csv](parameter_baseline_seed.csv) pulls the ~45
 highest-confidence, most load-bearing numbers from all five files into one
@@ -80,9 +81,11 @@ Each file ends with its own "gaps for follow-up" section. Recurring themes:
   Brookings commentary) that are reliable but not a substitute for the
   primary table. A follow-up pass with direct PDF/API access should verify
   exact figures before hard-coding them as simulation constants.
-- BLS occupational headcount data (e.g., insurance claims processors,
-  medical billing clerks — needed to size the "displaced worker" transition
-  cohort) blocked automated web fetch and needs the BLS API directly.
+- BLS occupational and industry headcounts now anchor the Workforce tab, but
+  no official table isolates PBM employment and the framework still lacks an
+  audited occupation-to-function crosswalk. The resulting displacement and
+  internal-transition counts remain explicit planning cases rather than a
+  forecast.
 - A handful of parameters (age-cost multiplier, national aggregate employer
   spending, CHIP-only spending, a clean adult diabetes prevalence topline)
   were only found as derived or partial figures — flagged inline rather than

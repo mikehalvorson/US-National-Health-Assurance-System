@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance &amp; Public Financing Simulator</title>
 <meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it. Every parameter is sourced and every major assumption can be adjusted.">
-<link rel="stylesheet" href="style.css?v=20260717-hardening1">
+<link rel="stylesheet" href="style.css?v=20260717-workforce1">
 </head>
 <body>
 <div class="wrap">
@@ -34,6 +34,7 @@
     <button id="tab-rollout">Phased Rollout</button>
     <button id="tab-data">Data</button>
     <button id="tab-quality">Quality</button>
+    <button id="tab-workforce">Workforce</button>
     <button id="tab-tax">Taxes &amp; Financing</button>
     <button id="tab-units">Unit Network</button>
     <button id="tab-gov">Governance</button>
@@ -1438,6 +1439,305 @@
 
   </div><!-- /view-quality -->
 
+  <div id="view-workforce" hidden>
+
+  <section class="card">
+    <span class="workforce-kicker">People are the capacity system</span>
+    <h2>The framework cannot be staffed by moving boxes on an organization chart</h2>
+    <p class="desc">Coverage, facilities, medicines, records, and specialist
+      routing work only when qualified people are available in the right role,
+      region, modality, and schedule. The framework therefore treats workforce
+      as a hard constraint: headcount is discounted for leave, competency,
+      schedule availability, retention, burnout, and unsafe overtime before it
+      counts as effective capacity.</p>
+    <div class="workforce-challenge-grid"
+      aria-label="Healthcare workforce challenges the framework must solve">
+      <article>
+        <span>01</span>
+        <div><h3>National shortages are geographically unequal</h3>
+          <p>Nonmetropolitan nursing gaps, specialist scarcity, and long travel
+            distances can leave a nominally covered rural resident without
+            usable care.</p></div>
+      </article>
+      <article>
+        <span>02</span>
+        <div><h3>Rural readiness is larger than visit volume</h3>
+          <p>A low-volume community still needs observation, emergency handoff,
+            pharmacy, transport, maternal and pediatric triage, and weather
+            resilience.</p></div>
+      </article>
+      <article>
+        <span>03</span>
+        <div><h3>Training arrives years after funding</h3>
+          <p>A funded slot becomes capacity only after faculty, clinical
+            rotations, completion, credentialing, and a matched service
+            location.</p></div>
+      </article>
+      <article>
+        <span>04</span>
+        <div><h3>Burnout destroys nominal capacity</h3>
+          <p>Vacancies, turnover, leave, moral injury, and excessive overtime
+            reduce safe capacity even when an authorized position exists on
+            paper.</p></div>
+      </article>
+      <article>
+        <span>05</span>
+        <div><h3>New benefits release hidden demand</h3>
+          <p>Long-term care, behavioral health, dental, vision, hearing, EMS,
+            and public-health access cannot expand faster than trained teams
+            and safe facilities.</p></div>
+      </article>
+      <article>
+        <span>06</span>
+        <div><h3>Administrative simplification displaces workers</h3>
+          <p>Private claims, prior authorization, PBM rebate, brokerage, and
+            revenue-cycle work shrinks before every worker has a new role.</p></div>
+      </article>
+    </div>
+    <div class="workforce-target-strip" aria-label="Controlled workforce targets">
+      <article><strong>&le;5%</strong><span>critical-role vacancy</span><small>TPP-8.1</small></article>
+      <article><strong>&ge;55,000</strong><span>public training slots each year</span><small>TPP-8.3</small></article>
+      <article><strong>&ge;96%</strong><span>service-obligation fulfillment</span><small>TPP-8.4</small></article>
+      <article><strong>&ge;30%</strong><span>burnout-risk reduction</span><small>TPP-8.6</small></article>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Administrative work shrinks; useful skills move</h2>
+    <p class="desc">The framework sets a worker-protection target but does
+      not publish an audited job count. The visual below is a derived
+      planning model, not a forecast. It starts with BLS employment anchors,
+      applies explicit functional exposure shares, removes overlap, and keeps
+      clinical records work out of the eliminated total. Choose a case to see
+      the transition load.</p>
+    <div class="workforce-scenario-controls" role="group"
+      aria-label="Workforce transition planning case">
+      <button type="button" data-wf-scenario="low">Lower exposure</button>
+      <button type="button" data-wf-scenario="plan" aria-pressed="true">Planning case</button>
+      <button type="button" data-wf-scenario="high">Stress case</button>
+    </div>
+    <div class="workforce-count-grid" aria-live="polite">
+      <article>
+        <span>Legacy positions eliminated</span>
+        <strong id="wf-eliminated">760,000</strong>
+        <small>derived central estimate</small>
+      </article>
+      <article>
+        <span>Could move into framework roles</span>
+        <strong id="wf-inside">360,000</strong>
+        <small>skills-to-role planning match</small>
+      </article>
+      <article>
+        <span>Placement or training target</span>
+        <strong id="wf-supported">570,000</strong>
+        <small>KPP-W1 floor applied to exposure</small>
+      </article>
+      <article>
+        <span>Quantified new-position floor</span>
+        <strong id="wf-created">510,000</strong>
+        <small>excludes uncalibrated benefit expansion</small>
+      </article>
+    </div>
+    <div class="workforce-flow" aria-label="Planning flow from eliminated jobs to new positions">
+      <div class="workforce-flow-column">
+        <span class="workforce-flow-label">Legacy work removed</span>
+        <strong id="wf-flow-eliminated">760k</strong>
+        <div class="workforce-flow-track"><i id="wf-flow-eliminated-bar"></i></div>
+        <small>insurance, billing, PBM, brokerage, and duplicative vendor work</small>
+      </div>
+      <div class="workforce-flow-bridge" aria-hidden="true">&rarr;</div>
+      <div class="workforce-flow-destinations">
+        <article>
+          <div><span>Inside the new framework</span><strong id="wf-flow-inside">360k</strong></div>
+          <div class="workforce-flow-track"><i id="wf-flow-inside-bar"></i></div>
+        </article>
+        <article>
+          <div><span>External placement or approved training needed to reach KPP-W1</span>
+            <strong id="wf-flow-external">210k</strong></div>
+          <div class="workforce-flow-track secondary"><i id="wf-flow-external-bar"></i></div>
+        </article>
+        <article>
+          <div><span>Attrition, retirement, other work, or unresolved support gap</span>
+            <strong id="wf-flow-gap">190k</strong></div>
+          <div class="workforce-flow-track muted"><i id="wf-flow-gap-bar"></i></div>
+        </article>
+      </div>
+    </div>
+    <div class="workforce-legacy-layout">
+      <div>
+        <span class="workforce-section-label">Select a legacy function</span>
+        <div id="workforce-legacy-list" class="workforce-legacy-list"></div>
+      </div>
+      <div id="workforce-legacy-detail" class="workforce-legacy-detail"
+        aria-live="polite"></div>
+    </div>
+    <p class="note">BLS anchors are not added together mechanically:
+      611,100 jobs in direct health and medical insurance carriers,
+      229,070 insurance claims and policy-processing clerks, and 417,500
+      billing and posting clerks are overlapping or broader-than-health
+      populations. The planning model counts functions once. The 194,570
+      medical-records specialists are treated as continuing or redeployable
+      work, not as an eliminated occupation.</p>
+  </section>
+
+  <section class="card">
+    <h2>Where the quantified new positions are</h2>
+    <p class="desc">The planning case creates a floor of about 510,000
+      funded positions. About 360,000 can be matched to displaced workers;
+      the remaining <strong id="wf-new-hires">150,000</strong> require
+      licensed clinicians, technicians, new graduates, or other entrants.
+      Select a row to see the derivation and likely transition path.</p>
+    <div id="workforce-created-chart" class="workforce-created-chart"
+      aria-label="New framework positions by function"></div>
+    <p class="note">This is deliberately a floor. It excludes the still-open
+      national workforce quantity for long-term care, behavioral health,
+      dental, vision, hearing, EMS, and public health. Those benefit-workforce
+      formulas remain open under OI-033 and OI-035 and must be added before a
+      total net-employment claim is valid.</p>
+  </section>
+
+  <section class="card">
+    <h2>A rural staffing plan built around a permanent core</h2>
+    <p class="desc">Travel staff are a relief valve, not the rural model.
+      Every region first funds a permanent local core and the facilities,
+      housing, supervision, transport, and family support that make retention
+      possible. A public regional flex pool then covers vacancies, leave,
+      training, seasonal demand, and short surges without forcing unsafe
+      overtime.</p>
+    <div class="workforce-rural-steps" aria-label="Seven-step rural staffing plan">
+      <article><span>01</span><h3>Measure safe FTE need</h3><p>Count readiness, leave, supervision, geography, weather, EMS handoff, and low-volume essential service.</p></article>
+      <article><span>02</span><h3>Anchor Type C hubs</h3><p>Pair enhanced rural units with Type A/B satellites, mobile outreach, pharmacy, hospital, and transport capacity.</p></article>
+      <article><span>03</span><h3>Fund the permanent core</h3><p>Use transparent rural premiums, call pay, housing, childcare, spouse support, schedule control, and local leadership.</p></article>
+      <article><span>04</span><h3>Build the local pipeline</h3><p>Reserve training slots, rural rotations, scholarships, community recruitment, and bounded service obligations with hardship rights.</p></article>
+      <article><span>05</span><h3>Deploy the flex pool</h3><p>RS-CORPS supplies rotating nurses, paramedics, imaging/lab staff, respiratory therapy, pharmacy, and behavioral health.</p></article>
+      <article><span>06</span><h3>Bring specialists to the team</h3><p>Use e-consults, tele-specialty, tele-radiology, tele-ICU, and cross-region queue capacity without double-counting supply.</p></article>
+      <article><span>07</span><h3>Gate expansion on retention</h3><p>Hold or resize benefit waves when vacancy, burnout, EMS, home-care, behavioral-health, or hospital staffing floors fail.</p></article>
+    </div>
+    <div class="workforce-rotation">
+      <div>
+        <span class="workforce-section-label">Illustrative five-team regional nurse pod</span>
+        <h3>Four teams deployed; one team resetting, training, and handing off</h3>
+        <p>Each 10-week cycle contains an eight-week deployment and a protected
+          two-week reset. Staggering the reset keeps relief capacity continuous.
+          Assignments rotate among communities so the pool fills gaps without
+          replacing local jobs.</p>
+      </div>
+      <div class="tbl-scroll">
+        <table class="data workforce-rotation-table">
+          <caption class="sr-only">Staggered ten-week travel-nurse rotation</caption>
+          <thead><tr><th>Team</th><th>Wk 1-2</th><th>Wk 3-4</th><th>Wk 5-6</th><th>Wk 7-8</th><th>Wk 9-10</th></tr></thead>
+          <tbody>
+            <tr><th>A</th><td class="reset">Reset</td><td>Deploy</td><td>Deploy</td><td>Deploy</td><td>Deploy</td></tr>
+            <tr><th>B</th><td>Deploy</td><td class="reset">Reset</td><td>Deploy</td><td>Deploy</td><td>Deploy</td></tr>
+            <tr><th>C</th><td>Deploy</td><td>Deploy</td><td class="reset">Reset</td><td>Deploy</td><td>Deploy</td></tr>
+            <tr><th>D</th><td>Deploy</td><td>Deploy</td><td>Deploy</td><td class="reset">Reset</td><td>Deploy</td></tr>
+            <tr><th>E</th><td>Deploy</td><td>Deploy</td><td>Deploy</td><td>Deploy</td><td class="reset">Reset</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="workforce-rural-formula">
+      <span>Flex-pool sizing rule</span>
+      <strong>max(vacancy gap + protected leave + training backfill + seasonal surge, continuity floor)</strong>
+      <p>The planning case holds 30,000 rural flex positions nationally.
+        Its provisional mix assigns 18,000 to rotating RN/LPN nursing and
+        12,000 to EMS, respiratory, imaging/lab, pharmacy, behavioral-health,
+        and supervisory relief. Those numbers are derived, not framework
+        targets, and must be replaced by the role-region formula adopted under
+        OI-033.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>AI and telehealth add capacity; they do not erase bedside work</h2>
+    <p class="desc">Technology removes avoidable clerical load, carries
+      expertise across distance, and helps a small local team close the loop.
+      It does not count as capacity twice, authorize unsafe staffing, or make
+      final clinical decisions without an accountable professional.</p>
+    <div class="workforce-tech-grid">
+      <article>
+        <span>AI-assisted workflow</span>
+        <h3>Give time back to clinicians</h3>
+        <ul>
+          <li>Draft encounter documentation and patient instructions for human review.</li>
+          <li>Check referral packets, result closure, medication lists, and follow-up queues.</li>
+          <li>Forecast staffing, transport, inventory, and surge demand by region.</li>
+          <li>Support triage and translation while preserving override, audit, and manual fallback.</li>
+        </ul>
+      </article>
+      <article>
+        <span>Telehealth and e-consults</span>
+        <h3>Move expertise before moving the patient</h3>
+        <ul>
+          <li>Local teams acquire the history, exam, labs, imaging, and vital signs.</li>
+          <li>Specialists answer complete e-consults within a 24-hour median target.</li>
+          <li>Tele-specialty, tele-radiology, tele-ICU, and behavioral health cover distance.</li>
+          <li>Hands-on procedures, unstable patients, and red flags still trigger transfer.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="workforce-capacity-path"
+      aria-label="Capacity path from local care through telehealth to transfer">
+      <article><span>1</span><h3>Local team</h3><p>Exam, tests, stabilization</p></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>2</span><h3>AI support</h3><p>Document, check, surface risk</p></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>3</span><h3>E-consult</h3><p>Specialist response &le;24h</p></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>4</span><h3>Tele-visit</h3><p>Cross-region expertise</p></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>5</span><h3>Transfer when needed</h3><p>Procedure or higher acuity</p></article>
+    </div>
+    <div class="workforce-tech-guardrail">
+      <strong>Productivity is evidence-gated.</strong>
+      <p>TPP-6.6 has unresolved semantics: the framework retains both 1.25x
+        and 2.25x sensitivity branches under OI-008. Neither branch is a
+        staffing-cut instruction. Gains count only after safety, quality,
+        workload, equity, and human-accountability tests pass.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>The workforce transition across twelve years</h2>
+    <div class="workforce-phase-strip" aria-label="Workforce rollout milestones">
+      <article><span>P1-P2</span><strong>Years 2-3</strong><h3>Count need and protect workers</h3><p>Open registries, AHWCS, NHWECA, HATC, and RS-CORPS before legacy wind-down.</p></article>
+      <article><span>P4</span><strong>Year 6</strong><h3>Pilot role and region models</h3><p>Test unit teams, compensation, scope, training, tele-support, and safety in representative regions.</p></article>
+      <article><span>P5</span><strong>Year 7</strong><h3>Scale workforce reforms</h3><p>Expand unit staffing, rural rotations, training slots, specialist routing, and scope floors.</p></article>
+      <article><span>P7</span><strong>Year 10</strong><h3>Gate expanded benefits</h3><p>Do not expand faster than LTC, home-care, behavioral-health, DVH, EMS, and hospital capacity.</p></article>
+      <article><span>P8</span><strong>Year 12</strong><h3>Prove mature performance</h3><p>Verify vacancies, placement, training, service obligations, burnout, safety culture, and bottleneck reduction.</p></article>
+    </div>
+    <div class="workforce-agencies">
+      <span class="workforce-section-label">Accountable workforce institutions</span>
+      <div class="workforce-agency-grid">
+        <article><strong>AHWCS</strong><span>integrated workforce, compensation, scope, and education policy</span></article>
+        <article><strong>NHWB</strong><span>role-region need, supply, vacancy, retention, and bottleneck plans</span></article>
+        <article><strong>NPCB</strong><span>transparent compensation bands and rural/scarcity premiums</span></article>
+        <article><strong>NCSWB</strong><span>national scope floors, competency, supervision, and escalation</span></article>
+        <article><strong>NHWECA</strong><span>training slots, scholarships, fellowships, hubs, and faculty support</span></article>
+        <article><strong>RS-CORPS</strong><span>rural placement, housing, rotations, transport, and retention</span></article>
+        <article><strong>HATC</strong><span>income bridge, retraining, placement, retention, and appeal</span></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>What is controlled, derived, and still open</h2>
+    <div class="workforce-limit-grid">
+      <article><span>Controlled</span><h3>Performance floors</h3><p>KPP-W1 and TPP-5.5/8.1-8.6 set placement, staffing, vacancy, bottleneck, training, service, scope, burnout, and safety targets.</p></article>
+      <article><span>Derived</span><h3>Job quantities and the travel pool</h3><p>The 760,000 eliminated-position case, 360,000 internal matches, 510,000 new-position floor, and 30,000 flex pool are transparent planning estimates.</p></article>
+      <article><span>Open</span><h3>The audited national workforce total</h3><p>OI-033, OI-034, OI-035, and OI-043 still require role-region FTE formulas, employment boundaries, benefit standards, and phase resource allocation.</p></article>
+    </div>
+    <p class="rollout-source">Framework basis: Sections 6.6 and 6.9;
+      Appendix M; KPP-W1; TPP-5.5 and TPP-8.1 through TPP-8.6; and open issues
+      OI-008, OI-033, OI-034, OI-035, and OI-043.
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/National_Health_Assurance_Framework_v2.0.0_FINAL.pdf"
+        target="_blank" rel="noopener">Read the full framework</a>.
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/workforce_transition_methodology.md"
+        target="_blank" rel="noopener">Read the job-count methodology</a>.</p>
+  </section>
+
+  </div><!-- /view-workforce -->
+
   <footer class="site">
     Built from the National Health Assurance Framework v2.0.0 and its research
     parameter base:
@@ -1458,7 +1758,7 @@
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js"></script>
 <script src="js/app.js"></script>
-<script src="js/taxapp.js?v=20260717-hardening1"></script>
+<script src="js/taxapp.js?v=20260717-workforce1"></script>
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
@@ -1468,5 +1768,6 @@
 <script src="js/data.js?v=20260717-data-layout2"></script>
 <script src="js/quality.js?v=20260717-quality1"></script>
 <script src="js/hardening.js?v=20260717-hardening1"></script>
+<script src="js/workforce.js?v=20260717-workforce1"></script>
 </body>
 </html>
