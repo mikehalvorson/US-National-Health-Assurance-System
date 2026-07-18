@@ -3,23 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>National Health Assurance &amp; Public Financing Simulator</title>
-<meta name="description" content="Interactive, bottom-up simulations of the proposed U.S. National Health Assurance Framework and the tax system that would finance it. Every parameter is sourced and every major assumption can be adjusted.">
-<link rel="stylesheet" href="style.css?v=20260717-workforce1">
+<title>National Health Assurance: Story &amp; System Dashboard</title>
+<meta name="description" content="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models.">
+<link rel="stylesheet" href="style.css?v=20260718-overview1">
 </head>
 <body>
 <div class="wrap">
 
   <header class="site">
-    <h1>National Health Assurance &amp; Public Financing Simulator</h1>
+    <h1>National Health Assurance: Story &amp; System Dashboard</h1>
     <p class="sub">
-      Two working models built from public data: a fiscal simulation of the
-      proposed National Health Assurance Framework, a public system replacing
-      U.S. private health insurance with automatic coverage and zero
-      point-of-care cost, and a general U.S. tax model showing how any
-      funding need can be financed, and who bears the burden across income
-      groups. Every parameter is sourced; every major assumption is
-      adjustable. The models compute their own answers.
+      A guided, evidence-linked tour of the proposed National Health Assurance
+      system: why change is needed, how care delivery, data, medicines,
+      workforce, financing, quality, and governance fit together, and how the
+      twelve-year rollout is held to readiness gates. Each chapter opens into
+      a deeper working model or operating plan.
     </p>
     <p class="meta">
       All results in real 2024 dollars. Calibrated to CMS National Health
@@ -30,7 +28,8 @@
   </header>
 
   <nav class="tabs" aria-label="Dashboard sections">
-    <button id="tab-health" class="active">Healthcare</button>
+    <button id="tab-overview" class="active">Overview</button>
+    <button id="tab-health">Healthcare</button>
     <button id="tab-rollout">Phased Rollout</button>
     <button id="tab-data">Data</button>
     <button id="tab-quality">Quality</button>
@@ -41,7 +40,7 @@
     <button id="tab-hardening">Executive Hardening</button>
   </nav>
 
-  <div id="view-health">
+  <div id="view-overview">
 
   <!-- ACT 1: The system today -->
   <section class="card">
@@ -52,14 +51,17 @@
       people get insurance through an employer, who pays most of the
       premium out of what would otherwise be wages. Medicare covers ~67
       million people over 65 or disabled, funded by payroll taxes, general
-      federal revenue, and enrollee premiums. Medicaid &amp; CHIP cover ~72
+      federal revenue, and enrollee premiums. Medicaid &amp;
+      <abbr class="overview-acronym" title="Children's Health Insurance Program">CHIP</abbr>
+      cover ~72
       million lower-income people, funded jointly by Washington and the
       states. Everyone also pays directly at the point of care:
       deductibles, copays, and uncovered bills totaled $506B in 2023. And
       ~26 million people have no coverage at all. Here is where the $4.87T
       came from and where it went. Hover any ribbon for the details.</p>
     <div class="flow-panel" style="max-width:560px;margin:14px auto 0">
-      <div class="flow-title">Actual 2023 spending: $4.87T (CMS)</div>
+      <div class="flow-title">Actual 2023 spending: $4.87T
+        (<abbr class="overview-acronym" title="Centers for Medicare &amp; Medicaid Services">CMS</abbr>)</div>
       <div id="flow-today-solo"></div>
     </div>
     <details class="tableview"><summary>View the distribution as a table</summary>
@@ -90,8 +92,10 @@
         claims rail replace ~900 insurers' duplicated overhead and the
         billing bureaucracy providers maintain to fight them. Recoverable
         savings estimates in the literature run $200 to $500B a year.</li>
-      <li><b>Drug-price negotiation and public manufacturing.</b> The IRA
-        already proved government negotiation works (CBO-scored, 38–79%
+      <li><b>Drug-price negotiation and public manufacturing.</b> The
+        <abbr class="overview-acronym" title="Inflation Reduction Act">IRA</abbr>
+        already proved government negotiation works
+        (<abbr class="overview-acronym" title="Congressional Budget Office">CBO</abbr>-scored, 38–79%
         price cuts on the first ten drugs). Applied system-wide against
         prices 2.78× the international average, plus a public manufacturer
         for essential generics, modeled on Civica Rx's real $30-a-vial
@@ -103,7 +107,9 @@
         letting them close.</li>
       <li><b>Front-door capacity.</b> A community diagnostic-treatment
         network and specialist e-consults absorb the routine care that
-        currently lands in $2,453-average ER visits and months-long
+        currently lands in $2,453-average
+        <abbr class="overview-acronym" title="Emergency Room">ER</abbr>
+        visits and months-long
         specialist queues.</li>
     </ul>
     <p class="note">The framework's bet: these levers can pay for most of
@@ -126,7 +132,9 @@
         care; medical debt for covered care is prohibited (patient billing
         capped at 0.5% of encounters).</li>
       <li><b>National drug purchasing</b> through a real-time public
-        pharmacy claims utility (replacing PBMs), plus a Public Medicines
+        pharmacy claims utility (replacing
+        <abbr class="overview-acronym" title="Pharmacy Benefit Managers">PBMs</abbr>),
+        plus a Public Medicines
         Corporation manufacturing essential generics.</li>
       <li><b>Hospitals on global budgets</b> under public-service charters,
         funded for readiness and essential service lines, not per-claim
@@ -138,12 +146,274 @@
         24-hour e-consults before in-person referrals, with urgency classes
         and protected urgent capacity.</li>
       <li><b>Expanded benefits phased in:</b> long-term care (home-first),
-        behavioral health, dental, vision, hearing, and EMS.</li>
+        behavioral health, dental, vision, hearing, and
+        <abbr class="overview-acronym" title="Emergency Medical Services">EMS</abbr>.</li>
       <li><b>A 12-year gated rollout (2027–2038)</b> with go/no-go
         phase gates, transition protections for patients, providers, and
         displaced workers, and independent oversight bodies.</li>
     </ul>
   </section>
+
+  <section class="card overview-map-card">
+    <span class="overview-kicker">The whole design in one view</span>
+    <h2>The plan is one operating system, not a collection of separate programs</h2>
+    <p class="desc">A universal public promise sits above a local care network.
+      National payment, data, medicine, and workforce systems make that promise
+      operable; measurable quality and independent governance keep every layer
+      accountable. Select a chapter to inspect the detailed model.</p>
+
+    <div class="overview-system-map"
+      aria-label="Layered map of the National Health Assurance operating system">
+      <div class="overview-promise-band">
+        <span>Public promise</span>
+        <strong>Automatic coverage · medically necessary care without a bill ·
+          portable rights and appeals</strong>
+        <button type="button" data-dashboard-view="health">Healthcare chapter</button>
+      </div>
+      <div class="overview-map-connector" aria-hidden="true">
+        <i></i><span>turn the promise into care</span><i></i>
+      </div>
+      <div class="overview-care-band">
+        <article>
+          <span>Front door</span>
+          <h3>Community diagnostic-treatment units</h3>
+          <p>Same-day routine care, testing, prevention, navigation, and
+            escalation close to where people live.</p>
+          <button type="button" data-dashboard-view="units">Unit Network</button>
+        </article>
+        <article>
+          <span>Clinical backplane</span>
+          <h3>Specialists and hospitals</h3>
+          <p>Complete workups, e-consults, urgency routing, protected capacity,
+            and hospital global budgets.</p>
+          <button type="button" data-dashboard-view="health">Healthcare</button>
+        </article>
+        <article>
+          <span>Continuity</span>
+          <h3>Home, community, and expanded benefits</h3>
+          <p>Home-first long-term care plus behavioral, dental, vision, hearing,
+            emergency, and public-health services.</p>
+          <button type="button" data-dashboard-view="rollout">Rollout</button>
+        </article>
+      </div>
+      <div class="overview-map-connector" aria-hidden="true">
+        <i></i><span>shared national backbone</span><i></i>
+      </div>
+      <div class="overview-backbone-band">
+        <article>
+          <b>Payment &amp; financing</b>
+          <p>One public claims rail, global budgets, existing public spending,
+            employer contributions, and progressive revenue.</p>
+          <button type="button" data-dashboard-view="tax">Financing</button>
+        </article>
+        <article>
+          <b>Data &amp; cyber</b>
+          <p>Portable records, authoritative nodes, common interfaces, audit
+            trails, segmentation, and tested downtime paths.</p>
+          <button type="button" data-dashboard-view="data">Data</button>
+        </article>
+        <article>
+          <b>Medicines &amp; supply</b>
+          <p>National purchasing, a public pharmacy utility, transparent
+            formularies, public production, and shortage response.</p>
+          <button type="button" data-dashboard-view="rollout">Buildout plan</button>
+        </article>
+        <article>
+          <b>Workforce &amp; education</b>
+          <p>Role-region staffing plans, training expansion, rural service,
+            travel teams, and a protected transition for displaced workers.</p>
+          <button type="button" data-dashboard-view="workforce">Workforce</button>
+        </article>
+      </div>
+      <div class="overview-assurance-band">
+        <span>Independent assurance across every layer</span>
+        <div>
+          <button type="button" data-dashboard-view="quality">430 controlled parameters</button>
+          <button type="button" data-dashboard-view="gov">Distributed governance</button>
+          <button type="button" data-dashboard-view="hardening">Executive hardening</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="overview-kicker">What changes for a patient</span>
+    <h2>One person, one continuous care pathway</h2>
+    <p class="desc">The system moves expertise and information toward the
+      patient first. It moves the patient only when hands-on specialty or
+      hospital care is necessary.</p>
+    <div class="overview-care-path" aria-label="Patient care pathway">
+      <article>
+        <span>1</span>
+        <h3>Covered automatically</h3>
+        <p>Coverage follows residency, not a job, age band, or annual plan choice.</p>
+      </article>
+      <i aria-hidden="true">&rarr;</i>
+      <article>
+        <span>2</span>
+        <h3>Enter locally</h3>
+        <p>A nearby unit examines, tests, treats, and assembles a complete record.</p>
+      </article>
+      <i aria-hidden="true">&rarr;</i>
+      <article>
+        <span>3</span>
+        <h3>Route by need</h3>
+        <p>An e-consult can advise the local team or move the case into a protected queue.</p>
+      </article>
+      <i aria-hidden="true">&rarr;</i>
+      <article>
+        <span>4</span>
+        <h3>Treat at the right level</h3>
+        <p>Specialists, hospitals, and regional services take cases that require them.</p>
+      </article>
+      <i aria-hidden="true">&rarr;</i>
+      <article>
+        <span>5</span>
+        <h3>Close the loop</h3>
+        <p>Results, medications, follow-up, home support, and appeals remain visible.</p>
+      </article>
+    </div>
+    <div class="overview-inline-links">
+      <button type="button" data-dashboard-view="health">See benefits and cost</button>
+      <button type="button" data-dashboard-view="units">See the local network</button>
+      <button type="button" data-dashboard-view="data">See how information follows the patient</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="overview-kicker">How the money changes route</span>
+    <h2>Replace fragmented collection and billing with public financing and simple payment</h2>
+    <p class="desc">The proposal does not make healthcare free to produce.
+      It replaces premiums, deductibles, point-of-care bills, and payer-specific
+      administration with a publicly financed system that pays providers
+      through a common claims rail and hospital global budgets.</p>
+    <div class="overview-money-shift" aria-label="High-level money-flow change">
+      <div class="overview-money-world today">
+        <span>Today</span>
+        <strong>Households + employers + governments</strong>
+        <i aria-hidden="true">&darr;</i>
+        <p>Premiums · taxes · deductibles · copays · uncovered bills</p>
+        <i aria-hidden="true">&darr;</i>
+        <b>Many insurers, networks, contracts, and billing rules</b>
+      </div>
+      <div class="overview-money-pivot" aria-hidden="true">
+        <span>consolidate</span>
+        <b>&rarr;</b>
+      </div>
+      <div class="overview-money-world proposal">
+        <span>National Health Assurance</span>
+        <strong>Existing public funds + employer contribution + progressive revenue</strong>
+        <i aria-hidden="true">&darr;</i>
+        <p>National health trust and public payment operations</p>
+        <i aria-hidden="true">&darr;</i>
+        <b>Claims payments · hospital budgets · unit funding · benefits</b>
+      </div>
+    </div>
+    <div class="overview-inline-links">
+      <button type="button" data-dashboard-view="health">Test total system cost</button>
+      <button type="button" data-dashboard-view="tax">Test who pays and who saves</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="overview-kicker">Implementation, not a switch-flip</span>
+    <h2>Twelve years of staged authority, infrastructure, coverage, and benefits</h2>
+    <p class="desc">Dates are anchors, not automatic deadlines. Eight independent
+      readiness gates can hold, resize, or roll back a wave when claims,
+      capacity, workforce, fiscal, artificial-intelligence, cyber, legitimacy,
+      or continuity evidence is inadequate.</p>
+    <div class="overview-rollout-arc" aria-label="Twelve-year high-level rollout">
+      <article>
+        <span>Years 1–2 · P0–P1</span>
+        <strong>Found</strong>
+        <p>Pass the statute; stand up accountable bodies, rights, identity,
+          registries, cyber baselines, and transition protection.</p>
+      </article>
+      <article>
+        <span>Years 3–4 · P2–P3</span>
+        <strong>Operate first rails</strong>
+        <p>Launch pharmacy purchasing and production, then begin the first
+          public coverage wave and claims operation.</p>
+      </article>
+      <article>
+        <span>Years 5–7 · P4–P5</span>
+        <strong>Pilot and scale delivery</strong>
+        <p>Test hospital budgets and all four unit types; expand workforce,
+          specialist routing, and the care network.</p>
+      </article>
+      <article>
+        <span>Years 8–9 · P6</span>
+        <strong>Make coverage the default</strong>
+        <p>Scale public coverage, payment, rights, regional operations, and
+          major cost-sharing elimination nationally.</p>
+      </article>
+      <article>
+        <span>Years 10–12 · P7–P8</span>
+        <strong>Expand and certify</strong>
+        <p>Add long-term care and other benefits only after capacity gates,
+          then test the mature system against every performance floor.</p>
+      </article>
+    </div>
+    <div class="overview-gate-line">
+      <strong>Eight stop-the-clock gates</strong>
+      <span>claims</span><span>unit capacity</span><span>workforce</span>
+      <span>fiscal</span><span><abbr class="overview-acronym" title="Artificial Intelligence">AI</abbr> safety</span><span>records &amp; cyber</span>
+      <span>legitimacy</span><span>continuity</span>
+    </div>
+    <div class="overview-inline-links">
+      <button type="button" data-dashboard-view="rollout">Open the complete phased rollout</button>
+      <button type="button" data-dashboard-view="quality">Inspect phase targets</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="overview-kicker">Continue the story</span>
+    <h2>Each chapter answers a different implementation question</h2>
+    <p class="desc">Read in sequence for a guided tour, or jump directly to
+      the operating question you want to test.</p>
+    <div class="overview-chapter-grid">
+      <button type="button" data-dashboard-view="health">
+        <span>01 · Promise and price</span><strong>Healthcare</strong>
+        <small>What people receive, what care costs, and how spending reroutes.</small>
+      </button>
+      <button type="button" data-dashboard-view="units">
+        <span>02 · Physical access</span><strong>Unit Network</strong>
+        <small>What the four facility types do and where they are placed.</small>
+      </button>
+      <button type="button" data-dashboard-view="data">
+        <span>03 · Information</span><strong>Data</strong>
+        <small>How the national mesh stores, moves, protects, and corrects records.</small>
+      </button>
+      <button type="button" data-dashboard-view="workforce">
+        <span>04 · People</span><strong>Workforce</strong>
+        <small>How clinical capacity, rural staffing, training, and job transition work.</small>
+      </button>
+      <button type="button" data-dashboard-view="quality">
+        <span>05 · Proof</span><strong>Quality</strong>
+        <small>Which parameters define success and what each phase must achieve.</small>
+      </button>
+      <button type="button" data-dashboard-view="tax">
+        <span>06 · Financing</span><strong>Taxes &amp; Financing</strong>
+        <small>How much revenue is needed, who pays, and who comes out ahead.</small>
+      </button>
+      <button type="button" data-dashboard-view="rollout">
+        <span>07 · Sequence</span><strong>Phased Rollout</strong>
+        <small>What is built in each year and what evidence allows the next wave.</small>
+      </button>
+      <button type="button" data-dashboard-view="gov">
+        <span>08 · Authority</span><strong>Governance</strong>
+        <small>Which institutions decide, operate, audit, and enforce the system.</small>
+      </button>
+      <button type="button" data-dashboard-view="hardening">
+        <span>09 · Durability</span><strong>Executive Hardening</strong>
+        <small>How distributed authority and continuity duties resist sabotage.</small>
+      </button>
+    </div>
+  </section>
+
+  </div><!-- /view-overview -->
+
+  <div id="view-health" hidden>
 
   <!-- What you'd pay at the point of care -->
   <section class="card" id="care-card-section">
@@ -1758,7 +2028,7 @@
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js"></script>
 <script src="js/app.js"></script>
-<script src="js/taxapp.js?v=20260717-workforce1"></script>
+<script src="js/taxapp.js?v=20260718-overview1"></script>
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>

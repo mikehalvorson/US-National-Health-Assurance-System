@@ -281,9 +281,9 @@
   }
 
   /* ---- tabs ---- */
-  var VIEWS = ["health", "rollout", "data", "quality", "workforce", "tax", "units", "gov", "hardening"];
+  var VIEWS = ["overview", "health", "rollout", "data", "quality", "workforce", "tax", "units", "gov", "hardening"];
   function showView(which) {
-    if (VIEWS.indexOf(which) < 0) which = "health";
+    if (VIEWS.indexOf(which) < 0) which = "overview";
     VIEWS.forEach(function (v) {
       $("view-" + v).hidden = v !== which;
       $("tab-" + v).className = v === which ? "active" : "";
@@ -292,6 +292,12 @@
   }
   VIEWS.forEach(function (v) {
     $("tab-" + v).addEventListener("click", function () { showView(v); });
+  });
+  document.querySelectorAll("[data-dashboard-view]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      showView(button.dataset.dashboardView);
+      window.scrollTo(0, 0);
+    });
   });
 
   /* ---- financing scenario picker (selectable, then fully editable) ---- */
@@ -377,5 +383,5 @@
   wireScenarioPicker();
   renderInequality();
   applyScenario(activeScenario); /* builds controls + refreshes, goal met */
-  showView((location.hash || "#health").slice(1));
+  showView((location.hash || "#overview").slice(1));
 })();
