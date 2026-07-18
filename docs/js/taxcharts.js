@@ -412,3 +412,103 @@
     note.textContent = "Linear scale, deliberately: most of America is invisible next to the top 0.01%. That is the chart.";
   };
 })();
+
+/* ---- Save-vs-pay comparison: per bracket, healthcare savings against new
+ * taxes, with the net. Bars in % of income (a $27M tax and a $9k saving
+ * cannot share a dollar axis); exact dollars ride the labels/tooltips. */
+(function () {
+  var U = NHA._chartUtil;
+  var el = U.el, div = U.div, showTip = U.showTip, hideTip = U.hideTip,
+      tipRow = U.tipRow, barPath = U.barPath;
+
+  function fmtC(v) {
+    var a = Math.abs(v);
+    if (a >= 1e6) return "$" + (a / 1e6).toFixed(1) + "M";
+    if (a >= 1e4) return "$" + Math.round(a / 1000) + "k";
+    if (a >= 1e3) return "$" + (a / 1000).toFixed(1) + "k";
+    return "$" + Math.round(a);
+  }
+
+  NHA.renderSaveVsPayChart = function (container, rows) {
+    container.innerHTML = "";
+    var W = 900, rowH = 44, M = { l: 128, r: 148, t: 30, b: 30 };
+    var H = M.t + rows.length * rowH + M.b;
+
+    var maxPct = 0.01;
+    rows.forEach(function (r) {
+      var save = (r.reliefPerHH + (r.wagePerHH || 0)) / r.avgIncomeNow;
+      var pay = r.taxPerHH / r.avgIncomeNow;
+      maxPct = Math.max(maxPct, save, pay);
+    });
+    maxPct *= 1.06;
+    var cx = M.l + (W - M.l - M.r) / 2;
+    var half = (W - M.l - M.r) / 2;
+    var xL = function (p) { return cx - half * (p / maxPct); };
+    var xR = function (p) { return cx + half * (p / maxPct); };
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, class: "chart-svg", role: "img",
+      "aria-label": "Healthcare savings versus new taxes by income group, as share of income" }, container);
+
+    el("line", { x1: cx, x2: cx, y1: M.t - 4, y2: H - M.b, class: "baseline-axis" }, svg);
+    var hSave = el("text", { x: cx - 10, y: M.t - 12, class: "axis-text", "text-anchor": "end" }, svg);
+    hSave.textContent = "saves on healthcare →";
+    var hPay = el("text", { x: cx + 10, y: M.t - 12, class: "axis-text" }, svg);
+    hPay.textContent = "← pays in new taxes";
+
+    rows.forEach(function (r, i) {
+      var cy = M.t + i * rowH + rowH / 2;
+      var savePH = r.reliefPerHH + (r.wagePerHH || 0);
+      var save = savePH / r.avgIncomeNow;
+      var pay = r.taxPerHH / r.avgIncomeNow;
+      var net = r.netPerHH;
+
+      var lab = el("text", { x: M.l - 10, y: cy + 4, class: "row-label", "text-anchor": "end" }, svg);
+      lab.textContent = r.group.label;
+
+      var g = el("g", { class: "bench-row", tabindex: 0 }, svg);
+      var wS = Math.max(1.5, cx - xL(save));
+      el("path", { d: barPath(xL(save), cy - 10, wS, 20, 4, "left"),
+        fill: "var(--div-cool)", "fill-opacity": 0.85 }, g);
+      var wP = Math.max(1.5, xR(pay) - cx);
+      el("path", { d: barPath(cx, cy - 10, wP, 20, 4, "right"),
+        fill: "var(--div-warm)", "fill-opacity": 0.85 }, g);
+
+      var sLab = el("text", { x: xL(save) - 7, y: cy + 4, class: "direct-label",
+        "text-anchor": "end" }, svg);
+      sLab.textContent = fmtC(savePH);
+      var netTxt = (net <= 0 ? "ahead " : "pays ") + fmtC(net) + " net";
+      var pLab = el("text", { x: xR(pay) + 7, y: cy + 4, class: "direct-label" }, svg);
+      pLab.textContent = fmtC(r.taxPerHH) + " · " + netTxt;
+
+      function tipIt(evt) {
+        var box = document.createElement("div");
+        div("tip-head", box).textContent = r.group.label +
+          " (avg income " + fmtC(r.avgIncomeNow) + ")";
+        tipRow(box, "var(--div-cool)", "Premiums & bills eliminated",
+          fmtC(r.reliefPerHH) + "/yr (" + (100 * r.reliefPerHH / r.avgIncomeNow).toFixed(1) + "% of income)", false);
+        if (r.wagePerHH > 0.5) {
+          tipRow(box, "var(--div-cool)", "Wage gains from employer pass-through",
+            fmtC(r.wagePerHH) + "/yr", false);
+        }
+        tipRow(box, "var(--div-warm)", "New taxes under this scenario",
+          fmtC(r.taxPerHH) + "/yr (" + (100 * pay).toFixed(1) + "% of income)", false);
+        tipRow(box, "", "Net change",
+          (net <= 0 ? "−" : "+") + fmtC(net) + "/yr (" +
+          (r.netPctIncome > 0 ? "+" : "") + (100 * r.netPctIncome).toFixed(1) + "% of income)", true);
+        showTip(box, evt.clientX, evt.clientY);
+      }
+      g.addEventListener("pointermove", tipIt);
+      g.addEventListener("pointerleave", hideTip);
+    });
+
+    var leg = div("legend", container);
+    [["var(--div-cool)", "Healthcare costs eliminated (premiums, deductibles, bills) plus wage pass-through"],
+     ["var(--div-warm)", "New taxes under the selected scenario"]].forEach(function (p) {
+      var item = div("legend-item", leg);
+      var sw = document.createElement("span");
+      sw.className = "legend-swatch"; sw.style.background = p[0];
+      item.appendChild(sw);
+      item.appendChild(document.createTextNode(p[1]));
+    });
+  };
+})();

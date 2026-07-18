@@ -203,6 +203,9 @@
     var reliefB = nhaEnabled ? healthRelief(distYear) : 0;
     var wageB = nhaEnabled ? healthWage(distYear) : 0;
     var rows = T.distribution(settings, distYear, reliefB, wageB);
+    var spYear = $("savepay-year");
+    if (spYear) spYear.textContent = String(distYear);
+    NHA.renderSaveVsPayChart($("tax-savepay-chart"), rows);
     NHA.renderNetImpactChart($("tax-impact-chart"), rows, distMode);
     NHA.renderRateCurve($("tax-rate-chart"), rows);
 
