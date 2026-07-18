@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance: Story &amp; System Dashboard</title>
 <meta name="description" content="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models.">
-<link rel="stylesheet" href="style.css?v=20260718-overview1">
+<link rel="stylesheet" href="style.css?v=20260718-legislation1">
 </head>
 <body>
 <div class="wrap">
@@ -29,6 +29,7 @@
 
   <nav class="tabs" aria-label="Dashboard sections">
     <button id="tab-overview" class="active">Overview</button>
+    <button id="tab-legislation">Legislation</button>
     <button id="tab-health">Healthcare</button>
     <button id="tab-rollout">Phased Rollout</button>
     <button id="tab-data">Data</button>
@@ -168,7 +169,7 @@
         <span>Public promise</span>
         <strong>Automatic coverage · medically necessary care without a bill ·
           portable rights and appeals</strong>
-        <button type="button" data-dashboard-view="health">Healthcare chapter</button>
+        <button type="button" data-dashboard-view="legislation">Enabling law</button>
       </div>
       <div class="overview-map-connector" aria-hidden="true">
         <i></i><span>turn the promise into care</span><i></i>
@@ -372,46 +373,319 @@
     <p class="desc">Read in sequence for a guided tour, or jump directly to
       the operating question you want to test.</p>
     <div class="overview-chapter-grid">
+      <button type="button" data-dashboard-view="legislation">
+        <span>01 · Legal foundation</span><strong>Legislation</strong>
+        <small>What Congress must enact, which laws change, and how authority activates.</small>
+      </button>
       <button type="button" data-dashboard-view="health">
-        <span>01 · Promise and price</span><strong>Healthcare</strong>
+        <span>02 · Promise and price</span><strong>Healthcare</strong>
         <small>What people receive, what care costs, and how spending reroutes.</small>
       </button>
       <button type="button" data-dashboard-view="units">
-        <span>02 · Physical access</span><strong>Unit Network</strong>
+        <span>03 · Physical access</span><strong>Unit Network</strong>
         <small>What the four facility types do and where they are placed.</small>
       </button>
       <button type="button" data-dashboard-view="data">
-        <span>03 · Information</span><strong>Data</strong>
+        <span>04 · Information</span><strong>Data</strong>
         <small>How the national mesh stores, moves, protects, and corrects records.</small>
       </button>
       <button type="button" data-dashboard-view="workforce">
-        <span>04 · People</span><strong>Workforce</strong>
+        <span>05 · People</span><strong>Workforce</strong>
         <small>How clinical capacity, rural staffing, training, and job transition work.</small>
       </button>
       <button type="button" data-dashboard-view="quality">
-        <span>05 · Proof</span><strong>Quality</strong>
+        <span>06 · Proof</span><strong>Quality</strong>
         <small>Which parameters define success and what each phase must achieve.</small>
       </button>
       <button type="button" data-dashboard-view="tax">
-        <span>06 · Financing</span><strong>Taxes &amp; Financing</strong>
+        <span>07 · Financing</span><strong>Taxes &amp; Financing</strong>
         <small>How much revenue is needed, who pays, and who comes out ahead.</small>
       </button>
       <button type="button" data-dashboard-view="rollout">
-        <span>07 · Sequence</span><strong>Phased Rollout</strong>
+        <span>08 · Sequence</span><strong>Phased Rollout</strong>
         <small>What is built in each year and what evidence allows the next wave.</small>
       </button>
       <button type="button" data-dashboard-view="gov">
-        <span>08 · Authority</span><strong>Governance</strong>
+        <span>09 · Authority</span><strong>Governance</strong>
         <small>Which institutions decide, operate, audit, and enforce the system.</small>
       </button>
       <button type="button" data-dashboard-view="hardening">
-        <span>09 · Durability</span><strong>Executive Hardening</strong>
+        <span>10 · Durability</span><strong>Executive Hardening</strong>
         <small>How distributed authority and continuity duties resist sabotage.</small>
       </button>
     </div>
   </section>
 
   </div><!-- /view-overview -->
+
+  <div id="view-legislation" hidden>
+
+  <section class="card legislation-hero">
+    <span class="legislation-kicker">The legal operating plan</span>
+    <h2>Build the successor system in law before retiring the systems it replaces</h2>
+    <p class="desc">The framework calls for one National Health Assurance and
+      Health System Transition Act, organized into 19 titles, followed by
+      controlled federal conforming amendments and state, regional, and tribal
+      implementation instruments. Every legacy legal function receives one
+      explicit disposition: preserve, parallel, transfer, amend, preempt,
+      sunset, or fall back.</p>
+    <div class="legislation-counts" aria-label="Legislative architecture summary">
+      <article><strong>19</strong><span>titles in the enabling act</span></article>
+      <article><strong>13</strong><span>major legal domains to reconcile</span></article>
+      <article><strong>7</strong><span>controlled enactment and activation steps</span></article>
+    </div>
+    <div class="legislation-path" aria-label="Path from constitutional authority to mature operation">
+      <article><span>Authority</span><strong>Article I powers</strong><small>tax, spend, regulate, implement</small></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>New law</span><strong>19-title enabling act</strong><small>rights, money, institutions, remedies</small></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>Reconcile</span><strong>Conforming amendments</strong><small>federal code, savings clauses, fallbacks</small></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>Federalism</span><strong>Compacts and floors</strong><small>states, regions, tribes, direct federal option</small></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>Execute</span><strong>Rules and appropriations</strong><small>APA process, mandatory funding, oversight</small></article>
+      <i aria-hidden="true">&rarr;</i>
+      <article><span>Activate</span><strong>Gated rollout</strong><small>successor first; legacy sunset last</small></article>
+    </div>
+    <div class="legislation-constitutional-answer">
+      <strong>Constitutional amendment: not required for implementation.</strong>
+      <span>Congress can construct the statutory system around its taxing,
+        spending, commerce, Indian-affairs, and necessary-and-proper powers.
+        An amendment is optional if the goal is to place an affirmative
+        healthcare right above ordinary legislation.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="legislation-kicker">The principal statute</span>
+    <h2>What Congress must enact</h2>
+    <p class="desc">Appendix L of the framework supplies the bill architecture.
+      The titles below are the legal containers; legislative counsel would
+      convert each requirement, parameter, appeal, funding formula, and
+      continuity trigger into operative sections.</p>
+    <div class="legislation-title-stack" aria-label="Nineteen-title enabling act architecture">
+      <article>
+        <span>Rights and payment</span>
+        <ol start="1">
+          <li><b>I</b> Entitlement, coverage, rights, and remedies</li>
+          <li><b>II</b> Financing, trust funds, and appropriations</li>
+          <li><b>III</b> Enrollment and default coverage</li>
+          <li><b>IV</b> Claims, payment, reconciliation, and appeals</li>
+        </ol>
+      </article>
+      <article>
+        <span>Care and national capacity</span>
+        <ol start="5">
+          <li><b>V</b> Drugs, devices, diagnostics, and public manufacturing</li>
+          <li><b>VI</b> Hospitals and public-service charters</li>
+          <li><b>VII</b> Workforce, education, compensation, and scope</li>
+          <li><b>VIII</b> LTC, behavioral health, DVH, and EMS</li>
+          <li><b>IX</b> Records, data rights, cyber, and AI</li>
+          <li><b>X</b> Public health and prevention</li>
+        </ol>
+      </article>
+      <article>
+        <span>Innovation and integrity</span>
+        <ol start="11">
+          <li><b>XI</b> Biomedical innovation</li>
+          <li><b>XII</b> Fraud, abuse, and anti-extraction rules</li>
+        </ol>
+      </article>
+      <article>
+        <span>Federalism, finance, and protection</span>
+        <ol start="13">
+          <li><b>XIII</b> State, regional, and tribal transition</li>
+          <li><b>XIV</b> Tax and wealth financing</li>
+          <li><b>XV</b> Transition protection</li>
+          <li><b>XVI</b> Legitimacy and safety</li>
+        </ol>
+      </article>
+      <article>
+        <span>Continuity and repair</span>
+        <ol start="17">
+          <li><b>XVII</b> Anti-impoundment and continuity</li>
+          <li><b>XVIII</b> Adaptation, scorekeeping, and repair</li>
+          <li><b>XIX</b> Conforming amendments</li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="legislation-kicker">Interactive legal crosswalk</span>
+    <h2>Which existing laws change, and what happens to them</h2>
+    <p class="desc">This is the complete major-law-family map identified by
+      the framework, not a claim that a provision-by-provision national legal
+      audit is already finished. Select a domain to see the statutes, the
+      required disposition, the implementation method, the retained
+      protections, and the rollout point.</p>
+    <div class="legislation-crosswalk">
+      <div id="legislation-law-list" class="legislation-law-list"
+        aria-label="Select a legal domain"></div>
+      <article id="legislation-law-detail" class="legislation-law-detail"
+        aria-live="polite"></article>
+    </div>
+    <div class="legislation-disposition-key" aria-label="Legal disposition key">
+      <span><b>Preserve</b> stays operative</span>
+      <span><b>Parallel</b> runs beside the successor</span>
+      <span><b>Transfer</b> moves a function</span>
+      <span><b>Amend</b> changes existing text</span>
+      <span><b>Preempt</b> displaces only a conflict</span>
+      <span><b>Sunset</b> closes after certification</span>
+      <span><b>Fallback</b> revives a safe default</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="legislation-kicker">Federalism by design</span>
+    <h2>Federal, state, and tribal authority must be separated precisely</h2>
+    <p class="desc">The federal statute should operate directly where national
+      uniformity is indispensable, preserve traditional state health and
+      safety functions, and recognize tribal sovereignty and federal trust
+      duties. It cannot force state officers to administer a federal program.</p>
+    <div class="legislation-federalism">
+      <article>
+        <span>Federal direct authority</span>
+        <h3>One national floor and a direct operating fallback</h3>
+        <ul>
+          <li>Coverage, benefits, payment rights, financing, national data and claims standards</li>
+          <li>Federal institutions, appropriations, remedies, audit, and continuity duties</li>
+          <li>Narrow express preemption when a state rule materially blocks the federal guarantee</li>
+        </ul>
+      </article>
+      <article>
+        <span>State authority preserved</span>
+        <h3>Health, safety, licensure, and more-protective rules</h3>
+        <ul>
+          <li>Professional licensure, discipline, facility safety, public health, and corporate law</li>
+          <li>Supplemental benefits and protections that exceed the federal floor</li>
+          <li>Voluntary administration through funded compacts with clear conditions and exit rules</li>
+        </ul>
+      </article>
+      <article>
+        <span>Tribal sovereignty and trust</span>
+        <h3>Direct nation-to-nation implementation</h3>
+        <ul>
+          <li>No diminution of treaty, trust, IHS, or self-determination rights</li>
+          <li>Direct federal-tribal funding and compacts without a required state intermediary</li>
+          <li>Tribal control of service design, data governance, workforce, and local integration</li>
+        </ul>
+      </article>
+    </div>
+    <div class="legislation-preemption-band">
+      <strong>Preemption rule:</strong>
+      <span>displace only the state rule that creates the actual conflict;
+        retain savings clauses for health, safety, privacy, remedies, tribal
+        authority, and stronger patient protection.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="legislation-kicker">From bill text to live authority</span>
+    <h2>How implementation would be performed</h2>
+    <p class="desc">The legal transition follows the same safety logic as the
+      clinical rollout: create the successor authority, prove it can operate,
+      migrate by certified wave, and retire the predecessor only after
+      continuity evidence passes.</p>
+    <div class="legislation-steps" aria-label="Seven-step legislative implementation sequence">
+      <article><span>01</span><strong>Close the legal crosswalk</strong><p>Legislative counsel maps every affected federal section and each state, territorial, and tribal interface to a named disposition.</p></article>
+      <article><span>02</span><strong>Enact the 19-title act</strong><p>Rights, institutions, mandatory funding, revenue, remedies, formulas, defaults, and transition authority take effect on sequenced dates.</p></article>
+      <article><span>03</span><strong>Amend legacy code</strong><p>Congress inserts conforming text, savings clauses, severability, transition rules, and revival fallbacks before any repeal can operate.</p></article>
+      <article><span>04</span><strong>Fund and appoint</strong><p>Trust funds, direct spending, appropriations, offices, inspectors, scorekeepers, courts, succession, and staffing floors become operational.</p></article>
+      <article><span>05</span><strong>Rule and compact</strong><p>Agencies use APA notice and comment; governments execute clear, funded, voluntary compacts with data, audit, cure, and exit terms.</p></article>
+      <article><span>06</span><strong>Run systems in parallel</strong><p>Claims, records, pharmacy, hospitals, and eligibility migrate in certified waves while predecessor benefits and pending cases remain protected.</p></article>
+      <article><span>07</span><strong>Sunset only after Gate 8</strong><p>Legacy authority closes only after record, financial, workforce, appeal, continuity, and fallback evidence is independently certified.</p></article>
+    </div>
+    <div class="legislation-passage-note">
+      <article><b>Regular legislation</b><span>can carry the full institutional,
+        rights, regulatory, and remedial design.</span></article>
+      <article><b>Budget reconciliation</b><span>can carry qualifying spending
+        and revenue provisions, but Senate rules expose nonbudgetary provisions
+        to a Byrd Rule point of order.</span></article>
+      <article><b>House origination</b><span>should be used for the revenue title
+        to avoid an Origination Clause challenge.</span></article>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="legislation-kicker">Constitutional architecture</span>
+    <h2>What the Constitution permits, constrains, and could optionally guarantee</h2>
+    <div class="legislation-constitutional-grid">
+      <article><span>Article I</span><h3>Enumerated federal powers</h3><p>Anchor financing in the taxing and spending powers; regulate interstate healthcare markets; use necessary-and-proper means tied to those powers.</p></article>
+      <article><span>Tenth Amendment</span><h3>No commandeering or coercion</h3><p>Administer federal duties federally. State participation must use clear, prospective, noncoercive funding terms and a workable direct federal option.</p></article>
+      <article><span>Article II</span><h3>Executive power remains presidential</h3><p>After <i>Trump v. Slaughter</i>, officers within the President's general administrative control must be removable at will.</p></article>
+      <article><span>Fifth Amendment</span><h3>Process, property, and equal treatment</h3><p>Give notice, hearings, review, compensation where property is taken, and rational, nondiscriminatory transition rules for patients and institutions.</p></article>
+      <article><span>First Amendment and RFRA</span><h3>Belief does not erase patient access</h3><p>Draft conscience rules narrowly, protect individual rights, and ensure an effective alternative provider and emergency-care pathway.</p></article>
+      <article><span>Supremacy Clause</span><h3>Express, bounded preemption</h3><p>State law yields only where Congress validly says so or a true conflict exists; explicit savings clauses prevent accidental field preemption.</p></article>
+    </div>
+    <div class="legislation-amendment-layout">
+      <div>
+        <span class="legislation-kicker">Optional, not required</span>
+        <h3>Illustrative Twenty-Eighth Amendment</h3>
+        <p>This language would constitutionalize an affirmative floor while
+          leaving Congress responsible for benefit definition, financing, and
+          implementation. It is a drafting concept for legislative counsel,
+          not final bill text.</p>
+        <div class="legislation-ratification">
+          <strong>2/3</strong><span>of both houses to propose</span>
+          <i aria-hidden="true">&rarr;</i>
+          <strong>3/4</strong><span>of states to ratify</span>
+        </div>
+      </div>
+      <blockquote class="legislation-amendment-text">
+        <p><b>Section 1.</b> Every person within the jurisdiction of the
+          United States has the right, as provided by law, to timely access
+          to medically necessary health care without discrimination and
+          without financial barriers at the point of service.</p>
+        <p><b>Section 2.</b> Congress shall have power to enforce and
+          implement this article by appropriate legislation, including by
+          establishing national standards, financing, remedies, and
+          reasonable implementation schedules. A State may provide greater
+          protection.</p>
+        <p><b>Section 3.</b> No benefit, payment, or appeal right secured by
+          law under this article may be suspended or terminated by executive
+          action contrary to law.</p>
+      </blockquote>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="legislation-kicker">What must be finished before introduction</span>
+    <h2>The framework specifies the structure; legal validation remains an open workstream</h2>
+    <p class="desc">The framework itself flags OI-061 through OI-070. A
+      responsible bill cannot call the crosswalk complete until these legal
+      work products are public, versioned, and reviewed.</p>
+    <div class="legislation-open-grid">
+      <article><span>01</span><strong>Federal section-by-section table</strong><p>Current citation, affected function, disposition, replacement section, effective date, savings clause, and fallback.</p></article>
+      <article><span>02</span><strong>Fifty-state and territorial annex</strong><p>Insurance, licensure, scope, facility, public-health, tax, labor, debt, privacy, and corporate-law interfaces.</p></article>
+      <article><span>03</span><strong>Tribal consultation record</strong><p>Treaty, trust, self-determination, service, funding, data-sovereignty, and compact terms developed nation to nation.</p></article>
+      <article><span>04</span><strong>Constitutional and litigation red team</strong><p>Enumerated power, federalism, removal, appointments, due process, takings, speech, religion, standing, remedies, and severability.</p></article>
+      <article><span>05</span><strong>Budget and tax scores</strong><p>CBO and JCT scoring, trust-fund flows, appropriation classification, reconciliation limits, and state fiscal transition.</p></article>
+      <article><span>06</span><strong>Operational readiness schedule</strong><p>Rulemaking, appointments, procurement, systems, compacts, workforce, claims, records, and Gate 8 sunset evidence.</p></article>
+    </div>
+    <div class="legislation-current-law-note">
+      <strong>Current-law alert · June 29, 2026</strong>
+      <span>The Supreme Court held in <i>Trump v. Slaughter</i> that the
+        FTC's for-cause removal protection was unconstitutional. Executive
+        hardening therefore must rely on statutory duties, mandatory funding,
+        evidence outside operations, courts, inspectors, congressional
+        offices, defaults, and remedies—not an assumption that executive
+        regulators can be made independent of presidential removal.</span>
+    </div>
+    <p class="rollout-source">Framework basis: Sections 9.2 and 9.3;
+      Appendix L; and OI-061 through OI-070.
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/National_Health_Assurance_Framework_v2.0.0_FINAL.pdf"
+        target="_blank" rel="noopener">Read the full framework</a>.
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/legislation_crosswalk.md"
+        target="_blank" rel="noopener">Read the legal crosswalk methodology</a>.
+      <a href="https://constitution.congress.gov/browse/article-5/"
+        target="_blank" rel="noopener">Article V process</a>.
+      <a href="https://www.supremecourt.gov/opinions/25pdf/25-332_qn12.pdf"
+        target="_blank" rel="noopener">Trump v. Slaughter</a>.
+      This page is a legislative planning map, not legal advice.</p>
+  </section>
+
+  </div><!-- /view-legislation -->
 
   <div id="view-health" hidden>
 
@@ -970,13 +1244,15 @@
       one governing body; click any box for the full entry, including the
       position in charge and what it answers for.</p>
     <div class="tiles" id="gov-summary"></div>
-    <p class="note">Leadership titles follow standard federal practice
-      (Senate-confirmed heads for benefit-paying bodies, fixed terms with
-      for-cause removal for scorekeepers, judges, and inspectors) and are
-      a staffing design consistent with the framework's executive-hardening
-      provisions rather than quotations from it. "Replaces" identifies the
-      function absorbed, not a claim that the named organization vanishes
-      on day one; the Transition body manages every handoff.</p>
+    <p class="note">Leadership titles follow standard federal practice:
+      Senate-confirmed heads for benefit-paying executive bodies, with
+      nonexecutive scorekeeping and adjudication assigned only to
+      constitutionally appropriate legislative offices or courts. After the
+      Supreme Court's June 29, 2026 decision in <i>Trump v. Slaughter</i>,
+      this dashboard does not assume that an executive regulator can be
+      insulated from presidential removal. "Replaces" identifies the function
+      absorbed, not a claim that the named organization vanishes on day one;
+      the Transition body manages every handoff.</p>
   </section>
 
   <div id="gov-groups"></div>
@@ -1215,9 +1491,10 @@
         <h3>Leadership rules still require legislation</h3>
         <p>Framework open issue OI-019 leaves governing-body composition,
           appointment, terms, removal, quorum, conflicts, vacancy, and
-          succession for final statutory design. This tab does not invent
-          fixed terms or for-cause removal where the framework has not adopted
-          them.</p>
+          succession for final statutory design. Trump v. Slaughter now
+          forecloses ordinary for-cause insulation for officers within the
+          President's general administrative control; every body still needs
+          an Appointments Clause and separation-of-powers opinion.</p>
       </article>
       <article>
         <span>Operational proof</span>
@@ -2028,7 +2305,7 @@
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js"></script>
 <script src="js/app.js"></script>
-<script src="js/taxapp.js?v=20260718-overview1"></script>
+<script src="js/taxapp.js?v=20260718-legislation1"></script>
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
@@ -2039,5 +2316,6 @@
 <script src="js/quality.js?v=20260717-quality1"></script>
 <script src="js/hardening.js?v=20260717-hardening1"></script>
 <script src="js/workforce.js?v=20260717-workforce1"></script>
+<script src="js/legislation.js?v=20260718-legislation1"></script>
 </body>
 </html>
