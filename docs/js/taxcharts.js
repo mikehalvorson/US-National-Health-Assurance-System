@@ -369,7 +369,8 @@
                avg: g.wealthT * 1e12 / (g.hhM * 1e6),
                share: 100 * g.wealthT / Wd.totalT };
     });
-    var W = 900, rowH = 42, M = { l: 128, r: 150, t: 8, b: 30 };
+    var W = 900, rowH = 42, M = { l: 330, r: 24, t: 8, b: 30 };
+    var nameX = 122, valX = 130; /* tier name column, then net-worth column */
     var H = M.t + rows.length * rowH + M.b;
     var maxAvg = Math.max.apply(null, rows.map(function (r) { return r.avg; }));
     var x = function (v) { return M.l + (W - M.l - M.r) * (v / maxAvg); };
@@ -379,21 +380,23 @@
 
     rows.forEach(function (r, i) {
       var cy = M.t + i * rowH + rowH / 2;
-      var lab = el("text", { x: M.l - 10, y: cy + 4, class: "row-label", "text-anchor": "end" }, svg);
-      lab.textContent = r.label;
-      var w = Math.max(1.5, x(r.avg) - M.l);
-      var g = el("g", { class: "bench-row", tabindex: 0 }, svg);
-      el("path", { d: barPath(M.l, cy - 11, w, 22, 4, "right"),
-        fill: "var(--series-1)", "fill-opacity": 0.85 }, g);
       function fmtW(v) {
         if (v >= 1e9) return "$" + (v / 1e9).toFixed(1) + "B";
         if (v >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
         return "$" + Math.round(v / 1000) + "k";
       }
-      var vt = el("text", { x: M.l + w + 8, y: cy + 4, class: "direct-label" }, svg);
+      /* tier name, then its net worth in a fixed column directly to the right */
+      var lab = el("text", { x: nameX, y: cy + 4, class: "row-label", "text-anchor": "end" }, svg);
+      lab.textContent = r.label;
       var mult = r.avg / Wd.medianHH;
-      vt.textContent = fmtW(r.avg) + " avg (" +
+      var vt = el("text", { x: valX, y: cy + 4, class: "direct-label", "text-anchor": "start" }, svg);
+      vt.textContent = fmtW(r.avg) + " (" +
         (mult >= 10 ? Math.round(mult).toLocaleString("en-US") : mult.toFixed(1)) + "× median)";
+
+      var w = Math.max(1.5, x(r.avg) - M.l);
+      var g = el("g", { class: "bench-row", tabindex: 0 }, svg);
+      el("path", { d: barPath(M.l, cy - 11, w, 22, 4, "right"),
+        fill: "var(--series-1)", "fill-opacity": 0.85 }, g);
 
       function tipIt(evt) {
         var box = document.createElement("div");
@@ -409,7 +412,7 @@
       g.addEventListener("pointerleave", hideTip);
     });
 
-    var note = el("text", { x: M.l, y: H - 8, class: "axis-text" }, svg);
+    var note = el("text", { x: nameX - 12, y: H - 8, class: "axis-text" }, svg);
     note.textContent = "Linear scale, deliberately: most of America is invisible next to the top 0.01%. That is the chart.";
   };
 })();
@@ -442,8 +445,10 @@
       maxPct = Math.max(maxPct, save, pay);
     });
     maxPct *= 1.06;
-    var cx = M.l + (W - M.l - M.r) / 2;
-    var half = (W - M.l - M.r) / 2;
+    var axisShift = 14; /* nudge the divider left of geometric center */
+    var cx = M.l + (W - M.l - M.r) / 2 - axisShift;
+    /* equal %-per-pixel scale on both sides, clamped so neither clips */
+    var half = Math.min(cx - M.l, (W - M.r) - cx);
     var xL = function (p) { return cx - half * (p / maxPct); };
     var xR = function (p) { return cx + half * (p / maxPct); };
 
