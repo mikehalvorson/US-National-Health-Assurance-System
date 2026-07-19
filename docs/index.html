@@ -29,16 +29,16 @@
 
   <nav class="tabs" aria-label="Dashboard sections">
     <button id="tab-overview" class="active">Overview</button>
-    <button id="tab-legislation">Legislation</button>
     <button id="tab-health">Healthcare</button>
-    <button id="tab-rollout">Phased Rollout</button>
-    <button id="tab-data">Data</button>
-    <button id="tab-quality">Quality</button>
-    <button id="tab-workforce">Workforce</button>
     <button id="tab-tax">Taxes &amp; Financing</button>
+    <button id="tab-legislation">Legislation</button>
     <button id="tab-units">Unit Network</button>
+    <button id="tab-data">Data</button>
+    <button id="tab-workforce">Workforce</button>
     <button id="tab-gov">Governance</button>
     <button id="tab-hardening">Executive Hardening</button>
+    <button id="tab-rollout">Phased Rollout</button>
+    <button id="tab-quality">Quality</button>
   </nav>
 
   <div id="view-overview">
@@ -373,45 +373,45 @@
     <p class="desc">Read in sequence for a guided tour, or jump directly to
       the operating question you want to test.</p>
     <div class="overview-chapter-grid">
+      <button type="button" data-dashboard-view="health">
+        <span>01 · The need and the promise</span><strong>Healthcare</strong>
+        <small>What is broken today, what people would receive, and what care costs.</small>
+      </button>
+      <button type="button" data-dashboard-view="tax">
+        <span>02 · Paying for it</span><strong>Taxes &amp; Financing</strong>
+        <small>How much revenue is needed, who pays, and who comes out ahead.</small>
+      </button>
       <button type="button" data-dashboard-view="legislation">
-        <span>01 · Legal foundation</span><strong>Legislation</strong>
+        <span>03 · Legal foundation</span><strong>Legislation</strong>
         <small>What Congress must enact, which laws change, and how authority activates.</small>
       </button>
-      <button type="button" data-dashboard-view="health">
-        <span>02 · Promise and price</span><strong>Healthcare</strong>
-        <small>What people receive, what care costs, and how spending reroutes.</small>
-      </button>
       <button type="button" data-dashboard-view="units">
-        <span>03 · Physical access</span><strong>Unit Network</strong>
+        <span>04 · Physical access</span><strong>Unit Network</strong>
         <small>What the four facility types do and where they are placed.</small>
       </button>
       <button type="button" data-dashboard-view="data">
-        <span>04 · Information</span><strong>Data</strong>
+        <span>05 · Information</span><strong>Data</strong>
         <small>How the national mesh stores, moves, protects, and corrects records.</small>
       </button>
       <button type="button" data-dashboard-view="workforce">
-        <span>05 · People</span><strong>Workforce</strong>
+        <span>06 · People</span><strong>Workforce</strong>
         <small>How clinical capacity, rural staffing, training, and job transition work.</small>
       </button>
-      <button type="button" data-dashboard-view="quality">
-        <span>06 · Proof</span><strong>Quality</strong>
-        <small>Which parameters define success and what each phase must achieve.</small>
-      </button>
-      <button type="button" data-dashboard-view="tax">
-        <span>07 · Financing</span><strong>Taxes &amp; Financing</strong>
-        <small>How much revenue is needed, who pays, and who comes out ahead.</small>
-      </button>
-      <button type="button" data-dashboard-view="rollout">
-        <span>08 · Sequence</span><strong>Phased Rollout</strong>
-        <small>What is built in each year and what evidence allows the next wave.</small>
-      </button>
       <button type="button" data-dashboard-view="gov">
-        <span>09 · Authority</span><strong>Governance</strong>
+        <span>07 · Authority</span><strong>Governance</strong>
         <small>Which institutions decide, operate, audit, and enforce the system.</small>
       </button>
       <button type="button" data-dashboard-view="hardening">
-        <span>10 · Durability</span><strong>Executive Hardening</strong>
+        <span>08 · Durability</span><strong>Executive Hardening</strong>
         <small>How distributed authority and continuity duties resist sabotage.</small>
+      </button>
+      <button type="button" data-dashboard-view="rollout">
+        <span>09 · Sequence</span><strong>Phased Rollout</strong>
+        <small>What is built in each year and what evidence allows the next wave.</small>
+      </button>
+      <button type="button" data-dashboard-view="quality">
+        <span>10 · Proof</span><strong>Quality</strong>
+        <small>Which parameters define success and what each phase must achieve.</small>
       </button>
     </div>
   </section>
@@ -688,6 +688,18 @@
   </div><!-- /view-legislation -->
 
   <div id="view-health" hidden>
+
+  <section class="card chapter-intro">
+    <span class="chapter-intro-eyebrow">Chapter 1 · The need and the promise</span>
+    <h2>What the system delivers, and what it costs</h2>
+    <p class="desc">The Overview made the case that American healthcare is
+      four payment systems stapled together, paying more for less. This
+      chapter is the promise in concrete terms: what a person pays at the
+      point of care, the outcomes coverage changes, a household's annual
+      bill, and the bottom-up price tag for the whole system, computed live
+      from sourced parameters. The next chapter shows how that price tag is
+      financed and who comes out ahead.</p>
+  </section>
 
   <!-- What you'd pay at the point of care -->
   <section class="card" id="care-card-section">

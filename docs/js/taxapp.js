@@ -281,7 +281,7 @@
   }
 
   /* ---- tabs ---- */
-  var VIEWS = ["overview", "legislation", "health", "rollout", "data", "quality", "workforce", "tax", "units", "gov", "hardening"];
+  var VIEWS = ["overview", "health", "tax", "legislation", "units", "data", "workforce", "gov", "hardening", "rollout", "quality"];
   function showView(which) {
     if (VIEWS.indexOf(which) < 0) which = "overview";
     VIEWS.forEach(function (v) {
@@ -299,6 +299,71 @@
       window.scrollTo(0, 0);
     });
   });
+
+  /* ---- connective tissue: a "next chapter" footer on every view -------
+   * Each chapter ends by naming the question the next chapter answers, so
+   * reading straight through tells one story: the need, the promise, how
+   * it is paid for, what it is made of, and how it is built and proven. */
+  (function buildStoryNav() {
+    var STORY = {
+      overview:    { n: 0, q: "the whole argument in one view" },
+      health:      { n: 1, q: "what is broken today, what people would receive, and what the system costs" },
+      tax:         { n: 2, q: "how the bill is paid, who contributes, and who comes out ahead" },
+      legislation: { n: 3, q: "what Congress enacts and which existing laws change" },
+      units:       { n: 4, q: "the physical care network and where it is placed" },
+      data:        { n: 5, q: "how information follows the patient safely" },
+      workforce:   { n: 6, q: "the people who deliver the care and how the workforce transitions" },
+      gov:         { n: 7, q: "the institutions that operate, audit, and enforce the system" },
+      hardening:   { n: 8, q: "how the design resists sabotage and stays running" },
+      rollout:     { n: 9, q: "what is built each year and what evidence unlocks the next wave" },
+      quality:     { n: 10, q: "the parameters that define success at every phase" }
+    };
+    var order = VIEWS.slice();
+    order.forEach(function (id, i) {
+      var view = $("view-" + id);
+      if (!view) return;
+      var next = order[i + 1], prev = order[i - 1];
+      var nav = document.createElement("section");
+      nav.className = "card chapter-nav";
+      var meta = STORY[id];
+      var eyebrow = document.createElement("span");
+      eyebrow.className = "chapter-nav-eyebrow";
+      eyebrow.textContent = meta && meta.n
+        ? "Chapter " + meta.n + " of 10"
+        : "Start of the story";
+      nav.appendChild(eyebrow);
+      var row = document.createElement("div");
+      row.className = "chapter-nav-row";
+      if (prev) {
+        var pb = document.createElement("button");
+        pb.type = "button"; pb.className = "chapter-nav-prev";
+        pb.dataset.dashboardView = prev;
+        pb.innerHTML = "<span>Back</span><strong>" +
+          $("tab-" + prev).textContent + "</strong>";
+        pb.addEventListener("click", function () { showView(prev); window.scrollTo(0, 0); });
+        row.appendChild(pb);
+      } else { row.appendChild(document.createElement("span")); }
+      if (next) {
+        var nb = document.createElement("button");
+        nb.type = "button"; nb.className = "chapter-nav-next";
+        nb.dataset.dashboardView = next;
+        nb.innerHTML = "<span>Next: " + STORY[next].q + "</span><strong>" +
+          $("tab-" + next).textContent + " &rarr;</strong>";
+        nb.addEventListener("click", function () { showView(next); window.scrollTo(0, 0); });
+        row.appendChild(nb);
+      } else {
+        var end = document.createElement("button");
+        end.type = "button"; end.className = "chapter-nav-next";
+        end.dataset.dashboardView = "overview";
+        end.innerHTML = "<span>You have read the whole story</span><strong>" +
+          "Back to the Overview &uarr;</strong>";
+        end.addEventListener("click", function () { showView("overview"); window.scrollTo(0, 0); });
+        row.appendChild(end);
+      }
+      nav.appendChild(row);
+      view.appendChild(nav);
+    });
+  })();
 
   /* ---- financing scenario picker (selectable, then fully editable) ---- */
   function applyScenario(id) {

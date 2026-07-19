@@ -2394,3 +2394,44 @@ footer.site a { color: var(--text-muted); }
   .legislation-constitutional-grid,
   .legislation-open-grid { grid-template-columns: 1fr; }
 }
+
+/* ---- Chapter navigation (story connective tissue) ---- */
+.chapter-nav { margin-top: 26px; }
+.chapter-nav-eyebrow {
+  display: block; font-size: 12px; font-weight: 650; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+}
+.chapter-nav-row {
+  display: flex; gap: 12px; align-items: stretch; justify-content: space-between;
+  flex-wrap: wrap;
+}
+.chapter-nav-row > span { flex: 1 1 0; }
+.chapter-nav-prev, .chapter-nav-next {
+  font: inherit; text-align: left; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface-1); color: var(--text-primary);
+  padding: 13px 17px; display: flex; flex-direction: column; gap: 3px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.chapter-nav-next { flex: 2 1 320px; align-items: flex-end; text-align: right;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-1)); }
+.chapter-nav-prev { flex: 1 1 180px; }
+.chapter-nav-prev:hover, .chapter-nav-next:hover {
+  border-color: var(--accent); transform: translateY(-1px);
+}
+.chapter-nav-prev span, .chapter-nav-next span {
+  font-size: 12.5px; color: var(--text-secondary); line-height: 1.35;
+}
+.chapter-nav-prev strong, .chapter-nav-next strong {
+  font-size: 15.5px; font-weight: 650; color: var(--text-primary);
+}
+@media (max-width: 620px) {
+  .chapter-nav-next, .chapter-nav-prev { flex-basis: 100%; }
+}
+
+/* ---- Chapter intro lead-in ---- */
+.chapter-intro { border-left: 3px solid var(--accent); }
+.chapter-intro-eyebrow {
+  display: block; font-size: 12px; font-weight: 650; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+}
