@@ -1,5 +1,5 @@
 /* =========================================================================
- * Unit Network tab: need-based allocation of the four-type community
+ * Physical Care tab: need-based allocation of the four-type community
  * diagnostic-treatment network across every U.S. county.
  *
  * Method (documented on the page): county demand = population × network
@@ -156,7 +156,7 @@
     var tiles = [
       { label: "Total units, need-based", value: t.total.toLocaleString("en-US"),
         range: "at " + visitsPerCapita.toFixed(2) + " network visits/person/yr" },
-      { label: "Framework's figure (SR-ACC-010)", value: "≥ 15,000",
+      { label: "Plan's minimum (SR-ACC-010)", value: "≥ 15,000",
         range: t.total > 16500
           ? "the floor undercounts need by ~" + Math.round(100 * (t.total - 15000) / 15000) +
             "%; either build ~" + Math.round(t.total / 1000) + "k or certify existing urgent-care/retail/FQHC sites into the network"
@@ -279,7 +279,7 @@
     DATA.error = String(e);
     var host = $("units-map");
     if (host) host.textContent =
-      "County data failed to load (" + DATA.error + "). The Unit Network tab " +
-      "needs docs/data/counties.json and docs/data/us-states.json.";
+      "County data failed to load (" + DATA.error +
+      "). The Physical Care tab needs docs/data/counties.json and docs/data/us-states.json.";
   });
 })();

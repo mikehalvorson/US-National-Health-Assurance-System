@@ -1,0 +1,164 @@
+{
+  "model": {
+    "version": "1.1",
+    "run_date": "2026-07-19",
+    "selected_region_count": 13,
+    "tested_region_counts": [
+      { "regions": 10, "total": 0.106596 },
+      { "regions": 11, "total": 0.080709 },
+      { "regions": 12, "total": 0.061422 },
+      { "regions": 13, "total": 0.059443 },
+      { "regions": 14, "total": 0.080504 },
+      { "regions": 15, "total": 0.088036 },
+      { "regions": 16, "total": 0.110954 }
+    ],
+    "candidate_method": "Expert-seeded candidates with adjacent-region merges for 10-12 and contiguous multi-state splits for 14-16, followed by deterministic boundary-state moves that lower the objective",
+    "weights": {
+      "population_scale": 0.45,
+      "geographic_compactness": 0.25,
+      "rural_workload": 0.15,
+      "administrative_fragmentation": 0.15
+    },
+    "hard_constraints": [
+      "All 50 states and the District of Columbia assigned exactly once",
+      "State boundaries preserved",
+      "Regions contiguous through state borders, except explicit AK-WA and HI-CA administrative links",
+      "A boundary move cannot leave a region below 12 million people",
+      "A moved state must be within 425 miles of the destination region centroid",
+      "A boundary move cannot raise destination mean state-centroid distance above 300 miles"
+    ],
+    "source": "Census 2024 county population estimates and 2020 rural shares in docs/data/counties.json"
+  },
+  "regions": [
+    {
+      "id": "R01",
+      "name": "Northwest and Alaska",
+      "states": ["AK", "ID", "MT", "OR", "WA", "WY"],
+      "population": 16697154,
+      "rural_population": 3789366,
+      "rural_share": 0.2269,
+      "centroid": [-120.852, 46.708],
+      "mean_state_centroid_miles": 223
+    },
+    {
+      "id": "R02",
+      "name": "California and Hawaii",
+      "states": ["CA", "HI"],
+      "population": 40877409,
+      "rural_population": 2450151,
+      "rural_share": 0.0599,
+      "centroid": [-120.553, 35.048],
+      "mean_state_centroid_miles": 168
+    },
+    {
+      "id": "R03",
+      "name": "Mountain Southwest",
+      "states": ["AZ", "CO", "NM", "NV", "UT"],
+      "population": 22441213,
+      "rural_population": 2713273,
+      "rural_share": 0.1209,
+      "centroid": [-110.297, 36.756],
+      "mean_state_centroid_miles": 293
+    },
+    {
+      "id": "R04",
+      "name": "Texas and Louisiana",
+      "states": ["LA", "TX"],
+      "population": 35888571,
+      "rural_population": 6478579,
+      "rural_share": 0.1805,
+      "centroid": [-96.542, 30.889],
+      "mean_state_centroid_miles": 78
+    },
+    {
+      "id": "R05",
+      "name": "Central Plains",
+      "states": ["AR", "IA", "KS", "MO", "ND", "NE", "OK", "SD"],
+      "population": 23368009,
+      "rural_population": 7936910,
+      "rural_share": 0.3396,
+      "centroid": [-94.7, 38.766],
+      "mean_state_centroid_miles": 217
+    },
+    {
+      "id": "R06",
+      "name": "Upper Midwest",
+      "states": ["IL", "MN", "WI"],
+      "population": 24464284,
+      "rural_population": 5243210,
+      "rural_share": 0.2143,
+      "centroid": [-89.739, 42.824],
+      "mean_state_centroid_miles": 144
+    },
+    {
+      "id": "R07",
+      "name": "Ohio Valley and Mid-South",
+      "states": ["AL", "IN", "KY", "MS", "TN"],
+      "population": 26841141,
+      "rural_population": 10071461,
+      "rural_share": 0.3752,
+      "centroid": [-86.55, 36.388],
+      "mean_state_centroid_miles": 178
+    },
+    {
+      "id": "R08",
+      "name": "Great Lakes and Appalachia",
+      "states": ["MI", "OH", "WV"],
+      "population": 23793742,
+      "rural_population": 6500022,
+      "rural_share": 0.2732,
+      "centroid": [-83.255, 41.365],
+      "mean_state_centroid_miles": 101
+    },
+    {
+      "id": "R09",
+      "name": "Florida",
+      "states": ["FL"],
+      "population": 23372215,
+      "rural_population": 2010750,
+      "rural_share": 0.086,
+      "centroid": [-81.709, 27.834],
+      "mean_state_centroid_miles": 0
+    },
+    {
+      "id": "R10",
+      "name": "South Atlantic",
+      "states": ["GA", "NC", "SC"],
+      "population": 27705733,
+      "rural_population": 8308246,
+      "rural_share": 0.2999,
+      "centroid": [-81.634, 34.383],
+      "mean_state_centroid_miles": 122
+    },
+    {
+      "id": "R11",
+      "name": "Chesapeake",
+      "states": ["DC", "MD", "PA", "VA"],
+      "population": 28855416,
+      "rural_population": 6139089,
+      "rural_share": 0.2128,
+      "centroid": [-77.181, 39.335],
+      "mean_state_centroid_miles": 74
+    },
+    {
+      "id": "R12",
+      "name": "Northeast Metro",
+      "states": ["DE", "NJ", "NY"],
+      "population": 30420016,
+      "rural_population": 3303712,
+      "rural_share": 0.1086,
+      "centroid": [-74.571, 41.08],
+      "mean_state_centroid_miles": 37
+    },
+    {
+      "id": "R13",
+      "name": "New England",
+      "states": ["CT", "MA", "ME", "NH", "RI", "VT"],
+      "population": 15386085,
+      "rural_population": 3095846,
+      "rural_share": 0.2012,
+      "centroid": [-71.669, 42.407],
+      "mean_state_centroid_miles": 58
+    }
+  ]
+}

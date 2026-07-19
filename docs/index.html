@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance: Story &amp; System Dashboard</title>
 <meta name="description" content="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models.">
-<link rel="stylesheet" href="style.css?v=20260718-legislation1">
+<link rel="stylesheet" href="style.css?v=20260719-physical-care1">
 </head>
 <body>
 <div class="wrap">
@@ -32,7 +32,7 @@
     <button id="tab-health">Healthcare</button>
     <button id="tab-tax">Taxes &amp; Financing</button>
     <button id="tab-legislation">Legislation</button>
-    <button id="tab-units">Unit Network</button>
+    <button id="tab-units">Physical Care</button>
     <button id="tab-data">Data</button>
     <button id="tab-workforce">Workforce</button>
     <button id="tab-gov">Governance</button>
@@ -143,7 +143,7 @@
       <li><b>A four-type community diagnostic-treatment network</b>
         (the framework specifies at least 15,000 units, from pharmacy
         micro-clinics to rural enhanced and urban public-health units;
-        the Unit Network chapter derives the need-based count) delivering
+        the Physical Care chapter derives the need-based count) delivering
         same-day routine care.</li>
       <li><b>A structured specialist backplane:</b> complete workups and
         24-hour e-consults before in-person referrals, with urgency classes
@@ -182,7 +182,7 @@
           <h3>Community diagnostic-treatment units</h3>
           <p>Same-day routine care, testing, prevention, navigation, and
             escalation close to where people live.</p>
-          <button type="button" data-dashboard-view="units">Unit Network</button>
+          <button type="button" data-dashboard-view="units">Physical Care</button>
         </article>
         <article>
           <span>Clinical backplane</span>
@@ -388,8 +388,8 @@
         <small>What Congress must enact, which laws change, and how authority activates.</small>
       </button>
       <button type="button" data-dashboard-view="units">
-        <span>04 · Physical access</span><strong>Unit Network</strong>
-        <small>What the four facility types do and where they are placed.</small>
+        <span>04 · Physical care</span><strong>Physical Care</strong>
+        <small>How hospitals are governed, funded, regionalized, and connected to the four-unit network.</small>
       </button>
       <button type="button" data-dashboard-view="data">
         <span>05 · Information</span><strong>Data</strong>
@@ -920,7 +920,7 @@
       pass-through with a fixed 28% marginal-rate revenue feedback; there
       are no general-equilibrium or labor-supply effects. The correlation
       structure is a single systemic factor, not a full covariance matrix.
-      Geographic detail exists for the unit network (see the Unit Network
+      Geographic detail exists for the care network (see the Physical Care
       tab) but the fiscal model's costs and prices remain national
       averages. Health outcomes are displayed with sources in the section
       above, not converted into dollars. Demographic aging is decomposed
@@ -1188,20 +1188,298 @@
   <div id="view-units" hidden>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 4 · Physical access</span>
-    <h2>Where the care actually happens</h2>
-    <p class="desc">With the promise made, financed, and authorized in law,
-      the system needs a physical front door within reach of every
-      resident. This chapter sizes and places the four-type community
-      network from real county population and rurality data, describes what
-      each facility type does and costs, and maps where the units would go.
-      The next chapter follows the information that has to move with each
-      patient between them.</p>
+    <span class="chapter-intro-eyebrow">Chapter 4 &middot; Physical care</span>
+    <h2>Hospitals become public-service infrastructure, then care moves closer to home</h2>
+    <p class="desc">The change is larger than building community clinics. It
+      starts by removing hospitals from the logic of payer contracts,
+      shareholder extraction, and profitable service selection. Hospitals
+      receive mission-locked public-service charters and certified budgets;
+      regional nonprofit administrations plan capacity and protect essential
+      services. The four-unit diagnostic-treatment network then becomes the
+      local front door, linked to hospitals for emergency, inpatient,
+      surgical, and complex specialty care.</p>
+  </section>
+
+  <section class="card physical-problem-section">
+    <span class="physical-kicker">The starting problem</span>
+    <h2>Hospital administration is optimized around revenue, not the human need for care</h2>
+    <p class="desc">A hospital is not an ordinary market. A patient with a
+      stroke, sepsis, trauma, or a dangerous pregnancy cannot postpone the
+      purchase, compare a complete price, or judge staffing quality in
+      advance. When the institution has an owner entitled to residual profit,
+      the easiest ways to improve returns can conflict with the public
+      mission: raise prices, favor lucrative procedures, reduce labor, load
+      the property with debt or rent, and close services whose social value is
+      greater than their margin.</p>
+    <div class="physical-problem-grid">
+      <article>
+        <span>Market failure</span>
+        <h3>Patients cannot bargain in an emergency</h3>
+        <p>Demand is involuntary, quality is hard to observe, and local
+          consolidation can leave no meaningful alternative. A hospital can
+          possess market power precisely when a person is least able to
+          exercise consumer power.</p>
+      </article>
+      <article>
+        <span>Financialization</span>
+        <h3>Private equity intensifies the extraction path</h3>
+        <p>Acquisition debt, management fees, related-party transactions,
+          sale-leasebacks, short holding periods, and exit targets can turn
+          clinical capacity into a financial asset. The risk is borne by
+          patients, workers, and the community if the facility weakens or
+          closes.</p>
+      </article>
+      <article>
+        <span>Administrative load</span>
+        <h3>Competing payers multiply nonclinical work</h3>
+        <p>Contracting, coding, prior authorization, utilization review,
+          collections, denials, and revenue-cycle teams consume labor that
+          does not diagnose, treat, clean a room, or keep a service line
+          ready.</p>
+      </article>
+    </div>
+    <div class="tiles physical-evidence">
+      <div class="tile">
+        <div class="label">For-profit share of Medicare-enrolled hospitals</div>
+        <div class="value">36.1%</div>
+        <div class="range">2023 ownership data; 49.2% nonprofit, 14.7% government</div>
+      </div>
+      <div class="tile">
+        <div class="label">Hospital-acquired conditions after private-equity acquisition</div>
+        <div class="value">+25.4%</div>
+        <div class="range">51 acquired hospitals; observational difference-in-differences study</div>
+      </div>
+      <div class="tile">
+        <div class="label">Hospitals operating in a chain</div>
+        <div class="value">56.1%</div>
+        <div class="range">Consolidated control is not limited to tax status</div>
+      </div>
+    </div>
+    <div class="physical-moral">
+      <strong>Why profit maximization is the wrong governing rule for hospitals</strong>
+      <p>Illness makes people dependent. A humane system therefore treats
+        survival capacity, safe staffing, maternity care, psychiatric beds,
+        trauma response, and rural access as obligations to people, not
+        optional product lines. Surplus is useful when it becomes reserves,
+        safer staffing, equipment, and replacement capital. It becomes
+        harmful when an outside residual claimant can extract it while the
+        community retains the clinical risk.</p>
+    </div>
+    <p class="note"><b>Important qualification:</b> ownership is not a
+      patient-level quality score. Not every for-profit hospital is unsafe,
+      and nonprofit status alone does not prevent monopoly pricing,
+      overcompensation, or weak community benefit. The remedy is a binding
+      charter, transparent accounts, related-party limits, a locked public
+      mission, and enforceable quality and continuity duties for every
+      participating hospital.</p>
+    <p class="rollout-source physical-sources">
+      Evidence:
+      <a href="https://aspe.hhs.gov/reports/hospital-ownership" target="_blank" rel="noopener">HHS ownership report</a>;
+      <a href="https://jamanetwork.com/journals/jama/fullarticle/2813379" target="_blank" rel="noopener">JAMA private-equity safety study</a>;
+      <a href="https://www.ftc.gov/news-events/news/press-releases/2024/03/federal-trade-commission-department-justice-department-health-human-services-launch-cross-government" target="_blank" rel="noopener">FTC/DOJ/HHS ownership inquiry</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <span class="physical-kicker">The administrative replacement</span>
+    <h2>One public mission, three accountable layers</h2>
+    <p class="desc">The new structure separates national rule-setting,
+      regional capacity decisions, and hospital operations. It does not
+      nationalize every clinician's employer or ask a distant national office
+      to schedule local beds. It removes investor control and payer bargaining
+      from the hospital operating model.</p>
+    <div class="hospital-admin-flow" aria-label="Hospital administrative structure">
+      <article>
+        <span>National steward</span>
+        <h3><abbr class="physical-acronym" title="National Hospital Stewardship Authority">NHSA</abbr></h3>
+        <p>Sets charter terms, budget rules, accounting definitions,
+          essential-service floors, capital standards, and national
+          comparability. The charter office investigates and enforces.</p>
+      </article>
+      <div class="hospital-flow-arrow" aria-hidden="true">&darr;</div>
+      <article>
+        <span>13 regional nonprofit administrations</span>
+        <h3><abbr class="physical-acronym" title="Regional Health Administrators">RHA</abbr> operating regions</h3>
+        <p>Plan beds and service lines, certify hospital budgets, maintain
+          transfer and specialist capacity, coordinate emergency transport,
+          and decide closures or conversions in public proceedings.</p>
+      </article>
+      <div class="hospital-flow-arrow" aria-hidden="true">&darr;</div>
+      <article>
+        <span>Chartered provider</span>
+        <h3>Hospital public-service corporation</h3>
+        <p>Runs clinical operations through a locally accountable nonprofit
+          board. No shareholders, no balance billing, no routine facility
+          fees, no sale of the mission, and no diversion of assets from care.</p>
+      </article>
+    </div>
+    <div class="hospital-charter-grid">
+      <article>
+        <span>Governance</span>
+        <h3>A board without investor control</h3>
+        <p>Patients and community members, clinical staff, labor, public
+          health, tribal and local government, and—where applicable—university
+          representatives. Conflicts, compensation, minutes, and votes are
+          public; clinical-safety officers have protected escalation rights.</p>
+      </article>
+      <article>
+        <span>Money</span>
+        <h3>A certified annual global budget</h3>
+        <p>Funding covers operations, emergency readiness, protected service
+          lines, safe staffing, capital replacement, teaching and research,
+          high-cost cases, clinician compensation, and transition
+          stabilization. It is not price times claims.</p>
+      </article>
+      <article>
+        <span>Surplus</span>
+        <h3>Reinvested, reserved, or returned</h3>
+        <p>Audited surplus stays in patient care, workforce, capital, or
+          reserves, or returns to the regional pool. It cannot become a
+          dividend, excessive management fee, affiliate rent, or leveraged
+          buyout return.</p>
+      </article>
+      <article>
+        <span>Continuity</span>
+        <h3>No spreadsheet-only closure</h3>
+        <p>A hospital cannot close an emergency department, obstetric unit,
+          psychiatric beds, trauma service, intensive-care capacity, dialysis,
+          or a rural site until the region tests travel time, replacement
+          capacity, workforce, equity, and transfer safety.</p>
+      </article>
+    </div>
+    <div class="hospital-budget-line" aria-label="Components of a hospital global budget">
+      <span>Operations</span><span>Readiness</span><span>Essential services</span>
+      <span>Safe staffing</span><span>Capital</span><span>Teaching &amp; research</span>
+      <span>High-cost cases</span><span>Transition reserve</span>
+    </div>
+    <p class="note">This budget logic has a real operating precedent:
+      <abbr class="physical-acronym" title="Centers for Medicare &amp; Medicaid Services">CMS</abbr>
+      describes global budgets as predetermined annual hospital revenue and
+      reports that Maryland's model improved predictability, coordination, and
+      Medicare savings. The national design adds stronger asset locks, service
+      duties, and public governance.</p>
+    <p class="rollout-source physical-sources">
+      <a href="https://www.cms.gov/priorities/innovation/key-concepts/total-cost-care-and-hospital-global-budgets" target="_blank" rel="noopener">CMS global-budget explainer</a>;
+      <a href="https://www.cms.gov/priorities/innovation/innovation-models/md-tccm" target="_blank" rel="noopener">Maryland Total Cost of Care model</a>.
+    </p>
+  </section>
+
+  <section class="card hospital-region-section">
+    <span class="physical-kicker">A reproducible regional model</span>
+    <h2>Thirteen nonprofit operating regions balance scale with local accountability</h2>
+    <p class="desc">A planning model aggregated all 3,144 counties to states,
+      then compared 10 through 16 contiguous regional partitions. It weighted
+      population scale 45%, geographic compactness 25%, rural workload 15%,
+      and the administrative cost of too many regions 15%. Every state and the
+      District of Columbia is assigned once; state boundaries stay intact.
+      The model selected 13 regions. California and Texas remain above the
+      26.2 million target because state integrity is a hard constraint, so
+      each would use internal operating districts.</p>
+    <div class="tiles hospital-model-tiles">
+      <div class="tile"><div class="label">Selected operating regions</div><div class="value">13</div><div class="range">lowest composite score: 0.059</div></div>
+      <div class="tile"><div class="label">Population assigned</div><div class="value">340.1M</div><div class="range">2024 county estimates</div></div>
+      <div class="tile"><div class="label">Population target per region</div><div class="value">26.2M</div><div class="range">state integrity overrides the target</div></div>
+    </div>
+    <div id="hospital-region-map"></div>
+    <div class="hospital-region-control">
+      <label for="hospital-region-select">Inspect a region</label>
+      <select id="hospital-region-select" aria-label="Select a nonprofit hospital administration region"></select>
+      <div id="hospital-region-detail" aria-live="polite"></div>
+    </div>
+    <div class="hospital-score-wrap">
+      <span class="physical-section-label">Candidate model score (lower is better)</span>
+      <div id="hospital-region-scores" aria-label="Scores for candidate region counts"></div>
+    </div>
+    <p class="note">These are administrative regions, not walls around
+      patients. Specialty referrals, disaster response, border communities,
+      and tribal or federal systems can cross them. Alaska-Washington and
+      Hawaii-California are explicit administrative links, not claims of land
+      contiguity. Final boundaries require tribal consultation, referral and
+      drive-time analysis, workforce inventories, and public hearings.</p>
+    <p class="rollout-source physical-sources">
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/hospital_regionalization_methodology.md"
+        target="_blank" rel="noopener">Model, assignments, assumptions, and sources</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <span class="physical-kicker">Hospitals with missions larger than a region</span>
+    <h2>University and specialty hospitals remain—and their special work is funded explicitly</h2>
+    <div class="hospital-mission-grid">
+      <article>
+        <span>Academic medical centers</span>
+        <h3>Keep the university mission</h3>
+        <p>The university keeps academic governance, faculty appointments,
+          accreditation, academic freedom, and its research enterprise. The
+          clinical hospital accepts the same public-service charter as every
+          other hospital. Its certified budget has separate, auditable lines
+          for graduate medical education, clinical teaching, research
+          infrastructure, quaternary referral care, and standby capacity—so
+          those missions do not depend on maximizing procedure volume.</p>
+      </article>
+      <article>
+        <span>Children's, cancer, transplant, burn, trauma, psychiatric, and rehabilitation centers</span>
+        <h3>Serve referral populations, not just local boundaries</h3>
+        <p>The national steward designates capabilities that need concentrated
+          expertise and minimum case volume. Regions jointly fund these
+          centers through case-mix adjustments, high-cost pass-throughs, and
+          capacity retainers. A specialty hospital remains when it adds needed
+          capability, accepts all eligible referrals, reports outcomes, and
+          does not select only profitable patients.</p>
+      </article>
+      <article>
+        <span>Federal and sovereign systems</span>
+        <h3>Coordinate without erasing legal identity</h3>
+        <p><abbr class="physical-acronym" title="Veterans Health Administration">VHA</abbr>,
+          military, Indian Health Service, and tribal facilities retain their
+          governing authorities and treaty or statutory duties. Compacts
+          establish payment, shared capacity, transfer, credentialing, and
+          data rules while preserving tribal sovereignty and federal
+          obligations.</p>
+      </article>
+    </div>
+    <p class="note">Academic medicine combines patient care, medical
+      education, research, and emergency preparedness. The design protects
+      that bundle by paying for each mission openly rather than expecting
+      profitable clinical lines to subsidize it invisibly.</p>
+    <p class="rollout-source physical-sources">
+      <a href="https://www.aamc.org/about-us" target="_blank" rel="noopener">Association of American Medical Colleges: academic-medicine mission</a>;
+      <a href="https://www.aamc.org/about-us/institutional-membership" target="_blank" rel="noopener">teaching-hospital scale and roles</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <span class="physical-kicker">The care continuum</span>
+    <h2>Hospitals become the high-acuity layer of a four-unit diagnostic-treatment network</h2>
+    <p class="desc">The regional administration sees one capacity picture.
+      Community units resolve routine needs close to home, assemble complete
+      workups, and obtain e-consults. Hospitals receive patients who need
+      emergency, operating-room, intensive, inpatient, or complex specialty
+      capability. Discharge returns the patient to a named local team instead
+      of ending at the hospital door.</p>
+    <div class="hospital-care-flow" aria-label="Flow between public-service hospitals and the four diagnostic-treatment unit types">
+      <article class="hospital-layer">
+        <span>Regional public-service hospitals</span>
+        <strong><abbr class="physical-acronym" title="Emergency department">ED</abbr> &middot; surgery &middot; inpatient &middot; <abbr class="physical-acronym" title="Intensive care unit">ICU</abbr> &middot; complex specialty</strong>
+        <small>Receive escalations; publish real-time capacity; discharge to a named follow-up team</small>
+      </article>
+      <div class="hospital-flow-spine">
+        <span>Escalation &uarr;</span>
+        <strong><abbr class="physical-acronym" title="Regional Health Administrators">RHA</abbr> capacity ledger + shared record + <abbr class="physical-acronym" title="Emergency medical services">EMS</abbr></strong>
+        <span>&darr; discharge and specialist support</span>
+      </div>
+      <div class="hospital-unit-layer">
+        <article><span>A</span><strong>Micro</strong><small>screen, test, vaccinate, teleclinician</small></article>
+        <article><span>B</span><strong>Neighborhood</strong><small>diagnose, treat, image, follow chronic illness</small></article>
+        <article><span>C</span><strong>Rural enhanced</strong><small>observe, stabilize, tele-specialty, coordinate transport</small></article>
+        <article><span>D</span><strong>Urban public health</strong><small>high-volume care, behavioral health, outbreak response</small></article>
+      </div>
+    </div>
   </section>
 
   <!-- The network and the count -->
   <section class="card">
-    <h2>The community diagnostic-treatment network, sized from need</h2>
+    <h2>The community front door, sized from need</h2>
     <p class="desc">The framework calls for "at least 15,000 certified
       units" (SR-ACC-010) but never derives that figure. This page derives
       it: every U.S. county's demand is computed from its population and
@@ -1230,7 +1508,7 @@
 
   <!-- The four types -->
   <section class="card">
-    <h2>What each type is, does, and costs</h2>
+    <h2>What each unit type does and costs</h2>
     <div class="care-grid" id="unit-type-cards"></div>
   </section>
 
@@ -2375,8 +2653,9 @@
 <script src="js/phasetargets.js?v=20260718-phasetargets3"></script>
 <script src="js/app.js"></script>
 <script src="js/taxapp.js?v=20260718-legislation1"></script>
-<script src="js/unitsmap.js"></script>
-<script src="js/unitsapp.js"></script>
+<script src="js/unitsmap.js?v=20260719-physical-care1"></script>
+<script src="js/hospitalregions.js?v=20260719-physical-care1"></script>
+<script src="js/unitsapp.js?v=20260719-physical-care1"></script>
 <script src="js/govapp.js"></script>
 <script src="js/rollout.js?v=20260716b"></script>
 <script src="js/data.js?v=20260717-data-layout2"></script>

@@ -19,6 +19,7 @@ those as open research items, not silent gaps.
 | [data_phase_target_methodology.md](data_phase_target_methodology.md) | Exact and derived KPP/TPP targets used by the Data tab for P0 through P8, with denominator scope and a row-level justification for every derived value | data rollout scorecard (docs/js/dataphases.js) |
 | [workforce_transition_methodology.md](workforce_transition_methodology.md) | BLS anchors, overlap controls, lower/planning/stress job-displacement cases, internal role matching, quantified new-position floor, and rural flex/travel-pool derivation | Workforce tab (docs/js/workforce.js) |
 | [legislation_crosswalk.md](legislation_crosswalk.md) | Nineteen-title enabling-act architecture, thirteen major legal domains, federal/state/tribal transition rules, constitutional limits, illustrative amendment language, and the provision-level work still required | Legislation tab (docs/js/legislation.js) |
+| [hospital_regionalization_methodology.md](hospital_regionalization_methodology.md) | Hospital ownership and private-equity evidence, public-service charter and global-budget design, the 10-16 region candidate model, 13-region result, and university/specialty-hospital treatment | Physical Care tab (docs/js/hospitalregions.js) |
 
 [parameter_baseline_seed.csv](parameter_baseline_seed.csv) pulls the ~45
 highest-confidence, most load-bearing numbers from all five files into one

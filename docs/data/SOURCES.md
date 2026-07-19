@@ -30,3 +30,25 @@ GeoJSON FeatureCollection of state outlines, **51 features** (50 states + Distri
 - Source: <https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json> (simplified geometry derived from Census cartographic boundaries; public domain source data).
 - One modification: the Puerto Rico feature (id 72) was removed, since the dashboard's county data excludes Puerto Rico. Geometry was otherwise saved as-is (no reprojection or re-simplification).
 - Feature properties include `name` (state name) and a legacy `density` attribute from the source file (ignore it).
+
+## hospital-regions.json
+
+Model output for the Physical Care tab's 13 proposed nonprofit hospital
+administration regions. The file assigns all 50 states and the District of
+Columbia exactly once and stores each region's population, rural population,
+rural share, population-weighted centroid, and population-weighted mean
+distance between member-state centroids.
+
+- Inputs: `counties.json` and its Census sources above.
+- Model: `tools/model_hospital_regions.py`.
+- Methodology, candidate scores, limitations, and exact assignments:
+  `research/hospital_regionalization_methodology.md`.
+- Run date: 2026-07-19.
+
+The model compares transparent candidates containing 10 through 16 regions.
+The 13-region candidate is expert-seeded; lower-count candidates merge
+adjacent regions and higher-count candidates split multi-state regions. A
+deterministic local search then accepts objective-improving boundary-state
+moves subject to contiguity, minimum-scale, and compactness limits. It is a
+planning model, not an exhaustive optimization over every possible state
+partition and not a legally binding boundary map.
