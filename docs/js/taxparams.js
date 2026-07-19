@@ -173,7 +173,7 @@ NHA.TAX.ECON = {
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
         t9950: 0, t9970: 0, t9990: 0.10, t9999: 0.45, t10000: 0.45 },
       phaseStart: 2028, phaseYears: 2,
-      source: "Saez–Zucman revenue letter (Feb 2021), 15% avoidance; no official JCT/CBO score exists and it is legally contested (the framework carries a fallback matrix)", confidence: "low-medium"
+      source: "Saez–Zucman revenue letter (Feb 2021), 15% avoidance; no official JCT/CBO score exists and it is legally contested (the plan carries a fallback matrix)", confidence: "low-medium"
     },
     {
       id: "estate", label: "Estate tax restoration (99.5%-Act-style)",
@@ -256,7 +256,7 @@ NHA.TAX.ECON = {
     },
     {
       id: "rents", label: "Health-sector rent taxes",
-      desc: "Windfall/extraction levies on monopoly rents in the health sector during transition (framework Title XIV).",
+      desc: "Windfall/extraction levies on monopoly rents in the health sector during transition (the plan's Title XIV).",
       kind: "toggle", default: true, rev1x: 20, growth: "gdp",
       incidence: mix(0.10, 0.90),
       phaseStart: 2029, phaseYears: 2,

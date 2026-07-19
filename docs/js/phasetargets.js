@@ -301,7 +301,7 @@
     p.rollout.sort(function (a, b) { return pIdx(a.phase) - pIdx(b.phase); });
     p._phaseStart = relPhase;
     p.phaseNote = "Targets shown for every phase from " + relPhase + " onward (" +
-      relWhy + "). Framework floors and gate values are authoritative; " +
+      relWhy + "). Specified floors and gate values are authoritative; " +
       "data-plan entries reuse the Data tab's methodology; entries marked " +
       "derived interpolate between those anchors and the maturity target.";
   }

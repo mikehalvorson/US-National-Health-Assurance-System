@@ -44,7 +44,7 @@
     "ED": "Emergency Department",
     "EMS": "Emergency Medical Services",
     "EPTO": "Employer and Payroll Transition Office",
-    "FA": "Framework Assumption",
+    "FA": "Specified assumption",
     "GDP": "Gross Domestic Product",
     "HATC": "Health Administration Transition Corps",
     "HCCA": "Health Cybersecurity and Continuity Authority",

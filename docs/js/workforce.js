@@ -85,7 +85,7 @@
       name: "Diagnostic-treatment unit teams",
       values: { low: 112, plan: 138, high: 175 },
       fills: { low: 40, plan: 30, high: 45 },
-      derivation: "Planning case: the framework's 15,000-unit target multiplied by the existing unit model's 9.2-FTE mix-weighted average, rounded. The high case moves toward the need-based 24,099-unit allocation but assumes substantial conversion of existing sites.",
+      derivation: "Planning case: the 15,000-unit specification multiplied by the existing unit model's 9.2-FTE mix-weighted average, rounded. The high case moves toward the need-based 24,099-unit allocation but assumes substantial conversion of existing sites.",
       roles: "Nurses, NPs/PAs, physicians, technicians, imaging/lab staff, behavioral-health staff, community health workers, navigators, and unit operations."
     },
     {
@@ -125,7 +125,7 @@
       name: "Education, faculty, and training support",
       values: { low: 8, plan: 11, high: 15 },
       fills: { low: 0, plan: 0, high: 0 },
-      derivation: "Planning case: one faculty, preceptor, placement, or program-support FTE for roughly every five of the framework's 55,000 annual publicly funded training slots.",
+      derivation: "Planning case: one faculty, preceptor, placement, or program-support FTE for roughly every five of the plan's 55,000 annual publicly funded training slots.",
       roles: "Faculty, preceptors, simulation staff, program operations, rural placement, credential support, learner services, and continuing education."
     },
     {
@@ -323,7 +323,7 @@
       track.appendChild(fill);
 
       var foot = document.createElement("small");
-      foot.textContent = fmtShort(inside) + " could match framework roles";
+      foot.textContent = fmtShort(inside) + " could match new-system roles";
       button.appendChild(top);
       button.appendChild(track);
       button.appendChild(foot);

@@ -22,7 +22,7 @@
     var scnWrap = document.createElement("div");
     scnWrap.className = "control";
     var scnLabel = document.createElement("label");
-    scnLabel.textContent = "Stress scenario (framework catalog)";
+    scnLabel.textContent = "Stress scenario";
     var sel = document.createElement("select");
     sel.id = "scenario-select";
     NHA.SCENARIOS.forEach(function (s) {
@@ -174,7 +174,7 @@
       " to $" + Math.round(fam2041 * 1e9 / (hh2041 * 1e6)).toLocaleString("en-US") +
       " per household per year, with no new coverage to show for it. Under NHA " +
       "in the same year, covered care costs $0 at the point of use and the " +
-      "framework caps ordinary households at 5% of the new financing " +
+      "the plan caps ordinary households at 5% of the new financing " +
       "(about $" + Math.round(kppPerHH).toLocaleString("en-US") + " per household); " +
       "the rest shifts to the tax side, weighted toward the top. Who pays what " +
       "is the Taxes & Financing tab.";
@@ -337,9 +337,9 @@
       "Under these assumptions the extreme-wealth package covers " +
       (newRev <= 0 ? "the entire gap (no new revenue needed)" :
         Math.min(999, Math.round(100 * covered)) + "% of the new-revenue requirement") +
-      ". The framework's remaining instruments (high-income and capital-income taxes, " +
+      ". The remaining instruments (high-income and capital-income taxes, " +
       "health-sector rent taxes, and the broad backstop) must cover the rest. " +
-      "The framework caps ordinary-household incremental burden at 5% (KPP-C8).";
+      "The plan caps ordinary-household incremental burden at 5% of new financing.";
 
     var tbl = $("financing-table");
     tbl.innerHTML = "";

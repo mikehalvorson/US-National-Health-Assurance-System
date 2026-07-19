@@ -254,17 +254,17 @@ NHA.HOUSEHOLD_PROFILES = [
       div("hh-line-val", nOop, "$0");
       div("hh-line-note", nhaCol, "covered medically necessary care is free at the point of use (KPP-A3 allows ≤0.5% billing exceptions); non-covered extras remain private");
       var nTax = div("hh-line", nhaCol);
-      div("hh-line-label", nTax, "Avg. household share of new taxes if financed per the framework's cap");
+      div("hh-line-label", nTax, "Avg. household share of new taxes if financed per the plan's cap");
       div("hh-line-val", nTax, "≤ $" + Math.round(kppShare).toLocaleString("en-US"));
       div("hh-line-note", nhaCol,
-        "the framework caps ordinary households at 5% of new financing (KPP-C8): 5% of the model's " +
+        "the plan caps ordinary households at 5% of new financing: 5% of the model's " +
         NHA.fmt.money(m.newRevenueB) + "/yr new-revenue requirement ÷ " + NHA.HOUSEHOLDS_M + "M households. " +
         "The rest falls on wealth, high-income, employer, and health-sector taxes, if those levers deliver.");
 
       foot.textContent =
         "Honest caveats: employer payroll contributions are widely expected to show up partly in wages over time (not modeled); " +
         "the uninsured today spend little on average because they skip care, so the comparison understates what coverage is worth to them; " +
-        "and the tax line depends entirely on Congress honoring the framework's household-protection cap.";
+        "and the tax line depends entirely on Congress honoring the plan's household-protection cap.";
     }
     sel.addEventListener("change", render);
     NHA._rerenderHousehold = render; // app.js calls this when the model recomputes

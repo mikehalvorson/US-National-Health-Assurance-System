@@ -1,11 +1,11 @@
 /* =========================================================================
  * Governance architecture: 82 entities under 9 governing bodies, from the
- * framework source package's architecture catalog (ARCH-*). For each
+ * plan source package's architecture catalog (ARCH-*). For each
  * entity: what it does, why it exists, what it replaces (or "New"), and
  * the position that runs it. Leadership titles follow standard federal
  * practice (Senate-confirmed Administrators for benefit-paying bodies,
  * fixed-term appointments for independent scorekeepers and courts) and are
- * a staffing design consistent with the framework's executive-hardening
+ * a staffing design consistent with the plan's executive-hardening
  * provisions, not quotations from it.
  * ========================================================================= */
 "use strict";
@@ -23,7 +23,7 @@ NHA.GOV_GROUPS = [
       role: "Enacts the entitlement, the governing bodies, the taxes, the trust funds, anti-impoundment triggers, and the fallback provisions that activate if courts strike parts down.",
       why: "Every durable feature of the system has to live in statute, not regulation, or the next administration can unwind it.",
       replaces: "Existing constitutional body with new duties",
-      leader: "The health committees of both chambers own the statute; the framework assigns them mandatory sunset-review calendars." },
+      leader: "The health committees of both chambers own the statute; the plan assigns them mandatory sunset-review calendars." },
     { code: "TREAS", name: "Department of the Treasury", short: "Treasury",
       role: "Hosts the trust funds and the disbursement office, and coordinates the public financing side of the system.",
       why: "Payments survive political interference only if they run on Treasury's mandatory-spending machinery, the same rail that pays Social Security.",
@@ -56,7 +56,7 @@ NHA.GOV_GROUPS = [
       leader: "Chief Health Actuary, fixed 10-year term, removable only for cause; certifications are published, not clearable by the White House." },
     { code: "CHAO", name: "Congressional Health Accountability Office", short: "Accountability Office",
       role: "Article I oversight: audits anti-impoundment compliance, executive interference, data publication, and general performance.",
-      why: "The framework assumes a future executive may try to sabotage the system; a congressional auditor with subpoena power is the tripwire.",
+      why: "The plan assumes a future executive may try to sabotage the system; a congressional auditor with subpoena power is the tripwire.",
       replaces: "New body modeled on GAO, health-specific",
       leader: "Comptroller for Health, 15-year term appointed like the Comptroller General." }
   ]
@@ -200,7 +200,7 @@ NHA.GOV_GROUPS = [
       leader: "Administrator with a Chief Crisis Officer coordinating with the 988 system." },
     { code: "NDVHO", name: "National Dental, Vision, and Hearing Benefit Office", short: "Dental/Vision/Hearing",
       role: "Runs the new dental, vision, and hearing benefits, including device supply (glasses, hearing aids) and access standards.",
-      why: "The mouth, eyes, and ears were historically carved out of 'health'; the framework ends the carve-out.",
+      why: "The mouth, eyes, and ears were historically carved out of 'health'; the plan ends the carve-out.",
       replaces: "Standalone dental/vision insurers and the uncovered cash market",
       leader: "Director; the 21-day dental access and 95% device-fulfillment standards (TPP-9.5/9.6) are theirs." },
     { code: "NEMTA", name: "National EMS and Medical Transport Authority", short: "EMS & Transport",
@@ -223,7 +223,7 @@ NHA.GOV_GROUPS = [
   members: [
     { code: "AHWCS", name: "Administration for Health Workforce, Compensation, and Scope", short: "AHWCS (parent)",
       role: "Parent administration for workforce planning, pay, scope of practice, training capacity, and AI's role in clinical work.",
-      why: "The framework treats workforce as the hard constraint; someone has to own it end to end.",
+      why: "The plan treats workforce as the hard constraint; someone has to own it end to end.",
       replaces: "Functions split today across HRSA, state boards, and market accident",
       leader: "Administrator, Senate-confirmed." },
     { code: "NPCB", name: "National Physician Compensation Board", short: "Physician Compensation",
@@ -334,7 +334,7 @@ NHA.GOV_GROUPS = [
       leader: "Seven commissioners, staggered 7-year terms, no more than four from one party; the Chair is Senate-confirmed." },
     { code: "NOPRSL", name: "National Office of Patient Rights, Safety, and Legitimacy", short: "Patient Rights Office",
       role: "Enforces the No Silent Rationing Doctrine and the Patient Bill of Rights; runs service-design standards, equity monitoring, and public trust measurement.",
-      why: "The framework's central promise is that nobody is denied care invisibly; this office exists to catch invisible denials.",
+      why: "The plan's central promise is that nobody is denied care invisibly; this office exists to catch invisible denials.",
       replaces: "New capability",
       leader: "Director; the denial-explainability standard (98% complete explanations, TPP-LEG1) is theirs to enforce." },
     { code: "OIG-AF", name: "Office of Inspector General and Anti-Fraud", short: "Inspector General",
@@ -374,7 +374,7 @@ NHA.GOV_GROUPS = [
       leader: "Director, reporting to NHAC, not to the hospital-funding side." },
     { code: "PRTO", name: "Public Reporting and Transparency Office", short: "Transparency Office",
       role: "Publishes the dashboards: waits, denials, budgets, safety events, equity gaps, all on statutory schedules.",
-      why: "The framework's answer to distrust is radical publication; 99% on-time data publication (TPP-12.4) is the covenant.",
+      why: "The plan's answer to distrust is radical publication; 99% on-time data publication (TPP-12.4) is the covenant.",
       replaces: "Hospital price-transparency compliance machinery, generalized",
       leader: "Director; datasets ship raw alongside the dashboards." }
   ]
@@ -387,7 +387,7 @@ NHA.GOV_GROUPS = [
   members: [
     { code: "NHTCA", name: "National Health Transition and Continuity Authority", short: "Transition Command",
       role: "Commands the 12-year transition: sequencing, phase-gate certification, and the continuity guarantees, then sunsets by Year 15.",
-      why: "The framework names transition failure as a primary risk, not an administrative detail; risk that big gets its own command.",
+      why: "The plan names transition failure as a primary risk, not an administrative detail; risk that big gets its own command.",
       replaces: "New, deliberately temporary body",
       leader: "Transition Administrator, Senate-confirmed, with a statutory sunset; go/no-go gate decisions are published with evidence." },
     { code: "PCO", name: "Patient Continuity Office", short: "Patient Continuity",
@@ -412,7 +412,7 @@ NHA.GOV_GROUPS = [
       leader: "Director with pharmacist-staffed emergency-fill authority." },
     { code: "HATC", name: "Health Administration Transition Corps", short: "Workforce Transition Corps",
       role: "Retrains and redeploys the roughly one to two million displaced insurance, PBM, billing, and revenue-cycle workers into the new public system and adjacent careers.",
-      why: "The savings story is these jobs; pretending otherwise is dishonest, so the framework funds income bridges and placement (75% target, KPP-W1).",
+      why: "The savings story is these jobs; pretending otherwise is dishonest, so the plan funds income bridges and placement (75% target, KPP-W1).",
       replaces: "New capability; Trade Adjustment Assistance is the cost benchmark (~$10k/worker)",
       leader: "Director; placement and income-bridge statistics publish quarterly." },
     { code: "SRCO", name: "State and Regional Compact Office", short: "State Compacts",
@@ -437,7 +437,7 @@ NHA.GOV_GROUPS = [
       leader: "Director (career technical), joint with NHRA." },
     { code: "TRTO", name: "Tribal and Rural Transition Office", short: "Tribal & Rural Transition",
       role: "Transition protections for tribal nations (consultation, direct funding, data sovereignty, trust obligations intact) and rural systems.",
-      why: "Federal health promises to tribes have a long record of betrayal; the framework makes non-derogation a statutory floor (TPP-TRIB1).",
+      why: "Federal health promises to tribes have a long record of betrayal; the plan makes non-derogation a statutory floor (TPP-TRIB1).",
       replaces: "Builds alongside the Indian Health Service, which continues",
       leader: "Director appointed after tribal consultation; tribal compacts require tribal consent, with no state veto." },
     { code: "TLSHO", name: "Transition Legal Safe Harbor Office", short: "Legal Safe Harbor",
@@ -447,7 +447,7 @@ NHA.GOV_GROUPS = [
       leader: "General Counsel for Transition." },
     { code: "TRPGO", name: "Transition Risk and Phase-Gate Office", short: "Risk & Phase Gates",
       role: "Maintains the risk register and the evidence packages for the eight phase gates; recommends go, hold, or remediate.",
-      why: "The phase gates are the framework's honesty mechanism: expansion waits for evidence, and this office assembles it.",
+      why: "The phase gates are the plan's honesty mechanism: expansion waits for evidence, and this office assembles it.",
       replaces: "New, temporary capability",
       leader: "Chief Risk Officer; gate recommendations publish with dissents included." },
     { code: "NHASB", name: "National Health Adaptation and Scorekeeping Board", short: "Adaptation & Scorekeeping",
@@ -460,12 +460,12 @@ NHA.GOV_GROUPS = [
 {
   id: "innovation", color: "var(--baseline-series)",
   name: "9 · Biomedical innovation",
-  desc: "The replacement engine for drug-industry R&D: if prices no longer fund innovation (the framework's first assumption), public funding, prizes, and public-interest licensing must, at the scale of the roughly $100B/yr the industry currently spends.",
+  desc: "The replacement engine for drug-industry R&D: if prices no longer fund innovation (the plan's first assumption), public funding, prizes, and public-interest licensing must, at the scale of the roughly $100B/yr the industry currently spends.",
   head: "NBIA",
   members: [
     { code: "NBIA", name: "National Biomedical Innovation Agency", short: "Innovation Agency",
       role: "Funds drug and technology development directly: portfolios aimed at unmet need, milestone rewards, and delinkage from monopoly pricing.",
-      why: "Assumption one of the framework is that drug prices stop funding R&D; this agency is what funds it instead.",
+      why: "Assumption one of the plan is that drug prices stop funding R&D; this agency is what funds it instead.",
       replaces: "The R&D-financing role of monopoly drug pricing; complements NIH's basic science",
       leader: "Director, Senate-confirmed for a 6-year term; portfolio success metrics reviewed by NHASB." },
     { code: "NDIF", name: "National Drug Innovation Fund", short: "Innovation Fund",
@@ -481,7 +481,7 @@ NHA.GOV_GROUPS = [
     { code: "PILO", name: "Public-Interest Licensing Office", short: "Public Licensing",
       role: "Attaches access conditions to publicly funded technology: pricing commitments, supply obligations, march-in defaults.",
       why: "Taxpayers fund the science and then pay monopoly prices for its products; conditions on the license end the double payment.",
-      replaces: "The exclusive-licensing defaults of Bayh-Dole for framework-funded work",
+      replaces: "The exclusive-licensing defaults of Bayh-Dole for plan-funded work",
       leader: "Director; licensing terms are public and enforceable in the Health Claims Court." },
     { code: "CEVI", name: "Comparative Effectiveness and Value Institute", short: "Effectiveness Institute",
       role: "Head-to-head effectiveness research and value reconciliation feeding the formulary and benefit boundaries.",

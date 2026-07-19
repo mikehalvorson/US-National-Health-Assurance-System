@@ -141,7 +141,7 @@ NHA.SCENARIOS = [
   },
   {
     id: "SCN-LTC-AGING", name: "High aging & LTC demand",
-    desc: "Aging runs above projection: LTC demand and baseline growth both rise. Tests the framework's biggest expansion under its worst demographics.",
+    desc: "Aging runs above projection: LTC demand and baseline growth both rise. Tests the plan's biggest expansion under its worst demographics.",
     overrides: {
       ltcExpansion: [250, 330, 420],
       baselineRealGrowth: [3.0, 3.8, 4.6]

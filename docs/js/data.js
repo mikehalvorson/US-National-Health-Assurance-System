@@ -321,7 +321,7 @@
     var scopeText = document.createElement("p");
     scopeText.textContent = phase.id === "P8"
       ? "Targets are controlled national maturity values."
-      : "Derived values apply only to the named test, pilot, Wave I, scaled, or national denominator. Framework values remain controlling where shown.";
+      : "Derived values apply only to the named test, pilot, Wave I, scaled, or national denominator. Specified values remain controlling where shown.";
     var method = document.createElement("a");
     method.href = "https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#" + phase.id.toLowerCase();
     method.target = "_blank";
@@ -352,7 +352,7 @@
         metricId.textContent = metric.id;
         var basis = document.createElement("span");
         basis.className = "data-basis " + metric.basis;
-        basis.textContent = metric.basis === "framework" ? "Framework" : "Derived";
+        basis.textContent = metric.basis === "framework" ? "Specified" : "Derived";
         identity.appendChild(metricId); identity.appendChild(basis);
 
         var body = document.createElement("div");
@@ -395,7 +395,7 @@
       row.className = "data-fix-row";
       row.setAttribute(
         "aria-label",
-        "Problem: " + item.problem + ". Framework response: " + item.fix + "."
+        "Problem: " + item.problem + ". The fix: " + item.fix + "."
       );
 
       var problem = document.createElement("div");
