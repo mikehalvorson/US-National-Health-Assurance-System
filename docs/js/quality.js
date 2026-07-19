@@ -144,7 +144,11 @@
     PHASES.forEach(function (phase) { milestones[phase.id] = []; });
     DATA.parameters.forEach(function (parameter) {
       parameter.rollout.forEach(function (entry) {
-        if (entry.kind !== "maturity target") {
+        /* framework-explicit floors and milestones only; derived interim
+           targets live in each parameter's phase strip below */
+        if (entry.kind !== "maturity target" &&
+            entry.kind !== "derived interim target" &&
+            entry.kind !== "data-plan interim target") {
           milestones[entry.phase].push({
             id: parameter.id,
             value: entry.value,
@@ -209,7 +213,9 @@
     var rows = [];
     DATA.parameters.forEach(function (parameter) {
       parameter.rollout.forEach(function (entry) {
-        if (entry.kind === "maturity target") return;
+        if (entry.kind === "maturity target" ||
+            entry.kind === "derived interim target" ||
+            entry.kind === "data-plan interim target") return;
         rows.push({ parameter: parameter, entry: entry });
       });
     });

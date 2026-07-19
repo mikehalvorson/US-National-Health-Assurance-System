@@ -669,7 +669,7 @@
         FTC's for-cause removal protection was unconstitutional. Executive
         hardening therefore must rely on statutory duties, mandatory funding,
         evidence outside operations, courts, inspectors, congressional
-        offices, defaults, and remedies—not an assumption that executive
+        offices, defaults, and remedies, not an assumption that executive
         regulators can be made independent of presidential removal.</span>
     </div>
     <p class="rollout-source">Framework basis: Sections 9.2 and 9.3;
@@ -1600,7 +1600,7 @@
         <p class="note">The pharmacy claims utility, national purchasing,
           public manufacturing, formulary governance, shortage controls,
           supplier qualification, inventory visibility, and backup supply
-          scale as one connected capability—not as a stand-alone factory.</p>
+          scale as one connected capability, not as a stand-alone factory.</p>
       </div>
     </div>
   </section>
@@ -1634,7 +1634,7 @@
       <div>
         <b>Cumulative transition envelope</b>
         <span>continuity, infrastructure, capacity, migration, stabilization,
-          workforce, and wind-down—not mature annual operating cost</span>
+          workforce, and wind-down, not mature annual operating cost</span>
       </div>
     </div>
     <div id="rollout-workstreams" class="workstream-grid"></div>
@@ -1909,14 +1909,28 @@
 
   <section class="card">
     <h2>Targets across the twelve-year rollout</h2>
-    <p class="desc">Most catalog targets are assessed at full integration in
-      Phase 8. Earlier phases establish, pilot, and scale the measurement
-      systems. The framework specifies only seven numeric progression floors
-      before or at maturity; every other blank phase means no numeric interim
-      value was defined, not zero activity.</p>
+    <p class="desc">Every KPP and TPP now carries a target at every phase
+      where it is measurable, built from three sources in priority order:
+      the framework's own gate floors and milestones (authoritative, shown
+      below), the Data tab's hand-derived information-mesh plan (reused
+      verbatim so the two tabs always agree), and published ramp rules for
+      everything else. The panel and table here show only the
+      framework-explicit floors; each parameter's full phase-by-phase
+      strip, including derived interim targets, lives in the explorer.</p>
     <div id="quality-phase-overview" class="quality-phase-overview"
       aria-label="Numeric parameter milestones and gate floors across rollout phases"></div>
     <div id="quality-floor-table" class="tbl-scroll quality-floor-wrap"></div>
+    <p class="note"><b>How derived interim targets are built.</b>
+      Maximize-percentage targets enter at a deficit of four times the
+      maturity headroom (capped at 10 points) and tighten linearly;
+      minimize targets (error rates, waits, cost ceilings) enter at a
+      multiple of the mature ceiling and tighten geometrically;
+      vs-baseline targets ramp as even fractions of the mature delta; and
+      the seven "to be calibrated" outcome metrics carry qualitative
+      obligations (baseline, trend, calibration, certification) because
+      inventing numbers the framework deliberately deferred would be false
+      precision. Each derived entry states its rule and why the metric
+      becomes measurable at that phase.</p>
   </section>
 
   <section class="card">
@@ -1935,9 +1949,9 @@
         <span>Parameter type</span>
         <select id="quality-type">
           <option value="all">All types</option>
-          <option value="KPP">KPP — key performance</option>
-          <option value="TPP">TPP — technical performance</option>
-          <option value="CP">CP — cost/model parameter</option>
+          <option value="KPP">KPP: key performance</option>
+          <option value="TPP">TPP: technical performance</option>
+          <option value="CP">CP: cost/model parameter</option>
         </select>
       </label>
       <label class="quality-control">
@@ -1950,15 +1964,15 @@
         <span>Rollout phase shown</span>
         <select id="quality-phase">
           <option value="all">Source / maturity value</option>
-          <option value="P0">P0 — Year 1</option>
-          <option value="P1">P1 — Year 2</option>
-          <option value="P2">P2 — Year 3</option>
-          <option value="P3">P3 — Year 4</option>
-          <option value="P4">P4 — Year 6</option>
-          <option value="P5">P5 — Year 7</option>
-          <option value="P6">P6 — Year 8</option>
-          <option value="P7">P7 — Year 10</option>
-          <option value="P8">P8 — Year 12</option>
+          <option value="P0">P0 (Year 1)</option>
+          <option value="P1">P1 (Year 2)</option>
+          <option value="P2">P2 (Year 3)</option>
+          <option value="P3">P3 (Year 4)</option>
+          <option value="P4">P4 (Year 6)</option>
+          <option value="P5">P5 (Year 7)</option>
+          <option value="P6">P6 (Year 8)</option>
+          <option value="P7">P7 (Year 10)</option>
+          <option value="P8">P8 (Year 12)</option>
         </select>
       </label>
     </div>
@@ -2304,16 +2318,19 @@
 <script src="js/taxmodel.js"></script>
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js"></script>
+<!-- quality data + phase-target derivation load before app.js so their
+     self-tests register in the integrity footer -->
+<script src="js/qualitydata.js?v=20260717-quality1"></script>
+<script src="js/dataphases.js?v=20260717-data-phase1"></script>
+<script src="js/phasetargets.js?v=20260718-phasetargets3"></script>
 <script src="js/app.js"></script>
 <script src="js/taxapp.js?v=20260718-legislation1"></script>
 <script src="js/unitsmap.js"></script>
 <script src="js/unitsapp.js"></script>
 <script src="js/govapp.js"></script>
 <script src="js/rollout.js?v=20260716b"></script>
-<script src="js/qualitydata.js?v=20260717-quality1"></script>
-<script src="js/dataphases.js?v=20260717-data-phase1"></script>
 <script src="js/data.js?v=20260717-data-layout2"></script>
-<script src="js/quality.js?v=20260717-quality1"></script>
+<script src="js/quality.js?v=20260718-phasetargets3"></script>
 <script src="js/hardening.js?v=20260717-hardening1"></script>
 <script src="js/workforce.js?v=20260717-workforce1"></script>
 <script src="js/legislation.js?v=20260718-legislation1"></script>
