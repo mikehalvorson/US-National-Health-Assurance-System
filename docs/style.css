@@ -1861,6 +1861,93 @@ footer.site a { color: var(--text-muted); }
 }
 .workforce-created-legend .transitioned { background: var(--series-1); }
 .workforce-created-legend .entrants { background: var(--series-3); }
+.workforce-pay-equation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px; align-items: center; margin-top: 18px;
+}
+.workforce-pay-equation article {
+  min-width: 0; min-height: 142px; padding: 13px 0 5px;
+  border-top: 3px solid var(--series-1);
+}
+.workforce-pay-equation article:nth-of-type(2) { border-top-color: var(--series-2); }
+.workforce-pay-equation article:nth-of-type(3) { border-top-color: var(--series-5); }
+.workforce-pay-equation article > span {
+  color: var(--text-muted); font-size: 10px; font-weight: 650;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.workforce-pay-equation strong {
+  display: block; margin-top: 6px; color: var(--text-primary);
+  font-size: 13px; line-height: 1.35;
+}
+.workforce-pay-equation p {
+  margin-top: 6px; color: var(--text-secondary); font-size: 10.8px;
+  line-height: 1.45;
+}
+.workforce-pay-equation > i {
+  color: var(--text-muted); font-size: 20px; font-style: normal;
+}
+.workforce-pay-rules {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px; margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid var(--gridline);
+}
+.workforce-pay-rules article { min-width: 0; }
+.workforce-pay-rules article > span {
+  color: var(--series-5); font-size: 10.5px; font-weight: 700;
+}
+.workforce-pay-rules h3 {
+  margin-top: 3px; color: var(--text-primary); font-size: 12.5px;
+  font-weight: 650; line-height: 1.35;
+}
+.workforce-pay-rules p {
+  margin-top: 4px; color: var(--text-secondary); font-size: 10.8px;
+  line-height: 1.45;
+}
+.workforce-pay-benchmarks {
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--gridline);
+}
+.workforce-pay-benchmarks-head {
+  display: grid; grid-template-columns: minmax(220px, .55fr) minmax(0, 1fr);
+  gap: 24px; align-items: end; margin-bottom: 12px;
+}
+.workforce-pay-benchmarks-head h3 {
+  margin-top: 3px; color: var(--text-primary); font-size: 15px;
+  line-height: 1.35;
+}
+.workforce-pay-benchmarks-head > p {
+  color: var(--text-secondary); font-size: 11px; line-height: 1.45;
+}
+.workforce-pay-table { min-width: 720px; }
+.workforce-pay-table th:first-child { width: 22%; }
+.workforce-pay-table td:nth-child(2) { width: 31%; }
+.workforce-pay-table td,
+.workforce-pay-table th { vertical-align: top; }
+.workforce-pay-table td {
+  color: var(--text-secondary); font-size: 10.8px; line-height: 1.45;
+}
+.workforce-pay-table tbody th {
+  color: var(--text-primary); font-size: 11px; line-height: 1.4;
+}
+.workforce-pay-table td strong {
+  color: var(--text-primary); font-size: 11.5px; font-weight: 650;
+}
+.workforce-pay-table .conf {
+  display: inline-block; margin-left: 4px; padding: 1px 5px;
+  border-radius: 4px; font-size: 9.5px;
+}
+.workforce-pay-guardrail {
+  display: grid; grid-template-columns: minmax(190px, .42fr) minmax(0, 1fr);
+  gap: 22px; margin-top: 18px; padding: 14px 0;
+  border-top: 3px solid var(--series-2);
+  border-bottom: 1px solid var(--gridline);
+}
+.workforce-pay-guardrail strong {
+  color: var(--text-primary); font-size: 13px; line-height: 1.4;
+}
+.workforce-pay-guardrail p {
+  color: var(--text-secondary); font-size: 11.5px; line-height: 1.5;
+}
 .workforce-rural-steps {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0 20px; margin-top: 12px;
@@ -2638,6 +2725,12 @@ footer.site a { color: var(--text-muted); }
     grid-template-columns: minmax(150px, .8fr) minmax(150px, 1fr) 52px;
   }
   .workforce-created-detail { padding-left: 0; padding-right: 0; }
+  .workforce-pay-equation { grid-template-columns: 1fr; gap: 10px; }
+  .workforce-pay-equation article { min-height: 0; }
+  .workforce-pay-equation > i { display: none; }
+  .workforce-pay-rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workforce-pay-benchmarks-head { grid-template-columns: 1fr; gap: 7px; }
+  .workforce-pay-guardrail { grid-template-columns: 1fr; gap: 6px; }
   .workforce-rural-steps, .workforce-agency-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2702,6 +2795,7 @@ footer.site a { color: var(--text-muted); }
   .workforce-created-row > span:first-child { grid-column: 1; }
   .workforce-created-row > strong { grid-column: 2; grid-row: 1; }
   .workforce-created-track { grid-column: 1 / -1; grid-row: 2; }
+  .workforce-pay-rules { grid-template-columns: 1fr; }
   .hardening-stepper, .hardening-target-grid { grid-template-columns: 1fr; }
   .legislation-counts { grid-template-columns: 1fr; gap: 10px; }
   .legislation-path { grid-template-columns: 1fr; }

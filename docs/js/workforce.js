@@ -117,7 +117,7 @@
       name: "Rural flex and rotating travel workforce",
       values: { low: 20, plan: 30, high: 45 },
       fills: { low: 0, plan: 0, high: 0 },
-      derivation: "A derived regional relief pool for vacancy coverage, protected leave, training backfill, seasonal demand, and surge. OI-033 must replace this national placeholder with role-region safe-FTE formulas.",
+      derivation: "A derived regional relief pool for vacancy coverage, protected leave, training backfill, seasonal demand, and surge. The adopted role-region safe-FTE formula must replace this national placeholder.",
       roles: "Travel nurses, paramedics, respiratory therapists, imaging/lab technicians, pharmacists, behavioral-health clinicians, and short-term supervisory support."
     },
     {
@@ -157,8 +157,7 @@
     "LTC": "Long-Term Care",
     "DVH": "Dental, Vision, and Hearing",
     "AI": "Artificial Intelligence",
-    "ICU": "Intensive Care Unit",
-    "OI": "Open Issue"
+    "ICU": "Intensive Care Unit"
   };
 
   var activeScenario = "plan";

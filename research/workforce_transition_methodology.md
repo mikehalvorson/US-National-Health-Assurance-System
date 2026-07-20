@@ -48,6 +48,81 @@ The framework leaves the national role-region FTE formula, compensation and
 employment boundary, expanded-benefit operating standards, and phase resource
 allocation open under OI-033, OI-034, OI-035, and OI-043.
 
+## Clinician compensation architecture
+
+The framework does not set a national salary schedule or claim that physicians,
+nurses, or other clinicians must accept a pay cut. It controls the method that
+must be used to establish compensation. Sections 6.6.1, 6.6.4, and 6.6.5 require
+the National Physician Compensation Board to publish transparent bands and
+authorized adjustments for:
+
+- role, specialty, region, and care setting;
+- scarcity and documented vacancy pressure;
+- rural or other priority service;
+- call, readiness, and protected specialist-backplane work;
+- clinical complexity;
+- leadership, supervision, and training duties; and
+- required non-visit work, including e-consults and protocol work.
+
+Total compensation and its source must be visible. Hidden productivity
+incentives are prohibited, and pay cannot reward unsafe volume, denial,
+under-referral, geographic abandonment, suppressed demand, uncompensated work,
+or unsafe overtime. Compensation cost is modeled separately from hospital
+operating budgets and claims so the same labor is not paid twice.
+
+The operating logic is:
+
+`published role-region-setting band + authorized scarcity/rural/readiness/complexity/duty adjustments`
+
+The exact dollar bands and adjustment amounts remain open calibration work.
+They must be set from audited labor-market pay, safe-FTE need, vacancy,
+retention, workload, training debt, schedule burden, and regional cost evidence.
+An access or savings result is invalid if it depends on compensation below the
+adopted band, unfilled posts, uncompensated labor, or unsafe workload.
+
+### Current compensation anchors, not proposed salaries
+
+The following observed values show the order of magnitude that calibration has
+to respect. They are national anchors, not a recommendation or a guarantee.
+Local bands can differ by specialty, region, setting, scarcity, schedule, and
+responsibility.
+
+| Role | Observed annual compensation or wage | Vintage | Confidence |
+|---|---:|---:|---|
+| Primary care physicians | About $330,000 median | 2024 | Medium |
+| Specialist physicians | About $417,000 average | 2025 | Medium |
+| Registered nurses | $93,600 median | May 2024 | High |
+| Nurse anesthetists, nurse midwives, and nurse practitioners | $132,050 median | May 2024 | High |
+| Physician assistants | $133,260 median | May 2024 | High |
+| Pharmacists | $137,480 median | May 2024 | High |
+| Physical therapists | $101,020 median | May 2024 | High |
+| Occupational therapists | $98,340 median | May 2024 | High |
+| Respiratory therapists | $80,450 median | May 2024 | High |
+| Paramedics | $58,410 median | May 2024 | High |
+
+Sources:
+
+- MGMA, [2025 Provider Compensation and Productivity Data
+  Report](https://www.mgma.com/2025-provider-compensation), for the primary-care
+  median. The underlying practice-management data cover more than 220,000
+  physicians and advanced-practice providers.
+- Medscape, [Physician Compensation Report
+  2025](https://www.medscape.com/sites/public/physician-comp/2025), for the
+  specialist average. It is a voluntary survey and is therefore a secondary
+  calibration check rather than a pay schedule.
+- U.S. Bureau of Labor Statistics Occupational Outlook Handbook: [registered
+  nurses](https://www.bls.gov/ooh/healthcare/registered-nurses.htm), [advanced
+  practice nurses](https://www.bls.gov/ooh/healthcare/nurse-anesthetists-nurse-midwives-and-nurse-practitioners.htm),
+  [physician assistants](https://www.bls.gov/ooh/healthcare/physician-assistants.htm),
+  [pharmacists](https://www.bls.gov/ooh/healthcare/pharmacists.htm), [physical
+  therapists](https://www.bls.gov/ooh/healthcare/physical-therapists.htm),
+  [occupational therapists](https://www.bls.gov/ooh/healthcare/occupational-therapists.htm),
+  [respiratory therapists](https://www.bls.gov/ooh/healthcare/respiratory-therapists.htm),
+  and [EMTs and paramedics](https://www.bls.gov/ooh/healthcare/emts-and-paramedics.htm).
+- **Confidence:** High for the BLS medians. Medium for the physician point
+  estimates because MGMA and Medscape use different samples and report median
+  versus average compensation.
+
 ## Official employment anchors
 
 The planning cases use these official BLS anchors:
