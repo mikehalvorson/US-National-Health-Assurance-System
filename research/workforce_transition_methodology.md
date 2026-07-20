@@ -146,6 +146,57 @@ The occupation and industry counts overlap. For example, an insurance claims
 clerk may already be included in direct-health-insurer employment. The model
 does not add the anchors together.
 
+## PBM and prior-authorization evidence boundaries
+
+Two large sources of administrative friction do not have clean national job
+counts and therefore need separate treatment.
+
+### Pharmacy benefit managers
+
+The Federal Trade Commission reports that the six largest PBMs manage nearly
+95% of U.S. prescriptions. That establishes the concentration and reach of the
+functions being replaced, including rebate contracting, formulary management,
+specialty-pharmacy integration, and pharmacy reimbursement. It does not
+establish a PBM employment count.
+
+The planning case therefore uses 90,000 positions, equal to a 24% scenario
+slice of the 382,600-job BLS "other insurance-related activities" anchor. The
+lower and stress cases are 60,000 and 120,000. These values have **Low
+confidence** because the BLS anchor also contains non-PBM work and because some
+PBM staff sit in pharmacy, insurer, technology, or corporate-parent industries.
+The category is kept separate from the residual vendor allowance and is never
+added to the whole 382,600-job anchor.
+
+Source: Federal Trade Commission, [Pharmacy Benefit Managers: The Powerful
+Middlemen Inflating Drug Costs and Squeezing Main Street
+Pharmacies](https://www.ftc.gov/reports/pharmacy-benefit-managers-report), July
+2024; BLS industry employment table cited above.
+
+### Prior authorization
+
+The American Medical Association's 2024 survey of 1,000 practicing physicians
+reported about 40 prior-authorization requests and 13 hours of physician and
+staff time per physician each week. Forty percent of surveyed physicians said
+their practice employed staff who worked exclusively on prior authorization.
+Applying the weekly-hours estimate to the 866,460 direct-patient-care physician
+anchor gives an order-of-magnitude practice-capacity estimate:
+
+```
+866,460 physicians x 13 hours / 40 hours = 281,600 FTE-equivalent
+```
+
+This is **Medium confidence as burden evidence** and **Low confidence as an FTE
+conversion**. It combines physician and staff hours, assumes a 40-hour FTE, and
+does not measure unique workers. It is not a layoff count. It also overlaps
+provider billing and denial work in the 235,000-position planning estimate, so
+the dashboard shows it as released practice capacity and never adds it to the
+760,000 legacy-position total.
+
+Sources: AMA, [2024 AMA Prior Authorization Physician
+Survey](https://fixpriorauth.org/2024-ama-prior-authorization-physician-survey);
+AAMC physician counts documented in
+[02_hospital_clinical_workforce_education.md](02_hospital_clinical_workforce_education.md).
+
 ## Legacy positions eliminated
 
 ### Planning case
@@ -241,6 +292,128 @@ by displaced administrative workers. The remaining 150,000 positions require
 licensed clinicians, technicians, faculty, new graduates, or other entrants.
 This is why administrative transition and clinical pipeline expansion must be
 planned together.
+
+## Reconciled labor ledger
+
+The dashboard keeps four quantities separate:
+
+1. **Current functions that contract:** positions whose present work is
+   removed or materially reduced.
+2. **Gross system positions:** funded roles the new system must staff,
+   regardless of where the worker comes from.
+3. **Affected-worker matches:** gross system positions plausibly fillable by
+   people from contracting administrative functions.
+4. **Other entrants:** the residual requiring clinicians, technicians,
+   faculty, new graduates, transfers from other employers, or labor-force
+   entrants.
+
+| Case | Functions contract | Gross positions | Affected-worker matches | Other entrants | Average entrants over 12 years | Scoped difference, not national net jobs | Confidence |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Lower exposure | 560,000 | 390,000 | 270,000 | 120,000 | 10,000/year | 170,000 fewer positions | Medium-Low |
+| Planning | 760,000 | 510,000 | 360,000 | 150,000 | 12,500/year | 250,000 fewer positions | Medium-Low |
+| Stress | 1,000,000 | 650,000 | 460,000 | 190,000 | 15,833/year | 350,000 fewer positions | Low |
+
+The scoped difference is useful for checking arithmetic, but it is not a
+national net-employment estimate. The gross-position floor includes roles at
+new or converted sites without estimating how many incumbents transfer from
+existing clinics and hospitals. It excludes unsized long-term care,
+behavioral-health, dental, vision, hearing, EMS, and public-health demand. A
+valid national net estimate needs both populations.
+
+In the planning case, the four predominantly administrative operating groups
+contain 331,000 gross positions: public enrollment and payment (180,000), data
+and cyber (70,000), medicines and supply (40,000), and regional assurance
+(41,000). The skills mapping assigns 330,000 of those positions to affected
+workers. This is **Medium confidence** and shows that the aggregate
+administrative labor pool is sufficient in arithmetic terms. It does not prove
+that every worker has the required credential, location, wage, schedule, or
+willingness to take the matched role.
+
+The planning case's 150,000 other entrants reconcile as:
+
+| Function | Other entrants | Why existing administrative skills are insufficient | Confidence |
+|---|---:|---|---|
+| Diagnostic-treatment unit teams | 108,000 | Most positions require clinical or technical credentials; 30,000 navigation and operations positions are treated as internal matches | Medium-Low |
+| Rural flex and rotating travel workforce | 30,000 | Clinical and technical credentials plus travel and rural-service conditions | Low |
+| Education, faculty, and training support | 11,000 | Faculty, preceptor, and program capacity must precede larger graduating classes | Low |
+| Regional operations and assurance | 1,000 | Residual specialist recruitment beyond the 40,000 administrative matches | Low |
+| **Total** | **150,000** | Reconciles to gross positions less internal matches | Medium-Low |
+
+## Does the United States have enough labor?
+
+### Aggregate scale
+
+BLS reports 169,956,100 jobs across all industries in 2024. The planning
+case's 510,000 gross positions equal 0.30% of that employment base. The 150,000
+other entrants equal 0.088%, rounded to 0.09% on the dashboard. Spread evenly
+over the twelve-year rollout, the residual is 12,500 entrants per year.
+
+BLS projects about 1.9 million healthcare-occupation openings per year from
+2024 through 2034, including both growth and replacement demand. It projects
+189,100 registered-nurse openings per year and 166,100 net new RN jobs over the
+decade. These figures establish that the national healthcare labor market is
+much larger than the plan's average incremental pace. They do not represent
+idle workers: most openings include replacement demand, and every existing
+employer is recruiting from the same pipeline.
+
+The controlled target of at least 55,000 publicly funded training slots per
+year is 4.4 times the planning case's 12,500 average annual other-entrant need.
+That comparison establishes numerical capacity only. A slot becomes usable
+labor after faculty and clinical placements are available, the learner
+completes, passes licensing or certification, accepts the role, and reaches the
+needed location. The 55,000 target also serves the broader workforce, not only
+the 150,000-position residual.
+
+| Labor-scale anchor | Value | Vintage | Interpretation | Confidence |
+|---|---:|---:|---|---|
+| Total U.S. employment | 169,956,100 | 2024 | Denominator for aggregate scale, not an available-worker pool | High |
+| Healthcare occupation openings | About 1,900,000/year | 2024-2034 projection | Growth plus replacement openings across all healthcare occupations | High |
+| Registered-nurse openings | 189,100/year | 2024-2034 projection | Growth plus replacement demand | High |
+| Net new registered-nurse jobs | 166,100 over ten years | 2024-2034 projection | BLS baseline growth, not the plan's supply | High |
+| Publicly funded training target | At least 55,000/year | Controlled plan target | Slots, not completions or accepted placements | Controlled |
+| Planning-case other entrants | 12,500/year average | Derived over 12 years | Increment after affected-worker matching | Medium-Low |
+
+Sources: BLS, [Employment and output by industry,
+2024-2034](https://www.bls.gov/emp/tables/industry-employment-and-output.htm),
+[Healthcare Occupations](https://www.bls.gov/ooh/healthcare/home.htm), and
+[Registered Nurses](https://www.bls.gov/ooh/healthcare/registered-nurses.htm).
+
+### Existing shortages are the binding constraint
+
+HRSA's current-pattern projections show nationwide shortages of 108,960 RN
+FTE and 141,160 physician FTE in 2038. It projects an 11% RN shortage and a 58%
+physician shortage in nonmetropolitan areas, compared with 2% and 5% in
+metropolitan areas. These are not added to the plan's job counts. They are a
+stress test showing that aggregate national arithmetic can pass while the
+required occupation and location fail.
+
+| Workforce segment | Assessment | Reason |
+|---|---|---|
+| Public enrollment, payment, data, medicines administration, and assurance | National supply is sufficient in arithmetic terms | 330,000 of 331,000 planning positions are mapped to affected workers |
+| Diagnostic-treatment unit clinical teams | Feasible only with phased recruitment and site conversion | 108,000 positions require licensed or technical entrants, and some will transfer from existing sites |
+| Rural flex and rotating travel teams | High delivery risk | The 30,000-position placeholder requires credentialed entrants where projected shortages are already deepest |
+| Faculty and preceptors | Small headcount, high leverage, high risk | Eleven thousand positions govern whether 55,000 annual slots can become completed credentials |
+| Unsized expanded benefits | Not assessable yet | Operating standards and role-region FTE formulas remain open |
+
+Source: HRSA Bureau of Health Workforce, [Health Workforce
+Projections](https://bhw.hrsa.gov/data-research/projecting-health-workforce-supply-demand),
+including the December 2025 physician and nursing projections.
+
+### Overall assessment
+
+The United States has enough aggregate labor-market scale to fill the
+quantified 510,000-position floor over twelve years, particularly because
+360,000 positions can plausibly be filled from affected administrative
+workers. This is a **Medium-Low confidence feasibility conclusion**, not a
+forecast.
+
+The conclusion becomes false if the system treats healthcare openings as
+surplus workers, winds down legacy employers before destination jobs exist, or
+fails to expand faculty, clinical placements, credentialing, rural support,
+compensation, scope, and retention. Administrative transition is primarily a
+matching and timing problem. Clinical expansion is a capacity-production
+problem and must be gated by verified filled FTE, not authorized positions or
+funded slots.
 
 ## Rural flex and travel workforce
 

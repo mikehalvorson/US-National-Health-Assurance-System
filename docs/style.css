@@ -1727,6 +1727,31 @@ footer.site a { color: var(--text-muted); }
   display: block; color: var(--text-muted); font-size: 10.5px;
   line-height: 1.35; margin-top: 3px;
 }
+.workforce-count-grid-five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.workforce-count-grid-five article:nth-child(2) { border-top-color: var(--series-3); }
+.workforce-count-grid-five article:nth-child(3) { border-top-color: var(--series-2); }
+.workforce-count-grid-five article:nth-child(4) { border-top-color: var(--series-4); }
+.workforce-count-grid-five article:nth-child(5) { border-top-color: var(--series-5); }
+.workforce-ledger-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px; margin-top: 22px; padding: 16px 0;
+  border-top: 1px solid var(--gridline); border-bottom: 1px solid var(--gridline);
+}
+.workforce-ledger-grid article { min-width: 0; }
+.workforce-ledger-grid article > span {
+  display: block; color: var(--series-5); font-size: 10.5px;
+  font-weight: 700; letter-spacing: .035em; text-transform: uppercase;
+}
+.workforce-ledger-grid strong {
+  display: block; margin-top: 5px; color: var(--text-primary);
+  font-size: 13px; line-height: 1.35;
+}
+.workforce-ledger-grid p {
+  margin-top: 5px; color: var(--text-secondary); font-size: 11.2px;
+  line-height: 1.48;
+}
 .workforce-flow {
   display: grid; grid-template-columns: minmax(0, .75fr) 28px minmax(0, 1.25fr);
   gap: 16px; align-items: center; margin-top: 22px; padding: 16px 0;
@@ -1817,6 +1842,22 @@ footer.site a { color: var(--text-muted); }
   color: var(--text-secondary); font-size: 11.5px; line-height: 1.45;
   margin-top: 3px;
 }
+.workforce-continuing { margin-top: 22px; }
+.workforce-continuing-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 22px; margin-top: 7px;
+}
+.workforce-continuing-grid article {
+  min-width: 0; padding: 9px 0; border-top: 1px solid var(--gridline);
+}
+.workforce-continuing-grid strong {
+  display: block; color: var(--text-primary); font-size: 11.5px;
+  line-height: 1.35;
+}
+.workforce-continuing-grid span {
+  display: block; margin-top: 3px; color: var(--text-secondary);
+  font-size: 10.8px; line-height: 1.4;
+}
 .workforce-created-chart { margin-top: 15px; }
 .workforce-created-item { border-top: 1px solid var(--gridline); }
 .workforce-created-row {
@@ -1861,6 +1902,136 @@ footer.site a { color: var(--text-muted); }
 }
 .workforce-created-legend .transitioned { background: var(--series-1); }
 .workforce-created-legend .entrants { background: var(--series-3); }
+.workforce-reconcile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px; align-items: center; margin-top: 20px; padding: 14px 0;
+  border-top: 1px solid var(--gridline); border-bottom: 1px solid var(--gridline);
+}
+.workforce-reconcile article { min-width: 0; text-align: center; }
+.workforce-reconcile span {
+  display: block; color: var(--text-muted); font-size: 10.5px;
+}
+.workforce-reconcile strong {
+  display: block; margin-top: 3px; color: var(--text-primary);
+  font-size: 19px; line-height: 1.2;
+}
+.workforce-reconcile > i {
+  color: var(--series-5); font-size: 21px; font-style: normal;
+}
+.workforce-scope-warning {
+  display: grid; grid-template-columns: minmax(180px, .42fr) minmax(0, 1fr);
+  gap: 22px; margin-top: 17px; padding: 14px 0;
+  border-top: 3px solid var(--series-5);
+}
+.workforce-scope-warning > strong {
+  font-size: 13px; line-height: 1.4;
+}
+.workforce-scope-warning p {
+  color: var(--text-secondary); font-size: 11.2px; line-height: 1.5;
+}
+.workforce-scope-warning p span { color: var(--text-primary); font-weight: 700; }
+.workforce-labor-grid {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 17px; margin-top: 18px;
+}
+.workforce-labor-grid article {
+  min-width: 0; padding-top: 9px; border-top: 3px solid var(--series-2);
+}
+.workforce-labor-grid article:nth-child(2) { border-top-color: var(--series-1); }
+.workforce-labor-grid article:nth-child(3) { border-top-color: var(--series-3); }
+.workforce-labor-grid article:nth-child(4) { border-top-color: var(--series-4); }
+.workforce-labor-grid article:nth-child(5) { border-top-color: var(--series-5); }
+.workforce-labor-grid span {
+  display: block; color: var(--text-secondary); font-size: 10.8px;
+  line-height: 1.35;
+}
+.workforce-labor-grid strong {
+  display: block; margin-top: 3px; color: var(--text-primary);
+  font-size: 21px; line-height: 1.15; letter-spacing: -.015em;
+}
+.workforce-labor-grid small {
+  display: block; margin-top: 3px; color: var(--text-muted);
+  font-size: 10.2px; line-height: 1.35;
+}
+.workforce-supply-layout {
+  display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, .55fr);
+  gap: 28px; align-items: start; margin-top: 24px;
+}
+.workforce-supply-table { width: 100%; margin-top: 7px; border-collapse: collapse; }
+.workforce-supply-table th {
+  padding: 7px 9px; border-bottom: 2px solid var(--border);
+  color: var(--text-muted); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .035em; text-align: left; text-transform: uppercase;
+}
+.workforce-supply-table td {
+  padding: 8px 9px; border-bottom: 1px solid var(--gridline);
+  color: var(--text-secondary); font-size: 10.7px; line-height: 1.4;
+  vertical-align: top;
+}
+.workforce-supply-table td:first-child { color: var(--text-primary); font-weight: 650; }
+.workforce-supply-table td:nth-child(2) {
+  color: var(--text-primary); font-weight: 700; white-space: nowrap;
+}
+.workforce-shortage-panel {
+  padding: 14px 0 4px 18px; border-left: 3px solid var(--series-5);
+}
+.workforce-shortage-panel > strong {
+  display: block; margin-top: 5px; font-size: 13px; line-height: 1.4;
+}
+.workforce-shortage-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px; margin-top: 13px;
+}
+.workforce-shortage-grid article { min-width: 0; }
+.workforce-shortage-grid b {
+  display: block; color: var(--series-5); font-size: 17px; line-height: 1.2;
+}
+.workforce-shortage-grid span {
+  display: block; margin-top: 2px; color: var(--text-secondary);
+  font-size: 10.3px; line-height: 1.35;
+}
+.workforce-shortage-panel > p {
+  margin-top: 13px; color: var(--text-muted); font-size: 10.5px;
+  line-height: 1.45;
+}
+.workforce-risk-matrix { margin-top: 25px; }
+.workforce-risk-row {
+  display: grid; grid-template-columns: minmax(180px, .72fr) 90px minmax(0, 1.28fr);
+  gap: 15px; align-items: start; padding: 10px 0;
+  border-top: 1px solid var(--gridline);
+}
+.workforce-risk-row > strong { font-size: 11.5px; line-height: 1.4; }
+.workforce-risk-row > b {
+  display: inline-block; justify-self: start; padding: 3px 6px;
+  border: 1px solid var(--series-2); border-radius: 999px;
+  color: var(--series-2); font-size: 9.8px; line-height: 1.2;
+}
+.workforce-risk-row > b[data-level="tight"] {
+  color: var(--series-4); border-color: var(--series-4);
+}
+.workforce-risk-row > b[data-level="high"] {
+  color: var(--series-5); border-color: var(--series-5);
+}
+.workforce-risk-row > b[data-level="unknown"] {
+  color: var(--text-muted); border-color: var(--border);
+}
+.workforce-risk-row > span {
+  color: var(--text-secondary); font-size: 10.8px; line-height: 1.45;
+}
+.workforce-verdict {
+  display: grid; grid-template-columns: 110px minmax(0, 1fr);
+  gap: 18px; margin-top: 20px; padding: 15px 0;
+  border-top: 3px solid var(--accent); border-bottom: 1px solid var(--gridline);
+}
+.workforce-verdict > strong {
+  color: var(--accent); font-size: 10.5px; font-weight: 700;
+  letter-spacing: .045em; text-transform: uppercase;
+}
+.workforce-verdict p {
+  color: var(--text-secondary); font-size: 11.5px; line-height: 1.55;
+}
+.workforce-verdict p b { color: var(--text-primary); }
 .workforce-pay-equation {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
@@ -2711,6 +2882,10 @@ footer.site a { color: var(--text-muted); }
   .workforce-target-strip, .workforce-count-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .workforce-count-grid-five, .workforce-labor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workforce-ledger-grid { grid-template-columns: 1fr; gap: 14px; }
   .workforce-flow {
     grid-template-columns: 1fr; gap: 10px; align-items: start;
   }
@@ -2725,6 +2900,15 @@ footer.site a { color: var(--text-muted); }
     grid-template-columns: minmax(150px, .8fr) minmax(150px, 1fr) 52px;
   }
   .workforce-created-detail { padding-left: 0; padding-right: 0; }
+  .workforce-continuing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workforce-supply-layout { grid-template-columns: 1fr; gap: 20px; }
+  .workforce-shortage-panel {
+    padding: 13px 0 2px; border-left: 0; border-top: 3px solid var(--series-5);
+  }
+  .workforce-risk-row {
+    grid-template-columns: minmax(170px, .7fr) 88px minmax(0, 1.3fr);
+    gap: 10px;
+  }
   .workforce-pay-equation { grid-template-columns: 1fr; gap: 10px; }
   .workforce-pay-equation article { min-height: 0; }
   .workforce-pay-equation > i { display: none; }
@@ -2786,9 +2970,19 @@ footer.site a { color: var(--text-muted); }
   .quality-controls, .quality-phase-strip { grid-template-columns: 1fr; }
   .quality-filter-foot { align-items: flex-start; flex-direction: column; }
   .workforce-target-strip, .workforce-count-grid,
-  .workforce-rural-steps, .workforce-agency-grid {
+  .workforce-count-grid-five, .workforce-labor-grid,
+  .workforce-rural-steps, .workforce-agency-grid,
+  .workforce-continuing-grid {
     grid-template-columns: 1fr;
   }
+  .workforce-reconcile { grid-template-columns: 1fr; gap: 8px; }
+  .workforce-reconcile > i { display: none; }
+  .workforce-scope-warning, .workforce-verdict {
+    grid-template-columns: 1fr; gap: 7px;
+  }
+  .workforce-risk-row { grid-template-columns: 1fr; gap: 6px; }
+  .workforce-risk-row > b { grid-row: 2; }
+  .workforce-risk-row > span { grid-row: 3; }
   .workforce-created-row {
     grid-template-columns: minmax(0, 1fr) 52px; gap: 7px 12px;
   }

@@ -5,7 +5,14 @@
  * ========================================================================= */
 "use strict";
 (function () {
+  var NHA = window.NHA = window.NHA || {};
   function $(id) { return document.getElementById(id); }
+
+  var ROLLOUT_YEARS = 12;
+  var TOTAL_US_EMPLOYMENT_2024 = 169956100;
+  var ANNUAL_TRAINING_TARGET = 55000;
+  var DIRECT_PATIENT_CARE_PHYSICIANS = 866460;
+  var PRIOR_AUTH_HOURS_PER_WEEK = 13;
 
   var SCENARIOS = {
     low: {
@@ -39,7 +46,9 @@
       inside: { low: 130, plan: 170, high: 220 },
       reason: "One public coverage and payment architecture removes duplicated plan enrollment, network, utilization, and claims operations. Functions needed for payment integrity and service continuity remain.",
       destinations: "Public enrollment and eligibility, payment operations, provider reconciliation, patient navigation, appeals support, fraud control, and transition-wave operations.",
-      boundary: "The 611,100-job BLS direct-health-insurer industry is the anchor. The model applies functional exposure shares; it does not assume every insurer employee disappears."
+      boundary: "The 611,100-job BLS direct-health-insurer industry is the anchor. The model applies functional exposure shares; it does not assume every insurer employee disappears.",
+      evidence: "Planning exposure: 50% of the BLS industry anchor, rounded. Confidence: Medium because the public system keeps many payment, integrity, and service functions but removes payer duplication.",
+      continues: "Provider payment, reconciliation, program integrity, complex-case review, enrollment correction, appeals, navigation, and continuity operations."
     },
     {
       id: "provider",
@@ -48,7 +57,9 @@
       inside: { low: 80, plan: 110, high: 145 },
       reason: "Zero point-of-care billing, standardized public payment, global hospital budgets, and removal of routine insurer prior authorization sharply reduce collection, coding-for-payment, denial, and appeal work.",
       destinations: "Care navigation, referral-packet completion, data quality, records correction, care coordination, provider-payment reconciliation, and patient-rights support.",
-      boundary: "BLS counted 417,500 billing and posting clerks across all industries in May 2024. The model uses only a health-function share and keeps medical-records work out of the eliminated total."
+      boundary: "BLS counted 417,500 billing and posting clerks across all industries in May 2024. The model uses only a health-function share and keeps medical-records work out of the eliminated total.",
+      evidence: "Planning exposure: 56% of the broad BLS occupation anchor, rounded. Confidence: Medium. The AMA's prior-authorization survey supports a large burden, but its 13 weekly hours measure physician and staff time, not a separate job count.",
+      continues: "Clinical records, care coding, quality reporting, payment reconciliation, unusual-case review, referral completion, and patient-rights work."
     },
     {
       id: "pbm",
@@ -57,7 +68,9 @@
       inside: { low: 25, plan: 40, high: 55 },
       reason: "A public pharmacy claims utility, national purchasing, transparent formulary rules, and public production remove rebate negotiation, spread pricing, and duplicative benefit management.",
       destinations: "Public medicines procurement, formulary evidence, pharmacy onboarding, inventory visibility, shortage response, quality release, and supply-chain operations.",
-      boundary: "No official occupation table isolates PBM employment. This is a scenario slice of broader insurance-related and pharmacy-administration work, not a measured PBM headcount."
+      boundary: "No official occupation table isolates PBM employment. This is a scenario slice of broader insurance-related and pharmacy-administration work, not a measured PBM headcount.",
+      evidence: "Planning exposure: 24% of a 382,600-job other-insurance-related anchor. Confidence: Low. The FTC reports that the six largest PBMs manage nearly 95% of U.S. prescriptions, establishing concentration and functional reach, not employment.",
+      continues: "Pharmacy claims, formulary evidence, utilization safety, procurement, quality release, inventory visibility, specialty-drug handling, and shortage response."
     },
     {
       id: "broker",
@@ -66,7 +79,9 @@
       inside: { low: 20, plan: 22, high: 22 },
       reason: "Automatic public coverage removes annual plan shopping, benefit design, carrier bidding, and much of employer enrollment administration.",
       destinations: "Employer/payroll conversion, wage-pass-through compliance, outreach, eligibility support, service navigation, and transition communications.",
-      boundary: "The BLS insurance-brokerage industry includes many non-health lines. The model applies a small health-benefit exposure share and does not count the whole industry."
+      boundary: "The BLS insurance-brokerage industry includes many non-health lines. The model applies a small health-benefit exposure share and does not count the whole industry.",
+      evidence: "Planning exposure: 7% of the 1,003,900-job insurance-brokerage industry anchor. Confidence: Low because BLS does not isolate health-benefit brokerage or employer benefits staff.",
+      continues: "Temporary payroll conversion, wage-pass-through compliance, worker outreach, eligibility correction, service navigation, and supplemental non-health advice."
     },
     {
       id: "vendor",
@@ -75,7 +90,9 @@
       inside: { low: 15, plan: 18, high: 18 },
       reason: "Common interfaces, public rails, portable records, source-code escrow, and fewer payer-specific contracts reduce redundant transaction routing and contract administration.",
       destinations: "Cybersecurity, conformance testing, configuration control, procurement, audit, vendor exit, continuity, and public reporting.",
-      boundary: "This category is a residual planning allowance. It is kept separate and low-confidence because national vendor employment overlaps other industry and occupation counts."
+      boundary: "This category is a residual planning allowance. It is kept separate and low-confidence because national vendor employment overlaps other industry and occupation counts.",
+      evidence: "Planning allowance: 60,000. Confidence: Low. No non-overlapping national series separates payer-specific clearinghouse and contractor work from insurance, technology, and consulting employment.",
+      continues: "Interoperability, cybersecurity, procurement, audit, configuration control, uptime, data exchange, vendor exit, and disaster recovery."
     }
   ];
 
@@ -86,7 +103,8 @@
       values: { low: 112, plan: 138, high: 175 },
       fills: { low: 40, plan: 30, high: 45 },
       derivation: "Planning case: the 15,000-unit specification multiplied by the existing unit model's 9.2-FTE mix-weighted average, rounded. The high case moves toward the need-based 24,099-unit allocation but assumes substantial conversion of existing sites.",
-      roles: "Nurses, NPs/PAs, physicians, technicians, imaging/lab staff, behavioral-health staff, community health workers, navigators, and unit operations."
+      roles: "Nurses, NPs/PAs, physicians, technicians, imaging/lab staff, behavioral-health staff, community health workers, navigators, and unit operations.",
+      confidence: "Medium-Low"
     },
     {
       id: "public",
@@ -94,7 +112,8 @@
       values: { low: 145, plan: 180, high: 220 },
       fills: { low: 130, plan: 180, high: 220 },
       derivation: "Retains the necessary share of today's enrollment, claims/payment, provider reconciliation, appeals, navigation, employer conversion, and continuity workload while removing duplicated payer-specific work.",
-      roles: "Eligibility, payment operations, provider support, appeals casework, navigation, ombuds services, employer/payroll conversion, and legacy wind-down."
+      roles: "Eligibility, payment operations, provider support, appeals casework, navigation, ombuds services, employer/payroll conversion, and legacy wind-down.",
+      confidence: "Medium-Low"
     },
     {
       id: "data",
@@ -102,7 +121,8 @@
       values: { low: 50, plan: 70, high: 90 },
       fills: { low: 45, plan: 70, high: 90 },
       derivation: "A national data mesh, protected audit feeds, identity services, records migration, interoperability testing, cybersecurity operations, and offline continuity require durable technical and operational teams.",
-      roles: "Data quality, privacy, security operations, engineering, records correction, identity, analytics, audit evidence, conformance, and incident recovery."
+      roles: "Data quality, privacy, security operations, engineering, records correction, identity, analytics, audit evidence, conformance, and incident recovery.",
+      confidence: "Low"
     },
     {
       id: "medicines",
@@ -110,7 +130,8 @@
       values: { low: 30, plan: 40, high: 55 },
       fills: { low: 30, plan: 40, high: 55 },
       derivation: "A planning allowance for the Public Medicines Corporation, national purchasing, pharmacy utility, diagnostic/device procurement, batch quality, inventory visibility, and shortage response. Exact plant and product-family staffing remains uncalibrated.",
-      roles: "Procurement, pharmacy operations, manufacturing support, quality, logistics, inventory, shortage response, supplier assurance, and diagnostics."
+      roles: "Procurement, pharmacy operations, manufacturing support, quality, logistics, inventory, shortage response, supplier assurance, and diagnostics.",
+      confidence: "Low"
     },
     {
       id: "rural",
@@ -118,7 +139,8 @@
       values: { low: 20, plan: 30, high: 45 },
       fills: { low: 0, plan: 0, high: 0 },
       derivation: "A derived regional relief pool for vacancy coverage, protected leave, training backfill, seasonal demand, and surge. The adopted role-region safe-FTE formula must replace this national placeholder.",
-      roles: "Travel nurses, paramedics, respiratory therapists, imaging/lab technicians, pharmacists, behavioral-health clinicians, and short-term supervisory support."
+      roles: "Travel nurses, paramedics, respiratory therapists, imaging/lab technicians, pharmacists, behavioral-health clinicians, and short-term supervisory support.",
+      confidence: "Low"
     },
     {
       id: "education",
@@ -126,7 +148,8 @@
       values: { low: 8, plan: 11, high: 15 },
       fills: { low: 0, plan: 0, high: 0 },
       derivation: "Planning case: one faculty, preceptor, placement, or program-support FTE for roughly every five of the plan's 55,000 annual publicly funded training slots.",
-      roles: "Faculty, preceptors, simulation staff, program operations, rural placement, credential support, learner services, and continuing education."
+      roles: "Faculty, preceptors, simulation staff, program operations, rural placement, credential support, learner services, and continuing education.",
+      confidence: "Low"
     },
     {
       id: "assurance",
@@ -134,7 +157,8 @@
       values: { low: 25, plan: 41, high: 50 },
       fills: { low: 25, plan: 40, high: 50 },
       derivation: "A planning allowance for role-region workforce boards, scope and compensation operations, independent verification, safety and equity review, regional coordination, and workforce performance reporting.",
-      roles: "Workforce planning, compensation and scope administration, verification, audit, safety, equity, regional coordination, public reporting, and corrective action."
+      roles: "Workforce planning, compensation and scope administration, verification, audit, safety, equity, regional coordination, public reporting, and corrective action.",
+      confidence: "Low"
     }
   ];
 
@@ -148,8 +172,6 @@
     "HATC": "Health Administration Transition Corps",
     "BLS": "Bureau of Labor Statistics",
     "PBM": "Pharmacy Benefit Manager",
-    "KPP": "Key Performance Parameter",
-    "TPP": "Technical Performance Parameter",
     "FTE": "Full-Time Equivalent",
     "RN": "Registered Nurse",
     "LPN": "Licensed Practical Nurse",
@@ -228,12 +250,33 @@
     var scenario = SCENARIOS[activeScenario];
     var external = scenario.supported - scenario.inside;
     var gap = scenario.eliminated - scenario.supported;
+    var entrants = scenario.created - scenario.inside;
+    var annualEntrants = Math.round(entrants * 1000 / ROLLOUT_YEARS);
+    var scopedDifference = scenario.eliminated - scenario.created;
+    var employmentShare = entrants * 1000 / TOTAL_US_EMPLOYMENT_2024 * 100;
+    var transitionShare = scenario.inside / scenario.created * 100;
+    var trainingRatio = ANNUAL_TRAINING_TARGET / annualEntrants;
 
     $("wf-eliminated").textContent = fmtThousands(scenario.eliminated);
     $("wf-inside").textContent = fmtThousands(scenario.inside);
     $("wf-supported").textContent = fmtThousands(scenario.supported);
     $("wf-created").textContent = fmtThousands(scenario.created);
-    $("wf-new-hires").textContent = fmtThousands(scenario.created - scenario.inside);
+    $("wf-new-hires").textContent = fmtThousands(entrants);
+    $("wf-ledger-transfer").textContent = fmtThousands(scenario.inside) + " skills matches";
+
+    $("wf-reconcile-created").textContent = fmtThousands(scenario.created);
+    $("wf-reconcile-inside").textContent = fmtThousands(scenario.inside);
+    $("wf-reconcile-entrants").textContent = fmtThousands(entrants);
+    $("wf-scope-eliminated").textContent = fmtThousands(scenario.eliminated);
+    $("wf-scope-created").textContent = fmtThousands(scenario.created);
+    $("wf-scope-difference").textContent = fmtThousands(Math.abs(scopedDifference));
+
+    $("wf-labor-entrants").textContent = fmtThousands(entrants);
+    $("wf-labor-annual").textContent = numberFormat.format(annualEntrants) + "/year";
+    $("wf-labor-share").textContent = employmentShare.toFixed(2) + "%";
+    $("wf-labor-transition").textContent = Math.round(transitionShare) + "%";
+    $("wf-training-ratio").textContent = trainingRatio.toFixed(1) + "\u00d7";
+    $("wf-table-annual").textContent = numberFormat.format(annualEntrants);
 
     $("wf-flow-eliminated").textContent = fmtShort(scenario.eliminated);
     $("wf-flow-inside").textContent = fmtShort(scenario.inside);
@@ -284,11 +327,31 @@
     boundary.appendChild(bHead);
     boundary.appendChild(bBody);
 
+    var evidence = document.createElement("div");
+    evidence.className = "workforce-legacy-field";
+    var eHead = document.createElement("strong");
+    eHead.textContent = "Evidence and confidence";
+    var eBody = document.createElement("p");
+    eBody.textContent = item.evidence;
+    evidence.appendChild(eHead);
+    evidence.appendChild(eBody);
+
+    var continuing = document.createElement("div");
+    continuing.className = "workforce-legacy-field";
+    var cHead = document.createElement("strong");
+    cHead.textContent = "Work that continues";
+    var cBody = document.createElement("p");
+    cBody.textContent = item.continues;
+    continuing.appendChild(cHead);
+    continuing.appendChild(cBody);
+
     host.appendChild(kicker);
     host.appendChild(title);
     host.appendChild(reason);
     host.appendChild(destination);
     host.appendChild(boundary);
+    host.appendChild(evidence);
+    host.appendChild(continuing);
     addAcronymHovers(host);
   }
 
@@ -380,7 +443,8 @@
       dRoles.innerHTML = "<strong>Roles:</strong> " + item.roles;
       var dFill = document.createElement("small");
       dFill.textContent = fmtShort(fill) + " positions modeled as fillable by displaced workers; " +
-        fmtShort(value - fill) + " require other entrants.";
+        fmtShort(value - fill) + " require other entrants. Confidence: " +
+        item.confidence + ".";
       detail.appendChild(dText);
       detail.appendChild(dRoles);
       detail.appendChild(dFill);
@@ -413,6 +477,46 @@
     renderLegacyList();
     renderCreatedChart();
   }
+
+  function sumForScenario(items, field, scenarioId) {
+    return items.reduce(function (total, item) {
+      return total + item[field][scenarioId];
+    }, 0);
+  }
+
+  NHA.WORKFORCE_MODEL = {
+    scenarios: SCENARIOS,
+    legacy: LEGACY,
+    created: CREATED,
+    rolloutYears: ROLLOUT_YEARS,
+    totalEmployment2024: TOTAL_US_EMPLOYMENT_2024,
+    annualTrainingTarget: ANNUAL_TRAINING_TARGET
+  };
+
+  NHA.SELFTESTS = NHA.SELFTESTS || [];
+  NHA.SELFTESTS.push({
+    name: "Workforce: scenario job ledgers reconcile",
+    run: function () {
+      return Object.keys(SCENARIOS).every(function (scenarioId) {
+        var scenario = SCENARIOS[scenarioId];
+        return sumForScenario(LEGACY, "values", scenarioId) === scenario.eliminated &&
+          sumForScenario(CREATED, "values", scenarioId) === scenario.created &&
+          sumForScenario(CREATED, "fills", scenarioId) === scenario.inside &&
+          scenario.supported === scenario.eliminated * 0.75;
+      });
+    }
+  });
+  NHA.SELFTESTS.push({
+    name: "Workforce: entrant pace and prior-authorization capacity math reconcile",
+    run: function () {
+      var entrants = SCENARIOS.plan.created - SCENARIOS.plan.inside;
+      var annualEntrants = entrants * 1000 / ROLLOUT_YEARS;
+      var releasedFte = DIRECT_PATIENT_CARE_PHYSICIANS * PRIOR_AUTH_HOURS_PER_WEEK / 40;
+      return entrants === 150 && annualEntrants === 12500 &&
+        Math.round(releasedFte) === 281600 &&
+        Math.abs(ANNUAL_TRAINING_TARGET / annualEntrants - 4.4) < 0.001;
+    }
+  });
 
   document.querySelectorAll("[data-wf-scenario]").forEach(function (button) {
     button.addEventListener("click", function () {

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance: Story &amp; System Dashboard</title>
 <meta name="description" content="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models.">
-<link rel="stylesheet" href="style.css?v=20260720-workforce-pay1">
+<link rel="stylesheet" href="style.css?v=20260720-workforce-labor1">
 </head>
 <body>
 <div class="wrap">
@@ -2922,47 +2922,78 @@
       </article>
     </div>
     <div class="workforce-target-strip" aria-label="Controlled workforce targets">
-      <article><strong>&le;5%</strong><span>critical-role vacancy</span><small>TPP-8.1</small></article>
-      <article><strong>&ge;55,000</strong><span>public training slots each year</span><small>TPP-8.3</small></article>
-      <article><strong>&ge;96%</strong><span>service-obligation fulfillment</span><small>TPP-8.4</small></article>
-      <article><strong>&ge;30%</strong><span>burnout-risk reduction</span><small>TPP-8.6</small></article>
+      <article><strong>&le;5%</strong><span>critical-role vacancy</span><small>controlled floor</small></article>
+      <article><strong>&ge;55,000</strong><span>public training slots each year</span><small>controlled floor</small></article>
+      <article><strong>&ge;96%</strong><span>service-obligation fulfillment</span><small>controlled floor</small></article>
+      <article><strong>&ge;30%</strong><span>burnout-risk reduction</span><small>controlled floor</small></article>
     </div>
   </section>
 
   <section class="card">
-    <h2>Administrative work shrinks; useful skills move</h2>
-    <p class="desc">The plan sets a worker-protection target but does
-      not publish an audited job count. The visual below is a derived
-      planning model, not a forecast. It starts with BLS employment anchors,
-      applies explicit functional exposure shares, removes overlap, and keeps
-      clinical records work out of the eliminated total. Choose a case to see
-      the transition load.</p>
+    <span class="workforce-kicker">Labor transition ledger</span>
+    <h2>Administrative work shrinks: what ends, what moves, and what remains</h2>
+    <p class="desc">The assessment separates positions whose current function
+      contracts, workers whose skills transfer to public operations, and
+      clinical time released from paperwork. Those are different effects and
+      cannot be added together. Counts use BLS employment anchors, explicit
+      exposure shares, and overlap controls. Choose a case to test the
+      transition load.</p>
     <div class="workforce-scenario-controls" role="group"
       aria-label="Workforce transition planning case">
       <button type="button" data-wf-scenario="low">Lower exposure</button>
       <button type="button" data-wf-scenario="plan" aria-pressed="true">Planning case</button>
       <button type="button" data-wf-scenario="high">Stress case</button>
     </div>
-    <div class="workforce-count-grid" aria-live="polite">
+    <div class="workforce-count-grid workforce-count-grid-five" aria-live="polite">
       <article>
-        <span>Legacy positions eliminated</span>
+        <span>Current functions that contract</span>
         <strong id="wf-eliminated">760,000</strong>
-        <small>derived central estimate</small>
+        <small>derived, Medium-Low confidence</small>
       </article>
       <article>
-        <span>Could move into new-system roles</span>
+        <span>Gross funded positions created</span>
+        <strong id="wf-created">510,000</strong>
+        <small>derived floor, Medium-Low confidence</small>
+      </article>
+      <article>
+        <span>Fillable by affected workers</span>
         <strong id="wf-inside">360,000</strong>
-        <small>skills-to-role planning match</small>
+        <small>skills match, Medium confidence</small>
+      </article>
+      <article>
+        <span>Other entrants required</span>
+        <strong id="wf-new-hires">150,000</strong>
+        <small>derived residual, Medium-Low confidence</small>
       </article>
       <article>
         <span>Placement or training target</span>
         <strong id="wf-supported">570,000</strong>
-        <small>KPP-W1 floor applied to exposure</small>
+        <small>controlled 75% worker-protection floor</small>
+      </article>
+    </div>
+    <div class="workforce-ledger-grid" aria-label="Three labor effects that must not be combined">
+      <article>
+        <span>1 &middot; Position contraction</span>
+        <strong>Payroll functions become unnecessary</strong>
+        <p>Duplicated enrollment, network, billing, denial, rebate, and
+          employer-plan work can end. Attrition and phased conversion affect
+          how many people actually need a new job at one time.</p>
       </article>
       <article>
-        <span>Quantified new-position floor</span>
-        <strong id="wf-created">510,000</strong>
-        <small>excludes uncalibrated benefit expansion</small>
+        <span>2 &middot; Work transfer</span>
+        <strong id="wf-ledger-transfer">360,000 skills matches</strong>
+        <p>Eligibility, payment integrity, records, navigation, rights,
+          procurement, cyber, and assurance still require people. Ownership
+          and purpose change even when the underlying skill remains useful.</p>
+      </article>
+      <article>
+        <span>3 &middot; Time released</span>
+        <strong>About 282,000 FTE-equivalent</strong>
+        <p>Applying the AMA's 13 weekly prior-authorization hours per physician
+          to 866,460 direct-patient-care physicians shows the scale of practice
+          capacity tied up. It is not a layoff count and overlaps some billing
+          work, so it is never added to the position estimate. Confidence:
+          Low for the FTE conversion.</p>
       </article>
     </div>
     <div class="workforce-flow" aria-label="Planning flow from eliminated jobs to new positions">
@@ -2979,7 +3010,7 @@
           <div class="workforce-flow-track"><i id="wf-flow-inside-bar"></i></div>
         </article>
         <article>
-          <div><span>External placement or approved training needed to reach KPP-W1</span>
+          <div><span>External placement or approved training needed to reach the 75% floor</span>
             <strong id="wf-flow-external">210k</strong></div>
           <div class="workforce-flow-track secondary"><i id="wf-flow-external-bar"></i></div>
         </article>
@@ -2998,6 +3029,17 @@
       <div id="workforce-legacy-detail" class="workforce-legacy-detail"
         aria-live="polite"></div>
     </div>
+    <div class="workforce-continuing">
+      <span class="workforce-section-label">Functions that continue under public administration</span>
+      <div class="workforce-continuing-grid">
+        <article><strong>Eligibility and payment</strong><span>one enrollment record, provider payment, reconciliation, and continuity</span></article>
+        <article><strong>Integrity and appeals</strong><span>fraud control, clinical review for exceptional cases, patient rights, and correction</span></article>
+        <article><strong>Records and data quality</strong><span>clinical documentation, coding for care and quality, privacy, and portability</span></article>
+        <article><strong>Medicines operations</strong><span>formulary evidence, pharmacy claims, procurement, inventory, quality, and shortage response</span></article>
+        <article><strong>Technology and resilience</strong><span>cybersecurity, identity, conformance, audit evidence, downtime, and recovery</span></article>
+        <article><strong>Worker transition</strong><span>income bridges, retraining, placement, hardship review, and legacy wind-down</span></article>
+      </div>
+    </div>
     <p class="note">BLS anchors are not added together mechanically:
       611,100 jobs in direct health and medical insurance carriers,
       229,070 insurance claims and policy-processing clerks, and 417,500
@@ -3008,19 +3050,100 @@
   </section>
 
   <section class="card">
-    <h2>Where the quantified new positions are</h2>
-    <p class="desc">The planning case creates a floor of about 510,000
-      funded positions. About 360,000 can be matched to displaced workers;
-      the remaining <strong id="wf-new-hires">150,000</strong> require
-      licensed clinicians, technicians, new graduates, or other entrants.
-      Select a row to see the derivation and likely transition path.</p>
+    <h2>Where the 510,000 gross positions are created</h2>
+    <p class="desc">The planning case funds positions in seven operating
+      functions. The total is gross: it counts jobs the system must staff,
+      whether the worker comes from a contracting administrative function,
+      an existing care site, a training program, or another employer. Select
+      a row to see the derivation and transition path.</p>
     <div id="workforce-created-chart" class="workforce-created-chart"
       aria-label="New system positions by function"></div>
+    <div class="workforce-reconcile" aria-live="polite">
+      <article><span>Gross system positions</span><strong id="wf-reconcile-created">510,000</strong></article>
+      <i aria-hidden="true">&minus;</i>
+      <article><span>Fillable from affected pool</span><strong id="wf-reconcile-inside">360,000</strong></article>
+      <i aria-hidden="true">=</i>
+      <article><span>Other entrants needed</span><strong id="wf-reconcile-entrants">150,000</strong></article>
+    </div>
+    <div class="workforce-scope-warning">
+      <strong>Do not call the subtraction a national net-jobs forecast.</strong>
+      <p>Inside the quantified boundary, <span id="wf-scope-eliminated">760,000</span>
+        current functions contract while <span id="wf-scope-created">510,000</span>
+        gross positions are funded, a difference of <span id="wf-scope-difference">250,000</span>
+        positions. The model does not yet count how many unit jobs are filled
+        by workers from converted clinics, or the added labor required for
+        long-term care, behavioral health, dental, vision, hearing, EMS, and
+        public health. Calling that difference a national job loss would mix
+        known and uncalibrated populations.</p>
+    </div>
     <p class="note">This is deliberately a floor. It excludes the still-open
       national workforce quantity for long-term care, behavioral health,
       dental, vision, hearing, EMS, and public health. Those benefit-workforce
       formulas are not yet fixed and must be added before a total
       net-employment claim is valid.</p>
+  </section>
+
+  <section class="card workforce-labor-supply">
+    <span class="workforce-kicker">Labor-force sufficiency test</span>
+    <h2>America can cover the quantified floor nationally, but not without solving clinical and rural shortages</h2>
+    <p class="desc">The aggregate labor pool is large enough for the modeled
+      hiring pace. The binding constraints are occupation, license, training
+      time, faculty, location, and retention. Existing federal projections
+      show that several of the hardest roles are already in shortage.</p>
+    <div class="workforce-labor-grid" aria-live="polite">
+      <article><span>Other entrants over rollout</span><strong id="wf-labor-entrants">150,000</strong><small>after internal role matching</small></article>
+      <article><span>Average over 12 years</span><strong id="wf-labor-annual">12,500/year</strong><small>timing will be uneven by phase</small></article>
+      <article><span>Share of 2024 employment</span><strong id="wf-labor-share">0.09%</strong><small>169.96 million jobs nationally</small></article>
+      <article><span>Gross jobs filled by transition</span><strong id="wf-labor-transition">71%</strong><small>planning skills match</small></article>
+      <article><span>Training target versus pace</span><strong id="wf-training-ratio">4.4&times;</strong><small>slots are not completed hires</small></article>
+    </div>
+    <div class="workforce-supply-layout">
+      <div>
+        <span class="workforce-section-label">Scale comparison</span>
+        <div class="table-wrap">
+          <table class="workforce-supply-table">
+            <thead><tr><th>Signal</th><th>Annual scale</th><th>What it establishes</th><th>Confidence</th></tr></thead>
+            <tbody>
+              <tr><td>Modeled other-entrant need</td><td id="wf-table-annual">12,500</td><td>Average pace after affected-worker matches, not a yearly hiring schedule</td><td>Medium</td></tr>
+              <tr><td>Publicly funded training target</td><td>&ge;55,000</td><td>Enough numerical capacity to cover the pace only if slots match roles and graduates complete</td><td>Controlled</td></tr>
+              <tr><td>All healthcare occupation openings</td><td>1.9 million</td><td>A large active labor market, but most openings include replacement demand and are not spare workers</td><td>High</td></tr>
+              <tr><td>Registered-nurse openings</td><td>189,100</td><td>Pipeline scale is far larger than this plan's average increment, but employers already compete for it</td><td>High</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <aside class="workforce-shortage-panel">
+        <span class="workforce-section-label">Baseline shortage warning</span>
+        <strong>Training must expand supply, not just reshuffle it</strong>
+        <div class="workforce-shortage-grid">
+          <article><b>108,960</b><span>projected RN shortage in 2038</span></article>
+          <article><b>141,160</b><span>projected physician shortage in 2038</span></article>
+          <article><b>11%</b><span>projected nonmetro RN shortage</span></article>
+          <article><b>58%</b><span>projected nonmetro physician shortage</span></article>
+        </div>
+        <p>These HRSA projections assume current patterns. They show why a
+          national headcount can look feasible while particular communities
+          remain impossible to staff. Confidence: Medium for projected
+          magnitude and geography.</p>
+      </aside>
+    </div>
+    <div class="workforce-risk-matrix">
+      <span class="workforce-section-label">Where the labor test passes and where it can fail</span>
+      <div class="workforce-risk-row"><strong>Public administration, payment, data, and assurance</strong><b data-level="strong">Strong match</b><span>330,000 of 331,000 planning positions are mapped to affected administrative workers. Public hiring speed, training, pay, and location still matter.</span></div>
+      <div class="workforce-risk-row"><strong>Diagnostic-treatment unit teams</strong><b data-level="tight">Constrained</b><span>108,000 planning positions require clinicians, technicians, graduates, or transfers from existing care sites.</span></div>
+      <div class="workforce-risk-row"><strong>Rural flex and travel pool</strong><b data-level="high">High risk</b><span>All 30,000 planning positions require clinical or technical entrants, and rural vacancy projections are already worse than metropolitan projections.</span></div>
+      <div class="workforce-risk-row"><strong>Faculty, preceptors, and training support</strong><b data-level="high">Bottleneck</b><span>Eleven thousand positions are small in national terms but determine whether the 55,000 annual training slots become completed credentials.</span></div>
+      <div class="workforce-risk-row"><strong>Expanded benefits outside the floor</strong><b data-level="unknown">Not yet sized</b><span>Long-term care, behavioral health, dental, vision, hearing, EMS, and public-health staffing can materially raise demand after their operating standards are fixed.</span></div>
+    </div>
+    <div class="workforce-verdict">
+      <strong>Assessment</strong>
+      <p><b>Administrative labor: sufficient in arithmetic terms.</b> The
+        affected workforce is larger than the public administrative roles it
+        can plausibly fill. <b>Clinical labor: achievable only as a phased
+        capacity program.</b> The average annual increment is modest nationally,
+        but present shortages make training completion, compensation, scope,
+        rural support, and retention mandatory operating conditions.</p>
+    </div>
   </section>
 
   <section class="card workforce-compensation">
@@ -3331,12 +3454,13 @@
 <script src="js/taxmodel.js"></script>
 <script src="js/taxcharts.js"></script>
 <script src="js/govdata.js?v=20260719a"></script>
-<!-- quality data + phase-target derivation load before app.js so their
-     self-tests register in the integrity footer -->
+<!-- quality data, phase targets, and workforce model load before app.js so
+     their self-tests register in the integrity footer -->
 <script src="js/qualitydata.js?v=20260719a"></script>
 <script src="js/dataphases.js?v=20260717-data-phase1"></script>
 <script src="js/phasetargets.js?v=20260719a"></script>
 <script src="js/medications.js?v=20260719-medications1"></script>
+<script src="js/workforce.js?v=20260720-workforce-labor1"></script>
 <script src="js/app.js?v=20260719-benchmarks1"></script>
 <script src="js/taxapp.js?v=20260719-medications1"></script>
 <script src="js/unitsmap.js?v=20260719-physical-care1"></script>
@@ -3347,7 +3471,6 @@
 <script src="js/data.js?v=20260719a"></script>
 <script src="js/quality.js?v=20260719a"></script>
 <script src="js/hardening.js?v=20260717-hardening1"></script>
-<script src="js/workforce.js?v=20260720-workforce-pay1"></script>
 <script src="js/legislation.js?v=20260718-legislation1"></script>
 </body>
 </html>
