@@ -281,7 +281,7 @@
   }
 
   /* ---- tabs ---- */
-  var VIEWS = ["overview", "health", "tax", "legislation", "units", "data", "workforce", "gov", "hardening", "rollout", "quality"];
+  var VIEWS = ["overview", "health", "tax", "legislation", "units", "medications", "data", "workforce", "gov", "hardening", "rollout", "quality"];
   function showView(which) {
     if (VIEWS.indexOf(which) < 0) which = "overview";
     VIEWS.forEach(function (v) {
@@ -311,12 +311,13 @@
       tax:         { n: 2, q: "how the bill is paid, who contributes, and who comes out ahead" },
       legislation: { n: 3, q: "what Congress enacts and which existing laws change" },
       units:       { n: 4, q: "the physical care network and where it is placed" },
-      data:        { n: 5, q: "how information follows the patient safely" },
-      workforce:   { n: 6, q: "the people who deliver the care and how the workforce transitions" },
-      gov:         { n: 7, q: "the institutions that operate, audit, and enforce the system" },
-      hardening:   { n: 8, q: "how the design resists sabotage and stays running" },
-      rollout:     { n: 9, q: "what is built each year and what evidence unlocks the next wave" },
-      quality:     { n: 10, q: "the parameters that define success at every phase" }
+      medications: { n: 5, q: "how medicines are purchased, produced, and kept in supply" },
+      data:        { n: 6, q: "how information follows the patient safely" },
+      workforce:   { n: 7, q: "the people who deliver the care and how the workforce transitions" },
+      gov:         { n: 8, q: "the institutions that operate, audit, and enforce the system" },
+      hardening:   { n: 9, q: "how the design resists sabotage and stays running" },
+      rollout:     { n: 10, q: "what is built each year and what evidence unlocks the next wave" },
+      quality:     { n: 11, q: "the parameters that define success at every phase" }
     };
     var order = VIEWS.slice();
     order.forEach(function (id, i) {
@@ -329,7 +330,7 @@
       var eyebrow = document.createElement("span");
       eyebrow.className = "chapter-nav-eyebrow";
       eyebrow.textContent = meta && meta.n
-        ? "Chapter " + meta.n + " of 10"
+        ? "Chapter " + meta.n + " of 11"
         : "Start of the story";
       nav.appendChild(eyebrow);
       var row = document.createElement("div");

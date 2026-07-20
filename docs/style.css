@@ -512,6 +512,130 @@ table.data th.num { text-align: right; }
   font-size: 14px; line-height: 1.55;
 }
 
+/* ---- Benchmark reality checks ---- */
+.benchmark-section > .desc { max-width: 830px; }
+.benchmark-purpose-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px; margin-top: 16px;
+}
+.benchmark-purpose-grid article {
+  border-top: 3px solid var(--accent); padding: 12px 14px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface-1));
+}
+.benchmark-purpose-grid article:nth-child(2) { border-top-color: var(--series-3); }
+.benchmark-purpose-grid span,
+.benchmark-panel-head > span,
+.benchmark-supporting > span,
+.benchmark-verdict > span {
+  display: block; color: var(--text-muted); font-size: 10.5px;
+  font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.benchmark-purpose-grid strong { display: block; font-size: 13.5px; }
+.benchmark-purpose-grid p {
+  color: var(--text-secondary); font-size: 12.5px; line-height: 1.5;
+  margin-top: 5px;
+}
+.benchmark-distinction {
+  margin-top: 12px; padding: 11px 14px;
+  border-left: 3px solid var(--status-warning);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--status-warning) 7%, var(--surface-1));
+  color: var(--text-secondary); font-size: 13px; line-height: 1.55;
+}
+.benchmark-distinction strong { color: var(--text-primary); }
+.benchmark-panel {
+  margin-top: 18px; padding: 16px 16px 14px;
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.benchmark-panel-head {
+  display: grid; grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px; align-items: start;
+}
+.benchmark-panel-head > span {
+  color: var(--accent); margin-top: 3px;
+}
+.benchmark-panel + .benchmark-panel .benchmark-panel-head > span {
+  color: var(--series-3);
+}
+.benchmark-panel h3,
+.benchmark-supporting h3 { font-size: 14.5px; font-weight: 650; }
+.benchmark-panel-head p {
+  color: var(--text-secondary); font-size: 12.5px; line-height: 1.5;
+  margin-top: 3px; max-width: 720px;
+}
+.benchmark-key {
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  color: var(--text-muted); font-size: 11px; margin: 12px 0 2px 70px;
+}
+.benchmark-key span { display: inline-flex; align-items: center; gap: 6px; }
+.benchmark-key i { display: inline-block; width: 18px; height: 7px; border-radius: 4px; }
+.benchmark-key-model { background: var(--series-1); opacity: 0.5; }
+.benchmark-key-outside { background: var(--baseline-series); opacity: 0.5; }
+.benchmark-figure-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px; margin-top: 14px;
+}
+.benchmark-figure-grid article {
+  min-width: 0; padding: 12px 13px;
+  border: 1px solid var(--border); border-radius: 8px;
+  border-top: 3px solid var(--series-3);
+}
+.benchmark-figure-grid article:first-child { border-top-color: var(--series-1); }
+.benchmark-figure-grid span,
+.benchmark-figure-grid small,
+.benchmark-figure-grid p { display: block; }
+.benchmark-figure-grid span {
+  color: var(--text-muted); font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.benchmark-figure-grid .conf {
+  display: inline; font-size: 9px; margin-left: 3px;
+  padding: 1px 4px; border-radius: 4px; font-style: normal;
+  letter-spacing: 0; text-transform: lowercase;
+}
+.benchmark-figure-grid strong {
+  display: block; font-size: 21px; margin-top: 5px;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.benchmark-figure-grid small {
+  color: var(--text-secondary); font-size: 11px; margin-top: 1px;
+}
+.benchmark-figure-grid p {
+  color: var(--text-muted); font-size: 10.5px; line-height: 1.4;
+  margin-top: 7px;
+}
+.benchmark-readout {
+  margin-top: 8px; padding-top: 11px; border-top: 1px solid var(--gridline);
+  color: var(--text-secondary); font-size: 13px; line-height: 1.55;
+}
+.benchmark-readout strong { color: var(--text-primary); }
+.benchmark-supporting {
+  margin-top: 16px; padding: 14px 16px;
+  border-top: 1px solid var(--gridline); border-bottom: 1px solid var(--gridline);
+}
+.benchmark-supporting p {
+  color: var(--text-secondary); font-size: 12.5px; line-height: 1.55;
+  margin-top: 5px;
+}
+.benchmark-verdict {
+  margin-top: 16px; padding: 14px 16px;
+  border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-1));
+}
+.benchmark-verdict > span { color: var(--accent); }
+.benchmark-verdict p { font-size: 13.5px; line-height: 1.55; }
+.benchmark-source {
+  color: var(--text-muted); font-size: 11.5px; margin-top: 12px;
+}
+@media (max-width: 700px) {
+  .benchmark-purpose-grid { grid-template-columns: 1fr; }
+  .benchmark-panel { padding: 14px 10px 12px; }
+  .benchmark-panel-head { grid-template-columns: 1fr; gap: 2px; padding: 0 4px; }
+  .benchmark-key { margin-left: 4px; }
+  .benchmark-figure-grid { grid-template-columns: 1fr; }
+}
+
 /* ---- Nav tabs ---- */
 nav.tabs {
   display: flex; flex-wrap: wrap; gap: 2px; margin: 18px 0 6px;
@@ -2591,6 +2715,400 @@ footer.site a { color: var(--text-muted); }
   .legislation-steps,
   .legislation-constitutional-grid,
   .legislation-open-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- Medications view ---- */
+.medications-kicker {
+  display: block; margin-bottom: 6px; color: var(--series-5);
+  font-size: 12px; font-weight: 650; letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.medications-hero {
+  border-top: 4px solid var(--series-5);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--series-5) 8%, transparent),
+      transparent 58%),
+    var(--surface-1);
+}
+.medications-hero-stats {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px; margin-top: 20px; border-top: 1px solid var(--gridline);
+}
+.medications-hero-stats article {
+  min-width: 0; padding: 15px 18px 4px 0;
+}
+.medications-hero-stats article + article {
+  padding-left: 18px; border-left: 1px solid var(--gridline);
+}
+.medications-hero-stats strong {
+  display: block; color: var(--text-primary); font-size: 28px;
+  font-weight: 650; letter-spacing: -.025em;
+}
+.medications-hero-stats span {
+  display: block; color: var(--text-secondary); font-size: 12px;
+  line-height: 1.4;
+}
+.medications-hero-stats small {
+  display: block; margin-top: 5px; color: var(--text-muted);
+  font-size: 10.5px;
+}
+.medications-hero-stats .conf,
+.medications-cost-stack .conf,
+.medications-negotiation-proof .conf,
+.medications-savings-layout .conf,
+.medications-savings-result .conf,
+#view-medications .note .conf {
+  display: inline-block; padding: 1px 6px; border-radius: 4px;
+  font-size: 10.5px;
+}
+.medications-need-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px; margin-top: 18px;
+}
+.medications-need-grid article {
+  min-width: 0; padding: 13px 0 0; border-top: 3px solid var(--series-2);
+}
+.medications-need-grid article:nth-child(2) { border-top-color: var(--series-1); }
+.medications-need-grid article:nth-child(3) { border-top-color: var(--series-3); }
+.medications-need-grid article:nth-child(4) { border-top-color: var(--series-5); }
+.medications-need-grid span {
+  color: var(--text-muted); font-size: 10.5px; font-weight: 650;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.medications-need-grid h3 {
+  margin-top: 5px; color: var(--text-primary); font-size: 13.5px;
+  font-weight: 650; line-height: 1.3;
+}
+.medications-need-grid p {
+  margin-top: 5px; color: var(--text-secondary); font-size: 11.5px;
+  line-height: 1.45;
+}
+.medications-cost-layout {
+  display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr);
+  gap: 28px; margin-top: 18px;
+}
+.medications-cost-stack {
+  display: grid; gap: 12px;
+}
+.medications-cost-stack article {
+  padding: 12px 0; border-bottom: 1px solid var(--gridline);
+}
+.medications-cost-stack strong {
+  display: block; color: var(--series-5); font-size: 24px;
+  font-weight: 650; letter-spacing: -.02em;
+}
+.medications-cost-stack > article:nth-child(2) strong { color: var(--series-1); }
+.medications-cost-stack > article:nth-child(3) strong { color: var(--series-2); }
+.medications-cost-stack span {
+  display: block; color: var(--text-primary); font-size: 12.5px;
+  font-weight: 600;
+}
+.medications-cost-stack small {
+  display: block; margin-top: 4px; color: var(--text-secondary);
+  font-size: 10.5px; line-height: 1.4;
+}
+.medications-cost-explainer {
+  padding: 18px 0 0 24px; border-left: 1px solid var(--gridline);
+}
+.medications-cost-explainer h3 {
+  font-size: 16px; font-weight: 650;
+}
+.medications-cost-explainer > p {
+  margin-top: 7px; color: var(--text-secondary); font-size: 12px;
+  line-height: 1.55;
+}
+.medications-spend-bar {
+  display: flex; height: 42px; margin: 17px 0 13px;
+  border-radius: 8px; overflow: hidden;
+}
+.medications-spend-bar span {
+  display: flex; align-items: center; padding: 0 10px;
+  background: color-mix(in srgb, var(--series-5) 80%, var(--surface-1));
+  color: #fff; font-size: 11px; font-weight: 650;
+}
+.medications-spend-bar span + span {
+  background: color-mix(in srgb, var(--series-1) 75%, var(--surface-1));
+}
+.medications-law-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 9px; align-items: center; margin-top: 18px;
+}
+.medications-law-flow article {
+  min-width: 0; min-height: 138px; padding: 12px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-1);
+}
+.medications-law-flow article > span {
+  color: var(--text-muted); font-size: 10px; font-weight: 650;
+  letter-spacing: .03em; text-transform: uppercase;
+}
+.medications-law-flow strong {
+  display: block; margin-top: 6px; color: var(--text-primary);
+  font-size: 12.5px; line-height: 1.35;
+}
+.medications-law-flow p {
+  margin-top: 5px; color: var(--text-secondary); font-size: 10.5px;
+  line-height: 1.42;
+}
+.medications-law-flow > i {
+  color: var(--text-muted); font-style: normal; font-size: 18px;
+}
+.medications-negotiation-proof {
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px; align-items: center; margin-top: 18px; padding: 14px 0;
+  border-top: 1px solid var(--gridline); border-bottom: 1px solid var(--gridline);
+}
+.medications-negotiation-proof > strong {
+  color: var(--series-2); font-size: 33px; font-weight: 650;
+  letter-spacing: -.025em;
+}
+.medications-negotiation-proof h3 {
+  font-size: 14px; font-weight: 650;
+}
+.medications-negotiation-proof p {
+  margin: 4px 0 6px; color: var(--text-secondary); font-size: 11.5px;
+  line-height: 1.45;
+}
+.medications-family-controls {
+  display: grid; grid-template-columns: 1.3fr repeat(2, minmax(160px, .8fr));
+  gap: 12px; margin-top: 17px;
+}
+.medications-family-controls label {
+  color: var(--text-secondary); font-size: 11px; font-weight: 600;
+}
+.medications-family-controls input,
+.medications-family-controls select {
+  display: block; width: 100%; min-height: 38px; margin-top: 5px;
+  padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--surface-1); color: var(--text-primary); font: inherit;
+  font-size: 12px;
+}
+.medications-family-summary {
+  display: flex; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding: 8px 0; border-bottom: 1px solid var(--gridline);
+}
+.medications-family-summary strong {
+  color: var(--text-primary); font-size: 12px; font-weight: 650;
+}
+.medications-family-summary span {
+  color: var(--text-muted); font-size: 10.5px; text-align: right;
+}
+.medications-family-list {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px; max-height: 620px; overflow: auto;
+  margin-top: 12px; padding-right: 6px;
+  scrollbar-color: var(--baseline) transparent;
+}
+.medications-family {
+  min-width: 0; padding: 10px 0 11px;
+  border-bottom: 1px solid var(--gridline);
+}
+.medications-family-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 9px;
+}
+.medications-family h3 {
+  min-width: 0; color: var(--text-primary); font-size: 12.5px;
+  font-weight: 650; line-height: 1.3;
+}
+.medications-phase-chip {
+  flex: 0 0 auto; color: var(--series-5); font-size: 9.5px;
+  font-weight: 650;
+}
+.medications-family-form {
+  margin-top: 3px; color: var(--text-secondary); font-size: 10.5px;
+  line-height: 1.4;
+}
+.medications-family-tags {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+}
+.medications-family-tags span {
+  padding: 1px 5px; border: 1px solid var(--border); border-radius: 999px;
+  color: var(--text-muted); font-size: 9px; line-height: 1.45;
+}
+.medications-no-results {
+  grid-column: 1 / -1; padding: 24px 0; color: var(--text-secondary);
+  font-size: 12px; text-align: center;
+}
+.medications-production-flow {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 24px; margin-top: 18px;
+}
+.medications-production-flow article {
+  position: relative; min-width: 0; padding: 11px 0 0 34px;
+  border-top: 1px solid var(--gridline);
+}
+.medications-production-flow article > span {
+  position: absolute; top: 10px; left: 0;
+  width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--series-5) 13%, var(--surface-1));
+  color: var(--series-5); font-size: 11px; font-weight: 700;
+}
+.medications-production-flow h3 {
+  color: var(--text-primary); font-size: 13px; font-weight: 650;
+}
+.medications-production-flow p {
+  margin-top: 4px; color: var(--text-secondary); font-size: 10.8px;
+  line-height: 1.45;
+}
+.medications-quality-boundary {
+  display: grid; grid-template-columns: minmax(150px, .35fr) minmax(0, 1fr);
+  gap: 18px; margin-top: 20px; padding: 13px 0;
+  border-top: 3px solid var(--series-2);
+  border-bottom: 1px solid var(--gridline);
+}
+.medications-quality-boundary strong {
+  color: var(--text-primary); font-size: 13px;
+}
+.medications-quality-boundary p {
+  color: var(--text-secondary); font-size: 11.5px; line-height: 1.45;
+}
+.medications-timeline {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 24px; margin-top: 18px;
+}
+.medications-timeline article {
+  min-width: 0; padding: 12px 0 4px; border-top: 3px solid var(--series-1);
+}
+.medications-timeline article:nth-child(2),
+.medications-timeline article:nth-child(5) { border-top-color: var(--series-2); }
+.medications-timeline article:nth-child(3),
+.medications-timeline article:nth-child(6) { border-top-color: var(--series-5); }
+.medications-timeline span {
+  color: var(--text-muted); font-size: 10.5px; font-weight: 600;
+}
+.medications-timeline strong {
+  display: block; margin-top: 4px; color: var(--text-primary);
+  font-size: 14px; font-weight: 650;
+}
+.medications-timeline p {
+  margin-top: 5px; color: var(--text-secondary); font-size: 11px;
+  line-height: 1.45;
+}
+.medications-savings-layout {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr);
+  gap: 28px; align-items: stretch; margin-top: 18px;
+}
+.medications-savings-controls {
+  display: grid; gap: 17px;
+}
+.medications-savings-controls label > span {
+  display: flex; justify-content: space-between; gap: 12px;
+  color: var(--text-primary); font-size: 12px; font-weight: 600;
+}
+.medications-savings-controls output {
+  color: var(--series-5); font-variant-numeric: tabular-nums;
+}
+.medications-savings-controls input[type="range"] {
+  width: 100%; margin-top: 8px; accent-color: var(--series-5);
+}
+.medications-savings-controls small {
+  display: block; margin-top: 3px; color: var(--text-muted);
+  font-size: 10px; line-height: 1.4;
+}
+.medications-savings-formula {
+  padding: 9px 0; border-top: 1px solid var(--gridline);
+  border-bottom: 1px solid var(--gridline);
+  color: var(--text-secondary); font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.medications-savings-result {
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 0; padding: 20px;
+  background: color-mix(in srgb, var(--series-5) 8%, var(--surface-1));
+  border: 1px solid color-mix(in srgb, var(--series-5) 24%, var(--border));
+  border-radius: 12px;
+}
+.medications-savings-result > span {
+  color: var(--text-secondary); font-size: 11px;
+}
+.medications-savings-result > strong {
+  display: block; margin-top: 4px; color: var(--series-5);
+  font-size: 35px; font-weight: 650; letter-spacing: -.03em;
+}
+.medications-savings-result small {
+  margin-top: 4px; color: var(--text-muted); font-size: 10.5px;
+  line-height: 1.45;
+}
+.medications-savings-ledger {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0; margin-top: 18px; border-top: 1px solid var(--gridline);
+}
+.medications-savings-track {
+  grid-column: 1 / -1; height: 8px; margin: 12px 0 5px;
+  border-radius: 999px; overflow: hidden;
+  background: color-mix(in srgb, var(--series-1) 65%, var(--surface-1));
+}
+.medications-savings-track span {
+  display: block; height: 100%; min-width: 2px; background: var(--series-5);
+}
+.medications-savings-ledger article {
+  min-width: 0; padding: 10px 14px 5px 0;
+}
+.medications-savings-ledger article + article {
+  padding-left: 14px; border-left: 1px solid var(--gridline);
+}
+.medications-savings-ledger span {
+  display: block; min-height: 32px; color: var(--text-secondary);
+  font-size: 10.5px; line-height: 1.4;
+}
+.medications-savings-ledger strong {
+  display: block; margin-top: 3px; color: var(--text-primary);
+  font-size: 18px; font-weight: 650;
+}
+.medications-exclusions {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px; margin-top: 18px;
+}
+.medications-exclusions article {
+  min-width: 0; padding: 11px 0; border-top: 1px solid var(--gridline);
+}
+.medications-exclusions h3 {
+  color: var(--text-primary); font-size: 12.5px; font-weight: 650;
+}
+.medications-exclusions p {
+  margin-top: 4px; color: var(--text-secondary); font-size: 10.8px;
+  line-height: 1.45;
+}
+@media (max-width: 700px) {
+  .medications-hero-stats { grid-template-columns: 1fr; }
+  .medications-hero-stats article + article {
+    padding-left: 0; border-left: 0; border-top: 1px solid var(--gridline);
+  }
+  .medications-need-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .medications-cost-layout { grid-template-columns: 1fr; gap: 16px; }
+  .medications-cost-explainer {
+    padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--gridline);
+  }
+  .medications-law-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .medications-law-flow > i { display: none; }
+  .medications-family-controls {
+    grid-template-columns: 1fr repeat(2, minmax(0, 1fr));
+  }
+  .medications-production-flow,
+  .medications-timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .medications-savings-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 430px) {
+  .medications-need-grid,
+  .medications-law-flow,
+  .medications-family-controls,
+  .medications-family-list,
+  .medications-production-flow,
+  .medications-timeline,
+  .medications-savings-ledger,
+  .medications-exclusions { grid-template-columns: 1fr; }
+  .medications-quality-boundary { grid-template-columns: 1fr; gap: 5px; }
+  .medications-family-summary { align-items: flex-start; flex-direction: column; }
+  .medications-family-summary span { text-align: left; }
+  .medications-savings-ledger article + article {
+    padding-left: 0; border-left: 0; border-top: 1px solid var(--gridline);
+  }
 }
 
 /* ---- Chapter navigation (story connective tissue) ---- */

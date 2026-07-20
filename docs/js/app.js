@@ -366,37 +366,65 @@
   /* ---------- Benchmarks ---------- */
   function renderBenchmarks() {
     NHA.renderBenchmarkChart($("benchmark-nhe"), [
-      { label: "This model: mature system at 2024 scale", note: "real 2024$",
+      { label: "Dashboard model: mature system at 2024 scale", note: "real 2024$; 10th–90th percentile",
         lo: mc.steady.matureToday.p10 * DEF, hi: mc.steady.matureToday.p90 * DEF,
         mid: mc.steady.matureToday.p50 * DEF, color: "var(--series-1)" },
-      { label: "Actual U.S. health spending, 2024", note: "CMS preliminary",
+      { label: "Observed U.S. health spending, 2024", note: "CMS preliminary estimate",
         lo: 5250, hi: 5350, mid: 5300, color: "var(--baseline-series)" }
     ], { aria: "Total system cost comparison, all at 2024 scale" });
 
-    NHA.renderBenchmarkChart($("benchmark-fed"), [
-      { label: "This model, mature year", note: "real 2024$",
-        lo: mc.steady.fedIncrease.p10 * DEF, hi: mc.steady.fedIncrease.p90 * DEF,
-        mid: mc.steady.fedIncrease.p50 * DEF, color: "var(--series-1)" },
-      { label: "This model, first decade (annualized)", note: "includes transition costs",
-        lo: mc.tenYearFedIncAnnualized.p10 * DEF, hi: mc.tenYearFedIncAnnualized.p90 * DEF,
-        mid: mc.tenYearFedIncAnnualized.p50 * DEF, color: "var(--series-1)" },
-      { label: "CBO single-payer options (2030)", note: "study's own dollars",
-        lo: NHA.BENCHMARKS.cboFedIncrease.low, hi: NHA.BENCHMARKS.cboFedIncrease.high,
-        mid: null, color: "var(--series-3)" },
-      { label: "Urban Institute / Mercatus (annualized)", note: "study's own dollars",
-        lo: NHA.BENCHMARKS.urbanMercatus.low, hi: NHA.BENCHMARKS.urbanMercatus.high,
-        mid: null, color: "var(--series-3)" }
-    ], { aria: "Added federal cost comparison" });
-
     var d30 = mc.nhe2030delta;
-    $("benchmark-note").textContent =
-      "CBO also estimated that total national health spending in 2030 would change by " +
-      "−$700B to +$300B under its illustrative single-payer designs. This model's 2030 " +
-      "change vs. baseline is " + NHA.fmt.moneyShort(d30.p10 * DEF) + " to " +
-      NHA.fmt.moneyShort(d30.p90 * DEF) + " (median " + NHA.fmt.moneyShort(d30.p50 * DEF) +
-      "). Note that 2030 is mid-transition here (coverage ~85%, expansions not yet phased in), " +
-      "and published benchmarks are in each study's own dollars, so treat these as " +
-      "order-of-magnitude checks, not exact comparisons.";
+    var nhe = mc.steady.matureToday;
+    var nheMid = nhe.p50 * DEF;
+    var nheDiffPct = 100 * (nheMid / 5300 - 1);
+    var nheRelation = Math.abs(nheDiffPct) < 0.05 ? "essentially equal to" :
+      (nheDiffPct > 0 ? Math.abs(nheDiffPct).toFixed(1) + "% above" :
+        Math.abs(nheDiffPct).toFixed(1) + "% below");
+
+    $("benchmark-nhe-result").textContent =
+      "The model centers on " + NHA.fmt.money(nheMid) + " per year, with a " +
+      NHA.fmt.moneyShort(nhe.p10 * DEF) + " to " +
+      NHA.fmt.moneyShort(nhe.p90 * DEF) + " uncertainty range. That is " +
+      nheRelation + " the preliminary 2024 total of about $5.3T. The model is " +
+      "therefore operating at the observed scale of the U.S. health system.";
+
+    var fed = mc.steady.fedIncrease;
+    var fedMid = fed.p50 * DEF;
+    $("benchmark-fed-model").textContent = NHA.fmt.money(fedMid) + "/yr";
+    $("benchmark-fed-model-range").textContent =
+      NHA.fmt.moneyShort(fed.p10 * DEF) + " to " +
+      NHA.fmt.moneyShort(fed.p90 * DEF) + " uncertainty range";
+
+    $("benchmark-fed-result").textContent =
+      "These figures should not share one precise axis because their scale " +
+      "years, benefit packages, and transition periods differ. Their useful " +
+      "common finding is the order of magnitude: a single-payer system moves " +
+      "trillions of dollars per year onto the federal ledger. A direct score " +
+      "of the dashboard's mature estimate would require a harmonized year, " +
+      "price basis, benefit package, and current-law baseline.";
+
+    $("benchmark-2030-result").textContent =
+      "CBO estimated that its illustrative designs would change total national " +
+      "health spending by −$700B to +$300B in 2030. This model's 2030 change " +
+      "from its status-quo baseline is " + NHA.fmt.moneyShort(d30.p10 * DEF) +
+      " to " + NHA.fmt.moneyShort(d30.p90 * DEF) + ", with a median of " +
+      NHA.fmt.moneyShort(d30.p50 * DEF) + ". In this dashboard, 2030 is still " +
+      "mid-transition, so this is a directional and scale check rather than an " +
+      "exact like-for-like comparison.";
+
+    var nhePlausible = Math.abs(nheDiffPct) <= 15;
+    var cboNheOverlap = d30.p10 * DEF <= NHA.BENCHMARKS.cboNheChange.high &&
+      d30.p90 * DEF >= NHA.BENCHMARKS.cboNheChange.low;
+    var verdict = (nhePlausible
+      ? "The total-spending estimate aligns closely with observed U.S. spending. "
+      : "The total-spending estimate sits far enough from observed U.S. spending to warrant review. ") +
+      (cboNheOverlap
+        ? "The model's 2030 spending-change range also overlaps CBO's range. "
+        : "The model's 2030 spending-change range does not overlap CBO's range. ") +
+      "The federal estimates confirm the trillion-dollar scale of the budget shift, but their different years and designs prevent a precise pass-or-fail comparison.";
+    $("benchmark-verdict").textContent = verdict +
+      " These checks test plausibility, not precision, and they do not " +
+      "validate every individual assumption.";
   }
 
   /* ---------- Money flow (today vs NHA) ---------- */

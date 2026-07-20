@@ -1,7 +1,7 @@
 # Parameter research index
 
-Five research passes, one per cost domain, gathering sourced real-world
-baseline values to calibrate the framework's `CP-*` cost parameter
+Six core research passes, organized by cost and financing domain, gather
+sourced real-world baseline values to calibrate the framework's `CP-*` cost parameter
 dictionary (defined in `National_Health_Assurance_Framework_Source_Package.docx`).
 Every number in these files carries a source name, publication/dataset,
 year, and URL, plus a confidence/caveat note. Where no clean authoritative
@@ -20,11 +20,12 @@ those as open research items, not silent gaps.
 | [workforce_transition_methodology.md](workforce_transition_methodology.md) | BLS anchors, overlap controls, lower/planning/stress job-displacement cases, internal role matching, quantified new-position floor, and rural flex/travel-pool derivation | Workforce tab (docs/js/workforce.js) |
 | [legislation_crosswalk.md](legislation_crosswalk.md) | Nineteen-title enabling-act architecture, thirteen major legal domains, federal/state/tribal transition rules, constitutional limits, illustrative amendment language, and the provision-level work still required | Legislation tab (docs/js/legislation.js) |
 | [hospital_regionalization_methodology.md](hospital_regionalization_methodology.md) | Hospital ownership and private-equity evidence, public-service charter and global-budget design, the 10-16 region candidate model, 13-region result, and university/specialty-hospital treatment | Physical Care tab (docs/js/hospitalregions.js) |
+| [medications_methodology.md](medications_methodology.md) | Current medicine spending, statutory negotiation constraints, FDA manufacturing pathway, the 200-family PMC qualification plan, exclusions, and a non-additive savings attribution | Medications tab (docs/js/medications.js) |
 
 [parameter_baseline_seed.csv](parameter_baseline_seed.csv) pulls the ~45
-highest-confidence, most load-bearing numbers from all five files into one
-machine-readable table — use it as the starting calibration set, then go to
-the relevant detail file for anything it doesn't cover.
+highest-confidence, most load-bearing numbers from the core parameter files
+into one machine-readable table — use it as the starting calibration set,
+then go to the relevant detail file for anything it doesn't cover.
 
 ## Calibration base year — do not sum across vintages
 

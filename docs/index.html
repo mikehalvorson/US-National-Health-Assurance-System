@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>National Health Assurance: Story &amp; System Dashboard</title>
 <meta name="description" content="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models.">
-<link rel="stylesheet" href="style.css?v=20260719-physical-care1">
+<link rel="stylesheet" href="style.css?v=20260719-medications1">
 </head>
 <body>
 <div class="wrap">
@@ -33,6 +33,7 @@
     <button id="tab-tax">Taxes &amp; Financing</button>
     <button id="tab-legislation">Legislation</button>
     <button id="tab-units">Physical Care</button>
+    <button id="tab-medications">Medications</button>
     <button id="tab-data">Data</button>
     <button id="tab-workforce">Workforce</button>
     <button id="tab-gov">Governance</button>
@@ -219,7 +220,7 @@
           <b>Medicines &amp; supply</b>
           <p>National purchasing, a public pharmacy utility, transparent
             formularies, public production, and shortage response.</p>
-          <button type="button" data-dashboard-view="rollout">Buildout plan</button>
+          <button type="button" data-dashboard-view="medications">Medication strategy</button>
         </article>
         <article>
           <b>Workforce &amp; education</b>
@@ -391,28 +392,32 @@
         <span>04 · Physical care</span><strong>Physical Care</strong>
         <small>How hospitals are governed, funded, regionalized, and connected to the four-unit network.</small>
       </button>
+      <button type="button" data-dashboard-view="medications">
+        <span>05 · Medicines</span><strong>Medications</strong>
+        <small>How purchasing, public production, and shortage protection lower costs and secure supply.</small>
+      </button>
       <button type="button" data-dashboard-view="data">
-        <span>05 · Information</span><strong>Data</strong>
+        <span>06 · Information</span><strong>Data</strong>
         <small>How the national mesh stores, moves, protects, and corrects records.</small>
       </button>
       <button type="button" data-dashboard-view="workforce">
-        <span>06 · People</span><strong>Workforce</strong>
+        <span>07 · People</span><strong>Workforce</strong>
         <small>How clinical capacity, rural staffing, training, and job transition work.</small>
       </button>
       <button type="button" data-dashboard-view="gov">
-        <span>07 · Authority</span><strong>Governance</strong>
+        <span>08 · Authority</span><strong>Governance</strong>
         <small>Which institutions decide, operate, audit, and enforce the system.</small>
       </button>
       <button type="button" data-dashboard-view="hardening">
-        <span>08 · Durability</span><strong>Executive Hardening</strong>
+        <span>09 · Durability</span><strong>Executive Hardening</strong>
         <small>How distributed authority and continuity duties resist sabotage.</small>
       </button>
       <button type="button" data-dashboard-view="rollout">
-        <span>09 · Sequence</span><strong>Phased Rollout</strong>
+        <span>10 · Sequence</span><strong>Phased Rollout</strong>
         <small>What is built in each year and what evidence allows the next wave.</small>
       </button>
       <button type="button" data-dashboard-view="quality">
-        <span>10 · Proof</span><strong>Quality</strong>
+        <span>11 · Proof</span><strong>Quality</strong>
         <small>Which parameters define success and what each phase must achieve.</small>
       </button>
     </div>
@@ -873,16 +878,114 @@
   </section>
 
   <!-- Benchmarks -->
-  <section class="card">
-    <h2>Sanity checks against independent estimates</h2>
-    <p class="desc">Two different questions, two different panels. These
-      concepts are not interchangeable, which is why a single asserted
-      number needed this model.</p>
-    <h2 style="font-size:14.5px;margin-top:14px">Total system cost: mature system at 2024 scale vs. today (all payers, $/yr)</h2>
-    <div id="benchmark-nhe"></div>
-    <h2 style="font-size:14.5px;margin-top:20px">Added federal cost (vs. current-law federal health spending, $/yr)</h2>
-    <div id="benchmark-fed"></div>
-    <p class="note" id="benchmark-note"></p>
+  <section class="card benchmark-section">
+    <h2>Does the model pass an outside reality check?</h2>
+    <p class="desc">Internal tests can show that the arithmetic works. They
+      cannot show whether the result is plausible. These checks compare the
+      model with observed U.S. spending and independent estimates of
+      single-payer systems. Similar scale supports plausibility; it does not
+      prove that any one outcome will occur.</p>
+
+    <div class="benchmark-purpose-grid">
+      <article>
+        <span>Check 1</span>
+        <strong>The nation&apos;s total healthcare bill</strong>
+        <p>What would households, employers, states, and the federal
+          government spend in total? This tests the overall size of the
+          model.</p>
+      </article>
+      <article>
+        <span>Check 2</span>
+        <strong>The shift onto the federal budget</strong>
+        <p>How much additional spending would appear on the federal ledger?
+          This tests the scale of the financing transfer.</p>
+      </article>
+    </div>
+
+    <div class="benchmark-distinction">
+      <strong>Keep the two checks separate.</strong>
+      Added federal spending is not the same as added national healthcare
+      spending. Much of the federal increase replaces premiums,
+      point-of-care bills, employer spending, and state spending that already
+      exist elsewhere in the system.
+    </div>
+
+    <article class="benchmark-panel">
+      <div class="benchmark-panel-head">
+        <span>Check 1</span>
+        <div>
+          <h3>Is the total system price tag in a credible range?</h3>
+          <p>The dashboard&apos;s mature system at today&apos;s population and
+            economy is compared with what the United States actually spent
+            in 2024. Both figures include all payers.</p>
+        </div>
+      </div>
+      <div class="benchmark-key" aria-label="Chart key">
+        <span><i class="benchmark-key-model"></i>Dashboard model range and median</span>
+        <span><i class="benchmark-key-outside"></i>Observed or outside estimate</span>
+      </div>
+      <div id="benchmark-nhe"></div>
+      <p class="benchmark-readout">
+        <strong>Readout:</strong>
+        <span id="benchmark-nhe-result"></span>
+      </p>
+    </article>
+
+    <article class="benchmark-panel">
+      <div class="benchmark-panel-head">
+        <span>Check 2</span>
+        <div>
+          <h3>How does the federal financing shift compare?</h3>
+          <p>The dashboard&apos;s added federal spending is compared with CBO,
+            Urban Institute, and Mercatus estimates. This is a budget
+            comparison, not a measure of new cost to society or the exact
+            amount of new tax revenue required. The sources use different
+            years, benefit designs, and transition speeds, so this check is
+            intentionally approximate.</p>
+        </div>
+      </div>
+      <div class="benchmark-figure-grid">
+        <article>
+          <span>Dashboard model</span>
+          <strong id="benchmark-fed-model">...</strong>
+          <small id="benchmark-fed-model-range"></small>
+          <p>Mature system, 2041-scale economy, real 2024 dollars</p>
+        </article>
+        <article>
+          <span>CBO <i class="conf high">high</i></span>
+          <strong>$1.5T–$3.0T/yr</strong>
+          <small>Federal subsidy increase</small>
+          <p>Illustrative single-payer options in 2030, study dollars</p>
+        </article>
+        <article>
+          <span>Urban Institute / Mercatus <i class="conf medium">medium</i></span>
+          <strong>$3.2T–$3.4T/yr</strong>
+          <small>Annualized federal increase</small>
+          <p>First-decade estimates, each study&apos;s own dollars</p>
+        </article>
+      </div>
+      <p class="benchmark-readout">
+        <strong>Readout:</strong>
+        <span id="benchmark-fed-result"></span>
+      </p>
+    </article>
+
+    <div class="benchmark-supporting">
+      <span>Supporting check</span>
+      <h3>Does the 2030 change in total spending have a plausible scale?</h3>
+      <p id="benchmark-2030-result"></p>
+    </div>
+
+    <div class="benchmark-verdict">
+      <span>Overall interpretation</span>
+      <p id="benchmark-verdict"></p>
+    </div>
+    <p class="benchmark-source">
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/01_macro_financing_population_offsets.md"
+        target="_blank" rel="noopener">Sources and methodology</a>.
+      Published estimates retain each study&apos;s accounting basis and
+      publication-year dollars.
+    </p>
   </section>
 
   <!-- Methodology -->
@@ -1476,12 +1579,13 @@
   <!-- The network and the count -->
   <section class="card">
     <h2>The community front door, sized from need</h2>
-    <p class="desc">The plan calls for at least 15,000 certified units
-      but never derives that figure. This page derives it: every U.S. county's demand is computed from its population and
-      rural share (Census 2024 estimates, 2020 rural classifications), the
-      network's expected share of the nation's ~1.1 billion annual
-      ambulatory encounters, and realistic per-unit throughput. Move the
-      absorption slider to see how the count responds.</p>
+    <p class="desc">The unit count is derived from the capacity needed to
+      give urban and rural communities a practical front door to care. For
+      every U.S. county, this page estimates demand from population and rural
+      share (Census 2024 estimates, 2020 rural classifications), then converts
+      the network's expected share of the nation's ~1.1 billion annual
+      ambulatory encounters into units using realistic per-unit throughput.
+      Move the absorption slider to see how the count responds.</p>
     <div class="control" style="max-width:420px">
       <label>Network absorption at maturity
         <span class="val" id="units-vpc-val"></span></label>
@@ -1540,10 +1644,461 @@
 
   </div><!-- /view-units -->
 
+  <div id="view-medications" hidden>
+
+  <section class="card chapter-intro">
+    <span class="chapter-intro-eyebrow">Chapter 5 · Medicines</span>
+    <h2>How can one public purchaser lower prices and keep essential drugs available?</h2>
+    <p class="desc">National purchasing covers the complete formulary. The
+      Public Medicines Corporation, or PMC, does something narrower: it
+      creates permanent public capacity for 200 essential, shortage-prone,
+      high-volume, and preparedness product families. This chapter separates
+      those two levers and shows where each one applies.</p>
+  </section>
+
+  <section class="card medications-hero">
+    <span class="medications-kicker">A public option on the supply side</span>
+    <h2>The PMC is bargaining power, backup capacity, and a manufacturer of last resort</h2>
+    <p class="desc">A national buyer can negotiate only when it has legal
+      authority, credible alternatives, and the ability to walk away without
+      interrupting care. The PMC supplies that alternative for a controlled
+      portfolio. It does not replace the complete private drug industry or
+      relax FDA quality requirements.</p>
+    <div class="medications-hero-stats">
+      <article>
+        <strong>200</strong>
+        <span>controlled product families</span>
+        <small>specified portfolio <span class="conf high">high</span></small>
+      </article>
+      <article>
+        <strong>61 → 200</strong>
+        <span>families qualified from Phase 5 to Phase 8</span>
+        <small>staged obligation <span class="conf high">high</span></small>
+      </article>
+      <article>
+        <strong>$43B/yr</strong>
+        <span>illustrative PMC-attributed purchase saving</span>
+        <small>planning midpoint <span class="conf low">low</span></small>
+      </article>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">Why public capacity is needed</span>
+    <h2>The market can make a medicine cheap and still make its supply fragile</h2>
+    <p class="desc">Generic competition lowers prices when several qualified
+      suppliers remain. It can fail when low margins drive producers away,
+      one quality problem idles a scarce sterile line, or a buyer cannot see
+      inventory across the supply chain. FDA identifies manufacturing quality
+      problems as the most common reason for shortages and cannot require a
+      company to continue or expand production.</p>
+    <div class="medications-need-grid">
+      <article>
+        <span>Continuity</span>
+        <h3>Keep indispensable products in production</h3>
+        <p>Standing public lines do not abandon older injectables, antidotes,
+          or small markets solely because another product is more profitable.</p>
+      </article>
+      <article>
+        <span>Competition</span>
+        <h3>Create a credible cost-plus alternative</h3>
+        <p>A qualified public product gives the national purchaser a real
+          fallback when a supplier rejects reasonable price or access terms.</p>
+      </article>
+      <article>
+        <span>Visibility</span>
+        <h3>Connect demand, inventory, lots, and capacity</h3>
+        <p>The pharmacy utility and national inventory view reveal shortages
+          early enough to shift orders, release stock, or add production.</p>
+      </article>
+      <article>
+        <span>Preparedness</span>
+        <h3>Maintain surge capability before an emergency</h3>
+        <p>Antidotes, fluids, antibiotics, and other response products need
+          validated processes and qualified inputs before demand spikes.</p>
+      </article>
+    </div>
+    <p class="rollout-source">
+      <a href="https://www.fda.gov/drugs/drug-shortages/frequently-asked-questions-about-drug-shortages"
+        target="_blank" rel="noopener">FDA: causes and limits of shortage response</a>;
+      <a href="https://aspe.hhs.gov/reports/impacts-nonprofit-membership-based-pharmaceutical-company"
+        target="_blank" rel="noopener">HHS: nonprofit manufacturing precedent</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">The current bill</span>
+    <h2>Retail spending is the visible line, not the complete medication cost</h2>
+    <div class="medications-cost-layout">
+      <div class="medications-cost-stack">
+        <article>
+          <strong>$467B</strong>
+          <span>retail prescription drugs in 2024</span>
+          <small>Official CMS account, up 7.9% from 2023
+            <span class="conf high">high</span></small>
+        </article>
+        <article>
+          <strong>$680–730B</strong>
+          <span>retail plus hospital and clinician-administered drugs</span>
+          <small>Derived because CMS embeds non-retail drugs in service lines
+            <span class="conf medium">medium</span></small>
+        </article>
+        <article>
+          <strong>2.78×</strong>
+          <span>U.S. prices relative to 33 comparison countries</span>
+          <small>2022 all-drug price ratio; brand-name ratio was 4.22×
+            <span class="conf high">high</span></small>
+        </article>
+      </div>
+      <div class="medications-cost-explainer">
+        <h3>Why the all-drug total is a range</h3>
+        <p>CMS reports medicines dispensed by retail and mail-order pharmacies
+          as a separate category. Infused, injected, and other
+          clinician-administered medicines are recorded inside hospital and
+          physician-service spending. The fiscal model uses a $717.9B
+          2024-scale drug base inside the derived range.</p>
+        <div class="medications-spend-bar" aria-label="Modeled all-drug spending split">
+          <span style="width:65%">$467B retail</span>
+          <span style="width:35%">modeled non-retail</span>
+        </div>
+        <p class="note">The international ratio is evidence of price headroom,
+          not a promise that every U.S. price can fall to the comparison
+          average. U.S. generic prices were already lower in the RAND study.</p>
+      </div>
+    </div>
+    <p class="rollout-source">
+      <a href="https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/nhe-fact-sheet"
+        target="_blank" rel="noopener">CMS 2024 National Health Expenditures</a>;
+      <a href="https://www.rand.org/pubs/research_reports/RRA788-3.html"
+        target="_blank" rel="noopener">RAND international price comparison</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">Why negotiation is narrow today</span>
+    <h2>Medicare can negotiate now, but only inside a defined statutory lane</h2>
+    <p class="desc">The Part D noninterference law still bars the HHS
+      Secretary from taking over negotiations among manufacturers, pharmacies,
+      and drug plans; requiring a particular formulary; or imposing a Part D
+      price structure outside the negotiation exception. Medicare also pays
+      plans and providers rather than directly buying the nation's complete
+      drug supply.</p>
+    <div class="medications-law-flow" aria-label="Current Medicare negotiation limits">
+      <article>
+        <span>1 · Screen</span>
+        <strong>High expenditure</strong>
+        <p>CMS ranks Medicare spending, not the complete U.S. market.</p>
+      </article>
+      <i aria-hidden="true">&rarr;</i>
+      <article>
+        <span>2 · Wait</span>
+        <strong>7 years for drugs, 11 for biologics</strong>
+        <p>The age floors run from FDA approval or licensure to selection.</p>
+      </article>
+      <i aria-hidden="true">&rarr;</i>
+      <article>
+        <span>3 · Exclude competition</span>
+        <strong>Single source only</strong>
+        <p>A marketed generic or biosimilar generally removes the product
+          from this negotiation pathway.</p>
+      </article>
+      <i aria-hidden="true">&rarr;</i>
+      <article>
+        <span>4 · Phase in</span>
+        <strong>10, then 15, then 15</strong>
+        <p>Prices apply in 2026, 2027, and 2028 for the first three cycles.</p>
+      </article>
+    </div>
+    <div class="medications-negotiation-proof">
+      <strong>$12B</strong>
+      <div>
+        <h3>The narrow lane still demonstrates bargaining power</h3>
+        <p>CMS estimates the 15 prices effective in 2027 would have reduced
+          2024 net spending on those medicines by about $12B, or 44%, before
+          the Coverage Gap Discount Program adjustment. Those medicines were
+          about 15% of Part D gross drug costs, not the national formulary.</p>
+        <span class="conf high">high confidence</span>
+      </div>
+    </div>
+    <p class="rollout-source">
+      <a href="https://www.govinfo.gov/link/uscode/42/1395w-111"
+        target="_blank" rel="noopener">42 U.S.C. 1395w-111(i)</a>;
+      <a href="https://www.cms.gov/initiatives/medicare-prescription-drug-affordability/overview/medicare-drug-price-negotiation-program/selected-drugs-negotiated-prices"
+        target="_blank" rel="noopener">CMS selected drugs and negotiated prices</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">The complete public-production portfolio</span>
+    <h2>Search all 200 product families</h2>
+    <p class="desc">A family identifies the medicine and the essential forms
+      the public line must be able to make. It is not permission to market a
+      product. Exact strengths, labeling, intellectual-property route, FDA
+      application, facility, process, and lot release must still qualify.</p>
+    <div class="medications-family-controls">
+      <label>
+        Search medicine, form, or reason
+        <input id="medications-family-search" type="search"
+          placeholder="Try insulin, sterile, shortage, or maternal">
+      </label>
+      <label>
+        Qualification phase
+        <select id="medications-phase-filter">
+          <option value="">All phases</option>
+          <option value="P5">Phase 5 · Year 7</option>
+          <option value="P6">Phase 6 · Year 8</option>
+          <option value="P7">Phase 7 · Year 10</option>
+          <option value="P8">Phase 8 · Year 12</option>
+        </select>
+      </label>
+      <label>
+        Why included
+        <select id="medications-reason-filter">
+          <option value="">All reasons</option>
+          <option value="critical">Immediate clinical need</option>
+          <option value="high volume">High routine volume</option>
+          <option value="shortage risk">Shortage or concentration risk</option>
+          <option value="price and equity">Price or access inequity</option>
+          <option value="maternal and child">Maternal and child need</option>
+          <option value="preparedness">Emergency preparedness</option>
+        </select>
+      </label>
+    </div>
+    <div class="medications-family-summary">
+      <strong id="medications-family-count">200 of 200 product families</strong>
+      <span>One family can satisfy several inclusion reasons.</span>
+    </div>
+    <div id="medications-family-list" class="medications-family-list"
+      aria-live="polite"></div>
+    <p class="note">The portfolio deliberately includes conventional oral
+      generics, complex sterile injectables, inhaled products, selected
+      biologics, insulin, oncology drugs, maternal and neonatal medicines,
+      antidotes, and emergency-response products. Manufacturing difficulty
+      determines when a family qualifies, not whether it matters.</p>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">How government production works</span>
+    <h2>Public ownership changes the mission, not the scientific standard</h2>
+    <div class="medications-production-flow">
+      <article>
+        <span>1</span>
+        <h3>Specify</h3>
+        <p>Choose the exact strength, form, demand forecast, inventory horizon,
+          and clinical substitution rules.</p>
+      </article>
+      <article>
+        <span>2</span>
+        <h3>Clear rights</h3>
+        <p>Use expired patents, licenses, public-interest terms, or lawful
+          federal use with compensation when authorized.</p>
+      </article>
+      <article>
+        <span>3</span>
+        <h3>Secure inputs</h3>
+        <p>Qualify active ingredients, containers, critical components, and a
+          separate backup source.</p>
+      </article>
+      <article>
+        <span>4</span>
+        <h3>Control the line</h3>
+        <p>Build or acquire a PMC facility, or control an affiliate or contract
+          line under the same public duties.</p>
+      </article>
+      <article>
+        <span>5</span>
+        <h3>Win FDA approval</h3>
+        <p>Submit the appropriate generic, biologic, or new-drug application;
+          pass review, inspection, and process validation.</p>
+      </article>
+      <article>
+        <span>6</span>
+        <h3>Release and monitor</h3>
+        <p>Test every lot, publish source and capacity status, monitor safety,
+          retain inventory, and exercise recall procedures.</p>
+      </article>
+    </div>
+    <div class="medications-quality-boundary">
+      <strong>FDA remains the regulator</strong>
+      <p>The PMC would submit applications and meet current good manufacturing
+        practice like another sponsor. FDA reviews whether the facility,
+        equipment, process, controls, and product can consistently meet the
+        approved standard.</p>
+    </div>
+    <p class="rollout-source">
+      <a href="https://www.fda.gov/drugs/types-applications/abbreviated-new-drug-application-anda"
+        target="_blank" rel="noopener">FDA generic application pathway</a>;
+      <a href="https://www.fda.gov/drugs/pharmaceutical-quality-resources/current-good-manufacturing-practice-cgmp-regulations"
+        target="_blank" rel="noopener">FDA current good manufacturing practice</a>;
+      <a href="https://www.gao.gov/products/b-195193"
+        target="_blank" rel="noopener">GAO explanation of federal patent use</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">Production timeline</span>
+    <h2>Start with authority and proof, then qualify platform by platform</h2>
+    <div class="medications-timeline">
+      <article>
+        <span>Years 1–2 · Phases 0–1</span>
+        <strong>Authorize and design</strong>
+        <p>Establish the PMC, select presentations, map patents and licenses,
+          forecast demand, choose sites, and prepare FDA submissions.</p>
+      </article>
+      <article>
+        <span>Year 3 · Phase 2</span>
+        <strong>First operation</strong>
+        <p>Launch national pharmacy purchasing and claims, qualify suppliers,
+          exercise shortage controls, and begin initial PMC production.</p>
+      </article>
+      <article>
+        <span>Year 7 · Phase 5</span>
+        <strong>61 families</strong>
+        <p>Qualify the first broad oral and routine-care portfolio while
+          preserving separate supplier redundancy.</p>
+      </article>
+      <article>
+        <span>Year 8 · Phase 6</span>
+        <strong>177 cumulative</strong>
+        <p>Add 116 families, dominated by sterile injectables, acute-care
+          products, oncology medicines, fluids, and antidotes.</p>
+      </article>
+      <article>
+        <span>Year 10 · Phase 7</span>
+        <strong>188 cumulative</strong>
+        <p>Add 11 device-dependent or complex presentations, including
+          inhalers, autoinjectors, and long-acting products.</p>
+      </article>
+      <article>
+        <span>Year 12 · Phase 8</span>
+        <strong>200 cumulative</strong>
+        <p>Qualify the final 12 biologic and complex families, certify routine
+          output, dual sourcing, inventory visibility, and lifecycle review.</p>
+      </article>
+    </div>
+    <p class="note">Dates are qualification anchors, not automatic releases.
+      A family moves into routine production only after its legal,
+      manufacturing, FDA, quality, and supply evidence is complete.
+      <span class="conf high">specified schedule</span></p>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">Savings without double counting</span>
+    <h2>Attribute part of the national price lever to products the PMC supplies</h2>
+    <p class="desc">The fiscal model applies a 25–55% mature net price
+      reduction to the complete $717.9B drug base through national purchasing,
+      reference pricing, formulary management, and public production together.
+      This calculator identifies how much of that same saving could be
+      associated with the PMC portfolio. It does not add a new offset.</p>
+    <div class="medications-savings-layout">
+      <div class="medications-savings-controls">
+        <label>
+          <span>Share of national drug spending supplied by PMC
+            <output id="medications-share-value">15%</output></span>
+          <input id="medications-share" type="range" min="5" max="25"
+            step="1" value="15">
+          <small>5–25% planning range; portfolio claims share is not yet observed
+            <span class="conf low">low</span></small>
+        </label>
+        <label>
+          <span>Net acquisition-cost reduction on PMC products
+            <output id="medications-reduction-value">40%</output></span>
+          <input id="medications-reduction" type="range" min="25" max="55"
+            step="1" value="40">
+          <small>Same range as the fiscal model's national drug-price parameter
+            <span class="conf medium">medium</span></small>
+        </label>
+        <p id="medications-savings-formula" class="medications-savings-formula">
+          $717.9B × 15% × 40% = $43.1B per year</p>
+      </div>
+      <div class="medications-savings-result">
+        <span>PMC-attributed annual purchase saving</span>
+        <strong id="medications-pmc-savings">$43.1B</strong>
+        <small>Illustrative 2024-scale midpoint; stress boundary is
+          approximately $9–99B per year. <span class="conf low">low</span></small>
+      </div>
+    </div>
+    <div class="medications-savings-ledger">
+      <div class="medications-savings-track" aria-hidden="true">
+        <span id="medications-pmc-share-bar" style="width:15%"></span>
+      </div>
+      <article>
+        <span>PMC-attributed slice</span>
+        <strong id="medications-pmc-savings-copy">$43.1B</strong>
+      </article>
+      <article>
+        <span>Remaining national purchasing and formulary slice</span>
+        <strong id="medications-purchasing-savings">$244B</strong>
+      </article>
+      <article>
+        <span>Complete modeled drug-price lever</span>
+        <strong id="medications-total-drug-savings">$287B</strong>
+      </article>
+    </div>
+    <p class="note">The saving lowers the public system's cost and therefore
+      the financing Americans must provide. Covered patients pay $0 at the
+      pharmacy, so this is not a separate checkout discount. Start-up capital,
+      shortage avoidance, adherence, and health outcomes are outside this
+      attribution.</p>
+  </section>
+
+  <section class="card">
+    <span class="medications-kicker">What the government does not produce</span>
+    <h2>The national formulary is much larger than the public-production portfolio</h2>
+    <p class="desc">Medicines outside the 200 families are still covered,
+      evaluated, purchased, and monitored. The default tool is national
+      purchasing, not a public factory for every product.</p>
+    <div class="medications-exclusions">
+      <article>
+        <h3>Patented single-source products without a cleared rights path</h3>
+        <p>Negotiate or license them. Public production waits for an expired
+          patent, a voluntary license, public-interest terms, or a lawful
+          federal-use decision with compensation.</p>
+      </article>
+      <article>
+        <h3>Patient-specific cell and gene therapies</h3>
+        <p>Use qualified specialist centers and outcome-linked purchasing when
+          production is inseparable from collection, engineering, and
+          reinfusion for one patient.</p>
+      </article>
+      <article>
+        <h3>Very low-volume products with a reliable access contract</h3>
+        <p>Purchase from a qualified supplier when a guaranteed contract is
+          safer and less costly than maintaining a standing public line.</p>
+      </article>
+      <article>
+        <h3>Products in a resilient, low-price, multi-supplier market</h3>
+        <p>Keep purchasing competitively when another manufacturing line would
+          add little price discipline or continuity value.</p>
+      </article>
+      <article>
+        <h3>Noncovered cosmetic or non-medically-necessary products</h3>
+        <p>Public capacity follows the covered benefit and preparedness need,
+          not every product sold in the United States.</p>
+      </article>
+      <article>
+        <h3>Any product that has not completed FDA qualification</h3>
+        <p>Portfolio status never substitutes for an approved application,
+          inspected facility, validated process, conforming lot, and ongoing
+          safety controls.</p>
+      </article>
+    </div>
+    <p class="note">These are operating categories, not permanent exclusions.
+      A product can move into public production when price, shortage,
+      preparedness, or equity evidence changes and every legal and FDA
+      requirement is satisfied.</p>
+    <p class="rollout-source">
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/medications_methodology.md"
+        target="_blank" rel="noopener">Sources and medication savings methodology</a>.
+    </p>
+  </section>
+
+  </div><!-- /view-medications -->
+
   <div id="view-gov" hidden>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 7 · Authority</span>
+    <span class="chapter-intro-eyebrow">Chapter 8 · Authority</span>
     <h2>Who operates, decides, audits, and enforces</h2>
     <p class="desc">Care, money, law, facilities, information, and people all
       need institutional owners, kept deliberately separate so no single
@@ -2631,8 +3186,9 @@
 <script src="js/qualitydata.js?v=20260719a"></script>
 <script src="js/dataphases.js?v=20260717-data-phase1"></script>
 <script src="js/phasetargets.js?v=20260719a"></script>
-<script src="js/app.js?v=20260719a"></script>
-<script src="js/taxapp.js?v=20260718-legislation1"></script>
+<script src="js/medications.js?v=20260719-medications1"></script>
+<script src="js/app.js?v=20260719-benchmarks1"></script>
+<script src="js/taxapp.js?v=20260719-medications1"></script>
 <script src="js/unitsmap.js?v=20260719-physical-care1"></script>
 <script src="js/hospitalregions.js?v=20260719-physical-care1"></script>
 <script src="js/unitsapp.js?v=20260719-physical-care1"></script>

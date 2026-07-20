@@ -54,7 +54,7 @@ server) implementing the national-aggregate simulation specified in
 HANDOFF.md. It runs 600 Monte Carlo draws over 27 sourced parameter
 distributions in ~15ms in the browser, covers the framework's Phase 0–8
 rollout (2027–2042) and all 19 stress scenarios, and validates itself with
-9 built-in integrity tests shown in the page footer.
+25 built-in integrity tests shown in the page footer.
 
 ```
 docs/index.html        page structure
@@ -82,6 +82,8 @@ docs/js/taxcharts.js   revenue-vs-need stacked area, net household impact
                         diverging bars, effective-rate dumbbell
 docs/js/taxapp.js      tax view UI + tab navigation; healthcare model's
                         financing path flows in live
+docs/js/medications.js complete 200-family PMC portfolio, filters, savings
+                        attribution calculator, and portfolio self-tests
 tools/serve.ps1        local preview server (PowerShell, no Node needed)
 ```
 
