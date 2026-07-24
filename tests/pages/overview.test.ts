@@ -11,6 +11,8 @@ test('overview renders the build-time hero value from the model', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
   expect(html).toContain(expected);
+  const nha2041 = money(mc.steady.total.p50 * DEF) + '/yr';
+  expect(html).toContain(nha2041);
 });
 
 test('overview renders four tiles', async () => {

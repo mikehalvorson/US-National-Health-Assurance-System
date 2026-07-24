@@ -1,4 +1,4 @@
-export interface Tab { id: string; label: string; path: string }
+export interface Tab { id: string; label: string; path: string; ported?: boolean }
 
 // Order + labels must match docs/index.html nav exactly. path '' = the index (Overview).
 export const TABS: Tab[] = [

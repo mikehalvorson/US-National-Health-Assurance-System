@@ -29,7 +29,7 @@ test('TabNav marks the current tab active', async () => {
 test('rendered shell contains no em dashes', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(BaseLayout, {
-    props: { title: 'x', pathname: BASE },
+    props: { title: 'x' },
     slots: { default: '<main></main>' },
   });
   expect(html.includes('—')).toBe(false); // U+2014 em dash

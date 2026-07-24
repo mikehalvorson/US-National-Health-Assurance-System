@@ -2,8 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { TABS } from '../lib/tabs';
 export function getStaticPaths() {
-  // every tab except the index (overview) and any tab that has its own page yet
-  return TABS.filter((t) => t.path !== '').map((t) => ({
+  // every tab except the index (overview) and any tab that has its own real page (ported)
+  return TABS.filter((t) => t.path !== '' && !t.ported).map((t) => ({
     params: { chapter: t.path }, props: { label: t.label },
   }));
 }
