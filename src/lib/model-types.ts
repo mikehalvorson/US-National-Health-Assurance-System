@@ -19,4 +19,96 @@ export interface ParamDef extends Triangular {
   sliderMax?: number;
 }
 
-// (You will extend this file with DetailRow/PathResult in Task 3; leave room.)
+/* ---- Engine: sampled parameters ------------------------------------------
+ * The object shape NHA.sampleParams returns: one numeric value per
+ * PARAM_DEFS id (mode-only when rand === null, else a triangular draw,
+ * optionally correlation-shifted by z). Every field below is mutable
+ * because the self-tests (and the ported model.test.ts invariants) assign
+ * directly onto a sampled instance to build neutral/edge-case scenarios. */
+export interface SampledParams {
+  baselineRealGrowth: number;
+  gdpRealGrowth: number;
+  popGrowth: number;
+  utilIncrease: number;
+  coverageDemandShare: number;
+  providerPaymentFactor: number;
+  drugPriceCut: number;
+  embeddedDrugSpend: number;
+  publicAdminRate: number;
+  legacyAdminFloor: number;
+  providerAdminSavings: number;
+  governanceRate: number;
+  careModelSavings: number;
+  lowValueCapture: number;
+  extractionSavings: number;
+  ltcExpansion: number;
+  bhExpansion: number;
+  dvhExpansion: number;
+  emsPhExpansion: number;
+  unitsCost: number;
+  rdPublic: number;
+  workforceEdu: number;
+  itOperating: number;
+  itCapital: number;
+  transitionTotal: number;
+  residualPrivateShare: number;
+  employerCapture: number;
+  wagePassThrough: number;
+  wealthTaxPotential: number;
+  wealthCollectionEff: number;
+  /* Allow indexing by param id (the source builds this object generically
+   * from PARAM_DEFS ids, so any id not enumerated above must still be
+   * assignable/readable without widening every consumer to `any`). */
+  [id: string]: number;
+}
+
+/* ---- Engine: one calendar year's detail row (NHA.runPath output row) ----- */
+export interface DetailRow {
+  year: number;
+  gdp: number;
+  pop: number;
+  cHosp: number;
+  cClin: number;
+  cDrugs: number;
+  cOtherPhc: number;
+  cLtc: number;
+  cBh: number;
+  cDvh: number;
+  cEmsPh: number;
+  cUnits: number;
+  cRd: number;
+  cWf: number;
+  cItOp: number;
+  legacyAdmin: number;
+  newAdmin: number;
+  govCost: number;
+  cPubHealth: number;
+  cInvest: number;
+  trans: number;
+  itcap: number;
+  shock: number;
+  offProvAdmin: number;
+  offCareModel: number;
+  offLowValue: number;
+  offExtraction: number;
+  nheBase: number;
+  nheNha: number;
+  pubCost: number;
+  fedRedirect: number;
+  stateMoe: number;
+  empContrib: number;
+  newRevenue: number;
+  wealthRevenue: number;
+  householdRelief: number;
+  wageGain: number;
+  taxFeedback: number;
+  pubShare: number;
+}
+
+/* ---- Engine: NHA.runPath return value ------------------------------------ */
+export interface PathResult {
+  years: number[];
+  baseline: number[];
+  nha: number[];
+  detail: DetailRow[];
+}
