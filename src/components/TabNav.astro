@@ -1,0 +1,21 @@
+---
+const tabs = [
+  ['tab-overview', 'Overview'],
+  ['tab-health', 'Healthcare'],
+  ['tab-tax', 'Taxes & Financing'],
+  ['tab-legislation', 'Legislation'],
+  ['tab-units', 'Physical Care'],
+  ['tab-medications', 'Medications'],
+  ['tab-data', 'Data'],
+  ['tab-workforce', 'Workforce'],
+  ['tab-gov', 'Governance'],
+  ['tab-hardening', 'Executive Hardening'],
+  ['tab-rollout', 'Phased Rollout'],
+  ['tab-quality', 'Quality'],
+] as const;
+---
+<nav class="tabs" aria-label="Dashboard sections">
+  {tabs.map(([id, label], i) => (
+    <button id={id} class={i === 0 ? 'active' : undefined} set:html={label}></button>
+  ))}
+</nav>
