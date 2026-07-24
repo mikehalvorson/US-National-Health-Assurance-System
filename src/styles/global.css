@@ -642,17 +642,17 @@ nav.tabs {
   column-gap: 8px; row-gap: 0; margin: 18px 0 6px;
   border-bottom: 1px solid var(--gridline);
 }
-nav.tabs button {
+nav.tabs button, nav.tabs a {
   font: inherit; font-size: 12.5px; font-weight: 600;
   width: 100%; min-height: 40px; padding: 9px 7px; cursor: pointer;
   background: none; border: none; color: var(--text-secondary);
   border-bottom: 2.5px solid transparent; margin-bottom: -1px;
-  line-height: 1.2; text-align: center;
+  line-height: 1.2; text-align: center; text-decoration: none;
 }
-nav.tabs button.active {
+nav.tabs button.active, nav.tabs a.active {
   color: var(--text-primary); border-bottom-color: var(--accent);
 }
-nav.tabs button:hover:not(.active) { color: var(--text-primary); }
+nav.tabs button:hover:not(.active), nav.tabs a:hover:not(.active) { color: var(--text-primary); }
 
 /* ---- Overview story ---- */
 .overview-kicker {
@@ -2810,7 +2810,7 @@ footer.site a { color: var(--text-muted); }
   .hero-num { font-size: 40px; }
   header.site h1 { font-size: 21px; }
   nav.tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 5px; }
-  nav.tabs button { min-height: 38px; padding: 8px 7px; font-size: 12px; }
+  nav.tabs button, nav.tabs a { min-height: 38px; padding: 8px 7px; font-size: 12px; }
   .overview-promise-band { grid-template-columns: 1fr; gap: 6px; }
   .overview-care-band, .overview-backbone-band {
     grid-template-columns: repeat(2, minmax(0, 1fr));
