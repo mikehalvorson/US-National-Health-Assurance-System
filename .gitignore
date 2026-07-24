@@ -5,3 +5,6 @@ Thumbs.db
 # Local-only agent onboarding (never pushed to the public repo)
 .agent-kb/
 AGENTS.md
+
+# Subagent-driven-development scratch
+.superpowers/

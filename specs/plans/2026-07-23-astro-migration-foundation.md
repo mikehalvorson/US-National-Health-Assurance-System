@@ -276,10 +276,10 @@ test('BaseLayout renders the document title', async () => {
 });
 ```
 
-- [ ] **Step 3: Run the test to verify it fails (before Vitest config exists it errors; confirm it now runs)**
+- [ ] **Step 3: Run the test to verify the Vitest + Container harness works**
 
 Run: `pnpm test`
-Expected: the test executes and PASSES (BaseLayout already renders a title). If it errors on `astro/container` import, ensure Astro >= 5 is installed. This test documents the rendering harness; it is green because Task 4 already built the layout.
+Expected: the test executes and PASSES (BaseLayout, built in Task 4, already renders a title). This task's purpose is to stand up the Vitest + Astro Container harness reused for real TDD in Task 7; it is intentionally a green harness-bootstrap check, not a red-first test. If it errors on the `astro/container` import, ensure Astro >= 5 is installed.
 
 - [ ] **Step 4: Commit**
 
