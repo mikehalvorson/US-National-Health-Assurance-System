@@ -91,6 +91,9 @@ export interface WealthDist {
 export interface ScenarioInstrumentSetting {
   value?: number;
   enabled?: boolean;
+  /* Not set by any current SCENARIOS entry, but solveScenario() honors it
+     (see docs/js/taxmodel.js) if a future scenario overrides phase-in. */
+  phaseStart?: number;
 }
 
 /* ---- Params: a financing scenario (NHA.TAX.SCENARIOS entry) --------------
@@ -102,4 +105,50 @@ export interface TaxScenario {
   balancer?: string | null;
   desc: string;
   settings: Record<string, ScenarioInstrumentSetting>;
+}
+
+/* ---- Engine: one instrument's live setting within TaxSettings.instruments
+ * (NHA.TAX.defaultSettings()'s per-id entry). value semantics: for 'scale'
+ * instruments, a multiple of the default rev1x; for 'toggle', 0/1. ---------- */
+export interface InstrumentSetting {
+  value: number;
+  enabled: boolean;
+  phaseStart?: number;
+  phaseYears?: number;
+}
+
+/* ---- Engine: the full settings object passed to compute/distribution -----
+ * _balanced is set only by solveScenario, after it solves a balancer
+ * instrument's scale. */
+export interface TaxSettings {
+  instruments: Record<string, InstrumentSetting>;
+  _balanced?: { id: string; value: number; clamped: boolean };
+}
+
+/* ---- Engine: one row of distribution()'s per-group output ---------------- */
+export interface DistributionRow {
+  group: TaxGroup;
+  taxB: number;
+  reliefB: number;
+  wageB: number;
+  taxPerHH: number;
+  reliefPerHH: number;
+  wagePerHH: number;
+  netPerHH: number;
+  netPctIncome: number;
+  taxPctIncome: number;
+  curRate: number;
+  newRate: number;
+  avgIncomeNow: number;
+}
+
+/* ---- Engine: compute()'s full-horizon result ------------------------------
+ * byInstrument maps instrument id -> revenue $B per year (parallel to years).
+ * coverage is totalRev / need, or Infinity/1 when need is 0 (see source). */
+export interface ComputeResult {
+  years: number[];
+  byInstrument: Record<string, number[]>;
+  totalRev: number[];
+  need: number[];
+  coverage: number[];
 }
