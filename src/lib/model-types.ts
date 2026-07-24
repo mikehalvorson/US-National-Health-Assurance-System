@@ -112,3 +112,47 @@ export interface PathResult {
   nha: number[];
   detail: DetailRow[];
 }
+
+/* ---- Engine: NHA.matureAtScale return value ------------------------------- */
+export interface MatureAtScaleResult {
+  nheNha: number;
+  nheBase: number;
+}
+
+/* ---- Engine: a Monte Carlo percentile band (p10/p50/p90) ------------------ */
+export interface PercentileBand {
+  p10: number;
+  p50: number;
+  p90: number;
+}
+
+/* ---- Engine: NHA.runMonteCarlo's steady-state distribution bundle -------- */
+export interface MonteCarloSteady {
+  total: PercentileBand;
+  newRevenue: PercentileBand;
+  perCapita: PercentileBand;
+  gdpPct: PercentileBand;
+  fedIncrease: PercentileBand;
+  matureToday: PercentileBand;
+}
+
+/* ---- Engine: NHA.runMonteCarlo return value ------------------------------- */
+export interface MonteCarloResult {
+  scenarioId: string;
+  nRuns: number;
+  years: number[];
+  baseline: number[];
+  yearBands: PercentileBand[];
+  modePath: PathResult;
+  modeParams: SampledParams;
+  steady: MonteCarloSteady;
+  nhe2030delta: PercentileBand;
+  tenYearFedIncAnnualized: PercentileBand;
+}
+
+/* ---- Engine: NHA.selfTest's per-check result ------------------------------ */
+export interface SelfTestResult {
+  name: string;
+  ok: boolean;
+  note: string;
+}
