@@ -8,3 +8,8 @@ AGENTS.md
 
 # Subagent-driven-development scratch
 .superpowers/
+
+# Astro
+node_modules/
+dist/
+.astro/
