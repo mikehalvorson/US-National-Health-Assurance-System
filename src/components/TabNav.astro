@@ -16,6 +16,6 @@ const tabs = [
 ---
 <nav class="tabs" aria-label="Dashboard sections">
   {tabs.map(([id, label], i) => (
-    <button id={id} class={i === 0 ? 'active' : undefined} set:html={label}></button>
+    <button id={id} class={i === 0 ? 'active' : undefined}>{label}</button>
   ))}
 </nav>
