@@ -218,10 +218,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 ```
 
-- [ ] **Step 3: Build and verify output path**
+- [ ] **Step 3: Build and verify output**
 
 Run: `pnpm build`
-Expected: exits 0 and creates `dist/US-National-Health-Assurance-System/index.html` (the `base` path becomes a directory in `dist/`).
+Expected: exits 0 and creates `dist/index.html`. NOTE: Astro's `base` only
+prefixes generated URLs/links; it does NOT nest the physical `dist/` output,
+so the file is `dist/index.html` (flat), not under a base-named subdirectory.
+`astro preview` and the Pages deploy apply `base` at serve time.
 
 - [ ] **Step 4: Type-check**
 
