@@ -1,9 +1,112 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { runMonteCarlo } from '../lib/model';
+import { DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
+import { money, moneyShort, pct, perCap } from '../lib/format';
+
+const mc = runMonteCarlo('SCN-BASE', null, 600, 42);
+
+function bandTxt(p10: number, p90: number, fmt: (v: number) => string): string {
+  return fmt(p10) + ' – ' + fmt(p90) + ' (10th–90th pct)';
+}
+
+const tot = mc.steady.matureToday;
+const heroValue = money(tot.p50 * DEF) + '/yr';
+const heroRange = bandTxt(tot.p10 * DEF, tot.p90 * DEF, money);
+
+const lastIdx = mc.years.length - 2; // 2041
+const baseMature = mc.baseline[lastIdx] * DEF;
+const ss = mc.steady.total;
+const deltaVsBase = ss.p50 * DEF - baseMature;
+const nha2041 = money(ss.p50 * DEF) + '/yr';
+const hero2041Range =
+  bandTxt(ss.p10 * DEF, ss.p90 * DEF, money) +
+  ' · ' + (deltaVsBase >= 0 ? '+' : '−') + moneyShort(Math.abs(deltaVsBase)) +
+  ' (' + (deltaVsBase >= 0 ? '+' : '−') +
+  Math.abs((100 * deltaVsBase) / baseMature).toFixed(1) + '%) vs status quo';
+const base2041 = money(baseMature) + '/yr';
+
+const tiles = [
+  {
+    label: 'Share of GDP at maturity',
+    value: pct(mc.steady.gdpPct.p50),
+    range: pct(mc.steady.gdpPct.p10) + ' – ' + pct(mc.steady.gdpPct.p90),
+  },
+  {
+    label: 'Per person per year',
+    value: perCap(mc.steady.perCapita.p50 * DEF),
+    range: perCap(mc.steady.perCapita.p10 * DEF) + ' – ' + perCap(mc.steady.perCapita.p90 * DEF),
+  },
+  {
+    label: 'vs. status quo at maturity',
+    value: (deltaVsBase >= 0 ? '+' : '−') + moneyShort(Math.abs(deltaVsBase)),
+    range: 'status quo reaches ' + money(baseMature) + ' by 2041',
+  },
+  {
+    label: 'New revenue needed (mature)',
+    value: money(mc.steady.newRevenue.p50 * DEF) + '/yr',
+    range: bandTxt(mc.steady.newRevenue.p10 * DEF, mc.steady.newRevenue.p90 * DEF, moneyShort),
+  },
+];
 ---
 <BaseLayout
   title="National Health Assurance: Story & System Dashboard"
   description="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models."
 >
-  <main><p>Tab content is migrated in follow-on plans.</p></main>
+  <main>
+    <section class="card" id="hero-card">
+      <h2>The system-level price tag</h2>
+      <p class="desc">This model's own projection, computed bottom-up from
+        sourced parameters: what the fully-mature system would cost at today's
+        (2024) scale, directly comparable with the ~$5.3T the U.S. actually
+        spends now. The savings levers (drug negotiation, administrative
+        consolidation, payment reform) largely pay for the benefit expansions
+        (universal coverage, $0 care, long-term care, dental/vision/hearing,
+        behavioral health).</p>
+      <div class="hero-pair-label">If the mature system existed today, at 2024 scale</div>
+      <div class="hero">
+        <div class="hero-block">
+          <div class="label">NHA, fully mature (median)</div>
+          <div class="hero-num" id="hero-value">{heroValue}</div>
+          <div class="range" id="hero-range">{heroRange}</div>
+        </div>
+        <div class="hero-block">
+          <div class="label">What the U.S. actually spends, 2024</div>
+          <div class="hero-num" style="color:var(--text-secondary)">$5.3T/yr</div>
+          <div class="range">CMS preliminary</div>
+        </div>
+      </div>
+      <div class="hero-pair-label">In 2041, at 2041's size (still measured in 2024 dollars)</div>
+      <div class="hero">
+        <div class="hero-block">
+          <div class="label">NHA at steady state (median)</div>
+          <div class="hero-num" id="hero-2041-nha">{nha2041}</div>
+          <div class="range" id="hero-2041-range">{hero2041Range}</div>
+        </div>
+        <div class="hero-block">
+          <div class="label">Status quo, same year</div>
+          <div class="hero-num" style="color:var(--text-secondary)" id="hero-2041-base">{base2041}</div>
+          <div class="range">CMS's own trajectory, no reform; the country is bigger and older either way</div>
+        </div>
+      </div>
+      <div class="takeaway" id="family-burden-note"></div>
+      <div class="tiles" id="tiles">
+        {tiles.map((it) => (
+          <div class="tile">
+            <div class="label">{it.label}</div>
+            <div class="value">{it.value}</div>
+            <div class="range">{it.range}</div>
+          </div>
+        ))}
+      </div>
+      <p class="note"><b>Reading the pairs:</b> each row compares like with
+        like. The first row asks what the mature system would cost if it
+        existed today; the second asks what the annual bill looks like in
+        2041, when the country is bigger and older under either system.
+        Never compare across rows: the jump from ~$5.3T to ~$9T happens with
+        or without reform, and it is more people, older people, and more
+        care per person, not inflation. Every dollar on this page is in 2024
+        purchasing power.</p>
+    </section>
+  </main>
 </BaseLayout>
