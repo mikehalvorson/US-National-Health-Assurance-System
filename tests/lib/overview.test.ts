@@ -1,5 +1,11 @@
 import { expect, test } from 'vitest';
-import { computeOverview } from '../../src/lib/overview';
+import { computeOverview, computeOverviewFromMc, runOverviewMc } from '../../src/lib/overview';
+
+test('computeOverview equals computeOverviewFromMc(runOverviewMc(...)) for SCN-BASE', () => {
+  const viaHelpers = computeOverviewFromMc(runOverviewMc('SCN-BASE', null));
+  const direct = computeOverview('SCN-BASE', null);
+  expect(viaHelpers).toEqual(direct);
+});
 
 test('SCN-BASE default matches the known headline figures', () => {
   const v = computeOverview('SCN-BASE', null);

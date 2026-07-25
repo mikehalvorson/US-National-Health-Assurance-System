@@ -8,6 +8,7 @@
  * of truth for the Overview hero/tiles/family-burden note.
  * ========================================================================= */
 import { runMonteCarlo } from './model';
+import type { MonteCarloResult } from './model-types';
 import { DEFLATOR_2023_TO_2024 } from './params';
 import { money, moneyShort, pct, perCap } from './format';
 
@@ -32,11 +33,25 @@ function bandTxt(p10: number, p90: number, fmt: (v: number) => string): string {
   return fmt(p10) + " – " + fmt(p90) + " (10th–90th pct)";
 }
 
+/* Run the Overview Monte Carlo once (600 runs, seed 42) so the text render
+   and the path chart can share a single result. */
+export function runOverviewMc(
+  scenario: string,
+  sliders: Record<string, number> | null
+): MonteCarloResult {
+  return runMonteCarlo(scenario, sliders, 600, 42);
+}
+
+/* computeOverview split so callers holding an mc (e.g. the client, which also
+   feeds the chart) do not re-run the model. */
 export function computeOverview(
   scenario: string,
   sliders: Record<string, number> | null
 ): OverviewView {
-  const mc = runMonteCarlo(scenario, sliders, 600, 42);
+  return computeOverviewFromMc(runOverviewMc(scenario, sliders));
+}
+
+export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
   const DEF = DEFLATOR_2023_TO_2024;
 
   /* ---- renderHero (app.js:142-181) ---- */
