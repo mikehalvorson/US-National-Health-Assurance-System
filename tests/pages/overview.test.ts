@@ -6,6 +6,14 @@ import { DEFLATOR_2023_TO_2024 as DEF } from '../../src/lib/params';
 import { money } from '../../src/lib/format';
 import { computeOverview } from '../../src/lib/overview';
 
+test('overview includes the money-flow comparison card containers', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('id="flow-today"');
+  expect(html).toContain('id="flow-nha"');
+  expect(html).toContain('id="flow-nha-title"');
+});
+
 test('overview renders the build-time hero value from the model', async () => {
   const mc = runMonteCarlo('SCN-BASE', null, 600, 42);
   const expected = money(mc.steady.matureToday.p50 * DEF) + '/yr';

@@ -89,6 +89,26 @@ const v = computeOverview('SCN-BASE', null);
         Carlo draws of every uncertain parameter.</p>
       <div id="path-chart"></div>
     </section>
+
+    <section class="card">
+      <h2>How the money re-routes</h2>
+      <p class="desc">The most misunderstood part of a public
+        system: society's total spending barely changes; <em>the routes
+        change</em>. Compare the flow you saw at the top of the page with the
+        same flow under NHA. Premiums and point-of-care bills disappear; the
+        same dollars reach the same doctors and hospitals through public
+        financing instead. Hover any ribbon for what it contains.</p>
+      <div class="flow-grid">
+        <div class="flow-panel">
+          <div class="flow-title">Today: actual 2023 spending ($4.87T, CMS)</div>
+          <div id="flow-today"></div>
+        </div>
+        <div class="flow-panel">
+          <div class="flow-title" id="flow-nha-title">Under NHA: mature system at 2024 scale</div>
+          <div id="flow-nha"></div>
+        </div>
+      </div>
+    </section>
   </main>
 </BaseLayout>
 
