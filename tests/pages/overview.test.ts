@@ -6,6 +6,13 @@ import { DEFLATOR_2023_TO_2024 as DEF } from '../../src/lib/params';
 import { money } from '../../src/lib/format';
 import { computeOverview } from '../../src/lib/overview';
 
+test('overview includes the financing card containers', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('id="financing-chart"');
+  expect(html).toContain('id="financing-note"');
+});
+
 test('overview includes the money-flow comparison card containers', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
