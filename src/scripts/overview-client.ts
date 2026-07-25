@@ -9,6 +9,8 @@
  * ========================================================================= */
 import { runOverviewMc, computeOverviewFromMc } from '../lib/overview';
 import { renderPathChart } from '../lib/path-chart';
+import { renderFlowDiagram } from '../lib/flow-diagram';
+import { todayFlowSpec, nhaFlowSpec, nhaFlowTitle } from '../lib/money-flow';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
 import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 
@@ -70,6 +72,12 @@ function initOverview(): void {
     }
     const chartHost = $('path-chart');
     if (chartHost) renderPathChart(chartHost, mc, DEF);
+    const flowToday = $('flow-today');
+    if (flowToday) renderFlowDiagram(flowToday, todayFlowSpec());
+    const flowNha = $('flow-nha');
+    if (flowNha) renderFlowDiagram(flowNha, nhaFlowSpec(mc, DEF));
+    const flowTitle = $('flow-nha-title');
+    if (flowTitle) flowTitle.textContent = nhaFlowTitle(mc, DEF);
   }
 
   function scheduleRender(): void {
