@@ -1,5 +1,146 @@
-/* Placeholder for P3 slice-2 Task 3 (Overview client interactivity).
- * Filled in by the next task: scenario picker + slider wiring + recompute.
- * Kept as an empty module so the <script> import in src/pages/index.astro
- * resolves during Task 2's build. */
-export {};
+/* =========================================================================
+ * Overview page client interactivity: port of docs/js/app.js buildControls
+ * (lines 17-90) and the hero/tiles/note portion of the recompute wiring
+ * (lines 92-113). Charts, the comparison table, and financing are deferred
+ * to P3 slice 3.
+ *
+ * Re-initialises on astro:page-load so it survives View Transitions; the
+ * `data-wired` guard on #controls keeps re-init idempotent.
+ * ========================================================================= */
+import { computeOverview } from '../lib/overview';
+import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
+import { PARAM_DEFS } from '../lib/params';
+
+interface State {
+  scenario: string;
+  sliders: Record<string, number>;
+}
+
+function initOverview(): void {
+  const controls = document.getElementById('controls');
+  if (!controls) return; // not on the overview page
+  if (controls.dataset.wired === '1') return; // idempotent guard
+  controls.dataset.wired = '1';
+
+  const state: State = { scenario: 'SCN-BASE', sliders: {} };
+  let pending: number | undefined;
+
+  const $ = (id: string) => document.getElementById(id);
+
+  function fmtSimple(v: number, unit: string): string {
+    if (unit === '×') return v.toFixed(2) + '×';
+    if (unit.charAt(0) === '%') return v.toFixed(1) + '%';
+    if (unit.indexOf('$B') === 0) return '$' + Math.round(v) + 'B';
+    return v.toFixed(1) + ' ' + unit;
+  }
+
+  function render(): void {
+    const v = computeOverview(state.scenario, Object.keys(state.sliders).length ? state.sliders : null);
+    const set = (id: string, txt: string) => {
+      const el = $(id);
+      if (el) el.textContent = txt;
+    };
+    set('hero-value', v.heroValue);
+    set('hero-range', v.heroRange);
+    set('hero-2041-nha', v.nha2041);
+    set('hero-2041-base', v.base2041);
+    set('hero-2041-range', v.hero2041Range);
+    set('family-burden-note', v.familyNote);
+    const tilesHost = $('tiles');
+    if (tilesHost) {
+      tilesHost.innerHTML = '';
+      for (const t of v.tiles) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        const l = document.createElement('div');
+        l.className = 'label';
+        l.textContent = t.label;
+        const val = document.createElement('div');
+        val.className = 'value';
+        val.textContent = t.value;
+        const r = document.createElement('div');
+        r.className = 'range';
+        r.textContent = t.range;
+        tile.append(l, val, r);
+        tilesHost.appendChild(tile);
+      }
+    }
+  }
+
+  function scheduleRender(): void {
+    if (pending) clearTimeout(pending);
+    pending = window.setTimeout(render, 160);
+  }
+
+  function buildControls(): void {
+    controls!.innerHTML = '';
+    const scnWrap = document.createElement('div');
+    scnWrap.className = 'control';
+    const scnLabel = document.createElement('label');
+    scnLabel.textContent = 'Stress scenario';
+    const sel = document.createElement('select');
+    sel.id = 'scenario-select';
+    for (const s of SCENARIOS) {
+      const o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.id.replace('SCN-', '') + ': ' + s.name;
+      sel.appendChild(o);
+    }
+    sel.value = state.scenario;
+    sel.addEventListener('change', () => {
+      state.scenario = sel.value;
+      state.sliders = {};
+      buildControls();
+      render();
+    });
+    scnWrap.append(scnLabel, sel);
+    controls!.appendChild(scnWrap);
+
+    const eff = effectiveParams(state.scenario, null);
+    for (const p of PARAM_DEFS.filter((d) => d.adjustable)) {
+      const wrap = document.createElement('div');
+      wrap.className = 'control';
+      const label = document.createElement('label');
+      const valSpan = document.createElement('span');
+      valSpan.className = 'val';
+      const conf = document.createElement('span');
+      conf.className = 'conf ' + p.confidence;
+      conf.textContent = p.confidence ?? '';
+      conf.title = p.source ?? '';
+      label.appendChild(document.createTextNode((p.label ?? p.id) + ' '));
+      label.appendChild(conf);
+      label.appendChild(document.createElement('br'));
+      label.appendChild(valSpan);
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = String(p.sliderMin);
+      input.max = String(p.sliderMax);
+      input.step = String(((p.sliderMax as number) - (p.sliderMin as number)) / 200);
+      const seeded = state.sliders[p.id] != null ? state.sliders[p.id] : eff[p.id].mode;
+      input.value = String(seeded);
+      valSpan.textContent = fmtSimple(seeded, p.unit ?? '');
+      input.addEventListener('input', () => {
+        state.sliders[p.id] = +input.value;
+        valSpan.textContent = fmtSimple(+input.value, p.unit ?? '');
+        scheduleRender();
+      });
+      wrap.append(label, input);
+      controls!.appendChild(wrap);
+    }
+    const scn = SCENARIOS_BY_ID[state.scenario];
+    const desc = $('scenario-desc');
+    if (desc) desc.textContent = scn ? scn.id + ': ' + scn.desc : '';
+  }
+
+  const resetBtn = $('reset-btn');
+  resetBtn?.addEventListener('click', () => {
+    state.sliders = {};
+    buildControls();
+    render();
+  });
+
+  buildControls();
+  render();
+}
+
+document.addEventListener('astro:page-load', initOverview);
