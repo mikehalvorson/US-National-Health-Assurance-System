@@ -1,53 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { runMonteCarlo } from '../lib/model';
-import { DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
-import { money, moneyShort, pct, perCap } from '../lib/format';
+import { computeOverview } from '../lib/overview';
 
-const mc = runMonteCarlo('SCN-BASE', null, 600, 42);
-
-function bandTxt(p10: number, p90: number, fmt: (v: number) => string): string {
-  return fmt(p10) + ' – ' + fmt(p90) + ' (10th–90th pct)';
-}
-
-const tot = mc.steady.matureToday;
-const heroValue = money(tot.p50 * DEF) + '/yr';
-const heroRange = bandTxt(tot.p10 * DEF, tot.p90 * DEF, money);
-
-const lastIdx = mc.years.length - 2; // 2041
-const baseMature = mc.baseline[lastIdx] * DEF;
-const ss = mc.steady.total;
-const deltaVsBase = ss.p50 * DEF - baseMature;
-const nha2041 = money(ss.p50 * DEF) + '/yr';
-const hero2041Range =
-  bandTxt(ss.p10 * DEF, ss.p90 * DEF, money) +
-  ' · ' + (deltaVsBase >= 0 ? '+' : '−') + moneyShort(Math.abs(deltaVsBase)) +
-  ' (' + (deltaVsBase >= 0 ? '+' : '−') +
-  Math.abs((100 * deltaVsBase) / baseMature).toFixed(1) + '%) vs status quo';
-const base2041 = money(baseMature) + '/yr';
-
-const tiles = [
-  {
-    label: 'Share of GDP at maturity',
-    value: pct(mc.steady.gdpPct.p50),
-    range: pct(mc.steady.gdpPct.p10) + ' – ' + pct(mc.steady.gdpPct.p90),
-  },
-  {
-    label: 'Per person per year',
-    value: perCap(mc.steady.perCapita.p50 * DEF),
-    range: perCap(mc.steady.perCapita.p10 * DEF) + ' – ' + perCap(mc.steady.perCapita.p90 * DEF),
-  },
-  {
-    label: 'vs. status quo at maturity',
-    value: (deltaVsBase >= 0 ? '+' : '−') + moneyShort(Math.abs(deltaVsBase)),
-    range: 'status quo reaches ' + money(baseMature) + ' by 2041',
-  },
-  {
-    label: 'New revenue needed (mature)',
-    value: money(mc.steady.newRevenue.p50 * DEF) + '/yr',
-    range: bandTxt(mc.steady.newRevenue.p10 * DEF, mc.steady.newRevenue.p90 * DEF, moneyShort),
-  },
-];
+const v = computeOverview('SCN-BASE', null);
 ---
 <BaseLayout
   title="National Health Assurance: Story & System Dashboard"
@@ -67,8 +22,8 @@ const tiles = [
       <div class="hero">
         <div class="hero-block">
           <div class="label">NHA, fully mature (median)</div>
-          <div class="hero-num" id="hero-value">{heroValue}</div>
-          <div class="range" id="hero-range">{heroRange}</div>
+          <div class="hero-num" id="hero-value">{v.heroValue}</div>
+          <div class="range" id="hero-range">{v.heroRange}</div>
         </div>
         <div class="hero-block">
           <div class="label">What the U.S. actually spends, 2024</div>
@@ -80,18 +35,18 @@ const tiles = [
       <div class="hero">
         <div class="hero-block">
           <div class="label">NHA at steady state (median)</div>
-          <div class="hero-num" id="hero-2041-nha">{nha2041}</div>
-          <div class="range" id="hero-2041-range">{hero2041Range}</div>
+          <div class="hero-num" id="hero-2041-nha">{v.nha2041}</div>
+          <div class="range" id="hero-2041-range">{v.hero2041Range}</div>
         </div>
         <div class="hero-block">
           <div class="label">Status quo, same year</div>
-          <div class="hero-num" style="color:var(--text-secondary)" id="hero-2041-base">{base2041}</div>
+          <div class="hero-num" style="color:var(--text-secondary)" id="hero-2041-base">{v.base2041}</div>
           <div class="range">CMS's own trajectory, no reform; the country is bigger and older either way</div>
         </div>
       </div>
-      <div class="takeaway" id="family-burden-note"></div>
+      <div class="takeaway" id="family-burden-note">{v.familyNote}</div>
       <div class="tiles" id="tiles">
-        {tiles.map((it) => (
+        {v.tiles.map((it) => (
           <div class="tile">
             <div class="label">{it.label}</div>
             <div class="value">{it.value}</div>
@@ -108,5 +63,24 @@ const tiles = [
         care per person, not inflation. Every dollar on this page is in 2024
         purchasing power.</p>
     </section>
+
+    <section class="card">
+      <h2>Assumptions</h2>
+      <p class="desc">Pick a stress scenario from the 19-scenario
+        catalog, or adjust individual assumptions. Badges show evidence quality:
+        <span class="conf high">high</span> = official statistic or scored estimate,
+        <span class="conf medium">medium</span> = reputable study or survey,
+        <span class="conf low">low</span> = analyst assumption with no direct source.</p>
+      <div class="controls" id="controls"></div>
+      <p class="scenario-desc" id="scenario-desc"></p>
+      <div class="controls-foot">
+        <button class="btn" id="reset-btn">Reset assumptions</button>
+        <span class="runs-note" id="runs-note"></span>
+      </div>
+    </section>
   </main>
 </BaseLayout>
+
+<script>
+  import '../scripts/overview-client.ts';
+</script>
