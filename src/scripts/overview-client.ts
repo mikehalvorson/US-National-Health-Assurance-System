@@ -7,9 +7,10 @@
  * Re-initialises on astro:page-load so it survives View Transitions; the
  * `data-wired` guard on #controls keeps re-init idempotent.
  * ========================================================================= */
-import { computeOverview } from '../lib/overview';
+import { runOverviewMc, computeOverviewFromMc } from '../lib/overview';
+import { renderPathChart } from '../lib/path-chart';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
-import { PARAM_DEFS } from '../lib/params';
+import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 
 interface State {
   scenario: string;
@@ -35,7 +36,9 @@ function initOverview(): void {
   }
 
   function render(): void {
-    const v = computeOverview(state.scenario, Object.keys(state.sliders).length ? state.sliders : null);
+    const sliders = Object.keys(state.sliders).length ? state.sliders : null;
+    const mc = runOverviewMc(state.scenario, sliders);
+    const v = computeOverviewFromMc(mc);
     const set = (id: string, txt: string) => {
       const el = $(id);
       if (el) el.textContent = txt;
@@ -65,6 +68,8 @@ function initOverview(): void {
         tilesHost.appendChild(tile);
       }
     }
+    const chartHost = $('path-chart');
+    if (chartHost) renderPathChart(chartHost, mc, DEF);
   }
 
   function scheduleRender(): void {
