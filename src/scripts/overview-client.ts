@@ -15,6 +15,8 @@ import { renderFinancingChart } from '../lib/financing-chart';
 import { financingSpec, financingNote } from '../lib/financing';
 import { renderBridgeChart } from '../lib/bridge-chart';
 import { bridgeSteps } from '../lib/bridge';
+import { renderBenchmarkChart } from '../lib/benchmark-chart';
+import { benchmarkChartRows, benchmarkText } from '../lib/benchmarks';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
 import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 
@@ -88,6 +90,19 @@ function initOverview(): void {
     if (finNote) finNote.textContent = financingNote(mc, DEF);
     const bridgeHost = $('bridge-chart');
     if (bridgeHost) renderBridgeChart(bridgeHost, bridgeSteps(mc).steps, DEF);
+    const benchHost = $('benchmark-nhe');
+    if (benchHost) {
+      renderBenchmarkChart(benchHost, benchmarkChartRows(mc, DEF), {
+        aria: 'Total system cost comparison, all at 2024 scale',
+      });
+    }
+    const bt = benchmarkText(mc, DEF);
+    set('benchmark-nhe-result', bt.nheResult);
+    set('benchmark-fed-model', bt.fedModel);
+    set('benchmark-fed-model-range', bt.fedModelRange);
+    set('benchmark-fed-result', bt.fedResult);
+    set('benchmark-2030-result', bt.delta2030Result);
+    set('benchmark-verdict', bt.verdict);
   }
 
   function scheduleRender(): void {
