@@ -13,6 +13,8 @@ import { renderFlowDiagram } from '../lib/flow-diagram';
 import { todayFlowSpec, nhaFlowSpec, nhaFlowTitle } from '../lib/money-flow';
 import { renderFinancingChart } from '../lib/financing-chart';
 import { financingSpec, financingNote } from '../lib/financing';
+import { renderBridgeChart } from '../lib/bridge-chart';
+import { bridgeSteps } from '../lib/bridge';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
 import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 
@@ -84,6 +86,8 @@ function initOverview(): void {
     if (finChart) renderFinancingChart(finChart, financingSpec(mc, DEF), DEF);
     const finNote = $('financing-note');
     if (finNote) finNote.textContent = financingNote(mc, DEF);
+    const bridgeHost = $('bridge-chart');
+    if (bridgeHost) renderBridgeChart(bridgeHost, bridgeSteps(mc).steps, DEF);
   }
 
   function scheduleRender(): void {
