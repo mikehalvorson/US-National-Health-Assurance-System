@@ -82,7 +82,7 @@ export function sampleParams(
   return out as SampledParams;
 }
 
-interface BuiltRamps {
+export interface BuiltRamps {
   coverage: number[];
   costShareElim: number[];
   units: number[];
@@ -95,7 +95,7 @@ interface BuiltRamps {
 }
 
 /* Ramps with scenario structural adjustments applied */
-function buildRamps(structural: ScenarioStructural): BuiltRamps {
+export function buildRamps(structural: ScenarioStructural): BuiltRamps {
   const R = RAMPS;
   const s = structural || {};
   function shift(arr: number[], by: number): number[] {
