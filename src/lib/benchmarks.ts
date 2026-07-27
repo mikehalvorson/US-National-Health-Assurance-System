@@ -1,0 +1,92 @@
+/* =========================================================================
+ * Benchmark chart-rows + readout/verdict builders: pure port of
+ * docs/js/app.js renderBenchmarks (lines 367-427). Compares the model's
+ * mature-scale total and federal-financing shift with observed U.S. spending
+ * and CBO/Urban/Mercatus estimates. No DOM; returns rows + text strings.
+ * ========================================================================= */
+import { BENCHMARKS } from './params';
+import { money, moneyShort } from './format';
+import type { MonteCarloResult } from './model-types';
+import type { BenchmarkRow } from './benchmark-chart';
+
+/* app.js:368-373 */
+export function benchmarkChartRows(mc: MonteCarloResult, DEF: number): BenchmarkRow[] {
+  return [
+    {
+      label: 'Dashboard model: mature system at 2024 scale',
+      note: 'real 2024$; 10th–90th percentile',
+      lo: mc.steady.matureToday.p10 * DEF, hi: mc.steady.matureToday.p90 * DEF,
+      mid: mc.steady.matureToday.p50 * DEF, color: 'var(--series-1)'
+    },
+    {
+      label: 'Observed U.S. health spending, 2024', note: 'CMS preliminary estimate',
+      lo: 5250, hi: 5350, mid: 5300, color: 'var(--baseline-series)'
+    }
+  ];
+}
+
+export interface BenchmarkText {
+  nheResult: string;
+  fedModel: string;
+  fedModelRange: string;
+  fedResult: string;
+  delta2030Result: string;
+  verdict: string;
+}
+
+/* app.js:376-427 */
+export function benchmarkText(mc: MonteCarloResult, DEF: number): BenchmarkText {
+  const d30 = mc.nhe2030delta;
+  const nhe = mc.steady.matureToday;
+  const nheMid = nhe.p50 * DEF;
+  const nheDiffPct = 100 * (nheMid / 5300 - 1);
+  const nheRelation = Math.abs(nheDiffPct) < 0.05 ? 'essentially equal to' :
+    (nheDiffPct > 0 ? Math.abs(nheDiffPct).toFixed(1) + '% above' :
+      Math.abs(nheDiffPct).toFixed(1) + '% below');
+
+  const nheResult =
+    'The model centers on ' + money(nheMid) + ' per year, with a ' +
+    moneyShort(nhe.p10 * DEF) + ' to ' +
+    moneyShort(nhe.p90 * DEF) + ' uncertainty range. That is ' +
+    nheRelation + ' the preliminary 2024 total of about $5.3T. The model is ' +
+    'therefore operating at the observed scale of the U.S. health system.';
+
+  const fed = mc.steady.fedIncrease;
+  const fedMid = fed.p50 * DEF;
+  const fedModel = money(fedMid) + '/yr';
+  const fedModelRange =
+    moneyShort(fed.p10 * DEF) + ' to ' +
+    moneyShort(fed.p90 * DEF) + ' uncertainty range';
+
+  const fedResult =
+    'These figures should not share one precise axis because their scale ' +
+    'years, benefit packages, and transition periods differ. Their useful ' +
+    'common finding is the order of magnitude: a single-payer system moves ' +
+    'trillions of dollars per year onto the federal ledger. A direct score ' +
+    "of the dashboard's mature estimate would require a harmonized year, " +
+    'price basis, benefit package, and current-law baseline.';
+
+  const delta2030Result =
+    'CBO estimated that its illustrative designs would change total national ' +
+    "health spending by −$700B to +$300B in 2030. This model's 2030 change " +
+    'from its status-quo baseline is ' + moneyShort(d30.p10 * DEF) +
+    ' to ' + moneyShort(d30.p90 * DEF) + ', with a median of ' +
+    moneyShort(d30.p50 * DEF) + '. In this dashboard, 2030 is still ' +
+    'mid-transition, so this is a directional and scale check rather than an ' +
+    'exact like-for-like comparison.';
+
+  const nhePlausible = Math.abs(nheDiffPct) <= 15;
+  const cboNheOverlap = d30.p10 * DEF <= BENCHMARKS.cboNheChange.high &&
+    d30.p90 * DEF >= BENCHMARKS.cboNheChange.low;
+  const verdict = (nhePlausible
+    ? 'The total-spending estimate aligns closely with observed U.S. spending. '
+    : 'The total-spending estimate sits far enough from observed U.S. spending to warrant review. ') +
+    (cboNheOverlap
+      ? "The model's 2030 spending-change range also overlaps CBO's range. "
+      : "The model's 2030 spending-change range does not overlap CBO's range. ") +
+    "The federal estimates confirm the trillion-dollar scale of the budget shift, but their different years and designs prevent a precise pass-or-fail comparison." +
+    ' These checks test plausibility, not precision, and they do not ' +
+    'validate every individual assumption.';
+
+  return { nheResult, fedModel, fedModelRange, fedResult, delta2030Result, verdict };
+}
