@@ -129,6 +129,116 @@ const v = computeOverview('SCN-BASE', null);
         and derives these differences, so nothing can be double-counted.</p>
       <div id="bridge-chart"></div>
     </section>
+
+    <section class="card benchmark-section">
+      <h2>Does the model pass an outside reality check?</h2>
+      <p class="desc">Internal tests can show that the arithmetic works. They
+        cannot show whether the result is plausible. These checks compare the
+        model with observed U.S. spending and independent estimates of
+        single-payer systems. Similar scale supports plausibility; it does not
+        prove that any one outcome will occur.</p>
+
+      <div class="benchmark-purpose-grid">
+        <article>
+          <span>Check 1</span>
+          <strong>The nation&apos;s total healthcare bill</strong>
+          <p>What would households, employers, states, and the federal
+            government spend in total? This tests the overall size of the
+            model.</p>
+        </article>
+        <article>
+          <span>Check 2</span>
+          <strong>The shift onto the federal budget</strong>
+          <p>How much additional spending would appear on the federal ledger?
+            This tests the scale of the financing transfer.</p>
+        </article>
+      </div>
+
+      <div class="benchmark-distinction">
+        <strong>Keep the two checks separate.</strong>
+        Added federal spending is not the same as added national healthcare
+        spending. Much of the federal increase replaces premiums,
+        point-of-care bills, employer spending, and state spending that already
+        exist elsewhere in the system.
+      </div>
+
+      <article class="benchmark-panel">
+        <div class="benchmark-panel-head">
+          <span>Check 1</span>
+          <div>
+            <h3>Is the total system price tag in a credible range?</h3>
+            <p>The dashboard&apos;s mature system at today&apos;s population and
+              economy is compared with what the United States actually spent
+              in 2024. Both figures include all payers.</p>
+          </div>
+        </div>
+        <div class="benchmark-key" aria-label="Chart key">
+          <span><i class="benchmark-key-model"></i>Dashboard model range and median</span>
+          <span><i class="benchmark-key-outside"></i>Observed or outside estimate</span>
+        </div>
+        <div id="benchmark-nhe"></div>
+        <p class="benchmark-readout">
+          <strong>Readout:</strong>
+          <span id="benchmark-nhe-result"></span>
+        </p>
+      </article>
+
+      <article class="benchmark-panel">
+        <div class="benchmark-panel-head">
+          <span>Check 2</span>
+          <div>
+            <h3>How does the federal financing shift compare?</h3>
+            <p>The dashboard&apos;s added federal spending is compared with CBO,
+              Urban Institute, and Mercatus estimates. This is a budget
+              comparison, not a measure of new cost to society or the exact
+              amount of new tax revenue required. The sources use different
+              years, benefit designs, and transition speeds, so this check is
+              intentionally approximate.</p>
+          </div>
+        </div>
+        <div class="benchmark-figure-grid">
+          <article>
+            <span>Dashboard model</span>
+            <strong id="benchmark-fed-model">...</strong>
+            <small id="benchmark-fed-model-range"></small>
+            <p>Mature system, 2041-scale economy, real 2024 dollars</p>
+          </article>
+          <article>
+            <span>CBO <i class="conf high">high</i></span>
+            <strong>$1.5T–$3.0T/yr</strong>
+            <small>Federal subsidy increase</small>
+            <p>Illustrative single-payer options in 2030, study dollars</p>
+          </article>
+          <article>
+            <span>Urban Institute / Mercatus <i class="conf medium">medium</i></span>
+            <strong>$3.2T–$3.4T/yr</strong>
+            <small>Annualized federal increase</small>
+            <p>First-decade estimates, each study&apos;s own dollars</p>
+          </article>
+        </div>
+        <p class="benchmark-readout">
+          <strong>Readout:</strong>
+          <span id="benchmark-fed-result"></span>
+        </p>
+      </article>
+
+      <div class="benchmark-supporting">
+        <span>Supporting check</span>
+        <h3>Does the 2030 change in total spending have a plausible scale?</h3>
+        <p id="benchmark-2030-result"></p>
+      </div>
+
+      <div class="benchmark-verdict">
+        <span>Overall interpretation</span>
+        <p id="benchmark-verdict"></p>
+      </div>
+      <p class="benchmark-source">
+        <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/01_macro_financing_population_offsets.md"
+          target="_blank" rel="noopener">Sources and methodology</a>.
+        Published estimates retain each study&apos;s accounting basis and
+        publication-year dollars.
+      </p>
+    </section>
   </main>
 </BaseLayout>
 

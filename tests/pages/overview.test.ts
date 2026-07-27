@@ -6,6 +6,14 @@ import { DEFLATOR_2023_TO_2024 as DEF } from '../../src/lib/params';
 import { money } from '../../src/lib/format';
 import { computeOverview } from '../../src/lib/overview';
 
+test('overview includes the benchmarks card containers', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('id="benchmark-nhe"');
+  expect(html).toContain('id="benchmark-verdict"');
+  expect(html).toContain('id="benchmark-fed-model"');
+});
+
 test('overview includes the bridge card container', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
