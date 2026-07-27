@@ -88,6 +88,10 @@ const v = computeOverview('SCN-BASE', null);
         transition costs. The band is the 10th–90th percentile across Monte
         Carlo draws of every uncertain parameter.</p>
       <div id="path-chart"></div>
+      <p class="note" id="growth-decomp"></p>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="path-table"></table></div>
+      </details>
     </section>
 
     <section class="card">
@@ -119,6 +123,9 @@ const v = computeOverview('SCN-BASE', null);
         extreme-wealth tax package goes toward that gap.</p>
       <div id="financing-chart"></div>
       <p class="note" id="financing-note"></p>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="financing-table"></table></div>
+      </details>
     </section>
 
     <section class="card">
@@ -128,6 +135,9 @@ const v = computeOverview('SCN-BASE', null);
         mechanism appears exactly once: the model computes both worlds directly
         and derives these differences, so nothing can be double-counted.</p>
       <div id="bridge-chart"></div>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="bridge-table"></table></div>
+      </details>
     </section>
 
     <section class="card benchmark-section">
