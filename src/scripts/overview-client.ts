@@ -17,6 +17,9 @@ import { renderBridgeChart } from '../lib/bridge-chart';
 import { bridgeSteps } from '../lib/bridge';
 import { renderBenchmarkChart } from '../lib/benchmark-chart';
 import { benchmarkChartRows, benchmarkText } from '../lib/benchmarks';
+import { renderDataTable, pathTableData, bridgeTableData, financingTableData } from '../lib/overview-tables';
+import type { TableData } from '../lib/overview-tables';
+import { growthDecompNote } from '../lib/growth-decomp';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
 import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 
@@ -103,6 +106,14 @@ function initOverview(): void {
     set('benchmark-fed-result', bt.fedResult);
     set('benchmark-2030-result', bt.delta2030Result);
     set('benchmark-verdict', bt.verdict);
+    set('growth-decomp', growthDecompNote(state.scenario, sliders));
+    const fillTable = (id: string, data: TableData) => {
+      const tbl = document.getElementById(id) as HTMLTableElement | null;
+      if (tbl) renderDataTable(tbl, data);
+    };
+    fillTable('path-table', pathTableData(mc, DEF));
+    fillTable('bridge-table', bridgeTableData(mc, DEF));
+    fillTable('financing-table', financingTableData(mc, DEF));
   }
 
   function scheduleRender(): void {
