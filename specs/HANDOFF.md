@@ -4,9 +4,9 @@ Written 2026-07-27. For a fresh conversation to resume the migration.
 
 ## TL;DR — resume point
 
-- Branch **`astro-typescript-migration`**, HEAD **`f204ec8`**, ~69 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
-- Full suite green: **65 Vitest tests (16 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
-- **P3 slice 10 COMPLETE** (Overview narrative preamble: Act 3 "fixable part" + Act 4 "proposal" prose, four pure-static operating-system diagrams (system map, care pathway, money shift, rollout arc), and the chapter-nav grid footer; all `data-dashboard-view` SPA buttons converted to base-aware `<a>` links, zero client JS). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-act3-4.md`. **Resume at slice 11** (care-cost cards + household calculator [needs `care.js`] + outcomes + Methodology + `#flow-takeaway`, inserted between benchmarks and the chapter-nav footer — finishes the Overview). No slice-11 plan written yet.
+- Branch **`astro-typescript-migration`**, HEAD **`3ebfd1c`**, ~73 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
+- Full suite green: **69 Vitest tests (17 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
+- **P3 slice 11a COMPLETE** (Overview care-cost cards + outcome tiles, both pure-static build-time; new `src/lib/care.ts` with `CARE_SCENARIOS` + `moneyRange`). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-care-outcomes.md`. Slice 11 was split 3 ways. **Resume at slice 11b** (household calculator: port `HOUSEHOLD_PROFILES` + `HOUSEHOLDS_M` + `renderHouseholdCalc` from `docs/js/care.js:113-273` into `care.ts` + client wiring; the tax-share line reads `mc.modePath.detail[years.length-2].newRevenue * DEF`; plus `#flow-takeaway` client text on the existing "How the money re-routes" card). Then slice 11c (Methodology card + `#param-table` + `#gaps-list` + self-test badge) finishes the Overview. No slice-11b plan written yet.
 
 ## What this project is
 
