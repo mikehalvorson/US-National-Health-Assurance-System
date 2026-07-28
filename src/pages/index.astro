@@ -1,14 +1,67 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { computeOverview } from '../lib/overview';
+import { PROBLEM_STATS } from '../lib/params';
+import { sponsorTableData } from '../lib/overview-tables';
 
 const v = computeOverview('SCN-BASE', null);
+const sponsor = sponsorTableData();
 ---
 <BaseLayout
   title="National Health Assurance: Story & System Dashboard"
   description="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models."
 >
   <main>
+    <section class="card">
+      <h2>The system today</h2>
+      <p class="desc">American healthcare is not one system. It is four
+        payment systems stapled together, with your coverage determined
+        mostly by your job, your age, and your income. About 157 million
+        people get insurance through an employer, who pays most of the
+        premium out of what would otherwise be wages. Medicare covers ~67
+        million people over 65 or disabled, funded by payroll taxes, general
+        federal revenue, and enrollee premiums. Medicaid &amp;
+        <abbr class="overview-acronym" title="Children's Health Insurance Program">CHIP</abbr>
+        cover ~72
+        million lower-income people, funded jointly by Washington and the
+        states. Everyone also pays directly at the point of care:
+        deductibles, copays, and uncovered bills totaled $506B in 2023. And
+        ~26 million people have no coverage at all. Here is where the $4.87T
+        came from and where it went. Hover any ribbon for the details.</p>
+      <div class="flow-panel" style="max-width:560px;margin:14px auto 0">
+        <div class="flow-title">Actual 2023 spending: $4.87T
+          (<abbr class="overview-acronym" title="Centers for Medicare &amp; Medicaid Services">CMS</abbr>)</div>
+        <div id="flow-today-solo"></div>
+      </div>
+      <details class="tableview"><summary>View the distribution as a table</summary>
+        <div class="tbl-scroll">
+          <table class="data" id="sponsor-table">
+            <thead><tr>{sponsor.head.map((h) => <th>{h}</th>)}</tr></thead>
+            <tbody>{sponsor.rows.map((r) => <tr>{r.map((c) => <td>{c}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>What's wrong, by the numbers</h2>
+      <p class="desc">The problem is not that America spends heavily on health; every
+        rich country does. It's that America pays far more and gets less
+        coverage, less security, and far more overhead. Every figure below
+        is sourced (citations in the
+        <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/tree/main/research"
+           target="_blank" rel="noopener">research repository</a>).</p>
+      <div class="tiles" id="problem-tiles">
+        {PROBLEM_STATS.map((s) => (
+          <div class="tile">
+            <div class="value">{s.value}</div>
+            <div class="label">{s.label}</div>
+            <div class="range">{s.note}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
     <section class="card" id="hero-card">
       <h2>The system-level price tag</h2>
       <p class="desc">This model's own projection, computed bottom-up from

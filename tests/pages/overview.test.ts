@@ -5,6 +5,7 @@ import { runMonteCarlo } from '../../src/lib/model';
 import { DEFLATOR_2023_TO_2024 as DEF } from '../../src/lib/params';
 import { money } from '../../src/lib/format';
 import { computeOverview } from '../../src/lib/overview';
+import { PROBLEM_STATS } from '../../src/lib/params';
 
 test('overview includes the data-table containers and growth-decomp note', async () => {
   const container = await AstroContainer.create();
@@ -54,10 +55,24 @@ test('overview renders the build-time hero value from the model', async () => {
   expect(html).toContain(nha2041);
 });
 
-test('overview renders four tiles', async () => {
+test('overview renders four hero tiles plus the problem-stats tiles', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
-  expect((html.match(/class="tile"/g) ?? []).length).toBe(4);
+  // 4 hero tiles (#tiles) + one per PROBLEM_STATS entry (#problem-tiles)
+  expect((html.match(/class="tile"/g) ?? []).length).toBe(4 + PROBLEM_STATS.length);
+});
+
+test('overview includes Act-1/Act-2 with build-time tiles and sponsor table', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('id="flow-today-solo"');
+  expect(html).toContain('id="sponsor-table"');
+  expect(html).toContain('id="problem-tiles"');
+  expect(html).toContain('The system today');
+  // problem tiles rendered at build time (at least one tile value present)
+  expect(html).toContain('17.6% of GDP');
+  // sponsor table rendered at build time (a source label present)
+  expect(html).toContain('Households');
 });
 
 test('overview shell has no em dash', async () => {
