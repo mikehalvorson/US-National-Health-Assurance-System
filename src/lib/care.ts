@@ -112,3 +112,46 @@ export const CARE_SCENARIOS: CareScenario[] = [
     confidence: 'high'
   }
 ];
+
+export interface HouseholdProfile {
+  id: string;
+  label: string;
+  premium: CareAmount;
+  oop: CareAmount;
+  confidence: string;
+}
+
+/* docs/js/care.js:120 — Census 2024, millions of U.S. households */
+export const HOUSEHOLDS_M = 132.2;
+
+/* docs/js/care.js:122-151 (verbatim) */
+export const HOUSEHOLD_PROFILES: HouseholdProfile[] = [
+  {
+    id: 'emp-family',
+    label: 'Family with employer coverage',
+    premium: { lo: 6850, hi: 6850, note: 'worker share of family premium (KFF 2025)' },
+    oop: { lo: 2500, hi: 5500, note: 'deductibles, copays, coinsurance; household average is about $3,825 (derived from CMS)' },
+    confidence: 'medium'
+  },
+  {
+    id: 'emp-single',
+    label: 'Single person with employer coverage',
+    premium: { lo: 1492, hi: 1492, note: 'worker share (~16%) of a $9,325 single premium (KFF 2025)' },
+    oop: { lo: 800, hi: 2500, note: 'per-person average ≈ $1,514 (derived from CMS)' },
+    confidence: 'medium'
+  },
+  {
+    id: 'marketplace',
+    label: 'Family buying marketplace coverage',
+    premium: { lo: 6000, hi: 18000, note: 'varies enormously with age, state, and subsidy eligibility; enhanced subsidies expired in 2026' },
+    oop: { lo: 3000, hi: 9000, note: 'marketplace deductibles are typically much higher than employer plans' },
+    confidence: 'low'
+  },
+  {
+    id: 'uninsured',
+    label: 'Uninsured adult',
+    premium: { lo: 0, hi: 0, note: 'no premium, no protection' },
+    oop: { lo: 500, hi: 5000, note: 'averages hide the real risk: one hospitalization can mean five-figure debt' },
+    confidence: 'low'
+  }
+];
