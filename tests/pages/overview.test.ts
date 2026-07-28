@@ -122,6 +122,14 @@ test('overview includes build-time care cards and outcome tiles', async () => {
   expect((html.match(/class="care-card"/g) ?? []).length).toBe(10);
 });
 
+test('overview includes the household-calc and flow-takeaway containers', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('id="household-calc"');
+  expect(html).toContain("Your household's annual healthcare bill");
+  expect(html).toContain('id="flow-takeaway"');
+});
+
 test('overview shell has no em dash', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
