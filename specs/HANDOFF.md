@@ -4,9 +4,10 @@ Written 2026-07-27. For a fresh conversation to resume the migration.
 
 ## TL;DR — resume point
 
-- Branch **`astro-typescript-migration`**, HEAD **`aa2e6b5`**, ~79 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
-- Full suite green: **72 Vitest tests (17 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
-- **P3 slice 11b COMPLETE** (Overview household calculator + `#flow-takeaway`; new `src/lib/household.ts` client module + `flowTakeawayText` in `money-flow.ts` + `HOUSEHOLD_PROFILES`/`HOUSEHOLDS_M` in `care.ts`, all wired into the shared-mc client). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-household.md`. **Resume at slice 11c** (the LAST Overview slice): the Methodology card (`docs/index.html:991-1040`) = static prose + build-time `#gaps-list` (low-confidence `PARAM_DEFS` labels) + `#param-table` (full `PARAM_DEFS` table) + `#selftest` badge (reconcile `selfTest()` and the tax `SELFTESTS`/`TAX_SELFTESTS` shapes). Insert between the household card and the chapter-nav footer. Finishes the Overview page. No slice-11c plan written yet.
+- Branch **`astro-typescript-migration`**, HEAD **`7887605`**, ~82 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
+- Full suite green: **74 Vitest tests (18 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
+- **P3 COMPLETE — the Overview page (`src/pages/index.astro`) is fully ported.** Slice 11c added the Methodology card (build-time `#param-table` from all `PARAM_DEFS` + `#gaps-list` + `#selftest` badge via new `src/lib/selftests.ts` `selfTestSummary()`, which reconciles `selfTest()` + bridge identity + `TAX_SELFTESTS` into 19 passing tests). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-methodology.md`. Final Overview card order (20): Acts 1-4, four operating-system diagrams, model section (hero → benchmarks), care cards, outcomes, household calc, Methodology, chapter-nav footer.
+- **Resume at slice 12** (first of the 11 remaining tabs). Each replaces its `[chapter].astro` stub (set `Tab.ported = true` in `src/lib/tabs.ts` so the dynamic stub route drops it), DOM-diffed vs live. Suggested order: `health` first (Chapter 1 content, `docs/index.html:696-1042` minus what the Overview already reused). `tax` needs `taxcharts.js` + `taxapp.js` ports; several are prose-only tabs. `selfTestSummary()` (slice 11c) is reusable for any shared self-test badge. No slice-12 plan written yet.
 
 ## What this project is
 
