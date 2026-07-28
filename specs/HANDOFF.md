@@ -1,13 +1,20 @@
 # Handoff — NHA dashboard Astro + TypeScript migration
 
-Written 2026-07-27. For a fresh conversation to resume the migration.
+Written 2026-07-27; updated 2026-07-28 (mid slice 12). For a fresh conversation to resume the migration.
 
 ## TL;DR — resume point
 
-- Branch **`astro-typescript-migration`**, HEAD **`7887605`**, ~82 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
-- Full suite green: **74 Vitest tests (18 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
-- **P3 COMPLETE — the Overview page (`src/pages/index.astro`) is fully ported.** Slice 11c added the Methodology card (build-time `#param-table` from all `PARAM_DEFS` + `#gaps-list` + `#selftest` badge via new `src/lib/selftests.ts` `selfTestSummary()`, which reconciles `selfTest()` + bridge identity + `TAX_SELFTESTS` into 19 passing tests). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-methodology.md`. Final Overview card order (20): Acts 1-4, four operating-system diagrams, model section (hero → benchmarks), care cards, outcomes, household calc, Methodology, chapter-nav footer.
-- **Resume at slice 12** (first of the 11 remaining tabs). Each replaces its `[chapter].astro` stub (set `Tab.ported = true` in `src/lib/tabs.ts` so the dynamic stub route drops it), DOM-diffed vs live. Suggested order: `health` first (Chapter 1 content, `docs/index.html:696-1042` minus what the Overview already reused). `tax` needs `taxcharts.js` + `taxapp.js` ports; several are prose-only tabs. `selfTestSummary()` (slice 11c) is reusable for any shared self-test badge. No slice-12 plan written yet.
+- Branch **`astro-typescript-migration`**, HEAD **`8ea8fd8`**, ~86 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
+- Full suite green: **76 Vitest tests (19 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages. Working tree clean.
+- **P3 Overview COMPLETE** — `src/pages/index.astro` fully reproduces docs `#view-overview` + `#view-health` (20-card page: Acts 1-4, four operating-system diagrams, model section hero→benchmarks, care cards, outcomes, household calc, Methodology, chapter-nav footer).
+- **NOW: P3 slice 12 = Legislation tab, IN PROGRESS. Resume at Task 2** of `specs/plans/2026-07-28-astro-migration-p3-legislation-tab.md`.
+  - **Task 1 DONE** (commit 8ea8fd8): `src/lib/legislation.ts` = `Domain` type + `DOMAINS` (**13** entries, verbatim from `docs/js/legislation.js:11-305` — NOTE the plan wrongly said 14; the source has 13) + `ACRONYMS` (46 entries). Tested.
+  - **Task 2 (next):** create `src/scripts/legislation-client.ts` — the master-detail renderer (`renderList`/`renderDetail` over `#legislation-law-list`/`#legislation-law-detail`) + `addAcronymHovers`, init on `astro:page-load`, idempotent via `#legislation-law-list` `dataset.wired`. The plan has the full code, **but delete the three scaffolding-hint junk lines** (`host.querySelectorAll('button'); // no-op…`, `host.ownerDocument; // parity`, and the `// parity` comment) when writing the real file.
+  - **Task 3:** create `src/pages/legislation.astro` = `BaseLayout` + the legislation prose **verbatim from `docs/index.html:429-690`** (strip the `<div id="view-legislation" hidden>` wrapper; keep `#legislation-law-list` and `#legislation-law-detail` markup but empty) + `<script>import '../scripts/legislation-client.ts';</script>`. Then set `ported: true` on the legislation entry in `src/lib/tabs.ts` (drops `/legislation` from the `[chapter].astro` stub route). Extend `tests/pages/legislation.test.ts`.
+  - **Task 4:** browser-verify (13 domain buttons, click swaps detail `Domain 01`…, acronyms wrapped in `<abbr class="legislation-acronym">`, stub gone, DOM parity vs live docs at `http://localhost:8517/`, View-Transition re-init).
+  - Facts: no `data-dashboard-view` buttons in the legislation prose; `legislation-*` CSS already in `global.css` (152 rules); build must stay **12 pages** (flipping `Tab.ported` moves `/legislation` from the dynamic stub to a real page).
+- **DEFERRED decision — the `health` tab.** The Astro Overview already contains all of docs `#view-health` (the model + care + household + methodology), so `health` has no distinct docs source. The user chose to port `legislation` first and revisit `health` later. Open options: (a) leave Overview as-is and give `health` some other/subset content, (b) split the model+care+methodology off Overview onto a real `/health` page (leaving Overview as just the narrative), or (c) drop the `health` tab (11 tabs). Do not port `health` without resolving this with the user.
+- **After slice 12:** the remaining tabs (`tax` needs `taxcharts.js`+`taxapp.js`; `units` needs the county map `unitsapp.js`/`unitsmap.js`; `medications` 200 families; `data`, `workforce`, `gov`, `hardening`, `rollout`, `quality` 430-item catalog), each replacing its `[chapter].astro` stub. `selfTestSummary()` (`src/lib/selftests.ts`) is reusable for any shared build-time self-test badge.
 
 ## What this project is
 
