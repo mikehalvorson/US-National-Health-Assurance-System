@@ -58,6 +58,23 @@ export function nhaFlowSpec(mc: MonteCarloResult, DEF: number): FlowSpec {
   };
 }
 
+/* app.js:482-489 — the "How the money re-routes" takeaway sentence. */
+export function flowTakeawayText(mc: MonteCarloResult, DEF: number): string {
+  const i41 = mc.years.indexOf(2041);
+  const d = mc.modePath.detail[i41];
+  const k = (mc.steady.matureToday.p50 / d.nheNha) * DEF;
+  const newRev = d.newRevenue * k;
+  return (
+    'Same care, roughly the same total spending, different routes. Today a family pays ' +
+    'premiums to an insurer and bills at the point of care; under NHA those payments stop, ' +
+    'and the money reaches the same doctors and hospitals through public financing instead. ' +
+    'The ' + money(newRev) + '/yr of “new revenue” (at 2024 scale) is new to the ' +
+    'federal budget, not new cost to society. Most of it replaces the ' +
+    money(d.householdRelief * k) + '/yr households currently spend on premiums and ' +
+    'out-of-pocket care, which drops to roughly zero.'
+  );
+}
+
 /* app.js:453-455 */
 export function nhaFlowTitle(mc: MonteCarloResult, DEF: number): string {
   const i41 = mc.years.indexOf(2041);

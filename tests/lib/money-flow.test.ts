@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { todayFlowSpec, nhaFlowSpec, nhaFlowTitle } from '../../src/lib/money-flow';
+import { todayFlowSpec, nhaFlowSpec, nhaFlowTitle, flowTakeawayText } from '../../src/lib/money-flow';
 import { runOverviewMc } from '../../src/lib/overview';
 import { DEFLATOR_2023_TO_2024 as DEF } from '../../src/lib/params';
 
@@ -23,4 +23,13 @@ test('nhaFlowSpec has 5 sources, 2 public/residual channels, 6 ribbons, all fini
 test('nhaFlowTitle reports the mature-scale total as money', () => {
   const mc = runOverviewMc('SCN-BASE', null);
   expect(nhaFlowTitle(mc, DEF)).toMatch(/^Under NHA: mature system at 2024 scale \(\$[\d.]+T\)$/);
+});
+
+test('flowTakeawayText: mentions new revenue and household relief, no NaN/em dash', () => {
+  const mc = runOverviewMc('SCN-BASE', null);
+  const s = flowTakeawayText(mc, DEF);
+  expect(s).toContain('Same care');
+  expect(s).toContain('/yr');
+  expect(s.includes('NaN')).toBe(false);
+  expect(s.includes('—')).toBe(false);
 });
