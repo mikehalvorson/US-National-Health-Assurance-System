@@ -4,8 +4,9 @@
  * 213-232, the bridge table 292-308, the financing table 344-363). Column 0
  * is text; columns >= 1 are numeric (get class="num").
  * ========================================================================= */
-import { money } from './format';
+import { money, moneyShort } from './format';
 import { bridgeSteps } from './bridge';
+import { MONEYFLOW } from './params';
 import type { MonteCarloResult } from './model-types';
 
 export interface TableData {
@@ -84,5 +85,27 @@ export function financingTableData(mc: MonteCarloResult, DEF: number): TableData
   return {
     head: ['Source (mature year 2041)', 'Amount (2024$)'],
     rows: rows.map(function (r) { return [r[0], money(r[1] * DEF)]; })
+  };
+}
+
+/* app.js:547-573 renderSponsorTable (static CMS 2023 sponsor map). No num
+   cells (unlike the other tables); rendered at build time. */
+export function sponsorTableData(): TableData {
+  return {
+    head: ['Who pays', '2023 amount', 'Share', 'What it consists of'],
+    rows: MONEYFLOW.sources.map(function (s) {
+      const notes = MONEYFLOW.ribbons
+        .filter(function (r) { return r.from === s.id; })
+        .map(function (r) {
+          const ch = MONEYFLOW.channels.filter(function (c) { return c.id === r.to; })[0];
+          return ch.label + ' ' + moneyShort(r.value) + ' (' + r.note + ')';
+        });
+      return [
+        s.label,
+        money(s.value),
+        String(Math.round(100 * s.value / MONEYFLOW.total)) + '%',
+        notes.join('; ')
+      ];
+    })
   };
 }

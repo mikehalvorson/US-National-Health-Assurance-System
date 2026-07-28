@@ -28,3 +28,14 @@ test('financingTableData: 7 rows, amounts formatted', () => {
   expect(d.rows[0][0]).toBe('Total public cost');
   expect(d.rows[0][1]).toMatch(/^\$/);
 });
+
+import { sponsorTableData } from '../../src/lib/overview-tables';
+
+test('sponsorTableData: one row per MONEYFLOW source, 4 columns', () => {
+  const d = sponsorTableData();
+  expect(d.head).toEqual(['Who pays', '2023 amount', 'Share', 'What it consists of']);
+  expect(d.rows).toHaveLength(5);
+  expect(d.rows[0]).toHaveLength(4);
+  expect(d.rows[0][2]).toMatch(/%$/);
+  expect(d.rows[0][3].length).toBeGreaterThan(0);
+});
