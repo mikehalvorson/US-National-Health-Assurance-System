@@ -75,6 +75,14 @@ test('overview includes Act-1/Act-2 with build-time tiles and sponsor table', as
   expect(html).toContain('Households');
 });
 
+test('overview includes Act-3/Act-4 proposal prose', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('The fixable part');
+  expect(html).toContain('The proposal: National Health Assurance');
+  expect(html).toContain('lever-list');
+});
+
 test('overview shell has no em dash', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);

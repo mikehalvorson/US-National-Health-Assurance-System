@@ -6,6 +6,7 @@ import { sponsorTableData } from '../lib/overview-tables';
 
 const v = computeOverview('SCN-BASE', null);
 const sponsor = sponsorTableData();
+const base = import.meta.env.BASE_URL; // ends with '/'
 ---
 <BaseLayout
   title="National Health Assurance: Story & System Dashboard"
@@ -60,6 +61,79 @@ const sponsor = sponsorTableData();
           </div>
         ))}
       </div>
+    </section>
+
+    <section class="card">
+      <h2>The fixable part</h2>
+      <p class="desc">Most of that dysfunction is structural rather than medical,
+        which means it can be fixed by redesigning how money moves rather than by
+        rationing care. Four levers do most of the work:</p>
+      <ul class="lever-list">
+        <li><b>Administrative consolidation.</b> One public payer and one
+          claims rail replace ~900 insurers' duplicated overhead and the
+          billing bureaucracy providers maintain to fight them. Recoverable
+          savings estimates in the literature run $200 to $500B a year.</li>
+        <li><b>Drug-price negotiation and public manufacturing.</b> The
+          <abbr class="overview-acronym" title="Inflation Reduction Act">IRA</abbr>
+          already proved government negotiation works
+          (<abbr class="overview-acronym" title="Congressional Budget Office">CBO</abbr>-scored, 38–79%
+          price cuts on the first ten drugs). Applied system-wide against
+          prices 2.78× the international average, plus a public manufacturer
+          for essential generics, modeled on Civica Rx's real $30-a-vial
+          insulin. The model tests net price cuts of 25 to 55%.</li>
+        <li><b>Hospital payment reform.</b> Global budgets replace per-claim
+          billing, ending facility-fee markups, related-party extraction, and
+          a slice of the $76–101B/yr in scored low-value care, while
+          readiness funding protects ERs and rural service lines instead of
+          letting them close.</li>
+        <li><b>Front-door capacity.</b> A community diagnostic-treatment
+          network and specialist e-consults absorb the routine care that
+          currently lands in $2,453-average
+          <abbr class="overview-acronym" title="Emergency Room">ER</abbr>
+          visits and months-long
+          specialist queues.</li>
+      </ul>
+      <p class="note">The bet behind this design: these levers can pay for most of
+        covering everyone with no bills. Whether that holds is
+        what the model on this page computes; it is not assumed.</p>
+    </section>
+
+    <section class="card">
+      <h2>The proposal: National Health Assurance</h2>
+      <p class="desc">A single public system replacing employment-linked
+        insurance entirely, the design this
+        <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System"
+           target="_blank" rel="noopener">dashboard</a>
+        simulates:</p>
+      <ul class="lever-list">
+        <li><b>Automatic, continuous coverage</b> for every resident: no
+          enrollment cliffs, no churn, no linkage to your job.</li>
+        <li><b>$0 at the point of care</b> for covered medically necessary
+          care; medical debt for covered care is prohibited (patient billing
+          capped at 0.5% of encounters).</li>
+        <li><b>National drug purchasing</b> through a real-time public
+          pharmacy claims utility (replacing
+          <abbr class="overview-acronym" title="Pharmacy Benefit Managers">PBMs</abbr>),
+          plus a Public Medicines
+          Corporation manufacturing essential generics.</li>
+        <li><b>Hospitals on global budgets</b> under public-service charters,
+          funded for readiness and essential service lines, not per-claim
+          revenue.</li>
+        <li><b>A four-type community diagnostic-treatment network</b>
+          (the plan specifies at least 15,000 units, from pharmacy
+          micro-clinics to rural enhanced and urban public-health units;
+          the Physical Care chapter derives the need-based count) delivering
+          same-day routine care.</li>
+        <li><b>A structured specialist backplane:</b> complete workups and
+          24-hour e-consults before in-person referrals, with urgency classes
+          and protected urgent capacity.</li>
+        <li><b>Expanded benefits phased in:</b> long-term care (home-first),
+          behavioral health, dental, vision, hearing, and
+          <abbr class="overview-acronym" title="Emergency Medical Services">EMS</abbr>.</li>
+        <li><b>A 12-year gated rollout (2027–2038)</b> with go/no-go
+          phase gates, transition protections for patients, providers, and
+          displaced workers, and independent oversight bodies.</li>
+      </ul>
     </section>
 
     <section class="card" id="hero-card">
