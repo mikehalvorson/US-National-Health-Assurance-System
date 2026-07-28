@@ -4,9 +4,9 @@ Written 2026-07-27. For a fresh conversation to resume the migration.
 
 ## TL;DR — resume point
 
-- Branch **`astro-typescript-migration`**, HEAD **`ca3ac58`**, 62 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
-- Full suite green: **61 Vitest tests (16 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
-- In the middle of **P3 slice 9** (Overview Act-1/Act-2). **Task 1 done** (commit ca3ac58: `sponsorTableData` builder). **Resume at Task 2** of the plan below.
+- Branch **`astro-typescript-migration`**, HEAD **`115120e`**, 64 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
+- Full suite green: **62 Vitest tests (16 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
+- **P3 slice 9 COMPLETE** (Overview Act-1/Act-2: "The system today" + "What's wrong, by the numbers", prepended above the model section, build-time tiles + sponsor table, client solo money-flow). **Resume at slice 10** (Overview Act 3-4 + static diagrams). See roadmap at bottom; no slice-10 plan written yet.
 
 ## What this project is
 
