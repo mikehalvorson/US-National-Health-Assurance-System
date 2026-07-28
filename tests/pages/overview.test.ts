@@ -130,6 +130,19 @@ test('overview includes the household-calc and flow-takeaway containers', async 
   expect(html).toContain('id="flow-takeaway"');
 });
 
+test('overview includes the build-time Methodology card', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('Methodology and limits');
+  expect(html).toContain('id="param-table"');
+  expect(html).toContain('id="gaps-list"');
+  expect(html).toContain('id="selftest"');
+  // param table rendered at build time (a known parameter label)
+  expect(html).toContain('Real GDP growth');
+  // self-test badge rendered at build time, all passing
+  expect(html).toContain('model self-tests pass');
+});
+
 test('overview shell has no em dash', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
