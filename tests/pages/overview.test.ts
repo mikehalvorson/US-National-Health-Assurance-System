@@ -5,7 +5,7 @@ import { runMonteCarlo } from '../../src/lib/model';
 import { DEFLATOR_2023_TO_2024 as DEF } from '../../src/lib/params';
 import { money } from '../../src/lib/format';
 import { computeOverview } from '../../src/lib/overview';
-import { PROBLEM_STATS } from '../../src/lib/params';
+import { PROBLEM_STATS, OUTCOME_STATS } from '../../src/lib/params';
 
 test('overview includes the data-table containers and growth-decomp note', async () => {
   const container = await AstroContainer.create();
@@ -55,11 +55,11 @@ test('overview renders the build-time hero value from the model', async () => {
   expect(html).toContain(nha2041);
 });
 
-test('overview renders four hero tiles plus the problem-stats tiles', async () => {
+test('overview renders four hero tiles plus problem-stats and outcome tiles', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
-  // 4 hero tiles (#tiles) + one per PROBLEM_STATS entry (#problem-tiles)
-  expect((html.match(/class="tile"/g) ?? []).length).toBe(4 + PROBLEM_STATS.length);
+  // 4 hero (#tiles) + one per PROBLEM_STATS (#problem-tiles) + one per OUTCOME_STATS (#outcome-tiles)
+  expect((html.match(/class="tile"/g) ?? []).length).toBe(4 + PROBLEM_STATS.length + OUTCOME_STATS.length);
 });
 
 test('overview includes Act-1/Act-2 with build-time tiles and sponsor table', async () => {
@@ -105,6 +105,21 @@ test('overview ends with the chapter-nav grid of 11 base-aware links', async () 
   const links = (grid.match(/<a /g) ?? []).length;
   expect(links).toBeGreaterThanOrEqual(11);
   expect(html).toContain('/US-National-Health-Assurance-System/quality');
+});
+
+test('overview includes build-time care cards and outcome tiles', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('id="care-cards"');
+  expect(html).toContain('What you\'d pay for care');
+  expect(html).toContain('id="outcome-tiles"');
+  expect(html).toContain('Beyond dollars: what the model does not price');
+  // a care value rendered at build time (premium card: worker share $6,850)
+  expect(html).toContain('$6,850');
+  // an outcome stat rendered at build time
+  expect(html).toContain('20,000–68,000');
+  // care cards render one .care-card per scenario
+  expect((html.match(/class="care-card"/g) ?? []).length).toBe(10);
 });
 
 test('overview shell has no em dash', async () => {

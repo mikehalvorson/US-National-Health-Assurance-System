@@ -1,8 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { computeOverview } from '../lib/overview';
-import { PROBLEM_STATS } from '../lib/params';
+import { PROBLEM_STATS, OUTCOME_STATS } from '../lib/params';
 import { sponsorTableData } from '../lib/overview-tables';
+import { CARE_SCENARIOS, moneyRange } from '../lib/care';
 
 const v = computeOverview('SCN-BASE', null);
 const sponsor = sponsorTableData();
@@ -587,6 +588,64 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         Published estimates retain each study&apos;s accounting basis and
         publication-year dollars.
       </p>
+    </section>
+
+    <section class="card" id="care-card-section">
+      <h2>What you'd pay for care</h2>
+      <p class="desc">Here is what that design means for real care episodes:
+        today's typical cost with employer insurance, without insurance, and
+        under NHA, with the year each benefit arrives, assuming enactment in
+        2027.</p>
+      <div class="care-grid" id="care-cards">
+        {CARE_SCENARIOS.map((s) => (
+          <div class="care-card">
+            <div class="care-title">{s.title}</div>
+            <div class="care-rows">
+              <div class="care-row">
+                <div class="care-row-label">Today, typical insured</div>
+                <div class="care-row-val">{moneyRange(s.todayInsured.lo, s.todayInsured.hi)}</div>
+              </div>
+              <div class="care-row-note">{s.todayInsured.note}</div>
+              <div class="care-row">
+                <div class="care-row-label">Today, uninsured</div>
+                <div class="care-row-val">{moneyRange(s.todayUninsured.lo, s.todayUninsured.hi)}</div>
+              </div>
+              <div class="care-row-note">{s.todayUninsured.note}</div>
+            </div>
+            <div class="care-nha">
+              <div class="care-nha-line">
+                <div class="care-nha-label">Under NHA</div>
+                <div class="care-nha-val">$0</div>
+                <div class="care-year-chip" title="Assuming enactment in 2027; see the phase roadmap.">from ~{s.nha.fromYear}</div>
+              </div>
+              <div class="care-nha-note">{s.nha.note}</div>
+            </div>
+            <div class="care-src">Source: {s.source} <span class={"conf " + s.confidence}>{s.confidence}</span></div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Beyond dollars: what the model does not price</h2>
+      <p class="desc">Some effects of universal coverage are well documented
+        but deliberately kept out of the cost arithmetic, because turning
+        lives and solvency into dollars invites false precision. They belong
+        in the picture anyway. Each figure notes the NHA mechanism that
+        addresses it.</p>
+      <div class="tiles" id="outcome-tiles">
+        {OUTCOME_STATS.map((s) => (
+          <div class="tile">
+            <div class="value">{s.value}</div>
+            <div class="label">{s.label}</div>
+            <div class="range">{s.note} <span class={"conf " + s.confidence}>{s.confidence}</span></div>
+          </div>
+        ))}
+      </div>
+      <p class="note">The utilization-increase parameter in the model is the
+        cost side of these same effects: people who stop skipping care start
+        using it. The model prices that; it does not claim credit for the
+        health improvements that follow.</p>
     </section>
 
     <section class="card">
