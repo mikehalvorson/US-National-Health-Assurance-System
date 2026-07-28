@@ -4,9 +4,9 @@ Written 2026-07-27. For a fresh conversation to resume the migration.
 
 ## TL;DR — resume point
 
-- Branch **`astro-typescript-migration`**, HEAD **`115120e`**, 64 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
-- Full suite green: **62 Vitest tests (16 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
-- **P3 slice 9 COMPLETE** (Overview Act-1/Act-2: "The system today" + "What's wrong, by the numbers", prepended above the model section, build-time tiles + sponsor table, client solo money-flow). **Resume at slice 10** (Overview Act 3-4 + static diagrams). See roadmap at bottom; no slice-10 plan written yet.
+- Branch **`astro-typescript-migration`**, HEAD **`f204ec8`**, ~69 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
+- Full suite green: **65 Vitest tests (16 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
+- **P3 slice 10 COMPLETE** (Overview narrative preamble: Act 3 "fixable part" + Act 4 "proposal" prose, four pure-static operating-system diagrams (system map, care pathway, money shift, rollout arc), and the chapter-nav grid footer; all `data-dashboard-view` SPA buttons converted to base-aware `<a>` links, zero client JS). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-act3-4.md`. **Resume at slice 11** (care-cost cards + household calculator [needs `care.js`] + outcomes + Methodology + `#flow-takeaway`, inserted between benchmarks and the chapter-nav footer — finishes the Overview). No slice-11 plan written yet.
 
 ## What this project is
 
