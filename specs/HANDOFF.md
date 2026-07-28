@@ -1,0 +1,73 @@
+# Handoff — NHA dashboard Astro + TypeScript migration
+
+Written 2026-07-27. For a fresh conversation to resume the migration.
+
+## TL;DR — resume point
+
+- Branch **`astro-typescript-migration`**, HEAD **`ca3ac58`**, 62 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
+- Full suite green: **61 Vitest tests (16 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
+- In the middle of **P3 slice 9** (Overview Act-1/Act-2). **Task 1 done** (commit ca3ac58: `sponsorTableData` builder). **Resume at Task 2** of the plan below.
+
+## What this project is
+
+Migrating an interactive public-policy dashboard (National Health Assurance model) from hand-written vanilla HTML/JS (`docs/`) to **Astro 5 + TypeScript (strict)**, static output, GitHub Pages. Goal: maintainability + component structure while keeping visuals/behavior identical. The model math is ported **verbatim** (fidelity-critical); only structure changes.
+
+## The three sources of truth (read these first)
+
+1. **Memory:** `C:\Users\micha\.claude\projects\C--Users-micha-OneDrive-Desktop-Healthcare-Framework-ChatGPT-Work-Outputs-Claude-Outputs\memory\astro-migration.md` — full phase-by-phase state, decisions, gotchas. Also `MEMORY.md` index + `nha-dashboard-hard-rules.md`.
+2. **Progress ledger:** `.superpowers/sdd/progress.md` (gitignored) — every task, commit sha, and review outcome across all slices. Trust this + `git log` over recollection.
+3. **This slice's plan:** `specs/plans/2026-07-27-astro-migration-p3-overview-act1.md` — Tasks 2–4 have complete code/markup to paste. `specs/` holds every phase's design spec + plans (non-published).
+
+## Where things stand (done)
+
+- **P0/P1:** toolchain (Volta pins node 22.23.1 + pnpm 11.17.0), Astro static config (base `/US-National-Health-Assurance-System/`), Vitest, View-Transitions multi-page shell, 12-tab nav as base-aware `<a>` links, un-ported tabs are stubs via `src/pages/[chapter].astro` (guarded by `Tab.ported?`).
+- **P2:** healthcare model engine ported to `src/lib/{params,scenarios,model,model-types}.ts` + `format.ts`. 9 self-tests are Vitest.
+- **P2b:** tax model → `src/lib/{tax-types,taxparams,taxmodel}.ts`. 7 tax invariants Vitest.
+- **P3 (the Overview page, `src/pages/index.astro` + `src/scripts/overview-client.ts`):**
+  - Slices 1–8: hero, tiles, controls (scenario picker + 12 sliders), and the entire **model section** — all 6 charts (path, money-flow today+NHA, financing, cost-bridge, benchmarks) + 3 data tables (path/bridge/financing) + 2 notes (family-burden, growth-decomp). Chart modules: `src/lib/{path-chart,flow-diagram,money-flow,financing-chart,financing,bridge-chart,bridge,benchmark-chart,benchmarks,chart-util,overview-tables,growth-decomp}.ts`. Browser-verified each slice (0 NaN, redraws on scenario, View-Transition single-instance).
+  - **Slice 9 (current): Task 1 done** — `sponsorTableData()` in `overview-tables.ts`.
+
+## Resume: P3 slice 9, Tasks 2–4
+
+Plan file has the exact code. Summary:
+
+- **Task 2:** Prepend the Act-1 ("The system today") + Act-2 ("What's wrong, by the numbers") cards to the TOP of `<main>` in `src/pages/index.astro` (before the current hero card). Render `#problem-tiles` (from `PROBLEM_STATS`) and `#sponsor-table` (from `sponsorTableData()`) at **build time** (zero client JS); leave `#flow-today-solo` empty. Markup is verbatim from `docs/index.html:47-84`. Extend `tests/pages/overview.test.ts`. Then `pnpm check && pnpm build`; grep for U+2014 (must be 0).
+- **Task 3:** In `src/scripts/overview-client.ts` `render()`, draw the solo flow: `const flowSolo = $('flow-today-solo'); if (flowSolo) renderFlowDiagram(flowSolo, todayFlowSpec());` (both already imported).
+- **Task 4:** Browser-verify (see workflow below): solo SVG renders no-NaN, sponsor table + tiles present in `dist/index.html` (build-time, zero JS), model section still follows, View-Transition single `<svg>`.
+
+Then record in ledger + memory, and offer the user the finish menu (they have chosen "keep branch as-is" every slice).
+
+## How the work runs (workflow)
+
+- Per slice: `superpowers:writing-plans` (a plan in `specs/plans/`), then execute task-by-task, commit each task, browser-verify at the end.
+- **IMPORTANT — subagents are blocked:** the `Agent` tool has been **classifier-blocked** this whole session (both implementer and reviewer dispatches fail with "Blocked by classifier"). So everything is done **inline**: direct file edits, Vitest tests, and a controller-run "inline final review" (grep for scope-leak + em dash, confirm shared-mc wiring). If Agent dispatch works again, the subagent-driven flow (`superpowers:subagent-driven-development`) is preferred, but inline is proven and fine.
+- Commit trailer on every commit: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+
+## Commands
+
+```bash
+pnpm test        # vitest
+pnpm check       # astro check + tsc --noEmit (must be 0 errors)
+pnpm build       # static build -> dist/ (12 pages)
+pnpm preview --port <N>   # serve dist under the base path
+```
+
+Browser verify uses the in-app browser (`mcp__Claude_Browser__*`, top-level, not the disconnected `claude-in-chrome`): run `pnpm preview` in background, read its port from the task output, then `mcp__Claude_Browser__preview_start {url}` + `javascript_tool` to inspect DOM / `read_console_messages` for errors. Screenshots are avoided (they hang); DOM inspection is the convention.
+
+## Hard rules / gotchas (do not violate)
+
+- **Fidelity:** every value/formula ported verbatim from `docs/js/*.js`. Never re-derive or "improve" a number. `docs/` is read-only.
+- **No em dash U+2014** anywhere reader-visible. En dash `–` (U+2013) and minus `−` (U+2212) are allowed (used in ranges/negatives). Family-burden note keeps a source "the the" typo on purpose (flagged for a future content pass). Tests assert `!html.includes('—')`.
+- **Strict TS**, no gratuitous `any`. SVG helpers use narrow casts.
+- **The Overview client `render()` is one hub:** it calls `runOverviewMc(scenario, sliders)` ONCE and feeds the single `mc` to every chart/table + text builder. Build-time render in `index.astro` uses `computeOverview('SCN-BASE', null)` which must match the client default (empty sliders → `null`), so hydration does not repaint.
+- Client must re-init on `astro:page-load` (View Transitions), guarded idempotent via `#controls dataset.wired`.
+- `global.css` intentionally diverges from `docs/style.css` (nav `button`→`button, a`); that is expected.
+- Live docs preview for parity checks: `mcp__Claude_Browser__preview_start {name:"nha-dashboard"}` serves `docs/` at `http://localhost:8517/` **ROOT** (not `/docs/`).
+- Deferred minors carried forward: dedupe the base-path string (astro.config/vitest.config/tests); align nav hrefs to trailing-slash (avoids a 301 hop on Pages); the family-note "the the" content pass.
+
+## Roadmap after slice 9 (~10–14 slices left)
+
+- Slice 10: Overview Act 3–4 (proposal narrative + static operating-system/care-pathway/financing/rollout-preview diagrams + chapter nav; some may need `govdata`).
+- Slice 11: care-cost cards + household calculator (port `care.js` `CARE_SCENARIOS`/`HOUSEHOLD_PROFILES`) + outcomes (`OUTCOME_STATS`) + Methodology card + `#flow-takeaway`. Finishes the Overview.
+- Slices 12+: the 11 remaining tabs (health, tax [needs `taxcharts.js`+`taxapp.js`], legislation, units [county map], medications, data, workforce, gov, hardening, rollout, quality) — each replaces its `[chapter].astro` stub (set `Tab.ported = true` in `src/lib/tabs.ts` so the dynamic stub route drops it), DOM-diffed vs live. Reconcile the two self-test shapes (`selfTest()` vs `TAX_SELFTESTS`) when building a shared build-time badge.
+- P4: content collections (Zod-validated catalogs). P5: cutover (flip `.github/workflows/deploy.yml` to `on: push`, switch Pages source to GitHub Actions, retire old `docs/`).
