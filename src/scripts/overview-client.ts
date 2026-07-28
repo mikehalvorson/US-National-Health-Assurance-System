@@ -83,6 +83,8 @@ function initOverview(): void {
     if (chartHost) renderPathChart(chartHost, mc, DEF);
     const flowToday = $('flow-today');
     if (flowToday) renderFlowDiagram(flowToday, todayFlowSpec());
+    const flowSolo = $('flow-today-solo');
+    if (flowSolo) renderFlowDiagram(flowSolo, todayFlowSpec());
     const flowNha = $('flow-nha');
     if (flowNha) renderFlowDiagram(flowNha, nhaFlowSpec(mc, DEF));
     const flowTitle = $('flow-nha-title');
