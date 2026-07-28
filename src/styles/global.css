@@ -861,14 +861,17 @@ nav.tabs button:hover:not(.active), nav.tabs a:hover:not(.active) { color: var(-
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px 24px; margin-top: 18px;
 }
-.overview-chapter-grid button {
+.overview-chapter-grid button, .overview-chapter-grid a {
   min-width: 0; padding: 11px 0 5px; border: 0;
   border-top: 3px solid var(--series-1); background: transparent;
-  text-align: left;
+  text-align: left; text-decoration: none;
 }
-.overview-chapter-grid button:nth-child(3n + 2) { border-top-color: var(--series-2); }
-.overview-chapter-grid button:nth-child(3n) { border-top-color: var(--series-5); }
-.overview-chapter-grid button:hover strong { color: var(--accent); }
+.overview-chapter-grid button:nth-child(3n + 2),
+.overview-chapter-grid a:nth-child(3n + 2) { border-top-color: var(--series-2); }
+.overview-chapter-grid button:nth-child(3n),
+.overview-chapter-grid a:nth-child(3n) { border-top-color: var(--series-5); }
+.overview-chapter-grid button:hover strong,
+.overview-chapter-grid a:hover strong { color: var(--accent); }
 .overview-chapter-grid span {
   display: block; color: var(--text-muted); font-size: 10.5px;
   font-weight: 500; letter-spacing: .035em; text-transform: uppercase;

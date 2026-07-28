@@ -96,6 +96,17 @@ test('overview includes the four operating-system diagrams with base-aware links
   expect(html).toContain('/US-National-Health-Assurance-System/rollout');
 });
 
+test('overview ends with the chapter-nav grid of 11 base-aware links', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('overview-chapter-grid');
+  expect(html).toContain('Each chapter answers a different implementation question');
+  const grid = html.slice(html.indexOf('overview-chapter-grid'));
+  const links = (grid.match(/<a /g) ?? []).length;
+  expect(links).toBeGreaterThanOrEqual(11);
+  expect(html).toContain('/US-National-Health-Assurance-System/quality');
+});
+
 test('overview shell has no em dash', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
