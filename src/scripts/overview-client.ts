@@ -10,7 +10,9 @@
 import { runOverviewMc, computeOverviewFromMc } from '../lib/overview';
 import { renderPathChart } from '../lib/path-chart';
 import { renderFlowDiagram } from '../lib/flow-diagram';
-import { todayFlowSpec, nhaFlowSpec, nhaFlowTitle } from '../lib/money-flow';
+import { todayFlowSpec, nhaFlowSpec, nhaFlowTitle, flowTakeawayText } from '../lib/money-flow';
+import { renderHouseholdCalc } from '../lib/household';
+import type { HouseholdModelNumbers } from '../lib/household';
 import { renderFinancingChart } from '../lib/financing-chart';
 import { financingSpec, financingNote } from '../lib/financing';
 import { renderBridgeChart } from '../lib/bridge-chart';
@@ -38,6 +40,9 @@ function initOverview(): void {
   let pending: number | undefined;
 
   const $ = (id: string) => document.getElementById(id);
+
+  let householdRerender: (() => void) | null = null;
+  let householdNumbers: HouseholdModelNumbers = { newRevenueB: 0 };
 
   function fmtSimple(v: number, unit: string): string {
     if (unit === '×') return v.toFixed(2) + '×';
@@ -116,6 +121,19 @@ function initOverview(): void {
     fillTable('path-table', pathTableData(mc, DEF));
     fillTable('bridge-table', bridgeTableData(mc, DEF));
     fillTable('financing-table', financingTableData(mc, DEF));
+
+    const takeaway = $('flow-takeaway');
+    if (takeaway) takeaway.textContent = flowTakeawayText(mc, DEF);
+
+    const hh = $('household-calc');
+    if (hh) {
+      householdNumbers = { newRevenueB: mc.modePath.detail[mc.years.length - 2].newRevenue * DEF };
+      if (!householdRerender) {
+        householdRerender = renderHouseholdCalc(hh, () => householdNumbers);
+      } else {
+        householdRerender();
+      }
+    }
   }
 
   function scheduleRender(): void {
