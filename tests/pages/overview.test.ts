@@ -83,6 +83,19 @@ test('overview includes Act-3/Act-4 proposal prose', async () => {
   expect(html).toContain('lever-list');
 });
 
+test('overview includes the four operating-system diagrams with base-aware links', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Overview);
+  expect(html).toContain('overview-system-map');
+  expect(html).toContain('overview-care-path');
+  expect(html).toContain('overview-money-shift');
+  expect(html).toContain('overview-rollout-arc');
+  // SPA buttons converted to real links
+  expect(html).not.toContain('data-dashboard-view');
+  expect(html).toContain('/US-National-Health-Assurance-System/health');
+  expect(html).toContain('/US-National-Health-Assurance-System/rollout');
+});
+
 test('overview shell has no em dash', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);

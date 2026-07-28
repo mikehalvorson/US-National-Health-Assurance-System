@@ -136,6 +136,218 @@ const base = import.meta.env.BASE_URL; // ends with '/'
       </ul>
     </section>
 
+    <section class="card overview-map-card">
+      <span class="overview-kicker">The whole design in one view</span>
+      <h2>The plan is one operating system, not a collection of separate programs</h2>
+      <p class="desc">A universal public promise sits above a local care network.
+        National payment, data, medicine, and workforce systems make that promise
+        operable; measurable quality and independent governance keep every layer
+        accountable. Select a chapter to inspect the detailed model.</p>
+
+      <div class="overview-system-map"
+        aria-label="Layered map of the National Health Assurance operating system">
+        <div class="overview-promise-band">
+          <span>Public promise</span>
+          <strong>Automatic coverage · medically necessary care without a bill ·
+            portable rights and appeals</strong>
+          <a href={base + 'legislation'}>Enabling law</a>
+        </div>
+        <div class="overview-map-connector" aria-hidden="true">
+          <i></i><span>turn the promise into care</span><i></i>
+        </div>
+        <div class="overview-care-band">
+          <article>
+            <span>Front door</span>
+            <h3>Community diagnostic-treatment units</h3>
+            <p>Same-day routine care, testing, prevention, navigation, and
+              escalation close to where people live.</p>
+            <a href={base + 'units'}>Physical Care</a>
+          </article>
+          <article>
+            <span>Clinical backplane</span>
+            <h3>Specialists and hospitals</h3>
+            <p>Complete workups, e-consults, urgency routing, protected capacity,
+              and hospital global budgets.</p>
+            <a href={base + 'health'}>Healthcare</a>
+          </article>
+          <article>
+            <span>Continuity</span>
+            <h3>Home, community, and expanded benefits</h3>
+            <p>Home-first long-term care plus behavioral, dental, vision, hearing,
+              emergency, and public-health services.</p>
+            <a href={base + 'rollout'}>Rollout</a>
+          </article>
+        </div>
+        <div class="overview-map-connector" aria-hidden="true">
+          <i></i><span>shared national backbone</span><i></i>
+        </div>
+        <div class="overview-backbone-band">
+          <article>
+            <b>Payment &amp; financing</b>
+            <p>One public claims rail, global budgets, existing public spending,
+              employer contributions, and progressive revenue.</p>
+            <a href={base + 'tax'}>Financing</a>
+          </article>
+          <article>
+            <b>Data &amp; cyber</b>
+            <p>Portable records, authoritative nodes, common interfaces, audit
+              trails, segmentation, and tested downtime paths.</p>
+            <a href={base + 'data'}>Data</a>
+          </article>
+          <article>
+            <b>Medicines &amp; supply</b>
+            <p>National purchasing, a public pharmacy utility, transparent
+              formularies, public production, and shortage response.</p>
+            <a href={base + 'medications'}>Medication strategy</a>
+          </article>
+          <article>
+            <b>Workforce &amp; education</b>
+            <p>Role-region staffing plans, training expansion, rural service,
+              travel teams, and a protected transition for displaced workers.</p>
+            <a href={base + 'workforce'}>Workforce</a>
+          </article>
+        </div>
+        <div class="overview-assurance-band">
+          <span>Independent assurance across every layer</span>
+          <div>
+            <a href={base + 'quality'}>430 controlled parameters</a>
+            <a href={base + 'gov'}>Distributed governance</a>
+            <a href={base + 'hardening'}>Executive hardening</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="overview-kicker">What changes for a patient</span>
+      <h2>One person, one continuous care pathway</h2>
+      <p class="desc">The system moves expertise and information toward the
+        patient first. It moves the patient only when hands-on specialty or
+        hospital care is necessary.</p>
+      <div class="overview-care-path" aria-label="Patient care pathway">
+        <article>
+          <span>1</span>
+          <h3>Covered automatically</h3>
+          <p>Coverage follows residency, not a job, age band, or annual plan choice.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>2</span>
+          <h3>Enter locally</h3>
+          <p>A nearby unit examines, tests, treats, and assembles a complete record.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>3</span>
+          <h3>Route by need</h3>
+          <p>An e-consult can advise the local team or move the case into a protected queue.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>4</span>
+          <h3>Treat at the right level</h3>
+          <p>Specialists, hospitals, and regional services take cases that require them.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>5</span>
+          <h3>Close the loop</h3>
+          <p>Results, medications, follow-up, home support, and appeals remain visible.</p>
+        </article>
+      </div>
+      <div class="overview-inline-links">
+        <a href={base + 'health'}>See benefits and cost</a>
+        <a href={base + 'units'}>See the local network</a>
+        <a href={base + 'data'}>See how information follows the patient</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="overview-kicker">How the money changes route</span>
+      <h2>Replace fragmented collection and billing with public financing and simple payment</h2>
+      <p class="desc">The proposal does not make healthcare free to produce.
+        It replaces premiums, deductibles, point-of-care bills, and payer-specific
+        administration with a publicly financed system that pays providers
+        through a common claims rail and hospital global budgets.</p>
+      <div class="overview-money-shift" aria-label="High-level money-flow change">
+        <div class="overview-money-world today">
+          <span>Today</span>
+          <strong>Households + employers + governments</strong>
+          <i aria-hidden="true">&darr;</i>
+          <p>Premiums · taxes · deductibles · copays · uncovered bills</p>
+          <i aria-hidden="true">&darr;</i>
+          <b>Many insurers, networks, contracts, and billing rules</b>
+        </div>
+        <div class="overview-money-pivot" aria-hidden="true">
+          <span>consolidate</span>
+          <b>&rarr;</b>
+        </div>
+        <div class="overview-money-world proposal">
+          <span>National Health Assurance</span>
+          <strong>Existing public funds + employer contribution + progressive revenue</strong>
+          <i aria-hidden="true">&darr;</i>
+          <p>National health trust and public payment operations</p>
+          <i aria-hidden="true">&darr;</i>
+          <b>Claims payments · hospital budgets · unit funding · benefits</b>
+        </div>
+      </div>
+      <div class="overview-inline-links">
+        <a href={base + 'health'}>Test total system cost</a>
+        <a href={base + 'tax'}>Test who pays and who saves</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="overview-kicker">Implementation, not a switch-flip</span>
+      <h2>Twelve years of staged authority, infrastructure, coverage, and benefits</h2>
+      <p class="desc">Dates are anchors, not automatic deadlines. Eight independent
+        readiness gates can hold, resize, or roll back a wave when claims,
+        capacity, workforce, fiscal, artificial-intelligence, cyber, legitimacy,
+        or continuity evidence is inadequate.</p>
+      <div class="overview-rollout-arc" aria-label="Twelve-year high-level rollout">
+        <article>
+          <span>Years 1–2 · P0–P1</span>
+          <strong>Found</strong>
+          <p>Pass the statute; stand up accountable bodies, rights, identity,
+            registries, cyber baselines, and transition protection.</p>
+        </article>
+        <article>
+          <span>Years 3–4 · P2–P3</span>
+          <strong>Operate first rails</strong>
+          <p>Launch pharmacy purchasing and production, then begin the first
+            public coverage wave and claims operation.</p>
+        </article>
+        <article>
+          <span>Years 5–7 · P4–P5</span>
+          <strong>Pilot and scale delivery</strong>
+          <p>Test hospital budgets and all four unit types; expand workforce,
+            specialist routing, and the care network.</p>
+        </article>
+        <article>
+          <span>Years 8–9 · P6</span>
+          <strong>Make coverage the default</strong>
+          <p>Scale public coverage, payment, rights, regional operations, and
+            major cost-sharing elimination nationally.</p>
+        </article>
+        <article>
+          <span>Years 10–12 · P7–P8</span>
+          <strong>Expand and certify</strong>
+          <p>Add long-term care and other benefits only after capacity gates,
+            then test the mature system against every performance floor.</p>
+        </article>
+      </div>
+      <div class="overview-gate-line">
+        <strong>Eight stop-the-clock gates</strong>
+        <span>claims</span><span>unit capacity</span><span>workforce</span>
+        <span>fiscal</span><span><abbr class="overview-acronym" title="Artificial Intelligence">AI</abbr> safety</span><span>records &amp; cyber</span>
+        <span>legitimacy</span><span>continuity</span>
+      </div>
+      <div class="overview-inline-links">
+        <a href={base + 'rollout'}>Open the complete phased rollout</a>
+        <a href={base + 'quality'}>Inspect phase targets</a>
+      </div>
+    </section>
+
     <section class="card" id="hero-card">
       <h2>The system-level price tag</h2>
       <p class="desc">This model's own projection, computed bottom-up from
