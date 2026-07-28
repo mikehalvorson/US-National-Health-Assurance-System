@@ -4,9 +4,9 @@ Written 2026-07-27. For a fresh conversation to resume the migration.
 
 ## TL;DR — resume point
 
-- Branch **`astro-typescript-migration`**, HEAD **`3ebfd1c`**, ~73 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
-- Full suite green: **69 Vitest tests (17 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
-- **P3 slice 11a COMPLETE** (Overview care-cost cards + outcome tiles, both pure-static build-time; new `src/lib/care.ts` with `CARE_SCENARIOS` + `moneyRange`). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-care-outcomes.md`. Slice 11 was split 3 ways. **Resume at slice 11b** (household calculator: port `HOUSEHOLD_PROFILES` + `HOUSEHOLDS_M` + `renderHouseholdCalc` from `docs/js/care.js:113-273` into `care.ts` + client wiring; the tax-share line reads `mc.modePath.detail[years.length-2].newRevenue * DEF`; plus `#flow-takeaway` client text on the existing "How the money re-routes" card). Then slice 11c (Methodology card + `#param-table` + `#gaps-list` + self-test badge) finishes the Overview. No slice-11b plan written yet.
+- Branch **`astro-typescript-migration`**, HEAD **`aa2e6b5`**, ~79 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
+- Full suite green: **72 Vitest tests (17 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages.
+- **P3 slice 11b COMPLETE** (Overview household calculator + `#flow-takeaway`; new `src/lib/household.ts` client module + `flowTakeawayText` in `money-flow.ts` + `HOUSEHOLD_PROFILES`/`HOUSEHOLDS_M` in `care.ts`, all wired into the shared-mc client). Plan: `specs/plans/2026-07-28-astro-migration-p3-overview-household.md`. **Resume at slice 11c** (the LAST Overview slice): the Methodology card (`docs/index.html:991-1040`) = static prose + build-time `#gaps-list` (low-confidence `PARAM_DEFS` labels) + `#param-table` (full `PARAM_DEFS` table) + `#selftest` badge (reconcile `selfTest()` and the tax `SELFTESTS`/`TAX_SELFTESTS` shapes). Insert between the household card and the chapter-nav footer. Finishes the Overview page. No slice-11c plan written yet.
 
 ## What this project is
 
