@@ -10,7 +10,7 @@ export const TABS: Tab[] = [
   { id: 'tab-medications', label: 'Medications', path: 'medications' },
   { id: 'tab-data', label: 'Data', path: 'data' },
   { id: 'tab-workforce', label: 'Workforce', path: 'workforce' },
-  { id: 'tab-gov', label: 'Governance', path: 'gov' },
+  { id: 'tab-gov', label: 'Governance', path: 'gov', ported: true },
   { id: 'tab-hardening', label: 'Executive Hardening', path: 'hardening', ported: true },
   { id: 'tab-rollout', label: 'Phased Rollout', path: 'rollout', ported: true },
   { id: 'tab-quality', label: 'Quality', path: 'quality' },
