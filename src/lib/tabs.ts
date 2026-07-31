@@ -12,6 +12,6 @@ export const TABS: Tab[] = [
   { id: 'tab-workforce', label: 'Workforce', path: 'workforce' },
   { id: 'tab-gov', label: 'Governance', path: 'gov' },
   { id: 'tab-hardening', label: 'Executive Hardening', path: 'hardening', ported: true },
-  { id: 'tab-rollout', label: 'Phased Rollout', path: 'rollout' },
+  { id: 'tab-rollout', label: 'Phased Rollout', path: 'rollout', ported: true },
   { id: 'tab-quality', label: 'Quality', path: 'quality' },
 ];
