@@ -4,7 +4,7 @@ export interface Tab { id: string; label: string; path: string; ported?: boolean
 export const TABS: Tab[] = [
   { id: 'tab-overview', label: 'Overview', path: '' },
   { id: 'tab-health', label: 'Healthcare', path: 'health' },
-  { id: 'tab-tax', label: 'Taxes & Financing', path: 'tax' },
+  { id: 'tab-tax', label: 'Taxes & Financing', path: 'tax', ported: true },
   { id: 'tab-legislation', label: 'Legislation', path: 'legislation', ported: true },
   { id: 'tab-units', label: 'Physical Care', path: 'units' },
   { id: 'tab-medications', label: 'Medications', path: 'medications', ported: true },
