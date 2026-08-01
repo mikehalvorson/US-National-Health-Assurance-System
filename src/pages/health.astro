@@ -1,21 +1,30 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { OUTCOME_STATS } from '../lib/params';
+import ChapterNav from '../components/ChapterNav.astro';
+import { computeOverview } from '../lib/overview';
+import { OUTCOME_STATS, PARAM_DEFS } from '../lib/params';
 import { CARE_SCENARIOS, moneyRange } from '../lib/care';
+import { selfTestSummary } from '../lib/selftests';
+
+const v = computeOverview('SCN-BASE', null);
+const gapsList = ' ' + PARAM_DEFS.filter((p) => p.confidence === 'low').map((p) => p.label).join(' · ');
+const selftests = selfTestSummary();
 ---
 <BaseLayout title="National Health Assurance: Healthcare">
   <main>
 
     <section class="card chapter-intro">
       <span class="chapter-intro-eyebrow">Chapter 1 · The need and the promise</span>
-      <h2>What people would receive, and what care costs them</h2>
-      <p class="desc">The Overview builds the system-level model: the total
-        price tag, how the money re-routes, who pays, and the outside reality
-        checks. This chapter narrows to the household. It shows what real care
-        episodes cost today versus under National Health Assurance, the
-        documented effects the cost model deliberately does not price, and a
-        live calculator for a household's own annual bill. The next chapter
-        turns to how the whole thing is financed.</p>
+      <h2>What people would receive, what care costs, and what the whole system costs</h2>
+      <p class="desc">This chapter is the working core of the plan. It starts
+        with the household: what real care episodes cost today versus under
+        National Health Assurance, the documented effects the cost model
+        deliberately does not price, and a live calculator for a household's
+        own annual bill. It then opens up to the full system model, computed
+        bottom-up from sourced parameters: the total price tag, how the money
+        re-routes, who pays, whether the result survives an outside reality
+        check, and the methodology and limits behind every number. The next
+        chapter turns to how the whole thing is financed.</p>
     </section>
 
     <section class="card" id="care-card-section">
@@ -85,6 +94,330 @@ import { CARE_SCENARIOS, moneyRange } from '../lib/care';
       <div id="household-calc"></div>
     </section>
 
+    <section class="card" id="hero-card">
+      <h2>The system-level price tag</h2>
+      <p class="desc">This model's own projection, computed bottom-up from
+        sourced parameters: what the fully-mature system would cost at today's
+        (2024) scale, directly comparable with the ~$5.3T the U.S. actually
+        spends now. The savings levers (drug negotiation, administrative
+        consolidation, payment reform) largely pay for the benefit expansions
+        (universal coverage, $0 care, long-term care, dental/vision/hearing,
+        behavioral health).</p>
+      <div class="hero-pair-label">If the mature system existed today, at 2024 scale</div>
+      <div class="hero">
+        <div class="hero-block">
+          <div class="label">NHA, fully mature (median)</div>
+          <div class="hero-num" id="hero-value">{v.heroValue}</div>
+          <div class="range" id="hero-range">{v.heroRange}</div>
+        </div>
+        <div class="hero-block">
+          <div class="label">What the U.S. actually spends, 2024</div>
+          <div class="hero-num" style="color:var(--text-secondary)">$5.3T/yr</div>
+          <div class="range">CMS preliminary</div>
+        </div>
+      </div>
+      <div class="hero-pair-label">In 2041, at 2041's size (still measured in 2024 dollars)</div>
+      <div class="hero">
+        <div class="hero-block">
+          <div class="label">NHA at steady state (median)</div>
+          <div class="hero-num" id="hero-2041-nha">{v.nha2041}</div>
+          <div class="range" id="hero-2041-range">{v.hero2041Range}</div>
+        </div>
+        <div class="hero-block">
+          <div class="label">Status quo, same year</div>
+          <div class="hero-num" style="color:var(--text-secondary)" id="hero-2041-base">{v.base2041}</div>
+          <div class="range">CMS's own trajectory, no reform; the country is bigger and older either way</div>
+        </div>
+      </div>
+      <div class="takeaway" id="family-burden-note">{v.familyNote}</div>
+      <div class="tiles" id="tiles">
+        {v.tiles.map((it) => (
+          <div class="tile">
+            <div class="label">{it.label}</div>
+            <div class="value">{it.value}</div>
+            <div class="range">{it.range}</div>
+          </div>
+        ))}
+      </div>
+      <p class="note"><b>Reading the pairs:</b> each row compares like with
+        like. The first row asks what the mature system would cost if it
+        existed today; the second asks what the annual bill looks like in
+        2041, when the country is bigger and older under either system.
+        Never compare across rows: the jump from ~$5.3T to ~$9T happens with
+        or without reform, and it is more people, older people, and more
+        care per person, not inflation. Every dollar on this page is in 2024
+        purchasing power.</p>
+    </section>
+
+    <section class="card">
+      <h2>Assumptions</h2>
+      <p class="desc">Pick a stress scenario from the 19-scenario
+        catalog, or adjust individual assumptions. Badges show evidence quality:
+        <span class="conf high">high</span> = official statistic or scored estimate,
+        <span class="conf medium">medium</span> = reputable study or survey,
+        <span class="conf low">low</span> = analyst assumption with no direct source.</p>
+      <div class="controls" id="controls"></div>
+      <p class="scenario-desc" id="scenario-desc"></p>
+      <div class="controls-foot">
+        <button class="btn" id="reset-btn">Reset assumptions</button>
+        <span class="runs-note" id="runs-note"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Annual total system cost, 2027–2042</h2>
+      <p class="desc">The status-quo path follows CMS's own spending trajectory.
+        The NHA path phases in over the Phase 0–8 roadmap
+        (coverage waves from Year 4, national default coverage Year 8, expanded
+        long-term-care/behavioral/dental benefits Years 10–12), including all
+        transition costs. The band is the 10th–90th percentile across Monte
+        Carlo draws of every uncertain parameter.</p>
+      <div id="path-chart"></div>
+      <p class="note" id="growth-decomp"></p>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="path-table"></table></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>How the money re-routes</h2>
+      <p class="desc">The most misunderstood part of a public
+        system: society's total spending barely changes; <em>the routes
+        change</em>. Compare the flow you saw at the top of the page with the
+        same flow under NHA. Premiums and point-of-care bills disappear; the
+        same dollars reach the same doctors and hospitals through public
+        financing instead. Hover any ribbon for what it contains.</p>
+      <div class="flow-grid">
+        <div class="flow-panel">
+          <div class="flow-title">Today: actual 2023 spending ($4.87T, CMS)</div>
+          <div id="flow-today"></div>
+        </div>
+        <div class="flow-panel">
+          <div class="flow-title" id="flow-nha-title">Under NHA: mature system at 2024 scale</div>
+          <div id="flow-nha"></div>
+        </div>
+      </div>
+      <div class="takeaway" id="flow-takeaway"></div>
+    </section>
+
+    <section class="card">
+      <h2>Who pays</h2>
+      <p class="desc">Mature-year public cost funded by redirecting what
+        government already spends, a state maintenance-of-effort contribution,
+        an employer contribution replacing today's premiums, and the remainder,
+        which requires new revenue. The comparison shows how far the
+        extreme-wealth tax package goes toward that gap.</p>
+      <div id="financing-chart"></div>
+      <p class="note" id="financing-note"></p>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="financing-table"></table></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>Why the total lands where it does</h2>
+      <p class="desc">The bridge from the status-quo baseline at maturity (2041)
+        to the NHA total, using central-estimate parameters. Each saving
+        mechanism appears exactly once: the model computes both worlds directly
+        and derives these differences, so nothing can be double-counted.</p>
+      <div id="bridge-chart"></div>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="bridge-table"></table></div>
+      </details>
+    </section>
+
+    <section class="card benchmark-section">
+      <h2>Does the model pass an outside reality check?</h2>
+      <p class="desc">Internal tests can show that the arithmetic works. They
+        cannot show whether the result is plausible. These checks compare the
+        model with observed U.S. spending and independent estimates of
+        single-payer systems. Similar scale supports plausibility; it does not
+        prove that any one outcome will occur.</p>
+
+      <div class="benchmark-purpose-grid">
+        <article>
+          <span>Check 1</span>
+          <strong>The nation&apos;s total healthcare bill</strong>
+          <p>What would households, employers, states, and the federal
+            government spend in total? This tests the overall size of the
+            model.</p>
+        </article>
+        <article>
+          <span>Check 2</span>
+          <strong>The shift onto the federal budget</strong>
+          <p>How much additional spending would appear on the federal ledger?
+            This tests the scale of the financing transfer.</p>
+        </article>
+      </div>
+
+      <div class="benchmark-distinction">
+        <strong>Keep the two checks separate.</strong>
+        Added federal spending is not the same as added national healthcare
+        spending. Much of the federal increase replaces premiums,
+        point-of-care bills, employer spending, and state spending that already
+        exist elsewhere in the system.
+      </div>
+
+      <article class="benchmark-panel">
+        <div class="benchmark-panel-head">
+          <span>Check 1</span>
+          <div>
+            <h3>Is the total system price tag in a credible range?</h3>
+            <p>The dashboard&apos;s mature system at today&apos;s population and
+              economy is compared with what the United States actually spent
+              in 2024. Both figures include all payers.</p>
+          </div>
+        </div>
+        <div class="benchmark-key" aria-label="Chart key">
+          <span><i class="benchmark-key-model"></i>Dashboard model range and median</span>
+          <span><i class="benchmark-key-outside"></i>Observed or outside estimate</span>
+        </div>
+        <div id="benchmark-nhe"></div>
+        <p class="benchmark-readout">
+          <strong>Readout:</strong>
+          <span id="benchmark-nhe-result"></span>
+        </p>
+      </article>
+
+      <article class="benchmark-panel">
+        <div class="benchmark-panel-head">
+          <span>Check 2</span>
+          <div>
+            <h3>How does the federal financing shift compare?</h3>
+            <p>The dashboard&apos;s added federal spending is compared with CBO,
+              Urban Institute, and Mercatus estimates. This is a budget
+              comparison, not a measure of new cost to society or the exact
+              amount of new tax revenue required. The sources use different
+              years, benefit designs, and transition speeds, so this check is
+              intentionally approximate.</p>
+          </div>
+        </div>
+        <div class="benchmark-figure-grid">
+          <article>
+            <span>Dashboard model</span>
+            <strong id="benchmark-fed-model">...</strong>
+            <small id="benchmark-fed-model-range"></small>
+            <p>Mature system, 2041-scale economy, real 2024 dollars</p>
+          </article>
+          <article>
+            <span>CBO <i class="conf high">high</i></span>
+            <strong>$1.5T–$3.0T/yr</strong>
+            <small>Federal subsidy increase</small>
+            <p>Illustrative single-payer options in 2030, study dollars</p>
+          </article>
+          <article>
+            <span>Urban Institute / Mercatus <i class="conf medium">medium</i></span>
+            <strong>$3.2T–$3.4T/yr</strong>
+            <small>Annualized federal increase</small>
+            <p>First-decade estimates, each study&apos;s own dollars</p>
+          </article>
+        </div>
+        <p class="benchmark-readout">
+          <strong>Readout:</strong>
+          <span id="benchmark-fed-result"></span>
+        </p>
+      </article>
+
+      <div class="benchmark-supporting">
+        <span>Supporting check</span>
+        <h3>Does the 2030 change in total spending have a plausible scale?</h3>
+        <p id="benchmark-2030-result"></p>
+      </div>
+
+      <div class="benchmark-verdict">
+        <span>Overall interpretation</span>
+        <p id="benchmark-verdict"></p>
+      </div>
+      <p class="benchmark-source">
+        <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/01_macro_financing_population_offsets.md"
+          target="_blank" rel="noopener">Sources and methodology</a>.
+        Published estimates retain each study&apos;s accounting basis and
+        publication-year dollars.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Methodology and limits</h2>
+      <div class="note">
+        <b>What this is:</b> a national-aggregate annual model. It computes
+        the status-quo world and the NHA world category by category from CMS
+        2023 calibration data, phases policy in over the Phase 0–8
+        roadmap, and samples every uncertain parameter from a sourced
+        low/central/high range (triangular distribution). Draws share a
+        systemic optimism/pessimism factor (weight 0.35): runs where benefit
+        expansions overrun also tend to be runs where savings levers
+        underdeliver, which widens the tails compared with independent
+        sampling. Employer premium savings pass through to wages (adjustable,
+        40–95%, CBO convention) and the resulting income/payroll tax revenue
+        feeds back into financing. Steady state is the 2040–2042 average.
+      </div>
+      <div class="note">
+        <b>On the original headline figure:</b> earlier drafts
+        asserted a mature cost of $4.75T/yr (2024 dollars) without a derivation.
+        That figure is superseded by this model's computed projections; under
+        central assumptions the model lands somewhat above it, and reaches it
+        only under the optimistic scenario. The full comparison lives in the
+        parameter table and scenario presets, not in the headline.
+      </div>
+      <div class="note">
+        <b>What it still is not:</b> specialty-level queues and wait-time
+        dynamics are not modeled, nor is provider behavioral response beyond
+        the payment factor. Macroeconomic feedback stops at first-order wage
+        pass-through with a fixed 28% marginal-rate revenue feedback; there
+        are no general-equilibrium or labor-supply effects. The correlation
+        structure is a single systemic factor, not a full covariance matrix.
+        Geographic detail exists for the care network (see the Physical Care
+        tab) but the fiscal model's costs and prices remain national
+        averages. Health outcomes are displayed with sources in the section
+        above, not converted into dollars. Demographic aging is decomposed
+        and shown under the cost-path chart, but the model does not simulate
+        cohorts individually.
+      </div>
+      <div class="warnbox" id="gaps-box">
+        <b>Weakest assumptions.</b> These parameters have no direct real-world
+        source and materially move the result. They are flagged
+        <span class="conf low">low</span> in the controls and listed with their
+        derivation anchors in the full parameter table below.
+        <span id="gaps-list">{gapsList}</span>
+      </div>
+      <details class="tableview"><summary>Full parameter table with sources (the entire evidence base)</summary>
+        <div class="tbl-scroll">
+          <table class="data" id="param-table">
+            <thead><tr>
+              <th>Parameter</th><th class="num">Low</th><th class="num">Central</th>
+              <th class="num">High</th><th>Unit</th><th>Confidence</th><th>Source</th>
+            </tr></thead>
+            <tbody>
+              {PARAM_DEFS.map((p) => (
+                <tr>
+                  <td>{p.label}</td>
+                  <td class="num">{(+p.low.toFixed(2)).toLocaleString('en-US')}</td>
+                  <td class="num">{(+p.mode.toFixed(2)).toLocaleString('en-US')}</td>
+                  <td class="num">{(+p.high.toFixed(2)).toLocaleString('en-US')}</td>
+                  <td>{p.unit}</td>
+                  <td><span class={"conf " + p.confidence}>{p.confidence}</span></td>
+                  <td>{p.source} {p.url && (<a href={p.url} target="_blank" rel="noopener">[link]</a>)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <div class="selftest" id="selftest">
+        <div>Model integrity: <span class={selftests.passed === selftests.total ? 'pass' : 'fail'}>{
+          selftests.passed === selftests.total
+            ? 'All ' + selftests.total + ' model self-tests pass.'
+            : (selftests.total - selftests.passed) + ' of ' + selftests.total + ' self-tests FAILING.'
+        }</span></div>
+        <ul>
+          {selftests.rows.map((r) => (
+            <li>{r.ok ? '✓ ' + r.name : '✗ ' + r.name + ': ' + r.note}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <ChapterNav />
   </main>
 </BaseLayout>
 
