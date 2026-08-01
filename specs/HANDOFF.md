@@ -1,81 +1,62 @@
 # Handoff — NHA dashboard Astro + TypeScript migration
 
-Written 2026-07-27; updated 2026-07-28 (mid slice 12). For a fresh conversation to resume the migration.
+Updated 2026-08-01. Tab-porting phase COMPLETE. For a fresh conversation to do the final review + cutover.
 
-## TL;DR — resume point
+## TL;DR — where things stand
 
-- Branch **`astro-typescript-migration`**, HEAD **`8ea8fd8`**, ~86 commits ahead of `main`. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched.
-- Full suite green: **76 Vitest tests (19 files)**, `pnpm check` 0 errors, `pnpm build` 12 pages. Working tree clean.
-- **P3 Overview COMPLETE** — `src/pages/index.astro` fully reproduces docs `#view-overview` + `#view-health` (20-card page: Acts 1-4, four operating-system diagrams, model section hero→benchmarks, care cards, outcomes, household calc, Methodology, chapter-nav footer).
-- **NOW: P3 slice 12 = Legislation tab, IN PROGRESS. Resume at Task 2** of `specs/plans/2026-07-28-astro-migration-p3-legislation-tab.md`.
-  - **Task 1 DONE** (commit 8ea8fd8): `src/lib/legislation.ts` = `Domain` type + `DOMAINS` (**13** entries, verbatim from `docs/js/legislation.js:11-305` — NOTE the plan wrongly said 14; the source has 13) + `ACRONYMS` (46 entries). Tested.
-  - **Task 2 (next):** create `src/scripts/legislation-client.ts` — the master-detail renderer (`renderList`/`renderDetail` over `#legislation-law-list`/`#legislation-law-detail`) + `addAcronymHovers`, init on `astro:page-load`, idempotent via `#legislation-law-list` `dataset.wired`. The plan has the full code, **but delete the three scaffolding-hint junk lines** (`host.querySelectorAll('button'); // no-op…`, `host.ownerDocument; // parity`, and the `// parity` comment) when writing the real file.
-  - **Task 3:** create `src/pages/legislation.astro` = `BaseLayout` + the legislation prose **verbatim from `docs/index.html:429-690`** (strip the `<div id="view-legislation" hidden>` wrapper; keep `#legislation-law-list` and `#legislation-law-detail` markup but empty) + `<script>import '../scripts/legislation-client.ts';</script>`. Then set `ported: true` on the legislation entry in `src/lib/tabs.ts` (drops `/legislation` from the `[chapter].astro` stub route). Extend `tests/pages/legislation.test.ts`.
-  - **Task 4:** browser-verify (13 domain buttons, click swaps detail `Domain 01`…, acronyms wrapped in `<abbr class="legislation-acronym">`, stub gone, DOM parity vs live docs at `http://localhost:8517/`, View-Transition re-init).
-  - Facts: no `data-dashboard-view` buttons in the legislation prose; `legislation-*` CSS already in `global.css` (152 rules); build must stay **12 pages** (flipping `Tab.ported` moves `/legislation` from the dynamic stub to a real page).
-- **DEFERRED decision — the `health` tab.** The Astro Overview already contains all of docs `#view-health` (the model + care + household + methodology), so `health` has no distinct docs source. The user chose to port `legislation` first and revisit `health` later. Open options: (a) leave Overview as-is and give `health` some other/subset content, (b) split the model+care+methodology off Overview onto a real `/health` page (leaving Overview as just the narrative), or (c) drop the `health` tab (11 tabs). Do not port `health` without resolving this with the user.
-- **After slice 12:** the remaining tabs (`tax` needs `taxcharts.js`+`taxapp.js`; `units` needs the county map `unitsapp.js`/`unitsmap.js`; `medications` 200 families; `data`, `workforce`, `gov`, `hardening`, `rollout`, `quality` 430-item catalog), each replacing its `[chapter].astro` stub. `selfTestSummary()` (`src/lib/selftests.ts`) is reusable for any shared build-time self-test badge.
+- Branch **`astro-typescript-migration`**, HEAD **`217ebfb`**. Branch is KEPT (never merged, never pushed). Live `docs/` site untouched. Everything is pushed to GitHub once at the very end, after the whole UI is confirmed identical.
+- **ALL 12 TABS ARE NOW REAL ASTRO PAGES.** Overview is `index.astro`; the other 11 are standalone pages: `health, tax, legislation, units, medications, data, workforce, gov, hardening, rollout, quality`. Every non-index entry in `src/lib/tabs.ts` has `ported: true`.
+- Committed suite: **102 Vitest tests (37 files) green, `pnpm check` 0 errors (1 pre-existing hint: dead `growth()` in taxmodel), `pnpm build` 12 pages.**
+- Every tab was browser-verified in `dist/` (charts render 0-NaN, all interactions work, View-Transition round-trips are single-instance with state reset, 0 console errors on every tab).
 
-## What this project is
+## What was finished in this session (slices 20-22)
 
-Migrating an interactive public-policy dashboard (National Health Assurance model) from hand-written vanilla HTML/JS (`docs/`) to **Astro 5 + TypeScript (strict)**, static output, GitHub Pages. Goal: maintainability + component structure while keeping visuals/behavior identical. The model math is ported **verbatim** (fidelity-critical); only structure changes.
+- **Slice 20 — Tax** (`5aac23b`, `74251b9`, `8370052`): `src/pages/tax.astro`, `src/lib/tax-charts.ts` (6 renderers), `src/scripts/tax-client.ts`. `barPath`'s `dir` param widened to `string` (behavior-preserving). Health financing path computed once from `runOverviewMc('SCN-BASE', null) × DEFLATOR`.
+- **Slice 21 — Physical Care / units** (`f7999e0`, `6b395e5`, `b4292f8`): `src/pages/units.astro`, `src/scripts/units-client.ts` (ports unitsmap.js + hospitalregions.js + unitsapp.js: Albers composite US projection, county dot map, need-based 4-type allocation, 13-region admin map, acronym decoration). **Data decision:** the three data files were copied **byte-identical (md5-verified)** to `public/data/{counties.json, us-states.json, hospital-regions.json}` and are fetched at runtime via `import.meta.env.BASE_URL + 'data/*.json'` (base-path aware) — not reproduced into TS modules. This keeps 340KB out of context + the JS bundle and guarantees GeoJSON fidelity.
+- **Slice 22 — Healthcare / health** (`217ebfb`, `f43243b`): the one slice that needed a user decision. Asked via AskUserQuestion; user chose **"Keep Overview, give /health a subset."** So the verified Overview is untouched and `src/pages/health.astro` is a coherent household-facing subset: chapter-intro + "What you'd pay for care" (care-cards, **static** from `CARE_SCENARIOS`/`moneyRange`) + "Beyond dollars" (outcome-tiles, **static** from `OUTCOME_STATS`) + "Your household's annual healthcare bill" (`#household-calc`, rendered by `src/scripts/health-client.ts` using the exact same SCN-BASE household logic as the Overview).
 
-## The three sources of truth (read these first)
+## Remaining work (all gated on the user confirming the whole UI matches, then a single push)
 
-1. **Memory:** `C:\Users\micha\.claude\projects\C--Users-micha-OneDrive-Desktop-Healthcare-Framework-ChatGPT-Work-Outputs-Claude-Outputs\memory\astro-migration.md` — full phase-by-phase state, decisions, gotchas. Also `MEMORY.md` index + `nha-dashboard-hard-rules.md`.
-2. **Progress ledger:** `.superpowers/sdd/progress.md` (gitignored) — every task, commit sha, and review outcome across all slices. Trust this + `git log` over recollection.
-3. **This slice's plan:** `specs/plans/2026-07-27-astro-migration-p3-overview-act1.md` — Tasks 2–4 have complete code/markup to paste. `specs/` holds every phase's design spec + plans (non-published).
+1. **Final UI review with the user.** The user pushes everything to GitHub at once only after confirming the whole UI looks/behaves like `docs/`. Two accepted, deliberate divergences to mention:
+   - Astro **Overview** = the docs narrative + the docs Healthcare cost model (absorbed in an earlier session); legislation/constitution content moved to the **Legislation** tab. So Astro Overview ≠ docs Overview one-to-one.
+   - Astro **Healthcare** tab = a household-facing subset (care cards + outcome tiles + household calculator), not the full docs Healthcare view (that model lives on Overview). Chosen by the user this session.
+   - `global.css` intentionally diverges from `docs/style.css` (nav `button` → `button, a`).
+2. **P4 — content collections (Zod catalogs).** Optional refactor; not required for parity. Skip unless the user wants it.
+3. **P4 cleanup candidate:** `src/pages/[chapter].astro` (the dynamic stub route) now emits **0 pages** because every tab is ported. It is dead but harmless. Safe to delete once you confirm nothing else imports it; build stays 12 pages either way.
+4. **P5 — cutover.** Only after the user confirms: flip `.github/workflows/deploy.yml` to `on: push`, switch the Pages source to GitHub Actions, retire `docs/`. This is the single push.
 
-## Where things stand (done)
+## Sources of truth (read first)
 
-- **P0/P1:** toolchain (Volta pins node 22.23.1 + pnpm 11.17.0), Astro static config (base `/US-National-Health-Assurance-System/`), Vitest, View-Transitions multi-page shell, 12-tab nav as base-aware `<a>` links, un-ported tabs are stubs via `src/pages/[chapter].astro` (guarded by `Tab.ported?`).
-- **P2:** healthcare model engine ported to `src/lib/{params,scenarios,model,model-types}.ts` + `format.ts`. 9 self-tests are Vitest.
-- **P2b:** tax model → `src/lib/{tax-types,taxparams,taxmodel}.ts`. 7 tax invariants Vitest.
-- **P3 (the Overview page, `src/pages/index.astro` + `src/scripts/overview-client.ts`):**
-  - Slices 1–8: hero, tiles, controls (scenario picker + 12 sliders), and the entire **model section** — all 6 charts (path, money-flow today+NHA, financing, cost-bridge, benchmarks) + 3 data tables (path/bridge/financing) + 2 notes (family-burden, growth-decomp). Chart modules: `src/lib/{path-chart,flow-diagram,money-flow,financing-chart,financing,bridge-chart,bridge,benchmark-chart,benchmarks,chart-util,overview-tables,growth-decomp}.ts`. Browser-verified each slice (0 NaN, redraws on scenario, View-Transition single-instance).
-  - **Slice 9 (current): Task 1 done** — `sponsorTableData()` in `overview-tables.ts`.
+1. **Progress ledger:** `.superpowers/sdd/progress.md` (gitignored) — every slice, task, commit sha, and browser-verify result, slices 12-22. Trust it + `git log` over recollection.
+2. **Memory:** `C:\Users\micha\.claude\projects\C--Users-micha-OneDrive-Desktop-Healthcare-Framework-ChatGPT-Work-Outputs-Claude-Outputs\memory\` — `astro-migration.md`, `nha-dashboard-hard-rules.md`, `MEMORY.md`.
 
-## Resume: P3 slice 9, Tasks 2–4
+## The established per-tab porting pattern (proven across all 11 non-index tabs)
 
-Plan file has the exact code. Summary:
+1. **Data → `src/lib/<slug>.ts`** (verbatim; Bash-transform trick for big JS blobs) OR, for units, **static assets in `public/data/`** fetched with the base path.
+2. **Renderer → `src/scripts/<slug>-client.ts`**: `document.getElementById` fresh + null-guards; reuse `src/lib/chart-util.ts`; init on `astro:page-load`, **idempotent** via a stable container's `dataset.wired`; reset module state in init for View-Transition safety; acronym walkers skip existing `<abbr>`.
+3. **Page → `src/pages/<slug>.astro`**: `BaseLayout` + **verbatim prose** (strip the `<div id="view-<slug>" hidden>` wrapper) + `<script>import '../scripts/<slug>-client.ts';</script>`.
+4. **Flip `Tab.ported = true`** in `src/lib/tabs.ts`.
+5. **Tests** (`tests/pages/<slug>.test.ts` + any `tests/lib/*`), then `grep -c $'\u2014'` new reader files (0), `pnpm test && pnpm check && pnpm build`, commit per-task, **browser-verify**.
 
-- **Task 2:** Prepend the Act-1 ("The system today") + Act-2 ("What's wrong, by the numbers") cards to the TOP of `<main>` in `src/pages/index.astro` (before the current hero card). Render `#problem-tiles` (from `PROBLEM_STATS`) and `#sponsor-table` (from `sponsorTableData()`) at **build time** (zero client JS); leave `#flow-today-solo` empty. Markup is verbatim from `docs/index.html:47-84`. Extend `tests/pages/overview.test.ts`. Then `pnpm check && pnpm build`; grep for U+2014 (must be 0).
-- **Task 3:** In `src/scripts/overview-client.ts` `render()`, draw the solo flow: `const flowSolo = $('flow-today-solo'); if (flowSolo) renderFlowDiagram(flowSolo, todayFlowSpec());` (both already imported).
-- **Task 4:** Browser-verify (see workflow below): solo SVG renders no-NaN, sponsor table + tiles present in `dist/index.html` (build-time, zero JS), model section still follows, View-Transition single `<svg>`.
+## Hard rules / gotchas (do not violate)
 
-Then record in ledger + memory, and offer the user the finish menu (they have chosen "keep branch as-is" every slice).
+- **Fidelity:** every value/formula ported verbatim from `docs/js/*.js`. Never re-derive a number. Re-porting the docs `NHA.SELFTESTS` as Vitest is the fidelity check.
+- **No em dash U+2014** anywhere reader-visible in **build-time HTML** (tests assert `!html.includes('—')`). En dash `–`, minus `−`, `×`, `÷`, `→` allowed. Known verbatim exceptions kept for docs parity (both flagged in the ledger): the quality client's runtime-only `" — maturity"` suffix and the Overview family-burden `"the the"` typo.
+- **Strict TS**, no gratuitous `any`; narrow casts only (`as EventListener`, `as unknown as T` for big JSON, `as Poly[]` for GeoJSON coords).
+- Client must re-init on `astro:page-load`, idempotent-guarded; multi-page has no persistent `window.NHA` globals, so query DOM fresh + import data from libs (or fetch static assets).
+- Build must stay **12 pages**.
+- Git shows `LF will be replaced by CRLF` warnings on every add — harmless (Windows autocrlf).
 
-## How the work runs (workflow)
+## Browser verification
 
-- Per slice: `superpowers:writing-plans` (a plan in `specs/plans/`), then execute task-by-task, commit each task, browser-verify at the end.
-- **IMPORTANT — subagents are blocked:** the `Agent` tool has been **classifier-blocked** this whole session (both implementer and reviewer dispatches fail with "Blocked by classifier"). So everything is done **inline**: direct file edits, Vitest tests, and a controller-run "inline final review" (grep for scope-leak + em dash, confirm shared-mc wiring). If Agent dispatch works again, the subagent-driven flow (`superpowers:subagent-driven-development`) is preferred, but inline is proven and fine.
-- Commit trailer on every commit: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- `pnpm build` then `pnpm preview --port 8518` (serves `dist/` at `http://localhost:8518/US-National-Health-Assurance-System/`) in a background shell, then the in-app browser (`mcp__Claude_Browser__*`, top-level) + `javascript_tool` DOM inspection + `read_console_messages`. Screenshots hang — DOM inspection is the convention. SPA-nav round-trip = click a nav `<a>` (triggers `astro:page-load`) to Overview and back, then assert no duplication + state reset + active nav.
+- Live docs parity server (if needed): `mcp__Claude_Browser__preview_start {name:"nha-dashboard"}` serves `docs/` at `http://localhost:8517/` ROOT.
 
 ## Commands
 
 ```bash
-pnpm test        # vitest
-pnpm check       # astro check + tsc --noEmit (must be 0 errors)
+pnpm test        # vitest (37 files / 102 tests green at HEAD)
+pnpm check       # astro check + tsc --noEmit (0 errors; 1 pre-existing dead-growth hint)
 pnpm build       # static build -> dist/ (12 pages)
-pnpm preview --port <N>   # serve dist under the base path
+pnpm preview --port 8518   # serve dist under the base path
 ```
-
-Browser verify uses the in-app browser (`mcp__Claude_Browser__*`, top-level, not the disconnected `claude-in-chrome`): run `pnpm preview` in background, read its port from the task output, then `mcp__Claude_Browser__preview_start {url}` + `javascript_tool` to inspect DOM / `read_console_messages` for errors. Screenshots are avoided (they hang); DOM inspection is the convention.
-
-## Hard rules / gotchas (do not violate)
-
-- **Fidelity:** every value/formula ported verbatim from `docs/js/*.js`. Never re-derive or "improve" a number. `docs/` is read-only.
-- **No em dash U+2014** anywhere reader-visible. En dash `–` (U+2013) and minus `−` (U+2212) are allowed (used in ranges/negatives). Family-burden note keeps a source "the the" typo on purpose (flagged for a future content pass). Tests assert `!html.includes('—')`.
-- **Strict TS**, no gratuitous `any`. SVG helpers use narrow casts.
-- **The Overview client `render()` is one hub:** it calls `runOverviewMc(scenario, sliders)` ONCE and feeds the single `mc` to every chart/table + text builder. Build-time render in `index.astro` uses `computeOverview('SCN-BASE', null)` which must match the client default (empty sliders → `null`), so hydration does not repaint.
-- Client must re-init on `astro:page-load` (View Transitions), guarded idempotent via `#controls dataset.wired`.
-- `global.css` intentionally diverges from `docs/style.css` (nav `button`→`button, a`); that is expected.
-- Live docs preview for parity checks: `mcp__Claude_Browser__preview_start {name:"nha-dashboard"}` serves `docs/` at `http://localhost:8517/` **ROOT** (not `/docs/`).
-- Deferred minors carried forward: dedupe the base-path string (astro.config/vitest.config/tests); align nav hrefs to trailing-slash (avoids a 301 hop on Pages); the family-note "the the" content pass.
-
-## Roadmap after slice 9 (~10–14 slices left)
-
-- Slice 10: Overview Act 3–4 (proposal narrative + static operating-system/care-pathway/financing/rollout-preview diagrams + chapter nav; some may need `govdata`).
-- Slice 11: care-cost cards + household calculator (port `care.js` `CARE_SCENARIOS`/`HOUSEHOLD_PROFILES`) + outcomes (`OUTCOME_STATS`) + Methodology card + `#flow-takeaway`. Finishes the Overview.
-- Slices 12+: the 11 remaining tabs (health, tax [needs `taxcharts.js`+`taxapp.js`], legislation, units [county map], medications, data, workforce, gov, hardening, rollout, quality) — each replaces its `[chapter].astro` stub (set `Tab.ported = true` in `src/lib/tabs.ts` so the dynamic stub route drops it), DOM-diffed vs live. Reconcile the two self-test shapes (`selfTest()` vs `TAX_SELFTESTS`) when building a shared build-time badge.
-- P4: content collections (Zod-validated catalogs). P5: cutover (flip `.github/workflows/deploy.yml` to `on: push`, switch Pages source to GitHub Actions, retire old `docs/`).
