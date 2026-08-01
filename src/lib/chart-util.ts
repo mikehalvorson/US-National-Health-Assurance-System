@@ -99,7 +99,7 @@ export function tipRow(
 }
 
 /** Bar with rounded data-end, square base. dir: "up" | "right". (charts.js:97-114, verbatim) */
-export function barPath(x: number, y: number, w: number, h: number, r: number, dir: 'up' | 'right'): string {
+export function barPath(x: number, y: number, w: number, h: number, r: number, dir: string): string {
   r = Math.min(r, dir === 'right' ? w / 2 : h / 2, dir === 'right' ? h / 2 : w / 2);
   if (r <= 0.5) return 'M' + x + ',' + y + ' h' + w + ' v' + h + ' h' + -w + 'Z';
   if (dir === 'up') {
