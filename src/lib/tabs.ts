@@ -6,7 +6,7 @@ export const TABS: Tab[] = [
   { id: 'tab-health', label: 'Healthcare', path: 'health' },
   { id: 'tab-tax', label: 'Taxes & Financing', path: 'tax', ported: true },
   { id: 'tab-legislation', label: 'Legislation', path: 'legislation', ported: true },
-  { id: 'tab-units', label: 'Physical Care', path: 'units' },
+  { id: 'tab-units', label: 'Physical Care', path: 'units', ported: true },
   { id: 'tab-medications', label: 'Medications', path: 'medications', ported: true },
   { id: 'tab-data', label: 'Data', path: 'data', ported: true },
   { id: 'tab-workforce', label: 'Workforce', path: 'workforce', ported: true },
