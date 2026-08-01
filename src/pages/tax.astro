@@ -1,0 +1,251 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="National Health Assurance: Taxes & Financing">
+  <main>
+
+  <section class="card chapter-intro">
+    <span class="chapter-intro-eyebrow">Chapter 2 · Paying for it</span>
+    <h2>The same care, financed differently</h2>
+    <p class="desc">The healthcare chapter showed the system costs about
+      what the country already spends. This chapter answers the harder
+      question: who writes the checks. It starts with where the money
+      actually is, builds tax packages that meet the funding goal without
+      falling on lower incomes, and shows, bracket by bracket, how new
+      taxes compare with the premiums and bills that disappear. The next
+      chapter turns to the law that has to authorize all of it.</p>
+  </section>
+
+  <!-- The inequality context -->
+  <section class="card">
+    <h2>Start with where the money is</h2>
+    <p class="desc">Any honest financing conversation starts here. American
+      wealth has concentrated to a degree the words “top 1%” no longer
+      describe; the action is inside the top tenth and hundredth of a
+      percent. That is why the model on this page breaks the top 1% into
+      five bands, grows their capital faster than the economy (because it
+      does grow faster), and includes instruments aimed specifically at
+      them.</p>
+    <div class="tiles" id="inequality-tiles"></div>
+    <div id="wealth-chart"></div>
+    <p class="note">Sources: Federal Reserve Distributional Financial
+      Accounts (2026:Q1, $174.0T total household wealth) for the published
+      bands; the splits inside the top 1% are derived from Saez–Zucman
+      capitalization estimates and Forbes-list aggregates, constrained to
+      the Fed's band totals (medium confidence). Median household net worth
+      from the Survey of Consumer Finances.</p>
+
+    <h2 style="font-size:15px;margin-top:24px">Why the ultra-wealthy are hard to tax</h2>
+    <ul class="lever-list">
+      <li><b>Income is optional at the top.</b> The tax code mostly taxes
+        realized income, and a billionaire can simply not realize any:
+        hold appreciating assets, borrow against them for spending, and
+        let the step-up at death erase the gain entirely. “Buy, borrow,
+        die” is why measured top-0.01% tax rates fall below the merely
+        rich.</li>
+      <li><b>Valuation and liquidity.</b> Private businesses, art, and
+        carried interests are hard to appraise annually, and taxing them
+        can force sales; every wealth-tax design fights this.</li>
+      <li><b>A planning industry.</b> Grantor trusts, dynasty trusts,
+        valuation discounts, and pass-through games exist to move wealth
+        around any single-instrument tax; the estate tax raises a fifth of
+        what a static calculation says it should.</li>
+      <li><b>Legal uncertainty.</b> A federal wealth tax faces the
+        Constitution's direct-tax apportionment clause, and taxing
+        unrealized gains tests the 16th Amendment's meaning of income
+        (Moore v. United States left the question open, not answered).</li>
+      <li><b>Enforcement asymmetry.</b> Audit rates on the largest returns
+        collapsed for a decade; the IRS was outgunned by the taxpayers with
+        the most complex returns and the most to gain from opacity.</li>
+    </ul>
+    <h2 style="font-size:15px;margin-top:18px">How it can realistically be done</h2>
+    <ul class="lever-list">
+      <li><b>Tax what cannot flee or hide.</b> Withholding and third-party
+        reporting on capital income, an uncapped payroll base, and
+        transaction taxes collect at the source, before planning starts.</li>
+      <li><b>Close the death loophole first.</b> Ending stepped-up basis
+        and taxing gains at death removes the exit that makes deferral a
+        permanent escape; every rate increase works better once it is
+        shut.</li>
+      <li><b>Minimum taxes on comprehensive income.</b> The billionaire
+        minimum tax sidesteps game-by-game whack-a-mole by asking one
+        question: did you pay at least 25% on your true economic gain?</li>
+      <li><b>Tax inheritances as income to heirs.</b> Constitutionally
+        clean (it is income), progressive by construction, and aimed at
+        dynasties rather than founders.</li>
+      <li><b>Fund the referees.</b> High-end enforcement collects tax
+        already owed; the return on IRS funding at the top is documented
+        and large.</li>
+      <li><b>Coordinate internationally and at the exit.</b> Pillar-2
+        minimum taxes, information exchange, and a real exit tax shrink
+        the run-away option.</li>
+      <li><b>Build a legal ladder, not a single rung.</b> The plan's
+        own contingency matrix: if the wealth tax falls in court, fall back
+        to mark-to-market; then to realization-at-death plus minimum
+        taxes. Every scenario below survives losing its most contested
+        instrument.</li>
+    </ul>
+
+    <h2 style="font-size:15px;margin-top:24px">It has been done before</h2>
+    <p class="desc">America taxed its top earners far harder than it does
+      now, for decades, through its strongest growth years: the top
+      marginal rate stayed at 91 to 92 percent through the entire
+      Eisenhower administration and did not fall below 70 percent until
+      1982. It is 37 percent today.</p>
+    <div id="toprate-chart"></div>
+    <p class="note">Source: IRS Statistics of Income historical tables.
+      Effective rates paid were lower than statutory rates in every era
+      (deductions, exclusions, capital gains); the line shows what the law
+      asked of the next dollar at the very top, which is the policy choice
+      Congress controls.</p>
+  </section>
+
+  <!-- Funding programs -->
+  <section class="card">
+    <h2>What needs funding</h2>
+    <p class="desc">The tax model is general: it funds <em>programs</em>, each
+      with its own need over time. National Health Assurance's new-revenue
+      requirement flows in live from the healthcare model (change assumptions
+      or scenarios there and the need updates here). Add other programs, such as
+      childcare, climate, or deficit reduction, to see combined financing
+      demands.</p>
+    <div class="program-list" id="program-list"></div>
+    <div class="program-add">
+      <input class="p-name" id="p-add-name" placeholder="Program name" aria-label="Program name">
+      <input class="p-amt" id="p-add-amt" type="number" placeholder="$B/yr" aria-label="Annual amount in billions">
+      <input class="p-start" id="p-add-start" type="number" value="2030" min="2027" max="2042" aria-label="Start year">
+      <input class="p-ramp" id="p-add-ramp" type="number" value="3" min="0" max="10" aria-label="Ramp years">
+      <button id="p-add-btn">Add program</button>
+      <span class="note" style="margin:0">amount ($B/yr at maturity) · start year · ramp-in years</span>
+    </div>
+  </section>
+
+  <!-- Instruments -->
+  <section class="card">
+    <h2>The tax package: pick a scenario that meets the goal, then make it yours</h2>
+    <p class="desc">Sixteen instruments spanning the realistic menu, from
+      progressive surtaxes and uncapped payroll to the wealth tax,
+      billionaire minimum, and inheritance-as-income. Each carries a sourced
+      revenue estimate, its own base-growth rate (top-capital bases compound
+      at 4% real, wages at 1.2%, broad income at 1.9%), a start year, and a
+      slider or toggle. The scenarios below are solved to actually cover the
+      funding need; select one, then edit anything.</p>
+    <div class="control" style="max-width:520px">
+      <label for="tax-scenario">Financing scenario</label>
+      <select id="tax-scenario" aria-label="Financing scenario"></select>
+    </div>
+    <p class="scenario-desc" id="tax-scenario-desc"></p>
+    <div class="tax-controls" id="tax-instruments"></div>
+    <p class="note">None of the goal scenarios uses the consumption tax:
+      a VAT is regressive (the bottom quintile consumes about twice its
+      income), so it stays out of every preset. It remains available above
+      for anyone who wants to see exactly what that trade-off does to the
+      burden chart below.</p>
+  </section>
+
+  <!-- Revenue vs need over time -->
+  <section class="card">
+    <h2>Revenue vs. need, 2027–2042</h2>
+    <p class="desc">Each instrument phases in on its own schedule; bases grow
+      with the economy. The dark line is the total funding need of every
+      enabled program; the stack has to reach it.</p>
+    <div id="tax-path-chart"></div>
+    <div class="tiles" id="tax-tiles"></div>
+  </section>
+
+  <!-- Save vs pay: the honest ledger per bracket -->
+  <section class="card">
+    <h2>Yes, taxes rise for every bracket. Here is the other side of the ledger.</h2>
+    <p class="desc">Every goal scenario raises taxes across the income
+      scale; there is no way to fund a $3T+ program otherwise. But taxes
+      are only half of each household's ledger: the same reform deletes
+      premiums, deductibles, copays, and surprise bills, and passes
+      employer premium savings back through wages. This chart puts both
+      halves side by side for every bracket in
+      <span id="savepay-year">2041</span>, under whatever scenario and
+      edits are selected above. Bars are drawn as a share of income so an
+      $8,000 saving for a working family and an $8M tax bill for a
+      billionaire can share one picture; hover for exact dollars.</p>
+    <div id="tax-savepay-chart"></div>
+    <p class="note">Savings distribute the healthcare model's replaced
+      household spending (BLS CES pattern) plus wage pass-through by wage
+      share; taxes are the selected package's incidence. The net column
+      matches the burden chart below, which shows the same result as a
+      single bar per group. Roughly the bottom 90% comes out ahead in
+      dollars; the crossover sits near the 90th to 99th percentile
+      depending on the scenario.</p>
+  </section>
+
+  <!-- Distributional impact -->
+  <section class="card">
+    <h2>Who bears the burden, and who comes out ahead</h2>
+    <p class="desc">The question that matters for lower-income Americans:
+      new taxes <em>minus</em> the health costs this system eliminates
+      (premiums, deductibles, copays), by income group. The top 1% is
+      broken into five bands, down to the 13,200 households of the top
+      0.01%, because that is where the wealth actually sits; the
+      millionaire surtax, billionaire minimum tax, wealth tax, estate
+      restoration, and capital-gains reform in the package above land
+      almost entirely on those bands. Bars left of zero
+      mean a group's total annual costs go <em>down</em>. View in
+      <label style="display:inline">
+        year <select id="dist-year" aria-label="Distribution year"></select>
+      </label>
+      <span class="mode-toggle" role="group" aria-label="Units">
+        <button id="mode-dollars" class="active">$ per household</button>
+        <button id="mode-pct">% of income</button>
+      </span>
+    </p>
+    <div id="tax-impact-chart"></div>
+    <h2 style="font-size:14.5px;margin-top:20px">Average federal tax rate, current law → with this package</h2>
+    <p class="desc">Pure tax-side view (health savings excluded), comparable
+      to CBO's effective-rate tables.</p>
+    <div id="tax-rate-chart"></div>
+    <details class="tableview"><summary>View distribution as table</summary>
+      <div class="tbl-scroll" id="tax-dist-table"></div>
+    </details>
+  </section>
+
+  <!-- Tax methodology -->
+  <section class="card">
+    <h2>Tax model methodology</h2>
+    <div class="note">
+      <b>Structure:</b> income groups follow CBO's distribution format
+      (quintiles, 80–90th, 90–99th, top 1%). Each instrument carries a sourced
+      revenue estimate at 2024 scale (growing with the economy), a phase-in
+      schedule, and an incidence vector (who ultimately bears it), using
+      CBO/JCT conventions (employer payroll → workers' wages; corporate →
+      25% labor / 75% capital; consumption taxes → consumption shares).
+    </div>
+    <div class="note">
+      <b>Sources:</b> the income-group table is CBO's <em>Distribution of
+      Household Income, 2022</em> (published January 2026), extracted from
+      CBO's own supplemental workbook and inflated to 2024 dollars; revenue
+      scores come from CBO's <em>Options for Reducing the Deficit:
+      2025–2034</em> (December 2024, JCT staff), the Treasury FY2025
+      Greenbook, and the Saez–Zucman wealth-tax letter; health spending by
+      quintile is BLS Consumer Expenditure Survey 2024 (healthcare runs
+      20.7% of income in the lowest quintile vs 3.7% in the highest; that is the
+      regressivity this system unwinds). Full citations in
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/06_tax_distribution_financing.md"
+         target="_blank" rel="noopener">research file 06</a>.
+    </div>
+    <div class="note">
+      <b>Limits:</b> incidence is static (no behavioral responses
+      beyond the haircuts already in each estimate); group boundaries don't
+      capture within-group variation (a "middle quintile" family with high
+      health costs gains far more than one without); the wealth tax has no
+      official JCT/CBO score and its legal survival is genuinely uncertain
+      (the plan carries a fallback matrix for that reason); the estate
+      instrument has no current score against the post-2025 $15M exemption;
+      and CBO's December 2024 option scores predate the July 2025
+      reconciliation act, so some would re-base lower today.
+    </div>
+  </section>
+
+  </main>
+</BaseLayout>
+
+<script>
+  import '../scripts/tax-client.ts';
+</script>

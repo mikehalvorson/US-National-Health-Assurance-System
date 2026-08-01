@@ -1,0 +1,58 @@
+import { expect, test } from 'vitest';
+import {
+  compute, distribution, solveScenario, defaultSettings,
+  instrumentRevenue, TAX_SELFTESTS,
+} from '../../src/lib/taxmodel';
+import { PROGRAMS, INSTRUMENTS, SCENARIOS, ECON } from '../../src/lib/taxparams';
+
+test('distribution burden reconciles with total revenue within 0.5%', () => {
+  const s = defaultSettings();
+  const year = 2040;
+  const rows = distribution(s, year, 0);
+  const sumTax = rows.reduce((a, r) => a + r.taxB, 0);
+  const c = compute(s, PROGRAMS);
+  const total = c.totalRev[c.years.indexOf(year)];
+  expect(Math.abs(sumTax - total) / total).toBeLessThan(0.005);
+});
+
+test('revenue is linear in a scale instrument setting', () => {
+  const s1 = defaultSettings();
+  const s2 = defaultSettings();
+  s2.instruments.payroll.value = 2 * s1.instruments.payroll.value;
+  const ins = INSTRUMENTS.filter((i) => i.id === 'payroll')[0];
+  const a = instrumentRevenue(ins, s1.instruments.payroll, 2040);
+  const b = instrumentRevenue(ins, s2.instruments.payroll, 2040);
+  expect(Math.abs(b - 2 * a)).toBeLessThan(1e-9);
+});
+
+test('every goal scenario meets the funding goal', () => {
+  const goals = SCENARIOS.filter((sc) => sc.balancer);
+  expect(goals.length).toBeGreaterThan(0);
+  const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
+  for (const sc of goals) {
+    const s = solveScenario(sc, PROGRAMS);
+    const c = compute(s, PROGRAMS);
+    const i41 = c.years.indexOf(2041);
+    expect(c.totalRev[i41]).toBeGreaterThanOrEqual(c.need[i41]);
+    expect(sum(c.totalRev)).toBeGreaterThanOrEqual(sum(c.need));
+  }
+});
+
+test('phase-in ramps from 0 to full', () => {
+  const ins = INSTRUMENTS.filter((i) => i.id === 'surtax')[0];
+  const st = { value: 1, enabled: true, phaseStart: 2029, phaseYears: 4 };
+  const before = instrumentRevenue(ins, st, 2028);
+  const mid = instrumentRevenue(ins, st, 2030);
+  const full = instrumentRevenue(ins, st, 2035) /
+    Math.pow(1 + ECON.realGrowth, 2035 - ECON.baseYear);
+  expect(before).toBe(0);
+  expect(mid).toBeGreaterThan(0);
+  expect(mid).toBeLessThan(full * 0.75);
+  expect(Math.abs(full - ins.rev1x)).toBeLessThan(1);
+});
+
+test('all seven tax self-test invariants pass', () => {
+  expect(TAX_SELFTESTS.length).toBe(7);
+  const failing = TAX_SELFTESTS.filter((t) => !t.run()).map((t) => t.name);
+  expect(failing).toEqual([]);
+});

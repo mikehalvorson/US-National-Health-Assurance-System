@@ -1,0 +1,16 @@
+---
+import { TABS } from '../lib/tabs';
+interface Props { pathname: string }
+const { pathname } = Astro.props;
+const base = import.meta.env.BASE_URL; // ends with '/'
+const norm = (p: string) => (p.endsWith('/') ? p : p + '/');
+---
+<nav class="tabs" aria-label="Dashboard sections">
+  {TABS.map((t) => {
+    const href = base + t.path;
+    const active = norm(pathname) === norm(href);
+    return (
+      <a id={t.id} href={href} class={active ? 'active' : undefined} aria-current={active ? 'page' : undefined}>{t.label}</a>
+    );
+  })}
+</nav>

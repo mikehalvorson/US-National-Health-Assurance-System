@@ -1,0 +1,4 @@
+# Records pnpm 11 build-script approvals (esbuild, sharp) so installs stay non-interactive; this is NOT a monorepo workspace.
+allowBuilds:
+  esbuild: true
+  sharp: true

@@ -1,0 +1,802 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { computeOverview } from '../lib/overview';
+import { PROBLEM_STATS, OUTCOME_STATS, PARAM_DEFS } from '../lib/params';
+import { sponsorTableData } from '../lib/overview-tables';
+import { CARE_SCENARIOS, moneyRange } from '../lib/care';
+import { selfTestSummary } from '../lib/selftests';
+
+const v = computeOverview('SCN-BASE', null);
+const sponsor = sponsorTableData();
+const base = import.meta.env.BASE_URL; // ends with '/'
+const gapsList = ' ' + PARAM_DEFS.filter((p) => p.confidence === 'low').map((p) => p.label).join(' · ');
+const selftests = selfTestSummary();
+---
+<BaseLayout
+  title="National Health Assurance: Story & System Dashboard"
+  description="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models."
+>
+  <main>
+    <section class="card">
+      <h2>The system today</h2>
+      <p class="desc">American healthcare is not one system. It is four
+        payment systems stapled together, with your coverage determined
+        mostly by your job, your age, and your income. About 157 million
+        people get insurance through an employer, who pays most of the
+        premium out of what would otherwise be wages. Medicare covers ~67
+        million people over 65 or disabled, funded by payroll taxes, general
+        federal revenue, and enrollee premiums. Medicaid &amp;
+        <abbr class="overview-acronym" title="Children's Health Insurance Program">CHIP</abbr>
+        cover ~72
+        million lower-income people, funded jointly by Washington and the
+        states. Everyone also pays directly at the point of care:
+        deductibles, copays, and uncovered bills totaled $506B in 2023. And
+        ~26 million people have no coverage at all. Here is where the $4.87T
+        came from and where it went. Hover any ribbon for the details.</p>
+      <div class="flow-panel" style="max-width:560px;margin:14px auto 0">
+        <div class="flow-title">Actual 2023 spending: $4.87T
+          (<abbr class="overview-acronym" title="Centers for Medicare &amp; Medicaid Services">CMS</abbr>)</div>
+        <div id="flow-today-solo"></div>
+      </div>
+      <details class="tableview"><summary>View the distribution as a table</summary>
+        <div class="tbl-scroll">
+          <table class="data" id="sponsor-table">
+            <thead><tr>{sponsor.head.map((h) => <th>{h}</th>)}</tr></thead>
+            <tbody>{sponsor.rows.map((r) => <tr>{r.map((c) => <td>{c}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>What's wrong, by the numbers</h2>
+      <p class="desc">The problem is not that America spends heavily on health; every
+        rich country does. It's that America pays far more and gets less
+        coverage, less security, and far more overhead. Every figure below
+        is sourced (citations in the
+        <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/tree/main/research"
+           target="_blank" rel="noopener">research repository</a>).</p>
+      <div class="tiles" id="problem-tiles">
+        {PROBLEM_STATS.map((s) => (
+          <div class="tile">
+            <div class="value">{s.value}</div>
+            <div class="label">{s.label}</div>
+            <div class="range">{s.note}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>The fixable part</h2>
+      <p class="desc">Most of that dysfunction is structural rather than medical,
+        which means it can be fixed by redesigning how money moves rather than by
+        rationing care. Four levers do most of the work:</p>
+      <ul class="lever-list">
+        <li><b>Administrative consolidation.</b> One public payer and one
+          claims rail replace ~900 insurers' duplicated overhead and the
+          billing bureaucracy providers maintain to fight them. Recoverable
+          savings estimates in the literature run $200 to $500B a year.</li>
+        <li><b>Drug-price negotiation and public manufacturing.</b> The
+          <abbr class="overview-acronym" title="Inflation Reduction Act">IRA</abbr>
+          already proved government negotiation works
+          (<abbr class="overview-acronym" title="Congressional Budget Office">CBO</abbr>-scored, 38–79%
+          price cuts on the first ten drugs). Applied system-wide against
+          prices 2.78× the international average, plus a public manufacturer
+          for essential generics, modeled on Civica Rx's real $30-a-vial
+          insulin. The model tests net price cuts of 25 to 55%.</li>
+        <li><b>Hospital payment reform.</b> Global budgets replace per-claim
+          billing, ending facility-fee markups, related-party extraction, and
+          a slice of the $76–101B/yr in scored low-value care, while
+          readiness funding protects ERs and rural service lines instead of
+          letting them close.</li>
+        <li><b>Front-door capacity.</b> A community diagnostic-treatment
+          network and specialist e-consults absorb the routine care that
+          currently lands in $2,453-average
+          <abbr class="overview-acronym" title="Emergency Room">ER</abbr>
+          visits and months-long
+          specialist queues.</li>
+      </ul>
+      <p class="note">The bet behind this design: these levers can pay for most of
+        covering everyone with no bills. Whether that holds is
+        what the model on this page computes; it is not assumed.</p>
+    </section>
+
+    <section class="card">
+      <h2>The proposal: National Health Assurance</h2>
+      <p class="desc">A single public system replacing employment-linked
+        insurance entirely, the design this
+        <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System"
+           target="_blank" rel="noopener">dashboard</a>
+        simulates:</p>
+      <ul class="lever-list">
+        <li><b>Automatic, continuous coverage</b> for every resident: no
+          enrollment cliffs, no churn, no linkage to your job.</li>
+        <li><b>$0 at the point of care</b> for covered medically necessary
+          care; medical debt for covered care is prohibited (patient billing
+          capped at 0.5% of encounters).</li>
+        <li><b>National drug purchasing</b> through a real-time public
+          pharmacy claims utility (replacing
+          <abbr class="overview-acronym" title="Pharmacy Benefit Managers">PBMs</abbr>),
+          plus a Public Medicines
+          Corporation manufacturing essential generics.</li>
+        <li><b>Hospitals on global budgets</b> under public-service charters,
+          funded for readiness and essential service lines, not per-claim
+          revenue.</li>
+        <li><b>A four-type community diagnostic-treatment network</b>
+          (the plan specifies at least 15,000 units, from pharmacy
+          micro-clinics to rural enhanced and urban public-health units;
+          the Physical Care chapter derives the need-based count) delivering
+          same-day routine care.</li>
+        <li><b>A structured specialist backplane:</b> complete workups and
+          24-hour e-consults before in-person referrals, with urgency classes
+          and protected urgent capacity.</li>
+        <li><b>Expanded benefits phased in:</b> long-term care (home-first),
+          behavioral health, dental, vision, hearing, and
+          <abbr class="overview-acronym" title="Emergency Medical Services">EMS</abbr>.</li>
+        <li><b>A 12-year gated rollout (2027–2038)</b> with go/no-go
+          phase gates, transition protections for patients, providers, and
+          displaced workers, and independent oversight bodies.</li>
+      </ul>
+    </section>
+
+    <section class="card overview-map-card">
+      <span class="overview-kicker">The whole design in one view</span>
+      <h2>The plan is one operating system, not a collection of separate programs</h2>
+      <p class="desc">A universal public promise sits above a local care network.
+        National payment, data, medicine, and workforce systems make that promise
+        operable; measurable quality and independent governance keep every layer
+        accountable. Select a chapter to inspect the detailed model.</p>
+
+      <div class="overview-system-map"
+        aria-label="Layered map of the National Health Assurance operating system">
+        <div class="overview-promise-band">
+          <span>Public promise</span>
+          <strong>Automatic coverage · medically necessary care without a bill ·
+            portable rights and appeals</strong>
+          <a href={base + 'legislation'}>Enabling law</a>
+        </div>
+        <div class="overview-map-connector" aria-hidden="true">
+          <i></i><span>turn the promise into care</span><i></i>
+        </div>
+        <div class="overview-care-band">
+          <article>
+            <span>Front door</span>
+            <h3>Community diagnostic-treatment units</h3>
+            <p>Same-day routine care, testing, prevention, navigation, and
+              escalation close to where people live.</p>
+            <a href={base + 'units'}>Physical Care</a>
+          </article>
+          <article>
+            <span>Clinical backplane</span>
+            <h3>Specialists and hospitals</h3>
+            <p>Complete workups, e-consults, urgency routing, protected capacity,
+              and hospital global budgets.</p>
+            <a href={base + 'health'}>Healthcare</a>
+          </article>
+          <article>
+            <span>Continuity</span>
+            <h3>Home, community, and expanded benefits</h3>
+            <p>Home-first long-term care plus behavioral, dental, vision, hearing,
+              emergency, and public-health services.</p>
+            <a href={base + 'rollout'}>Rollout</a>
+          </article>
+        </div>
+        <div class="overview-map-connector" aria-hidden="true">
+          <i></i><span>shared national backbone</span><i></i>
+        </div>
+        <div class="overview-backbone-band">
+          <article>
+            <b>Payment &amp; financing</b>
+            <p>One public claims rail, global budgets, existing public spending,
+              employer contributions, and progressive revenue.</p>
+            <a href={base + 'tax'}>Financing</a>
+          </article>
+          <article>
+            <b>Data &amp; cyber</b>
+            <p>Portable records, authoritative nodes, common interfaces, audit
+              trails, segmentation, and tested downtime paths.</p>
+            <a href={base + 'data'}>Data</a>
+          </article>
+          <article>
+            <b>Medicines &amp; supply</b>
+            <p>National purchasing, a public pharmacy utility, transparent
+              formularies, public production, and shortage response.</p>
+            <a href={base + 'medications'}>Medication strategy</a>
+          </article>
+          <article>
+            <b>Workforce &amp; education</b>
+            <p>Role-region staffing plans, training expansion, rural service,
+              travel teams, and a protected transition for displaced workers.</p>
+            <a href={base + 'workforce'}>Workforce</a>
+          </article>
+        </div>
+        <div class="overview-assurance-band">
+          <span>Independent assurance across every layer</span>
+          <div>
+            <a href={base + 'quality'}>430 controlled parameters</a>
+            <a href={base + 'gov'}>Distributed governance</a>
+            <a href={base + 'hardening'}>Executive hardening</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="overview-kicker">What changes for a patient</span>
+      <h2>One person, one continuous care pathway</h2>
+      <p class="desc">The system moves expertise and information toward the
+        patient first. It moves the patient only when hands-on specialty or
+        hospital care is necessary.</p>
+      <div class="overview-care-path" aria-label="Patient care pathway">
+        <article>
+          <span>1</span>
+          <h3>Covered automatically</h3>
+          <p>Coverage follows residency, not a job, age band, or annual plan choice.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>2</span>
+          <h3>Enter locally</h3>
+          <p>A nearby unit examines, tests, treats, and assembles a complete record.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>3</span>
+          <h3>Route by need</h3>
+          <p>An e-consult can advise the local team or move the case into a protected queue.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>4</span>
+          <h3>Treat at the right level</h3>
+          <p>Specialists, hospitals, and regional services take cases that require them.</p>
+        </article>
+        <i aria-hidden="true">&rarr;</i>
+        <article>
+          <span>5</span>
+          <h3>Close the loop</h3>
+          <p>Results, medications, follow-up, home support, and appeals remain visible.</p>
+        </article>
+      </div>
+      <div class="overview-inline-links">
+        <a href={base + 'health'}>See benefits and cost</a>
+        <a href={base + 'units'}>See the local network</a>
+        <a href={base + 'data'}>See how information follows the patient</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="overview-kicker">How the money changes route</span>
+      <h2>Replace fragmented collection and billing with public financing and simple payment</h2>
+      <p class="desc">The proposal does not make healthcare free to produce.
+        It replaces premiums, deductibles, point-of-care bills, and payer-specific
+        administration with a publicly financed system that pays providers
+        through a common claims rail and hospital global budgets.</p>
+      <div class="overview-money-shift" aria-label="High-level money-flow change">
+        <div class="overview-money-world today">
+          <span>Today</span>
+          <strong>Households + employers + governments</strong>
+          <i aria-hidden="true">&darr;</i>
+          <p>Premiums · taxes · deductibles · copays · uncovered bills</p>
+          <i aria-hidden="true">&darr;</i>
+          <b>Many insurers, networks, contracts, and billing rules</b>
+        </div>
+        <div class="overview-money-pivot" aria-hidden="true">
+          <span>consolidate</span>
+          <b>&rarr;</b>
+        </div>
+        <div class="overview-money-world proposal">
+          <span>National Health Assurance</span>
+          <strong>Existing public funds + employer contribution + progressive revenue</strong>
+          <i aria-hidden="true">&darr;</i>
+          <p>National health trust and public payment operations</p>
+          <i aria-hidden="true">&darr;</i>
+          <b>Claims payments · hospital budgets · unit funding · benefits</b>
+        </div>
+      </div>
+      <div class="overview-inline-links">
+        <a href={base + 'health'}>Test total system cost</a>
+        <a href={base + 'tax'}>Test who pays and who saves</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="overview-kicker">Implementation, not a switch-flip</span>
+      <h2>Twelve years of staged authority, infrastructure, coverage, and benefits</h2>
+      <p class="desc">Dates are anchors, not automatic deadlines. Eight independent
+        readiness gates can hold, resize, or roll back a wave when claims,
+        capacity, workforce, fiscal, artificial-intelligence, cyber, legitimacy,
+        or continuity evidence is inadequate.</p>
+      <div class="overview-rollout-arc" aria-label="Twelve-year high-level rollout">
+        <article>
+          <span>Years 1–2 · P0–P1</span>
+          <strong>Found</strong>
+          <p>Pass the statute; stand up accountable bodies, rights, identity,
+            registries, cyber baselines, and transition protection.</p>
+        </article>
+        <article>
+          <span>Years 3–4 · P2–P3</span>
+          <strong>Operate first rails</strong>
+          <p>Launch pharmacy purchasing and production, then begin the first
+            public coverage wave and claims operation.</p>
+        </article>
+        <article>
+          <span>Years 5–7 · P4–P5</span>
+          <strong>Pilot and scale delivery</strong>
+          <p>Test hospital budgets and all four unit types; expand workforce,
+            specialist routing, and the care network.</p>
+        </article>
+        <article>
+          <span>Years 8–9 · P6</span>
+          <strong>Make coverage the default</strong>
+          <p>Scale public coverage, payment, rights, regional operations, and
+            major cost-sharing elimination nationally.</p>
+        </article>
+        <article>
+          <span>Years 10–12 · P7–P8</span>
+          <strong>Expand and certify</strong>
+          <p>Add long-term care and other benefits only after capacity gates,
+            then test the mature system against every performance floor.</p>
+        </article>
+      </div>
+      <div class="overview-gate-line">
+        <strong>Eight stop-the-clock gates</strong>
+        <span>claims</span><span>unit capacity</span><span>workforce</span>
+        <span>fiscal</span><span><abbr class="overview-acronym" title="Artificial Intelligence">AI</abbr> safety</span><span>records &amp; cyber</span>
+        <span>legitimacy</span><span>continuity</span>
+      </div>
+      <div class="overview-inline-links">
+        <a href={base + 'rollout'}>Open the complete phased rollout</a>
+        <a href={base + 'quality'}>Inspect phase targets</a>
+      </div>
+    </section>
+
+    <section class="card" id="hero-card">
+      <h2>The system-level price tag</h2>
+      <p class="desc">This model's own projection, computed bottom-up from
+        sourced parameters: what the fully-mature system would cost at today's
+        (2024) scale, directly comparable with the ~$5.3T the U.S. actually
+        spends now. The savings levers (drug negotiation, administrative
+        consolidation, payment reform) largely pay for the benefit expansions
+        (universal coverage, $0 care, long-term care, dental/vision/hearing,
+        behavioral health).</p>
+      <div class="hero-pair-label">If the mature system existed today, at 2024 scale</div>
+      <div class="hero">
+        <div class="hero-block">
+          <div class="label">NHA, fully mature (median)</div>
+          <div class="hero-num" id="hero-value">{v.heroValue}</div>
+          <div class="range" id="hero-range">{v.heroRange}</div>
+        </div>
+        <div class="hero-block">
+          <div class="label">What the U.S. actually spends, 2024</div>
+          <div class="hero-num" style="color:var(--text-secondary)">$5.3T/yr</div>
+          <div class="range">CMS preliminary</div>
+        </div>
+      </div>
+      <div class="hero-pair-label">In 2041, at 2041's size (still measured in 2024 dollars)</div>
+      <div class="hero">
+        <div class="hero-block">
+          <div class="label">NHA at steady state (median)</div>
+          <div class="hero-num" id="hero-2041-nha">{v.nha2041}</div>
+          <div class="range" id="hero-2041-range">{v.hero2041Range}</div>
+        </div>
+        <div class="hero-block">
+          <div class="label">Status quo, same year</div>
+          <div class="hero-num" style="color:var(--text-secondary)" id="hero-2041-base">{v.base2041}</div>
+          <div class="range">CMS's own trajectory, no reform; the country is bigger and older either way</div>
+        </div>
+      </div>
+      <div class="takeaway" id="family-burden-note">{v.familyNote}</div>
+      <div class="tiles" id="tiles">
+        {v.tiles.map((it) => (
+          <div class="tile">
+            <div class="label">{it.label}</div>
+            <div class="value">{it.value}</div>
+            <div class="range">{it.range}</div>
+          </div>
+        ))}
+      </div>
+      <p class="note"><b>Reading the pairs:</b> each row compares like with
+        like. The first row asks what the mature system would cost if it
+        existed today; the second asks what the annual bill looks like in
+        2041, when the country is bigger and older under either system.
+        Never compare across rows: the jump from ~$5.3T to ~$9T happens with
+        or without reform, and it is more people, older people, and more
+        care per person, not inflation. Every dollar on this page is in 2024
+        purchasing power.</p>
+    </section>
+
+    <section class="card">
+      <h2>Assumptions</h2>
+      <p class="desc">Pick a stress scenario from the 19-scenario
+        catalog, or adjust individual assumptions. Badges show evidence quality:
+        <span class="conf high">high</span> = official statistic or scored estimate,
+        <span class="conf medium">medium</span> = reputable study or survey,
+        <span class="conf low">low</span> = analyst assumption with no direct source.</p>
+      <div class="controls" id="controls"></div>
+      <p class="scenario-desc" id="scenario-desc"></p>
+      <div class="controls-foot">
+        <button class="btn" id="reset-btn">Reset assumptions</button>
+        <span class="runs-note" id="runs-note"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Annual total system cost, 2027–2042</h2>
+      <p class="desc">The status-quo path follows CMS's own spending trajectory.
+        The NHA path phases in over the Phase 0–8 roadmap
+        (coverage waves from Year 4, national default coverage Year 8, expanded
+        long-term-care/behavioral/dental benefits Years 10–12), including all
+        transition costs. The band is the 10th–90th percentile across Monte
+        Carlo draws of every uncertain parameter.</p>
+      <div id="path-chart"></div>
+      <p class="note" id="growth-decomp"></p>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="path-table"></table></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>How the money re-routes</h2>
+      <p class="desc">The most misunderstood part of a public
+        system: society's total spending barely changes; <em>the routes
+        change</em>. Compare the flow you saw at the top of the page with the
+        same flow under NHA. Premiums and point-of-care bills disappear; the
+        same dollars reach the same doctors and hospitals through public
+        financing instead. Hover any ribbon for what it contains.</p>
+      <div class="flow-grid">
+        <div class="flow-panel">
+          <div class="flow-title">Today: actual 2023 spending ($4.87T, CMS)</div>
+          <div id="flow-today"></div>
+        </div>
+        <div class="flow-panel">
+          <div class="flow-title" id="flow-nha-title">Under NHA: mature system at 2024 scale</div>
+          <div id="flow-nha"></div>
+        </div>
+      </div>
+      <div class="takeaway" id="flow-takeaway"></div>
+    </section>
+
+    <section class="card">
+      <h2>Who pays</h2>
+      <p class="desc">Mature-year public cost funded by redirecting what
+        government already spends, a state maintenance-of-effort contribution,
+        an employer contribution replacing today's premiums, and the remainder,
+        which requires new revenue. The comparison shows how far the
+        extreme-wealth tax package goes toward that gap.</p>
+      <div id="financing-chart"></div>
+      <p class="note" id="financing-note"></p>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="financing-table"></table></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>Why the total lands where it does</h2>
+      <p class="desc">The bridge from the status-quo baseline at maturity (2041)
+        to the NHA total, using central-estimate parameters. Each saving
+        mechanism appears exactly once: the model computes both worlds directly
+        and derives these differences, so nothing can be double-counted.</p>
+      <div id="bridge-chart"></div>
+      <details class="tableview"><summary>View as table</summary>
+        <div class="tbl-scroll"><table class="data" id="bridge-table"></table></div>
+      </details>
+    </section>
+
+    <section class="card benchmark-section">
+      <h2>Does the model pass an outside reality check?</h2>
+      <p class="desc">Internal tests can show that the arithmetic works. They
+        cannot show whether the result is plausible. These checks compare the
+        model with observed U.S. spending and independent estimates of
+        single-payer systems. Similar scale supports plausibility; it does not
+        prove that any one outcome will occur.</p>
+
+      <div class="benchmark-purpose-grid">
+        <article>
+          <span>Check 1</span>
+          <strong>The nation&apos;s total healthcare bill</strong>
+          <p>What would households, employers, states, and the federal
+            government spend in total? This tests the overall size of the
+            model.</p>
+        </article>
+        <article>
+          <span>Check 2</span>
+          <strong>The shift onto the federal budget</strong>
+          <p>How much additional spending would appear on the federal ledger?
+            This tests the scale of the financing transfer.</p>
+        </article>
+      </div>
+
+      <div class="benchmark-distinction">
+        <strong>Keep the two checks separate.</strong>
+        Added federal spending is not the same as added national healthcare
+        spending. Much of the federal increase replaces premiums,
+        point-of-care bills, employer spending, and state spending that already
+        exist elsewhere in the system.
+      </div>
+
+      <article class="benchmark-panel">
+        <div class="benchmark-panel-head">
+          <span>Check 1</span>
+          <div>
+            <h3>Is the total system price tag in a credible range?</h3>
+            <p>The dashboard&apos;s mature system at today&apos;s population and
+              economy is compared with what the United States actually spent
+              in 2024. Both figures include all payers.</p>
+          </div>
+        </div>
+        <div class="benchmark-key" aria-label="Chart key">
+          <span><i class="benchmark-key-model"></i>Dashboard model range and median</span>
+          <span><i class="benchmark-key-outside"></i>Observed or outside estimate</span>
+        </div>
+        <div id="benchmark-nhe"></div>
+        <p class="benchmark-readout">
+          <strong>Readout:</strong>
+          <span id="benchmark-nhe-result"></span>
+        </p>
+      </article>
+
+      <article class="benchmark-panel">
+        <div class="benchmark-panel-head">
+          <span>Check 2</span>
+          <div>
+            <h3>How does the federal financing shift compare?</h3>
+            <p>The dashboard&apos;s added federal spending is compared with CBO,
+              Urban Institute, and Mercatus estimates. This is a budget
+              comparison, not a measure of new cost to society or the exact
+              amount of new tax revenue required. The sources use different
+              years, benefit designs, and transition speeds, so this check is
+              intentionally approximate.</p>
+          </div>
+        </div>
+        <div class="benchmark-figure-grid">
+          <article>
+            <span>Dashboard model</span>
+            <strong id="benchmark-fed-model">...</strong>
+            <small id="benchmark-fed-model-range"></small>
+            <p>Mature system, 2041-scale economy, real 2024 dollars</p>
+          </article>
+          <article>
+            <span>CBO <i class="conf high">high</i></span>
+            <strong>$1.5T–$3.0T/yr</strong>
+            <small>Federal subsidy increase</small>
+            <p>Illustrative single-payer options in 2030, study dollars</p>
+          </article>
+          <article>
+            <span>Urban Institute / Mercatus <i class="conf medium">medium</i></span>
+            <strong>$3.2T–$3.4T/yr</strong>
+            <small>Annualized federal increase</small>
+            <p>First-decade estimates, each study&apos;s own dollars</p>
+          </article>
+        </div>
+        <p class="benchmark-readout">
+          <strong>Readout:</strong>
+          <span id="benchmark-fed-result"></span>
+        </p>
+      </article>
+
+      <div class="benchmark-supporting">
+        <span>Supporting check</span>
+        <h3>Does the 2030 change in total spending have a plausible scale?</h3>
+        <p id="benchmark-2030-result"></p>
+      </div>
+
+      <div class="benchmark-verdict">
+        <span>Overall interpretation</span>
+        <p id="benchmark-verdict"></p>
+      </div>
+      <p class="benchmark-source">
+        <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/01_macro_financing_population_offsets.md"
+          target="_blank" rel="noopener">Sources and methodology</a>.
+        Published estimates retain each study&apos;s accounting basis and
+        publication-year dollars.
+      </p>
+    </section>
+
+    <section class="card" id="care-card-section">
+      <h2>What you'd pay for care</h2>
+      <p class="desc">Here is what that design means for real care episodes:
+        today's typical cost with employer insurance, without insurance, and
+        under NHA, with the year each benefit arrives, assuming enactment in
+        2027.</p>
+      <div class="care-grid" id="care-cards">
+        {CARE_SCENARIOS.map((s) => (
+          <div class="care-card">
+            <div class="care-title">{s.title}</div>
+            <div class="care-rows">
+              <div class="care-row">
+                <div class="care-row-label">Today, typical insured</div>
+                <div class="care-row-val">{moneyRange(s.todayInsured.lo, s.todayInsured.hi)}</div>
+              </div>
+              <div class="care-row-note">{s.todayInsured.note}</div>
+              <div class="care-row">
+                <div class="care-row-label">Today, uninsured</div>
+                <div class="care-row-val">{moneyRange(s.todayUninsured.lo, s.todayUninsured.hi)}</div>
+              </div>
+              <div class="care-row-note">{s.todayUninsured.note}</div>
+            </div>
+            <div class="care-nha">
+              <div class="care-nha-line">
+                <div class="care-nha-label">Under NHA</div>
+                <div class="care-nha-val">$0</div>
+                <div class="care-year-chip" title="Assuming enactment in 2027; see the phase roadmap.">from ~{s.nha.fromYear}</div>
+              </div>
+              <div class="care-nha-note">{s.nha.note}</div>
+            </div>
+            <div class="care-src">Source: {s.source} <span class={"conf " + s.confidence}>{s.confidence}</span></div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Beyond dollars: what the model does not price</h2>
+      <p class="desc">Some effects of universal coverage are well documented
+        but deliberately kept out of the cost arithmetic, because turning
+        lives and solvency into dollars invites false precision. They belong
+        in the picture anyway. Each figure notes the NHA mechanism that
+        addresses it.</p>
+      <div class="tiles" id="outcome-tiles">
+        {OUTCOME_STATS.map((s) => (
+          <div class="tile">
+            <div class="value">{s.value}</div>
+            <div class="label">{s.label}</div>
+            <div class="range">{s.note} <span class={"conf " + s.confidence}>{s.confidence}</span></div>
+          </div>
+        ))}
+      </div>
+      <p class="note">The utilization-increase parameter in the model is the
+        cost side of these same effects: people who stop skipping care start
+        using it. The model prices that; it does not claim credit for the
+        health improvements that follow.</p>
+    </section>
+
+    <section class="card">
+      <h2>Your household's annual healthcare bill</h2>
+      <p class="desc">Premiums plus out-of-pocket costs today, versus the
+        mature system, where the question for a household becomes the tax
+        design. The tax line below is computed live from this model's financing
+        results and the plan's household-protection cap.</p>
+      <div id="household-calc"></div>
+    </section>
+
+    <section class="card">
+      <h2>Methodology and limits</h2>
+      <div class="note">
+        <b>What this is:</b> a national-aggregate annual model. It computes
+        the status-quo world and the NHA world category by category from CMS
+        2023 calibration data, phases policy in over the Phase 0–8
+        roadmap, and samples every uncertain parameter from a sourced
+        low/central/high range (triangular distribution). Draws share a
+        systemic optimism/pessimism factor (weight 0.35): runs where benefit
+        expansions overrun also tend to be runs where savings levers
+        underdeliver, which widens the tails compared with independent
+        sampling. Employer premium savings pass through to wages (adjustable,
+        40–95%, CBO convention) and the resulting income/payroll tax revenue
+        feeds back into financing. Steady state is the 2040–2042 average.
+      </div>
+      <div class="note">
+        <b>On the original headline figure:</b> earlier drafts
+        asserted a mature cost of $4.75T/yr (2024 dollars) without a derivation.
+        That figure is superseded by this model's computed projections; under
+        central assumptions the model lands somewhat above it, and reaches it
+        only under the optimistic scenario. The full comparison lives in the
+        parameter table and scenario presets, not in the headline.
+      </div>
+      <div class="note">
+        <b>What it still is not:</b> specialty-level queues and wait-time
+        dynamics are not modeled, nor is provider behavioral response beyond
+        the payment factor. Macroeconomic feedback stops at first-order wage
+        pass-through with a fixed 28% marginal-rate revenue feedback; there
+        are no general-equilibrium or labor-supply effects. The correlation
+        structure is a single systemic factor, not a full covariance matrix.
+        Geographic detail exists for the care network (see the Physical Care
+        tab) but the fiscal model's costs and prices remain national
+        averages. Health outcomes are displayed with sources in the section
+        above, not converted into dollars. Demographic aging is decomposed
+        and shown under the cost-path chart, but the model does not simulate
+        cohorts individually.
+      </div>
+      <div class="warnbox" id="gaps-box">
+        <b>Weakest assumptions.</b> These parameters have no direct real-world
+        source and materially move the result. They are flagged
+        <span class="conf low">low</span> in the controls and listed with their
+        derivation anchors in the full parameter table below.
+        <span id="gaps-list">{gapsList}</span>
+      </div>
+      <details class="tableview"><summary>Full parameter table with sources (the entire evidence base)</summary>
+        <div class="tbl-scroll">
+          <table class="data" id="param-table">
+            <thead><tr>
+              <th>Parameter</th><th class="num">Low</th><th class="num">Central</th>
+              <th class="num">High</th><th>Unit</th><th>Confidence</th><th>Source</th>
+            </tr></thead>
+            <tbody>
+              {PARAM_DEFS.map((p) => (
+                <tr>
+                  <td>{p.label}</td>
+                  <td class="num">{(+p.low.toFixed(2)).toLocaleString('en-US')}</td>
+                  <td class="num">{(+p.mode.toFixed(2)).toLocaleString('en-US')}</td>
+                  <td class="num">{(+p.high.toFixed(2)).toLocaleString('en-US')}</td>
+                  <td>{p.unit}</td>
+                  <td><span class={"conf " + p.confidence}>{p.confidence}</span></td>
+                  <td>{p.source} {p.url && (<a href={p.url} target="_blank" rel="noopener">[link]</a>)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <div class="selftest" id="selftest">
+        <div>Model integrity: <span class={selftests.passed === selftests.total ? 'pass' : 'fail'}>{
+          selftests.passed === selftests.total
+            ? 'All ' + selftests.total + ' model self-tests pass.'
+            : (selftests.total - selftests.passed) + ' of ' + selftests.total + ' self-tests FAILING.'
+        }</span></div>
+        <ul>
+          {selftests.rows.map((r) => (
+            <li>{r.ok ? '✓ ' + r.name : '✗ ' + r.name + ': ' + r.note}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="overview-kicker">Continue the story</span>
+      <h2>Each chapter answers a different implementation question</h2>
+      <p class="desc">Read in sequence for a guided tour, or jump directly to
+        the operating question you want to test.</p>
+      <div class="overview-chapter-grid">
+        <a href={base + 'health'}>
+          <span>01 · The need and the promise</span><strong>Healthcare</strong>
+          <small>What is broken today, what people would receive, and what care costs.</small>
+        </a>
+        <a href={base + 'tax'}>
+          <span>02 · Paying for it</span><strong>Taxes &amp; Financing</strong>
+          <small>How much revenue is needed, who pays, and who comes out ahead.</small>
+        </a>
+        <a href={base + 'legislation'}>
+          <span>03 · Legal foundation</span><strong>Legislation</strong>
+          <small>What Congress must enact, which laws change, and how authority activates.</small>
+        </a>
+        <a href={base + 'units'}>
+          <span>04 · Physical care</span><strong>Physical Care</strong>
+          <small>How hospitals are governed, funded, regionalized, and connected to the four-unit network.</small>
+        </a>
+        <a href={base + 'medications'}>
+          <span>05 · Medicines</span><strong>Medications</strong>
+          <small>How purchasing, public production, and shortage protection lower costs and secure supply.</small>
+        </a>
+        <a href={base + 'data'}>
+          <span>06 · Information</span><strong>Data</strong>
+          <small>How the national mesh stores, moves, protects, and corrects records.</small>
+        </a>
+        <a href={base + 'workforce'}>
+          <span>07 · People</span><strong>Workforce</strong>
+          <small>How clinical capacity, rural staffing, training, and job transition work.</small>
+        </a>
+        <a href={base + 'gov'}>
+          <span>08 · Authority</span><strong>Governance</strong>
+          <small>Which institutions decide, operate, audit, and enforce the system.</small>
+        </a>
+        <a href={base + 'hardening'}>
+          <span>09 · Durability</span><strong>Executive Hardening</strong>
+          <small>How distributed authority and continuity duties resist sabotage.</small>
+        </a>
+        <a href={base + 'rollout'}>
+          <span>10 · Sequence</span><strong>Phased Rollout</strong>
+          <small>What is built in each year and what evidence allows the next wave.</small>
+        </a>
+        <a href={base + 'quality'}>
+          <span>11 · Proof</span><strong>Quality</strong>
+          <small>Which parameters define success and what each phase must achieve.</small>
+        </a>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<script>
+  import '../scripts/overview-client.ts';
+</script>
