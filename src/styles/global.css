@@ -3662,3 +3662,257 @@ footer.site a { color: var(--text-muted); }
   .ltc-stat:nth-child(2n) { padding-left: 0; border-left: none; }
   .ltc-impacts { grid-template-columns: 1fr; }
 }
+
+/* ===================== Failure Modes and Effects Analysis ============== */
+/* Risk-band colors: extreme=red, high=orange, moderate=yellow, low=green. */
+.fmea-cell-extreme  { --band: var(--series-6); }
+.fmea-cell-high     { --band: var(--series-8); }
+.fmea-cell-moderate { --band: var(--series-3); }
+.fmea-cell-low      { --band: var(--series-4); }
+
+.fmea-kicker {
+  display: block; color: var(--accent); font-size: 10.5px; font-weight: 650;
+  letter-spacing: 0.02em; text-transform: uppercase;
+}
+
+.fmea-premise {
+  margin: 14px 0 4px; padding: 13px 16px; border: 1px solid var(--border);
+  border-left: 3px solid var(--series-6); border-radius: 9px;
+  background: color-mix(in srgb, var(--series-6) 5%, transparent);
+}
+.fmea-premise span {
+  display: block; color: var(--series-6); font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 4px;
+}
+.fmea-premise p { font-size: 13.5px; line-height: 1.5; color: var(--text-secondary); }
+.fmea-premise strong { color: var(--text-primary); }
+
+.fmea-scope {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px; margin-top: 16px;
+}
+.fmea-scope article {
+  min-width: 0; padding: 13px 14px; border: 1px solid var(--border);
+  border-top: 3px solid var(--series-1); border-radius: 9px;
+  background: var(--surface-1);
+}
+.fmea-scope article:nth-child(2) { border-top-color: var(--series-2); }
+.fmea-scope article:nth-child(3) { border-top-color: var(--series-5); }
+.fmea-scope strong { display: block; font-size: 26px; font-weight: 700; margin: 4px 0 2px; }
+.fmea-scope b { display: block; font-size: 12.5px; }
+.fmea-scope small { display: block; color: var(--text-secondary); font-size: 11.5px; margin-top: 5px; line-height: 1.4; }
+
+.fmea-scales { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 6px; }
+.fmea-scale { min-width: 0; padding-top: 9px; border-top: 3px solid var(--series-1); }
+.fmea-scale:nth-child(2) { border-top-color: var(--series-6); }
+.fmea-scale h3 { font-size: 13.5px; }
+.fmea-scale ul { list-style: none; margin: 9px 0 0; padding: 0; }
+.fmea-scale li {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.45;
+  padding: 3px 0; border-bottom: 1px solid var(--gridline);
+}
+.fmea-scale li b {
+  display: inline-block; min-width: 18px; margin-right: 7px; color: var(--text-primary);
+  font-weight: 700; text-align: center;
+}
+.fmea-scale-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.45; }
+
+/* ---- Matrix ---- */
+.fmea-matrix-wrap { margin-top: 14px; }
+.fmea-matrix {
+  display: grid; grid-template-columns: auto repeat(5, minmax(52px, 1fr));
+  gap: 4px; max-width: 560px;
+}
+.fmea-matrix-corner {
+  grid-column: 1 / 2; font-size: 9.5px; color: var(--text-muted);
+  align-self: end; line-height: 1.25; padding-right: 6px; text-align: right;
+}
+.fmea-matrix-colhead, .fmea-matrix-rowhead {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 650; color: var(--text-secondary);
+}
+.fmea-matrix-rowhead { min-height: 46px; }
+.fmea-cell {
+  min-height: 46px; border: 1px solid var(--border); border-radius: 6px;
+  background: color-mix(in srgb, var(--band) 72%, var(--surface-1));
+  color: #fff; font: inherit; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; padding: 0; transition: transform 0.08s ease;
+}
+.fmea-cell b { font-size: 15px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+.fmea-cell-moderate { color: #1a1a19; }
+.fmea-cell-moderate b { text-shadow: none; }
+.fmea-cell.is-empty { background: color-mix(in srgb, var(--band) 16%, var(--surface-1)); }
+.fmea-cell:hover { transform: translateY(-1px); }
+.fmea-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fmea-cell.is-selected { outline: 2px solid var(--text-primary); outline-offset: 1px; }
+.fmea-matrix-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px;
+  font-size: 11.5px; color: var(--text-secondary);
+}
+.fmea-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.fmea-swatch {
+  width: 12px; height: 12px; border-radius: 3px; display: inline-block;
+  background: color-mix(in srgb, var(--band) 72%, var(--surface-1));
+  border: 1px solid var(--border);
+}
+.fmea-axis-note { font-size: 11.5px; color: var(--text-muted); margin-top: 10px; max-width: 640px; line-height: 1.45; }
+
+/* ---- Headlines ---- */
+.fmea-headlines {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px; margin-top: 20px;
+}
+.fmea-headline {
+  min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-1); border-top: 3px solid var(--series-6);
+}
+.fmea-headline:nth-child(2) { border-top-color: var(--series-8); }
+.fmea-headline:nth-child(3) { border-top-color: var(--series-5); }
+.fmea-headline strong { display: block; font-size: 28px; font-weight: 700; line-height: 1.1; margin: 3px 0; }
+.fmea-headline-blurb { font-size: 11.5px; color: var(--text-secondary); line-height: 1.4; }
+.fmea-headline-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.fmea-headline-list li { padding: 3px 0; border-top: 1px solid var(--gridline); }
+.fmea-mini-link {
+  background: none; border: none; padding: 2px 0; font: inherit; font-size: 11.5px;
+  color: var(--accent); cursor: pointer; text-align: left; line-height: 1.35;
+}
+.fmea-mini-link:hover { text-decoration: underline; }
+
+/* ---- Tiers ---- */
+.fmea-tiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 6px; }
+.fmea-tier {
+  min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface-1); border-left: 4px solid var(--band);
+}
+.fmea-tier-head { display: flex; align-items: center; gap: 10px; }
+.fmea-tier-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--band); flex: none; }
+.fmea-tier-head b { font-size: 14px; }
+.fmea-tier-head small { display: block; color: var(--text-muted); font-size: 11px; }
+.fmea-tier-count { margin-left: auto; font-size: 22px; font-weight: 700; }
+.fmea-tier-classes { list-style: none; margin: 12px 0 0; padding: 0; }
+.fmea-tier-classes li {
+  display: flex; align-items: baseline; gap: 8px; padding: 4px 0;
+  border-top: 1px solid var(--gridline); font-size: 12px;
+}
+.fmea-tier-class-label { color: var(--text-secondary); min-width: 0; }
+.fmea-tier-class-n { margin-left: auto; color: var(--text-primary); font-weight: 700; }
+.fmea-tier-examples { margin-top: 11px; display: grid; gap: 7px; }
+.fmea-tier-example {
+  text-align: left; background: color-mix(in srgb, var(--band) 6%, transparent);
+  border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px;
+  font: inherit; cursor: pointer;
+}
+.fmea-tier-example b { display: block; font-size: 11.5px; color: var(--text-primary); }
+.fmea-tier-example span { display: block; font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+.fmea-tier-example:hover { border-color: var(--accent); }
+
+/* ---- Gaps ---- */
+.fmea-gaps { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; margin-top: 6px; }
+.fmea-gap { min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-1); }
+.fmea-gap-lead { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 6px 0 10px; }
+.fmea-gap-table { font-size: 11.5px; min-width: 420px; }
+.fmea-gap-table th, .fmea-gap-table td { padding: 5px 8px; }
+.fmea-gap-proposed { font-variant-numeric: tabular-nums; color: var(--series-5); font-weight: 650; }
+.fmea-gap-ids { list-style: none; margin: 0; padding: 0; }
+.fmea-gap-ids li { padding: 4px 0; border-top: 1px solid var(--gridline); }
+
+/* ---- Explorer ---- */
+.fmea-controls { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+.fmea-control { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.fmea-control span { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.fmea-control input, .fmea-control select {
+  background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 9px; font: inherit; font-size: 13px;
+}
+.fmea-search { flex: 1 1 220px; }
+.fmea-filter-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.fmea-filter-foot p { font-size: 12.5px; color: var(--text-secondary); }
+.fmea-empty { color: var(--text-muted); font-size: 13px; padding: 14px 0; }
+
+.fmea-selected {
+  margin-top: 14px; padding: 15px; border: 1px solid var(--border);
+  border-radius: 10px; background: color-mix(in srgb, var(--surface-1) 94%, var(--series-1) 6%);
+}
+.fmea-selected-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(210px, 0.7fr);
+  gap: 20px; align-items: start;
+}
+.fmea-id-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.fmea-id-line b { font-size: 12px; }
+.fmea-gate-tag {
+  font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+  background: color-mix(in srgb, var(--series-6) 16%, transparent); color: var(--text-primary);
+}
+.fmea-selected h3 { font-size: 16px; line-height: 1.3; margin-top: 5px; }
+.fmea-selected-concept { color: var(--text-secondary); font-size: 12px; margin-top: 3px; }
+.fmea-selected-scores { text-align: right; }
+.fmea-band-chip {
+  display: inline-block; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 700;
+  background: color-mix(in srgb, var(--band) 72%, var(--surface-1)); color: #fff;
+}
+.fmea-cell-moderate.fmea-band-chip { color: #1a1a19; }
+.fmea-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; margin-top: 9px; }
+.fmea-pill {
+  display: inline-flex; align-items: baseline; gap: 4px; font-size: 10.5px;
+  color: var(--text-secondary); border: 1px solid var(--border); border-radius: 999px;
+  padding: 2px 9px;
+}
+.fmea-pill b { font-size: 13px; color: var(--text-primary); font-weight: 700; }
+.fmea-mode-box { margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--gridline); }
+.fmea-mode-text { font-size: 13px; color: var(--text-primary); font-weight: 600; margin: 3px 0 10px; line-height: 1.4; }
+.fmea-effect-text { font-size: 12.5px; color: var(--text-secondary); margin-top: 3px; line-height: 1.5; }
+.fmea-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 22px; margin-top: 15px; }
+.fmea-detail-field { min-width: 0; padding-top: 8px; border-top: 1px solid var(--gridline); }
+.fmea-detail-field p { color: var(--text-secondary); font-size: 11.5px; line-height: 1.45; margin-top: 2px; }
+.fmea-detail-wide { grid-column: 1 / -1; }
+
+.fmea-table-wrap { margin-top: 16px; }
+.fmea-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fmea-table thead th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.02em;
+  color: var(--text-muted); padding: 6px 8px; border-bottom: 1px solid var(--border); position: sticky; top: 0;
+  background: var(--surface-1);
+}
+.fmea-group-row th {
+  text-align: left; padding: 9px 8px 5px; background: color-mix(in srgb, var(--surface-1) 90%, var(--band) 10%);
+}
+.fmea-group-row span:not(.fmea-group-dot) { font-weight: 700; font-size: 12px; }
+.fmea-group-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--band); margin-right: 7px; }
+.fmea-group-row small { color: var(--text-muted); font-weight: 500; margin-left: 8px; }
+.fmea-table tbody td, .fmea-table tbody th { padding: 6px 8px; border-bottom: 1px solid var(--gridline); vertical-align: top; }
+.fmea-table tbody tr.is-selected { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.fmea-cell-name { color: var(--text-secondary); min-width: 160px; }
+.fmea-num { text-align: center; font-variant-numeric: tabular-nums; font-weight: 650; width: 34px; }
+.fmea-select {
+  background: none; border: none; padding: 0; font: inherit; font-size: 11.5px; font-weight: 650;
+  color: var(--accent); cursor: pointer; white-space: nowrap;
+}
+.fmea-select:hover { text-decoration: underline; }
+
+/* ---- CP calibration panel ---- */
+.fmea-cp-layout { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.fmea-matrix-cp { max-width: 320px; grid-template-columns: auto repeat(5, minmax(40px, 1fr)); }
+.fmea-matrix-cp .fmea-cell { min-height: 38px; }
+.fmea-cp-right { min-width: 0; }
+.fmea-cp-families { display: grid; gap: 6px; margin-top: 10px; max-height: 340px; overflow-y: auto; }
+.fmea-cp-family {
+  display: flex; align-items: center; gap: 10px; text-align: left; width: 100%;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface-1); font: inherit; cursor: pointer;
+}
+.fmea-cp-family:hover { border-color: var(--accent); }
+.fmea-cp-family-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--band); flex: none; }
+.fmea-cp-family-body { min-width: 0; flex: 1 1 auto; }
+.fmea-cp-family-body b { font-size: 12px; }
+.fmea-cp-family-body small { display: block; color: var(--text-secondary); font-size: 11px; margin-top: 1px; }
+.fmea-cp-family-worst { font-size: 11px; font-weight: 650; color: var(--text-secondary); white-space: nowrap; }
+
+@media (max-width: 860px) {
+  .fmea-scope, .fmea-headlines { grid-template-columns: 1fr; }
+  .fmea-scales, .fmea-tiers, .fmea-gaps { grid-template-columns: 1fr; }
+  .fmea-cp-layout { grid-template-columns: 1fr; }
+  .fmea-selected-head { grid-template-columns: 1fr; }
+  .fmea-selected-scores { text-align: left; }
+  .fmea-pills { justify-content: flex-start; }
+  .fmea-detail-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,222 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ChapterNav from '../components/ChapterNav.astro';
+---
+<BaseLayout title="National Health Assurance: Risk">
+  <main>
+
+  <section class="card">
+    <h2>From protections to failure modes</h2>
+    <p class="desc">The Executive Hardening chapter shows the protections built
+      to keep the system running under attack. It does not say, in one place,
+      what actually breaks and how badly. This chapter does. It is a Failure
+      Modes and Effects Analysis: it treats every controlled target as a
+      promise that can be broken, states what happens when it is, and ranks
+      each break by how likely it is and how much harm it causes.</p>
+    <div class="fmea-premise">
+      <span>The definition of a failure used here</span>
+      <p><strong>A failure mode is a phase-based target that is not met.</strong>
+        Every key performance parameter and technical performance parameter
+        carries a target at each rollout phase where it can be measured. Each
+        of those phase targets is one way the system can fall short. Cost
+        parameters carry no phase target, so their failure is a different
+        thing: the controlled quantity is never calibrated, or it is
+        calibrated outside its allowed range.</p>
+    </div>
+    <div class="fmea-scope" aria-label="What the analysis covers">
+      <article>
+        <span class="fmea-kicker">System outcomes</span>
+        <strong id="fmea-n-kpp">KPP</strong>
+        <b>failure modes across all measurable phases</b>
+        <small>Coverage, access, safety, equity, fiscal, transition, and workforce targets, one failure per phase.</small>
+      </article>
+      <article>
+        <span class="fmea-kicker">Operating performance</span>
+        <strong id="fmea-n-tpp">TPP</strong>
+        <b>failure modes across all measurable phases</b>
+        <small>Eligibility, payment, medicines, facilities, data, cyber, rights, and innovation targets, one failure per phase.</small>
+      </article>
+      <article>
+        <span class="fmea-kicker">Cost and model control</span>
+        <strong id="fmea-n-cp">CP</strong>
+        <b>calibration-tolerance failure modes</b>
+        <small>One per cost parameter: the value is never calibrated or lands outside its controlled range.</small>
+      </article>
+    </div>
+    <p class="note"><b>Why every phase and not just maturity.</b> A target that
+      is safe to miss in a small Year 6 pilot can be catastrophic to miss once
+      the same service is national. Assessing the target at every phase is what
+      lets the analysis separate a recoverable pilot shortfall from a
+      system-level harm, and it is why the same parameter can appear in more
+      than one risk band.</p>
+  </section>
+
+  <section class="card">
+    <h2>How each failure is scored</h2>
+    <p class="desc">Every failure mode is placed on a five-by-five risk chart.
+      One axis is probability, how likely the target is to be missed. The other
+      is consequence, how much harm the miss causes. Both are derived from
+      signals already in the controlled catalog, not asserted. The cell where
+      the two axes meet sets the color and the criticality tier.</p>
+    <div class="fmea-scales">
+      <div class="fmea-scale">
+        <h3>Probability (occurrence)</h3>
+        <ul>
+          <li><b>5</b> Almost certain: a near-perfect target on an unproven foundation system.</li>
+          <li><b>4</b> Likely: a stringent target demanding a large step-up in one phase.</li>
+          <li><b>3</b> Possible: a tight but incremental target on a system in operation.</li>
+          <li><b>2</b> Unlikely: routine headroom on an established rail.</li>
+          <li><b>1</b> Rare.</li>
+        </ul>
+        <p class="fmea-scale-note">Raised by target stringency, by the size of
+          the required phase-to-phase improvement, by the parameter not yet
+          being calibrated, and by the unproven foundation phases.</p>
+      </div>
+      <div class="fmea-scale">
+        <h3>Consequence (severity)</h3>
+        <ul>
+          <li><b>5</b> Catastrophic: irreversible or mass harm, or system solvency.</li>
+          <li><b>4</b> Severe: serious harm to many, recoverable with effort.</li>
+          <li><b>3</b> Moderate: localized or recoverable harm.</li>
+          <li><b>2</b> Minor: degraded performance, readily corrected.</li>
+          <li><b>1</b> Negligible.</li>
+        </ul>
+        <p class="fmea-scale-note">Set by the kind of harm the miss produces,
+          reduced for a technical enabler versus a system outcome, scaled by
+          how many people the phase reaches, and raised by one where the target
+          is a phase gate that halts a rollout wave.</p>
+      </div>
+    </div>
+    <p class="note"><b>When the catalog cannot answer, a parameter is missing.</b>
+      Cost parameters have no controlled likelihood attribute, so their
+      probability had to be borrowed from the confidence grade of the modeled
+      quantity they calibrate. Seven outcome targets were deliberately left as
+      a number to be set later, so their probability cannot be assessed against
+      a real value at all. Both cases are reported below as parameter gaps
+      rather than filled with an invented number. A secondary risk priority
+      number multiplies consequence, probability, and how hard the failure is
+      to detect, and is shown on each record.</p>
+  </section>
+
+  <section class="card">
+    <h2>The five-by-five risk chart</h2>
+    <p class="desc">This chart holds the phase-target failures, the ones that
+      break when a key or technical performance target is missed. Each cell
+      counts the failures at that probability and consequence. Color follows the
+      standard risk grid: green is low, yellow moderate, orange high, red
+      extreme. Cost-parameter calibration risk is charted separately below,
+      because its probability is borrowed rather than native. Select any cell to
+      filter the explorer at the foot of the page.</p>
+    <div id="fmea-matrix" class="fmea-matrix-wrap" aria-label="Five by five probability and consequence risk chart"></div>
+    <div id="fmea-headlines" class="fmea-headlines" aria-label="The most probable, most consequential, and both"></div>
+  </section>
+
+  <section class="card">
+    <h2>Effects grouped by criticality</h2>
+    <p class="desc">The same failures, grouped by their risk tier and then by
+      the kind of harm the effect produces. The critical tier is where a likely
+      miss meets a catastrophic effect. Reading down the tiers shows where the
+      program should spend its detection, staffing, and reserve attention
+      first.</p>
+    <div id="fmea-tiers" class="fmea-tiers" aria-label="Failure modes grouped by criticality tier"></div>
+  </section>
+
+  <section class="card">
+    <h2>Cost-parameter calibration risk</h2>
+    <p class="desc">Cost parameters carry no phase target, so their failure is a
+      calibration-tolerance breach: the value is never calibrated or lands
+      outside its controlled range. They sit on their own chart because their
+      probability is not native to the controlled catalog. It is borrowed from
+      the confidence grade of the modeled quantity each family calibrates, so a
+      low-confidence estimate reads as more likely to miss. Consequence is still
+      scored from the ledger's domain and model role.</p>
+    <div id="fmea-cp" class="fmea-cp" aria-label="Cost-parameter calibration risk chart and ledger families"></div>
+  </section>
+
+  <section class="card">
+    <h2>Where the analysis needs a new parameter</h2>
+    <p class="desc">A failure mode you cannot score is itself a finding: the
+      controlled catalog is missing the information needed to manage that risk.
+      Two gaps appear. Cost parameters have no native likelihood control, and a
+      small set of outcome targets were deferred as numbers to be set later.
+      Each is listed with the parameter that would close it.</p>
+    <div id="fmea-gaps" class="fmea-gaps" aria-label="Parameter gaps revealed by the analysis"></div>
+  </section>
+
+  <section class="card">
+    <h2>Explore every failure mode</h2>
+    <p class="desc">Search the parameter or its text, narrow by type, concept,
+      phase, or risk band, and select any row to see its failure mode, its
+      effect, the basis for each score, and its risk priority number.</p>
+    <div class="fmea-controls" role="group" aria-label="Failure mode filters">
+      <label class="fmea-control fmea-search">
+        <span>Search</span>
+        <input id="fmea-search" type="search" placeholder="ID, parameter, effect, owner…">
+      </label>
+      <label class="fmea-control">
+        <span>Parameter type</span>
+        <select id="fmea-type">
+          <option value="all">All types</option>
+          <option value="KPP">KPP: key performance</option>
+          <option value="TPP">TPP: technical performance</option>
+          <option value="CP">CP: cost parameter</option>
+        </select>
+      </label>
+      <label class="fmea-control">
+        <span>Concept</span>
+        <select id="fmea-concept"><option value="all">All concepts</option></select>
+      </label>
+      <label class="fmea-control">
+        <span>Rollout phase</span>
+        <select id="fmea-phase">
+          <option value="all">All phases</option>
+          <option value="P0">P0 (Year 1)</option>
+          <option value="P1">P1 (Year 2)</option>
+          <option value="P2">P2 (Year 3)</option>
+          <option value="P3">P3 (Year 4)</option>
+          <option value="P4">P4 (Year 6)</option>
+          <option value="P5">P5 (Year 7)</option>
+          <option value="P6">P6 (Year 8)</option>
+          <option value="P7">P7 (Year 10)</option>
+          <option value="P8">P8 (Year 12)</option>
+          <option value="calibration">Calibration (CP)</option>
+        </select>
+      </label>
+      <label class="fmea-control">
+        <span>Risk band</span>
+        <select id="fmea-band">
+          <option value="all">All bands</option>
+          <option value="extreme">Extreme (critical)</option>
+          <option value="high">High (serious)</option>
+          <option value="moderate">Moderate</option>
+          <option value="low">Low (minor)</option>
+        </select>
+      </label>
+    </div>
+    <div class="fmea-filter-foot">
+      <p id="fmea-results" aria-live="polite"></p>
+      <button id="fmea-reset" class="btn" type="button">Reset filters</button>
+    </div>
+
+    <div id="fmea-selected" class="fmea-selected" aria-live="polite" aria-label="Selected failure mode"></div>
+
+    <div class="tbl-scroll fmea-table-wrap">
+      <table class="data fmea-table" id="fmea-table">
+        <caption class="sr-only">Every derived failure mode with probability, consequence, and risk</caption>
+      </table>
+    </div>
+  </section>
+
+  <p class="rollout-source">Failure modes are derived from the controlled key
+    performance, technical performance, and cost parameter catalogs and their
+    phase targets. Probability and consequence are scored from catalog signals;
+    each record shows its own basis.
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources and methodology</a>.</p>
+
+    <ChapterNav />
+  </main>
+</BaseLayout>
+
+<script>
+  import '../scripts/fmea-client.ts';
+</script>

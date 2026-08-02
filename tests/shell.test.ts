@@ -6,11 +6,11 @@ import { TABS } from '../src/lib/tabs';
 
 const BASE = '/US-National-Health-Assurance-System/';
 
-test('TabNav renders 13 links with base-prefixed hrefs, in order', async () => {
+test('TabNav renders 14 links with base-prefixed hrefs, in order', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(TabNav, { props: { pathname: BASE } });
   const anchorCount = (html.match(/<a /g) ?? []).length;
-  expect(anchorCount).toBe(13);
+  expect(anchorCount).toBe(14);
   for (const t of TABS) {
     const href = BASE + t.path;
     expect(html).toContain(`href="${href}"`);
