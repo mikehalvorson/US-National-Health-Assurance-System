@@ -1,0 +1,161 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ChapterNav from '../components/ChapterNav.astro';
+---
+<BaseLayout title="National Health Assurance: Long-Term Care">
+  <main>
+
+  <section class="card chapter-intro">
+    <span class="chapter-intro-eyebrow">Chapter 5 · Long-term care</span>
+    <h2>Who pays when someone needs help getting through the day, for years?</h2>
+    <p class="desc">Long-term care is help with the ordinary business of living:
+      bathing, dressing, eating, moving, remembering, staying safe. Most people
+      will need it. Almost no one is covered for it. This chapter shows why the
+      current arrangement fails, how other wealthy countries solved it, and what
+      a universal, home-first benefit looks like inside this plan.</p>
+  </section>
+
+  <!-- ============================ PART 1 ============================ -->
+  <section class="card ltc-hero">
+    <span class="ltc-kicker">Why the current system fails</span>
+    <h2>We already spend a fortune, and families still face ruin</h2>
+    <p class="desc">The United States does not lack spending on long-term care.
+      It lacks a system. Public money arrives only after a family has been
+      spent down to near-poverty, the private insurance market has all but
+      collapsed, and the gap is filled by unpaid relatives and underpaid aides.
+      The result is high cost and low security at the same time.</p>
+    <div id="ltc-failure-stats" class="ltc-stats" aria-live="polite"></div>
+  </section>
+
+  <section class="card ltc-medicare">
+    <span class="ltc-kicker">The gap most people discover too late</span>
+    <h2>Medicare does not pay for long-term custodial care</h2>
+    <p class="desc">Medicare covers up to 100 days of skilled care after a
+      qualifying hospital stay, then stops. Ongoing help with daily living is
+      not a Medicare benefit. Families learn this at the worst possible moment,
+      then spend their savings down to about $2,000 in assets to qualify for
+      Medicaid, the only public program that pays for this care, and the largest
+      single payer of it in the country.</p>
+    <div class="ltc-impacts">
+      <article>
+        <h3>Impoverishment by design</h3>
+        <p>To get help, a family first has to lose almost everything it saved.
+          The program is means-tested at the point of catastrophe.</p>
+      </article>
+      <article>
+        <h3>Care rationed by waiting</h3>
+        <p>About 711,000 people sit on state waiting lists for home and
+          community care, waiting roughly 40 months on average.</p>
+      </article>
+      <article>
+        <h3>Cost shifted onto families</h3>
+        <p>Thirty-eight million relatives provide unpaid care worth about $600B
+          a year, often cutting their own hours, pay, and health to do it.</p>
+      </article>
+      <article>
+        <h3>A workforce that cannot hold</h3>
+        <p>Aides earn a median of $17.36 an hour; home-care turnover runs near
+          75%, so the person who knows a client keeps disappearing.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================ PART 2 ============================ -->
+  <section class="card">
+    <span class="ltc-kicker">Systems in other countries that work</span>
+    <h2>Every peer country that solved this made the benefit universal</h2>
+    <p class="desc">Other wealthy nations treat long-term care as a normal risk
+      to be pooled, like retirement or acute illness, not a private misfortune.
+      They finance it through a dedicated stream, deliver it at home first, and
+      support the family and paid workers who provide it. They spend more public
+      money on it than the United States does, and get security in return.</p>
+    <div class="ltc-chart-wrap">
+      <div id="ltc-gdp-chart"></div>
+      <div id="ltc-gdp-legend" class="ltc-legend"></div>
+    </div>
+    <p class="note">Share of GDP is used on purpose: it compares national effort
+      without crossing dollar scales. The U.S. figure is public spending only
+      and understates true need, because it leaves out unpaid family care and
+      the care rationed away by spend-down and waiting lists.</p>
+  </section>
+
+  <section class="card">
+    <span class="ltc-kicker">Four models, one lesson</span>
+    <h2>How the working systems are actually built</h2>
+    <div id="ltc-country-cards" class="ltc-country-cards"></div>
+    <p class="note">Sources and methodology are linked at the foot of this
+      chapter. Figures are dated to their source year.</p>
+  </section>
+
+  <section class="card ltc-threads">
+    <span class="ltc-kicker">What they have in common</span>
+    <h2>The pattern behind every system that works</h2>
+    <ul class="ltc-thread-list">
+      <li>Coverage is universal and automatic, not a means-tested trapdoor that
+        requires going broke first.</li>
+      <li>Financing is a dedicated, predictable stream, so the benefit is a
+        right rather than an annual budget fight.</li>
+      <li>The benefit is home-first by design, because most people want to stay
+        home and home care usually costs less than an institution.</li>
+      <li>Family caregivers are paid or supported, not treated as free labor.</li>
+      <li>One accountable public body plans the capacity and the workforce,
+        instead of leaving it to a collapsed private market.</li>
+    </ul>
+  </section>
+
+  <!-- ============================ PART 3 ============================ -->
+  <section class="card">
+    <span class="ltc-kicker">The plan inside this framework</span>
+    <h2>A universal, home-first benefit, run by one accountable authority</h2>
+    <p class="desc">The plan carries the same lessons. Long-term care becomes a
+      covered benefit for every resident, run by the National Long-Term Care
+      Authority, delivered at home wherever possible, with the family caregivers
+      and the paid workforce treated as part of the design rather than an
+      afterthought.</p>
+    <div id="ltc-pillars" class="ltc-pillars"></div>
+  </section>
+
+  <section class="card ltc-cost">
+    <span class="ltc-kicker">What it costs, and where the cost already lives</span>
+    <h2>The largest single benefit expansion, already inside the total</h2>
+    <p id="ltc-cost-note" class="desc"></p>
+    <p class="note">Because the benefit pays for care that families now provide
+      unpaid and for people now turned away, most of it is genuinely new
+      national spending, not a reshuffling of today's bills. It is counted in
+      the framework total rather than added on afterward, so the headline cost
+      of the plan already includes it.</p>
+  </section>
+
+  <section class="card ltc-workforce">
+    <span class="ltc-kicker">Can we staff it?</span>
+    <h2>The binding constraint is the direct-care workforce, not doctors</h2>
+    <p class="desc">A home-first benefit lives or dies on aides: home care
+      workers, residential aides, and nursing assistants. This workforce is
+      already the fastest-growing occupation group in the country and already
+      short. A universal benefit adds demand on top of that.</p>
+    <div id="ltc-workforce-fig"></div>
+    <div class="ltc-workforce-assess">
+      <h3>How this squares with the Workforce and immigration plans</h3>
+      <p>The Workforce chapter now sizes the direct-care aide workforce as its
+        own block, separate from the insurance-transition ledger: about 5.4
+        million aides today against 9.7 million openings projected by 2034. It
+        sets a wage floor that lifts aide pay above today's $17.36-an-hour
+        median, and the net-new compensation that floor costs is carried in the
+        framework cost model on the Healthcare tab. The merit immigration
+        pathway now lists direct-care roles alongside physicians and nurses, and
+        scope-of-practice floors let aides and home-care nurses work to their
+        training everywhere. The benefit is funded, and now it is staffable.</p>
+    </div>
+    <p class="rollout-source">
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/long_term_care_methodology.md"
+        target="_blank" rel="noopener">Sources and long-term care methodology</a>.
+    </p>
+  </section>
+
+    <ChapterNav />
+  </main>
+</BaseLayout>
+
+<script>
+  import '../scripts/ltc-client.ts';
+</script>

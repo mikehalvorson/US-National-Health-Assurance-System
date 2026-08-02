@@ -34,14 +34,14 @@ export function bridgeSteps(mc: MonteCarloResult): { steps: BridgeStep[]; identi
   const utilAdd = phcBase * (u - 1);
   const paySave = (hosp0 + clin0) * G * u * (1 - pay);
   const drugSave = drug0 * G * u * (p.drugPriceCut / 100) * drugR;
-  const expansions = d.cLtc + d.cBh + d.cDvh + d.cEmsPh + d.cUnits + d.cRd + d.cWf + d.cItOp;
+  const expansions = d.cLtc + d.cLtcAides + d.cBh + d.cDvh + d.cEmsPh + d.cUnits + d.cRd + d.cWf + d.cItOp;
   const adminNet = (d.legacyAdmin + d.newAdmin + d.govCost) - (B.netInsCost + B.govtAdmin) * G;
   const oneTime = d.trans + d.itcap + d.shock;
 
   const steps: BridgeStep[] = [
     { label: 'Status-quo baseline (2041)', value: d.nheBase, kind: 'total' },
     { label: 'Demand response (coverage + $0 care)', value: utilAdd, kind: 'add' },
-    { label: 'Benefit expansions (LTC, BH, DVH, EMS, units…)', value: expansions, kind: 'add' }
+    { label: 'Benefit expansions (LTC, LTC aide pay, BH, DVH, EMS, units…)', value: expansions, kind: 'add' }
   ];
   if (Math.abs(oneTime) > 0.5) {
     steps.push({ label: 'Transition & shocks (residual)', value: oneTime, kind: 'add' });

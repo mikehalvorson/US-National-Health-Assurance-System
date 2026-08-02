@@ -223,9 +223,18 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Long-term care benefit expansion (home-first universal LTC)",
     low: 150, mode: 230, high: 330,
     confidence: "medium",
-    source: "CBO: an LTSS benefit raises NHE ~4.4% (≈$215B on 2023 base). Genworth cost survey + 0.7M-person HCBS waitlist (KFF) support the range. Largest single expansion in the framework.",
+    source: "Net new national spending for a universal, home-first long-term care benefit, above the ~$415B already spent on LTSS in 2022 (Medicaid 61%, out-of-pocket 17%). CBO's comprehensive-LTSS option raises NHE ~4.4% (≈$215B on the 2023 base) and anchors the mode. The specific plan drives the range up: a 70% home-and-community target that pays for care now given unpaid ($600B/yr, AARP 2023), eliminating the ~711,000-person HCBS waiting list (KFF 2024), and a direct-care wage floor above the $17.36/hr 2024 median (PHI). Peer systems that cover this benefit spend 2.0-4.4% of GDP on it (OECD). Largest single expansion in the framework.",
     url: "https://www.cbo.gov/publication/56811",
     adjustable: true, sliderMin: 50, sliderMax: 450
+  },
+  {
+    id: "ltcWageFloor", group: "Expansions", unit: "$B/yr (2023, mature)",
+    label: "Long-term care direct-care wage floor (aide pay lifted above prevailing)",
+    low: 29, mode: 52, high: 94,
+    confidence: "low",
+    source: "DERIVED, and separate from ltcExpansion, which prices care at prevailing wages. A home-first benefit is delivered by direct-care aides whose 2024 median wage is $17.36/hr with ~75% home-care turnover (PHI). Lifting a covered direct-care workforce of about 5.0M FTE (range 4-6M) by a loaded ~$5.00/hr toward a living-wage floor (range $3.50-7.50) gives 5.0M x 2,080 hr x $5.00 = ~$52B/yr. This is net new spending on top of the base LTC benefit and is what raises staffing stability; without it the benefit is funded but cannot be staffed.",
+    url: "https://www.phinational.org/resource/direct-care-workers-in-the-united-states-key-facts-2024/",
+    adjustable: true, sliderMin: 0, sliderMax: 150
   },
   {
     id: "bhExpansion", group: "Expansions", unit: "$B/yr (2023, mature)",
@@ -482,7 +491,8 @@ export const PROBLEM_STATS = [
  * weight CORR_WEIGHT. Untagged parameters stay independent.               */
 export const CORR_WEIGHT = 0.35;
 export const PARAM_CORR: Record<string, number> = {
-  utilIncrease: 1, providerPaymentFactor: 1, ltcExpansion: 1, bhExpansion: 1,
+  utilIncrease: 1, providerPaymentFactor: 1, ltcExpansion: 1, ltcWageFloor: 1,
+  bhExpansion: 1,
   dvhExpansion: 1, emsPhExpansion: 1, unitsCost: 1, rdPublic: 1,
   workforceEdu: 1, itOperating: 1, itCapital: 1, transitionTotal: 1,
   publicAdminRate: 1, governanceRate: 1, legacyAdminFloor: 1,

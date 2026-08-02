@@ -4,6 +4,20 @@
 import { el, div, showTip, hideTip, tipRow } from '../lib/chart-util';
 import { GOV_GROUPS, type GovGroup, type GovMember } from '../lib/gov';
 
+/* Fold a natural "Led by" lead-in into the leadership clause so the hover reads
+   as one sentence, instead of a right-aligned "Led by" label. Clauses that are
+   already full statements (start with "The ... own/hold ...") keep their own
+   wording. */
+function leadPhrase(clause: string): string {
+  const c = clause.trim();
+  if (/^The\b/.test(c)) return c;              // already a standalone statement
+  if (/^A\s/.test(c)) return 'Led by a ' + c.slice(2);
+  if (/^An\s/.test(c)) return 'Led by an ' + c.slice(3);
+  if (/^(Seven|Eight|Nine|Ten|Six|Five|Four|Three|Two)\b/.test(c))
+    return 'Led by ' + c.charAt(0).toLowerCase() + c.slice(1);
+  return 'Led by the ' + c;
+}
+
 /* ---- org diagram: head box on top, members in rows, elbow connectors -- */
 function renderOrgChart(container: HTMLElement, group: GovGroup): void {
   const members = group.members.filter(function (m) { return m.code !== group.head; });
@@ -35,7 +49,7 @@ function renderOrgChart(container: HTMLElement, group: GovGroup): void {
       const boxEl = document.createElement('div');
       div('tip-head', boxEl).textContent = m.name;
       tipRow(boxEl, group.color, '', m.role, false);
-      tipRow(boxEl, '', 'Led by', m.leader.split(';')[0], false);
+      tipRow(boxEl, '', '', leadPhrase(m.leader.split(';')[0]), false);
       showTip(boxEl, evt.clientX, evt.clientY);
     }
     g.addEventListener('pointermove', tipIt as EventListener);

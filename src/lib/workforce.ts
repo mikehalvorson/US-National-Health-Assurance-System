@@ -1,7 +1,10 @@
 /* Workforce data + planning constants, ported verbatim from docs/js/workforce.js
    (constants 11-15, SCENARIOS 17-39, LEGACY 41-97, CREATED 99-163,
    ACRONYMS 165-183). Fidelity-critical: do not re-derive. Values are in
-   thousands of jobs unless noted. */
+   thousands of jobs unless noted. The LTC direct-care block at the bottom is
+   new (long-term care aides) and is kept OUTSIDE the insurance-transition
+   ledger above, whose entrant-pace math must not absorb millions of aides. */
+import { PARAMS_BY_ID, DEFLATOR_2023_TO_2024 } from './params';
 
 export type ScenarioId = 'low' | 'plan' | 'high';
 
@@ -189,6 +192,43 @@ export const CREATED: CreatedItem[] = [
   }
 ];
 
+/* ---- Long-term care direct-care workforce -------------------------------
+   The home-first LTC benefit is delivered by aides (home care, residential,
+   nursing assistants), not by the clinical or administrative roles counted
+   above. This is the benefit's binding workforce constraint. Figures in
+   millions of workers unless noted; sourced in
+   research/long_term_care_methodology.md (PHI 2024, BLS). */
+export const LTC_WORKFORCE = {
+  currentDirectCareM: 5.4,   // total direct-care workers, 2024 (PHI)
+  homeCareM: 3.2,            // home-care share of that total, 2024 (PHI)
+  openings2034M: 9.7,        // total direct-care job openings 2024-2034 (PHI)
+  medianWageNow: 17.36,      // $/hr median, 2024 (PHI)
+  wageFloorTarget: 22.00,    // $/hr living-wage floor (plan design)
+  homeTurnoverPct: 75,       // home-care annual turnover, % (PHI)
+  coveredFteM: 5.0,          // covered direct-care FTE at maturity (planning)
+  hoursPerFteYear: 2080,     // full-time-equivalent hours
+  loadedUpliftPerHour: 5.00  // loaded $/hr lift toward the floor (incl. benefits allowance)
+};
+
+/* Net-new aide compensation cost. Derived here from LTC_WORKFORCE and carried
+   in the fiscal model as params.ltcWageFloor, so the workforce tab and the
+   healthcare-tab cost model share ONE number and can never drift. The derived
+   2023-scale figure must equal params.ltcWageFloor.mode (asserted in tests). */
+export function ltcWageFloorCost(): {
+  derived2023B: number; low2024B: number; mode2024B: number; high2024B: number;
+} {
+  const w = LTC_WORKFORCE;
+  const derived2023B = Math.round(
+    (w.coveredFteM * 1e6 * w.hoursPerFteYear * w.loadedUpliftPerHour) / 1e9);
+  const p = PARAMS_BY_ID['ltcWageFloor'];
+  return {
+    derived2023B: derived2023B,
+    low2024B: Math.round(p.low * DEFLATOR_2023_TO_2024),
+    mode2024B: Math.round(p.mode * DEFLATOR_2023_TO_2024),
+    high2024B: Math.round(p.high * DEFLATOR_2023_TO_2024)
+  };
+}
+
 export const ACRONYMS: Record<string, string> = {
   "AHWCS": "Administration for Health Workforce, Compensation, and Scope",
   "NHWB": "National Health Workforce Board",
@@ -212,6 +252,8 @@ export const ACRONYMS: Record<string, string> = {
   "LPN": "Licensed Practical Nurse",
   "EMS": "Emergency Medical Services",
   "LTC": "Long-Term Care",
+  "LTSS": "Long-Term Services and Supports",
+  "HCBS": "Home and Community-Based Services",
   "DVH": "Dental, Vision, and Hearing",
   "AI": "Artificial Intelligence",
   "ICU": "Intensive Care Unit"

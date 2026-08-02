@@ -209,15 +209,17 @@ import ChapterNav from '../components/ChapterNav.astro';
         gross positions are funded, a difference of <span id="wf-scope-difference">250,000</span>
         positions. The model does not yet count how many unit jobs are filled
         by workers from converted clinics, or the added labor required for
-        long-term care, behavioral health, dental, vision, hearing, EMS, and
-        public health. Calling that difference a national job loss would mix
-        known and uncalibrated populations.</p>
+        behavioral health, dental, vision, hearing, EMS, and public health. The
+        long-term care direct-care workforce, the largest of these, is now sized
+        in its own section below. Calling that difference a national job loss
+        would mix known and uncalibrated populations.</p>
     </div>
     <p class="note">This is deliberately a floor. It excludes the still-open
-      national workforce quantity for long-term care, behavioral health,
-      dental, vision, hearing, EMS, and public health. Those benefit-workforce
-      formulas are not yet fixed and must be added before a total
-      net-employment claim is valid.</p>
+      national workforce quantity for behavioral health, dental, vision,
+      hearing, EMS, and public health. The long-term care direct-care workforce
+      is now sized in its own section below and included in the cost model;
+      the remaining benefit-workforce formulas are not yet fixed and must be
+      added before a total net-employment claim is valid.</p>
   </section>
 
   <section class="card workforce-labor-supply">
@@ -270,7 +272,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       <div class="workforce-risk-row"><strong>Diagnostic-treatment unit teams</strong><b data-level="tight">Constrained</b><span>108,000 planning positions require clinicians, technicians, graduates, or transfers from existing care sites.</span></div>
       <div class="workforce-risk-row"><strong>Rural flex and travel pool</strong><b data-level="high">High risk</b><span>All 30,000 planning positions require clinical or technical entrants, and rural vacancy projections are already worse than metropolitan projections.</span></div>
       <div class="workforce-risk-row"><strong>Faculty, preceptors, and training support</strong><b data-level="high">Bottleneck</b><span>Eleven thousand positions are small in national terms but determine whether the 55,000 annual training slots become completed credentials.</span></div>
-      <div class="workforce-risk-row"><strong>Expanded benefits outside the floor</strong><b data-level="unknown">Not yet sized</b><span>Long-term care, behavioral health, dental, vision, hearing, EMS, and public-health staffing can materially raise demand after their operating standards are fixed.</span></div>
+      <div class="workforce-risk-row"><strong>Long-term care direct-care workforce</strong><b data-level="tight">Now sized</b><span>The aide workforce a home-first benefit needs is estimated in its own section below, with a wage floor and its net-new compensation carried in the cost model. Behavioral health, dental, vision, hearing, EMS, and public-health staffing remain outside the floor.</span></div>
     </div>
     <div class="workforce-verdict">
       <strong>Assessment</strong>
@@ -283,17 +285,70 @@ import ChapterNav from '../components/ChapterNav.astro';
     </div>
   </section>
 
+  <section class="card workforce-ltc">
+    <span class="workforce-kicker">The benefit's binding workforce constraint</span>
+    <h2>Long-term care is staffed by aides, and that workforce is now sized here</h2>
+    <p class="desc">A home-first long-term care benefit is not delivered by
+      physicians or system administrators. It is delivered by direct-care aides:
+      home-care workers, residential aides, and nursing assistants. This is the
+      largest and fastest-growing health workforce in the country, it is already
+      short, and it is the constraint that decides whether the benefit is real.
+      It is counted separately from the administrative-transition ledger above,
+      whose entrant-pace math is about insurance and billing jobs, not millions
+      of aides.</p>
+    <div class="workforce-labor-grid" aria-live="polite">
+      <article><span>Direct-care workers today</span><strong>5.4 million</strong><small>home care, residential, and nursing aides, 2024 (PHI)</small></article>
+      <article><span>Home-care share</span><strong>3.2 million</strong><small>more than doubled over the past decade</small></article>
+      <article><span>Total openings by 2034</span><strong>9.7 million</strong><small>growth plus replacement demand (PHI)</small></article>
+      <article><span>Median wage now</span><strong>$17.36/hr</strong><small>median annual earnings under $26,000</small></article>
+      <article><span>Home-care turnover</span><strong>~75%/yr</strong><small>continuity of care collapses at this churn</small></article>
+    </div>
+    <div class="workforce-pay-guardrail workforce-ltc-comp">
+      <strong>A wage floor lifts aide pay toward $22 an hour, and that cost is in the framework total.</strong>
+      <p id="wf-ltc-comp-formula">About 5.0 million covered aides, lifted toward a
+        living-wage floor, adds roughly $53B a year.</p>
+      <p>Net-new aide compensation at maturity:
+        <b id="wf-ltc-comp">$53B/yr</b>. This is separate from the base
+        long-term care benefit (which prices care at today's low wages) and is
+        the amount that actually stabilizes staffing. It is carried in the
+        healthcare-tab cost model as its own line, so the headline framework
+        cost already includes it.</p>
+    </div>
+    <div class="workforce-risk-matrix">
+      <span class="workforce-section-label">Why raising aide pay is the load-bearing move</span>
+      <div class="workforce-risk-row"><strong>Turnover, not headcount, is the crisis</strong><b data-level="high">Load-bearing</b><span>At roughly 75% annual home-care turnover, the same clients keep losing the aide who knows them. A wage floor is the most direct lever on retention.</span></div>
+      <div class="workforce-risk-row"><strong>Demand rises faster than supply</strong><b data-level="tight">Constrained</b><span>A universal home-first benefit adds demand on top of 9.7 million openings already projected. Pay and recruitment have to scale with it.</span></div>
+      <div class="workforce-risk-row"><strong>Scope floors extend reach</strong><b data-level="strong">Enabler</b><span>National scope-of-practice floors let aides and home-care nurses work to their training everywhere, stretching a scarce workforce safely.</span></div>
+    </div>
+    <p class="note">The aide-workforce number is sized here as a planning
+      estimate, not a fixed target. It replaces the earlier open item for
+      long-term care staffing; behavioral health, dental, vision, hearing, EMS,
+      and public-health benefit staffing remain to be sized.
+      <span class="conf low">low</span></p>
+    <p class="rollout-source">
+      <a href="https://www.phinational.org/resource/direct-care-workers-in-the-united-states-key-facts-2024/"
+        target="_blank" rel="noopener">PHI direct-care workforce key facts</a>;
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/long_term_care_methodology.md"
+        target="_blank" rel="noopener">long-term care workforce and cost methodology</a>.
+    </p>
+  </section>
+
   <section class="card workforce-immigration">
     <span class="workforce-kicker">Merit immigration fills the shortage the pipeline cannot</span>
     <h2>A merit-based health-talent pathway closes the clinical and rural gap on time</h2>
     <p class="desc">Domestic training is the primary answer, but it arrives
-      years after funding and cannot fill the hardest clinical and rural roles
-      fast enough. A disciplined merit immigration pathway is the bridge. It
-      recruits qualified clinicians for the exact roles and places that are
-      short, holds them to the adopted pay bands, recognizes their credentials
-      quickly, and shrinks as the domestic pipeline matures. The design copies
-      what has actually worked in other countries rather than the visa lottery
-      it replaces.</p>
+      years after funding and cannot fill the hardest clinical, rural, and
+      direct-care roles fast enough. A disciplined merit immigration pathway is
+      the bridge. It recruits qualified clinicians and long-term care aides for
+      the exact roles and places that are short, holds them to the adopted pay
+      bands and wage floors, recognizes their credentials quickly, and shrinks
+      as the domestic pipeline matures. The design copies what has actually
+      worked in other countries rather than the visa lottery it replaces.</p>
+    <p class="desc">Long-term care aides belong on the shortage-occupation lists
+      alongside physicians and nurses. The home-first benefit needs millions of
+      direct-care workers, a workforce already projected to have 9.7 million
+      openings by 2034, and one where fair pay and a real credential and
+      residency path decide whether people stay in the field.</p>
     <div class="workforce-labor-grid">
       <article><span>Other-entrant gap to close</span><strong>150,000</strong><small>over the twelve-year rollout, after internal role matching</small></article>
       <article><span>Concentrated in hard roles</span><strong>138,000</strong><small>of the gap is unit-clinical and rural-clinical, not administrative</small></article>
@@ -375,7 +430,7 @@ import ChapterNav from '../components/ChapterNav.astro';
         built-in limit so it adds capacity without lowering the price of labor.</p>
     </div>
     <div class="workforce-rural-steps" aria-label="Eight design rules of the merit health-talent pathway">
-      <article><span>01</span><h3>Select on merit for the roles actually short</h3><p>Points and criteria weight qualification, competency, language safety, and willingness to serve where shortages are worst. NHTIB publishes the shortage-occupation and shortage-region lists that drive selection, not a lottery.</p></article>
+      <article><span>01</span><h3>Select on merit for the roles actually short</h3><p>Points and criteria weight qualification, competency, language safety, and willingness to serve where shortages are worst. NHTIB publishes the shortage-occupation and shortage-region lists that drive selection, not a lottery, and those lists include long-term care direct-care roles, not only physicians and nurses.</p></article>
       <article><span>02</span><h3>Make processing fast and predictable</h3><p>A published service standard targets a median decision of about two weeks for shortage-role petitions, met 80% of the time, so qualified clinicians do not choose a faster country first.</p></article>
       <article><span>03</span><h3>Protect domestic pay and workers</h3><p>Every admission is priced at or above the adopted NPCB role-region band. Employers carry a labor-market benefit obligation, and no admission may be used to undercut wages or displace a domestic worker or trainee.</p></article>
       <article><span>04</span><h3>Recognize credentials and bridge licensing</h3><p>HCRB runs national competency assessment, supervised-practice bridges, and licensing coordination with states so a qualified IMG or IEN reaches full license quickly instead of leaving the field.</p></article>
@@ -389,6 +444,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       <span class="workforce-section-label">Where immigration helps most and where it cannot substitute</span>
       <div class="workforce-risk-row"><strong>Physicians and specialists</strong><b data-level="strong">High yield</b><span>A quarter of active U.S. physicians are already internationally trained, so targeted admission plus faster credentialing can move the 141,160 projected 2038 physician shortage materially.</span></div>
       <div class="workforce-risk-row"><strong>Registered and advanced-practice nurses</strong><b data-level="tight">Moderate yield</b><span>Internationally educated nurses are an established pipeline, but English-for-safety, licensure by state, and ethical-sourcing limits cap the pace against the 108,960 projected 2038 RN shortage.</span></div>
+      <div class="workforce-risk-row"><strong>Long-term care direct-care aides</strong><b data-level="tight">High volume, pay-gated</b><span>Immigration can supply a meaningful share of the millions of aides a home-first benefit needs, but only alongside the wage floor: without better pay the roles neither attract nor retain workers, domestic or immigrant, and ethical-sourcing limits still apply.</span></div>
       <div class="workforce-risk-row"><strong>Rural and HPSA placement</strong><b data-level="high">Only with a service obligation</b><span>Immigration reaches the 58% projected nonmetro physician shortage only when entry is tied to a bounded rural or HPSA service term, because arrivals gravitate to metropolitan areas otherwise.</span></div>
       <div class="workforce-risk-row"><strong>Faculty and preceptors</strong><b data-level="tight">Force multiplier</b><span>Admitting experienced educators relieves the training bottleneck that decides whether 55,000 annual slots become completed credentials.</span></div>
       <div class="workforce-risk-row"><strong>Total domestic capacity</strong><b data-level="unknown">Not a substitute</b><span>Immigration is a bridge, not the plan. It cannot excuse under-training, pay suppression, or unsafe staffing, and it shrinks as the domestic pipeline matures.</span></div>
@@ -555,6 +611,15 @@ import ChapterNav from '../components/ChapterNav.astro';
               <td><strong>$58,410</strong> median
                 <span class="conf high">high</span></td>
               <td>Schedule, readiness, transport geography, and extended shifts must be priced.</td>
+            </tr>
+            <tr>
+              <th>Long-term care direct-care aides</th>
+              <td><strong>$17.36/hr</strong> median (about $36,100 full-time)
+                <span class="conf high">high</span></td>
+              <td>The floor to lift, not a band to hold. The plan raises aide pay
+                toward a living-wage floor of about $22 an hour; that net-new
+                compensation is sized in the long-term care section above and
+                carried in the framework cost model.</td>
             </tr>
           </tbody>
         </table>

@@ -3514,3 +3514,144 @@ footer.site a { color: var(--text-muted); }
   display: block; font-size: 12px; font-weight: 650; letter-spacing: 0.05em;
   text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
 }
+
+/* ============================ Long-Term Care tab ============================ */
+.ltc-kicker {
+  display: block; margin-bottom: 6px; color: var(--series-6);
+  font-size: 12px; font-weight: 650; letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.ltc-hero {
+  border-top: 4px solid var(--series-6);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--series-6) 8%, transparent),
+      transparent 58%),
+    var(--surface-1);
+}
+.ltc-stats {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px 0; margin-top: 20px; border-top: 1px solid var(--gridline);
+}
+.ltc-stat {
+  min-width: 0; padding: 15px 18px 14px 0;
+  border-bottom: 1px solid var(--gridline);
+}
+.ltc-stat:nth-child(3n+2), .ltc-stat:nth-child(3n) {
+  padding-left: 18px; border-left: 1px solid var(--gridline);
+}
+.ltc-stat strong {
+  display: block; color: var(--series-6); font-size: 27px;
+  font-weight: 650; letter-spacing: -.025em;
+}
+.ltc-stat span {
+  display: block; margin-top: 2px; color: var(--text-primary);
+  font-size: 12.5px; font-weight: 600; line-height: 1.35;
+}
+.ltc-stat small {
+  display: block; margin-top: 6px; color: var(--text-secondary);
+  font-size: 11px; line-height: 1.45;
+}
+.ltc-stat .conf {
+  display: inline-block; margin-top: 4px; padding: 1px 6px;
+  border-radius: 4px; font-size: 10.5px;
+}
+.ltc-impacts {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px; margin-top: 18px;
+}
+.ltc-impacts article {
+  min-width: 0; padding: 13px 0 0; border-top: 3px solid var(--series-5);
+}
+.ltc-impacts h3 {
+  color: var(--text-primary); font-size: 13.5px; font-weight: 650;
+  line-height: 1.3;
+}
+.ltc-impacts p {
+  margin-top: 5px; color: var(--text-secondary); font-size: 11.5px;
+  line-height: 1.45;
+}
+.ltc-chart-wrap { margin-top: 16px; }
+.ltc-legend { margin-top: 8px; }
+.ltc-country-cards {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px; margin-top: 18px;
+}
+.ltc-country-card {
+  min-width: 0; padding: 16px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface-1);
+  border-top: 3px solid var(--series-1);
+}
+.ltc-country-cards > .ltc-country-card:nth-child(2) { border-top-color: var(--series-3); }
+.ltc-country-cards > .ltc-country-card:nth-child(3) { border-top-color: var(--series-2); }
+.ltc-country-cards > .ltc-country-card:nth-child(4) { border-top-color: var(--series-6); }
+.ltc-country-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+}
+.ltc-country-head strong {
+  color: var(--text-primary); font-size: 16px; font-weight: 650;
+}
+.ltc-country-head span {
+  color: var(--text-muted); font-size: 11px; white-space: nowrap;
+}
+.ltc-country-system {
+  margin-top: 2px; color: var(--text-secondary); font-size: 12px;
+  font-weight: 600;
+}
+.ltc-country-row {
+  margin-top: 9px; color: var(--text-secondary); font-size: 12px;
+  line-height: 1.5;
+}
+.ltc-country-row b { color: var(--text-primary); font-weight: 650; }
+.ltc-thread-list {
+  margin-top: 14px; padding-left: 18px; display: grid; gap: 8px;
+}
+.ltc-thread-list li {
+  color: var(--text-secondary); font-size: 13px; line-height: 1.5;
+}
+.ltc-pillars {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px; margin-top: 18px;
+}
+.ltc-pillar {
+  min-width: 0; padding: 15px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface-1);
+}
+.ltc-pillar h3 {
+  color: var(--series-6); font-size: 14px; font-weight: 650; line-height: 1.3;
+}
+.ltc-pillar p {
+  margin-top: 6px; color: var(--text-secondary); font-size: 12px;
+  line-height: 1.5;
+}
+.ltc-pillar-borrow {
+  margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--gridline);
+  color: var(--text-muted); font-size: 11.5px; line-height: 1.4;
+}
+.ltc-pillar-borrow b { color: var(--text-secondary); }
+.ltc-cost { border-left: 3px solid var(--series-6); }
+.ltc-cost .conf {
+  display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10.5px;
+}
+.ltc-workforce-assess {
+  margin-top: 16px; padding: 15px; border-radius: 10px;
+  background: var(--surface-2, var(--surface-1));
+  border: 1px solid var(--border);
+}
+.ltc-workforce-assess h3 { font-size: 14px; font-weight: 650; }
+.ltc-workforce-assess p {
+  margin-top: 6px; color: var(--text-secondary); font-size: 12.5px;
+  line-height: 1.55;
+}
+@media (max-width: 860px) {
+  .ltc-stats { grid-template-columns: 1fr 1fr; }
+  .ltc-stat:nth-child(3n+2), .ltc-stat:nth-child(3n) { padding-left: 0; border-left: none; }
+  .ltc-stat:nth-child(2n) { padding-left: 18px; border-left: 1px solid var(--gridline); }
+  .ltc-impacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ltc-country-cards, .ltc-pillars { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .ltc-stats { grid-template-columns: 1fr; }
+  .ltc-stat:nth-child(2n) { padding-left: 0; border-left: none; }
+  .ltc-impacts { grid-template-columns: 1fr; }
+}

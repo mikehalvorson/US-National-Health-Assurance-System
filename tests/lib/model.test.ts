@@ -9,7 +9,7 @@ test('neutral policy reproduces the baseline within 0.5% (no free lunch)', () =>
   const n = sampleParams(effective, null);
   n.utilIncrease = 0; n.drugPriceCut = 0; n.providerPaymentFactor = 1;
   n.providerAdminSavings = 0; n.careModelSavings = 0; n.lowValueCapture = 0;
-  n.extractionSavings = 0; n.ltcExpansion = 0; n.bhExpansion = 0;
+  n.extractionSavings = 0; n.ltcExpansion = 0; n.ltcWageFloor = 0; n.bhExpansion = 0;
   n.dvhExpansion = 0; n.emsPhExpansion = 0; n.unitsCost = 0; n.rdPublic = 0;
   n.workforceEdu = 0; n.itOperating = 0; n.itCapital = 0; n.transitionTotal = 0;
   n.legacyAdminFloor = 1; n.publicAdminRate = 0; n.governanceRate = 0;

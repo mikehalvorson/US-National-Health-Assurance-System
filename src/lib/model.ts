@@ -175,8 +175,11 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
     const cDrugs = drugBase0 * G * util * (1 - (p.drugPriceCut / 100) * drugR);
     const cOtherPhc = otherPhc0 * G * util;
 
-    /* Expansions: demand-driven grow with G; program-based grow with wages */
-    const cLtc   = p.ltcExpansion   * G  * expR;
+    /* Expansions: demand-driven grow with G; program-based grow with wages.
+       LTC aide wage floor is labor cost, so it grows with wages (Gw) and
+       ramps with the expansion wave (expR). */
+    const cLtc      = p.ltcExpansion   * G  * expR;
+    const cLtcAides = p.ltcWageFloor   * Gw * expR;
     const cBh    = p.bhExpansion    * G  * expR;
     const cDvh   = p.dvhExpansion   * G  * expR;
     const cEmsPh = p.emsPhExpansion * G  * expR;
@@ -184,7 +187,7 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
     const cRd    = p.rdPublic       * Gw * infR;
     const cWf    = p.workforceEdu   * Gw * infR;
     const cItOp  = p.itOperating    * Gw * infR;
-    const cExpansions = cLtc + cBh + cDvh + cEmsPh + cUnits + cRd + cWf + cItOp;
+    const cExpansions = cLtc + cLtcAides + cBh + cDvh + cEmsPh + cUnits + cRd + cWf + cItOp;
 
     /* Administration - both worlds computed directly */
     const legacyAdmin = admin0 * G * (1 - (1 - p.legacyAdminFloor) * covR);
@@ -240,7 +243,7 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
     const row: DetailRow = {
       year: year, gdp: gdp, pop: pop,
       cHosp: cHosp, cClin: cClin, cDrugs: cDrugs, cOtherPhc: cOtherPhc,
-      cLtc: cLtc, cBh: cBh, cDvh: cDvh, cEmsPh: cEmsPh, cUnits: cUnits,
+      cLtc: cLtc, cLtcAides: cLtcAides, cBh: cBh, cDvh: cDvh, cEmsPh: cEmsPh, cUnits: cUnits,
       cRd: cRd, cWf: cWf, cItOp: cItOp,
       legacyAdmin: legacyAdmin, newAdmin: newAdmin, govCost: govCost,
       cPubHealth: cPubHealth, cInvest: cInvest,
@@ -312,6 +315,7 @@ export function matureAtScale(
   const cDrugs = drugBase0 * G * util * (1 - (p.drugPriceCut / 100) * drugR);
   const cOtherPhc = otherPhc0 * G * util;
   const cExpansions = (p.ltcExpansion + p.bhExpansion + p.dvhExpansion + p.emsPhExpansion) * G * expR +
+                      p.ltcWageFloor * Gw * expR +
                       p.unitsCost * Gw * unitR +
                       (p.rdPublic + p.workforceEdu + p.itOperating) * Gw * infR;
   const legacyAdmin = admin0 * G * (1 - (1 - p.legacyAdminFloor) * covR);
@@ -449,7 +453,7 @@ export function selfTest(): SelfTestResult[] {
   neutral.utilIncrease = 0; neutral.drugPriceCut = 0;
   neutral.providerPaymentFactor = 1; neutral.providerAdminSavings = 0;
   neutral.careModelSavings = 0; neutral.lowValueCapture = 0;
-  neutral.extractionSavings = 0; neutral.ltcExpansion = 0;
+  neutral.extractionSavings = 0; neutral.ltcExpansion = 0; neutral.ltcWageFloor = 0;
   neutral.bhExpansion = 0; neutral.dvhExpansion = 0; neutral.emsPhExpansion = 0;
   neutral.unitsCost = 0; neutral.rdPublic = 0; neutral.workforceEdu = 0;
   neutral.itOperating = 0; neutral.itCapital = 0; neutral.transitionTotal = 0;

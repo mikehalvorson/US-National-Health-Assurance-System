@@ -5,6 +5,7 @@
 import {
   SCENARIOS, LEGACY, CREATED, ACRONYMS,
   ROLLOUT_YEARS, TOTAL_US_EMPLOYMENT_2024, ANNUAL_TRAINING_TARGET,
+  LTC_WORKFORCE, ltcWageFloorCost,
   type ScenarioId
 } from '../lib/workforce';
 
@@ -270,6 +271,21 @@ function renderCreatedChart(): void {
   addAcronymHovers(host);
 }
 
+/* LTC direct-care workforce: the one figure that must match the fiscal model
+   (aide compensation) is rendered here from the shared source; the rest is
+   static prose in the page. */
+function renderLtcWorkforce(): void {
+  const host = document.getElementById('wf-ltc-comp');
+  if (!host) return;
+  const w = LTC_WORKFORCE;
+  const c = ltcWageFloorCost();
+  setText('wf-ltc-comp', '$' + c.mode2024B + 'B/yr');
+  setText('wf-ltc-comp-formula',
+    w.coveredFteM.toFixed(1) + 'M covered aides x ' + numberFormat.format(w.hoursPerFteYear) +
+    ' hr x $' + w.loadedUpliftPerHour.toFixed(2) + '/hr lift = about $' + c.mode2024B +
+    'B per year (range $' + c.low2024B + 'B to $' + c.high2024B + 'B).');
+}
+
 function setScenario(id: string): void {
   if (!SCENARIOS[id as ScenarioId]) return;
   activeScenario = id as ScenarioId;
@@ -295,6 +311,7 @@ function initWorkforce(): void {
     });
   });
   setScenario('plan');
+  renderLtcWorkforce();
   addAcronymHovers(document.querySelector('main'));
 }
 

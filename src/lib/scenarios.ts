@@ -167,6 +167,7 @@ export const SCENARIOS: Scenario[] = [
     desc: "Aging runs above projection: LTC demand and baseline growth both rise. Tests the plan's biggest expansion under its worst demographics.",
     overrides: {
       ltcExpansion: [250, 330, 420],
+      ltcWageFloor: { mult: 1.3 },
       baselineRealGrowth: [3.0, 3.8, 4.6]
     }
   },

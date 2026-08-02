@@ -42,6 +42,7 @@ export interface SampledParams {
   lowValueCapture: number;
   extractionSavings: number;
   ltcExpansion: number;
+  ltcWageFloor: number;
   bhExpansion: number;
   dvhExpansion: number;
   emsPhExpansion: number;
@@ -72,6 +73,7 @@ export interface DetailRow {
   cDrugs: number;
   cOtherPhc: number;
   cLtc: number;
+  cLtcAides: number;
   cBh: number;
   cDvh: number;
   cEmsPh: number;
