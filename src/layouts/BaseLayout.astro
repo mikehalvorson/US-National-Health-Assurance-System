@@ -16,6 +16,7 @@ const pathname = Astro.url.pathname;
   <title>{title}</title>
   {description && <meta name="description" content={description} />}
   <ClientRouter />
+  <script>import '../scripts/acronyms-client.ts';</script>
 </head>
 <body>
   <div class="wrap">
