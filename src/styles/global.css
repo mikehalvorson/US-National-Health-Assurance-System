@@ -2072,9 +2072,11 @@ footer.site a { color: var(--text-muted); }
 }
 .workforce-risk-row > strong { font-size: 11.5px; line-height: 1.4; }
 .workforce-risk-row > b {
-  display: inline-block; justify-self: start; padding: 3px 6px;
-  border: 1px solid var(--series-2); border-radius: 999px;
-  color: var(--series-2); font-size: 9.8px; line-height: 1.2;
+  display: inline-flex; align-items: center; justify-content: center;
+  justify-self: stretch; min-height: 22px; padding: 3px 8px;
+  border: 1px solid var(--series-2); border-radius: 11px;
+  color: var(--series-2); font-size: 9.8px; line-height: 1.25;
+  text-align: center;
 }
 .workforce-risk-row > b[data-level="tight"] {
   color: var(--series-4); border-color: var(--series-4);
