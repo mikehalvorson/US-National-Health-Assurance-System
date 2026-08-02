@@ -3,6 +3,11 @@
 The framework DOCX is the controlled, machine-readable companion to the
 published PDF.  This script keeps the dashboard catalog reproducible instead
 of maintaining hundreds of records by hand.
+
+LEGACY: this extractor targets the retired vanilla path (docs/js/qualitydata.js)
+and validates the 430 records in the DOCX.  The live Astro catalog now lives in
+src/lib/quality-data.ts and has 440 records: the original 430 plus 10 merit
+health-talent immigration KPP/TPP added by hand in 2026-08 (not in the DOCX).
 """
 
 from __future__ import annotations

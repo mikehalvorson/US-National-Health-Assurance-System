@@ -1,7 +1,9 @@
-/* Governance architecture data, ported verbatim from docs/js/govdata.js
-   (GOV_GROUPS 15-498): 82 entities under 9 governing bodies. Fidelity-critical:
-   do not re-derive. Leadership titles are a staffing design consistent with the
-   plan's executive-hardening provisions, not quotations from it. */
+/* Governance architecture data. 82 entities as ported verbatim from
+   docs/js/govdata.js (GOV_GROUPS 15-498), plus NHTIB and HCRB added under the
+   AHWCS body for the merit health-talent immigration pathway = 84 entities
+   under 9 governing bodies. Fidelity-critical: do not re-derive the ported set.
+   Leadership titles are a staffing design consistent with the plan's
+   executive-hardening provisions, not quotations from it. */
 
 export interface GovMember {
   code: string;
@@ -228,7 +230,7 @@ export const GOV_GROUPS: GovGroup[] = [
 {
   id: "workforce", color: "var(--series-3)",
   name: "5 · Health workforce, compensation, and scope (AHWCS)",
-  desc: "The people plan: compensation boards that replace fee-schedule politics, a training pipeline sized to the bottlenecks, national scope-of-practice floors, a rural service corps, and the office that keeps clinical AI accountable.",
+  desc: "The people plan: compensation boards that replace fee-schedule politics, a training pipeline sized to the bottlenecks, national scope-of-practice floors, a rural service corps, a merit health-talent immigration pathway with credential recognition to bridge the near-term clinical gap, and the office that keeps clinical AI accountable.",
   head: "AHWCS",
   members: [
     { code: "AHWCS", name: "Administration for Health Workforce, Compensation, and Scope", short: "AHWCS (parent)",
@@ -261,6 +263,16 @@ export const GOV_GROUPS: GovGroup[] = [
       why: "Money alone does not staff a frontier county; a corps with rotation guarantees and community support does.",
       replaces: "National Health Service Corps, scaled roughly tenfold",
       leader: "Director; placement fulfillment feeds the rural essential-access index (KPP-E4)." },
+    { code: "NHTIB", name: "National Health Talent Immigration Board", short: "Talent Immigration",
+      role: "Runs the merit health-talent immigration pathway: publishes the shortage-occupation and shortage-region lists, scores and selects qualified clinicians for the roles and places that are short, holds a fast published decision standard, and caps admissions to role-region need.",
+      why: "Domestic training cannot fill the hardest clinical and rural gaps in time, so a disciplined merit pathway is the bridge, but only if one accountable body targets it to real shortages, keeps it fast, and shrinks it as the pipeline matures.",
+      replaces: "The occupational visa lottery and scattered employer sponsorship, consolidated into one targeted, capped, merit selection system",
+      leader: "Director; selection follows the published shortage lists and the NPCB pay floors, and admission caps are reported against role-region vacancy data (KPP-W4)." },
+    { code: "HCRB", name: "Health Credential Recognition Board", short: "Credential Recognition",
+      role: "Assesses the competency of internationally trained clinicians, runs supervised-practice bridges, and coordinates licensing with the states so a qualified IMG or IEN reaches full license quickly instead of leaving the field.",
+      why: "The country already relies on internationally trained clinicians (a quarter of physicians, a sixth of nurses), but slow and inconsistent fifty-state credentialing strands qualified people outside the workforce.",
+      replaces: "The uncoordinated mix of state boards, private credential evaluators, and specialty exams that no single body aligns",
+      leader: "Director; works with the NCSWB scope floors and state boards, with credential-assessment turnaround as the headline metric (TPP-IMM3)." },
     { code: "AICIO", name: "AI Clinical Integration Office", short: "AI Integration",
       role: "Registry, validation, monitoring, audit logs, and suspension authority for every AI system used in care or routing; enforces the hard rule that AI never makes final high-stakes denials.",
       why: "The unit network leans on AI-assisted intake; the difference between leverage and catastrophe is an office that can pull a model from production overnight.",

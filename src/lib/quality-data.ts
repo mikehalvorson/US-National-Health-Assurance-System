@@ -1,7 +1,9 @@
-/* Quality catalog base data, ported verbatim from docs/js/qualitydata.js
-   (window.NHA_QUALITY_DATA: 430 parameters + phases/gates/concepts/counts).
-   Fidelity-critical: do not re-derive. phase-targets.ts augments each
-   parameter.rollout with derived interim targets at load time. */
+/* Quality catalog base data. 430 parameters ported verbatim from the retired
+   docs/js/qualitydata.js, plus 10 merit health-talent immigration KPP/TPP added
+   2026-08 = 440 parameters (45 KPP + 85 TPP + 310 CP), with phases, gates,
+   concepts, and counts. Fidelity-critical: do not re-derive the ported set.
+   phase-targets.ts augments each parameter.rollout with derived interim
+   targets. */
 
 export interface RolloutEntry { phase: string; value: string; kind: string; gate?: string; basis?: string; justification?: string; interpretation?: string; }
 export interface QualityParameter {
