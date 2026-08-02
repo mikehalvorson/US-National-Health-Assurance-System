@@ -186,18 +186,19 @@ export const DOMAINS: Domain[] = [
       'National Health Service Corps authorities',
       'Medicare graduate-medical-education payment',
       'Higher Education Act and Public Service Loan Forgiveness',
-      'Immigration and Nationality Act health-workforce pathways',
+      'Immigration and Nationality Act health-workforce pathways, including INA employment-based categories and INA §214(l) Conrad 30 waiver authority',
+      'WHO Global Code of Practice on the International Recruitment of Health Personnel as a voluntary ethical-recruitment standard',
       'Federal employment, service-obligation, and labor statutes',
       'State licensure, scope-of-practice, supervision, telehealth, and compact laws'
     ],
-    change: 'Authorize national role-region staffing plans, training expansion, rural service, compensation bands, transition support, travel teams, telehealth, and competency-based national scope floors.',
-    preserve: 'Keep state discipline, clinical competency, collective bargaining, wage and hour, nondiscrimination, immigration due process, academic standards, and worker appeals.',
-    method: 'Use federal employment and facility-participation rules directly; fund voluntary state compacts; condition new grants with clear prospective terms; preempt only barriers to the enacted national scope or telehealth floor, not general licensure.',
-    phase: 'P1 registries and transition authority; P4 pilots; P5-P7 scale; P8 workforce floors.',
+    change: 'Authorize national role-region staffing plans, training expansion, rural service, compensation bands, transition support, travel teams, telehealth, and competency-based national scope floors. Authorize a merit-based health-talent immigration pathway: a shortage-occupation and shortage-region designation, a merit selection category, a fast published petition service standard, a credential-recognition and licensing bridge, an underserved-area service obligation, and ethical-recruitment safeguards. Immigration admissions must meet the adopted pay bands and shrink as domestic training completion rises.',
+    preserve: 'Keep state discipline, clinical competency, collective bargaining, wage and hour, nondiscrimination, immigration due process, academic standards, worker appeals, and the domestic-worker and trainee anti-displacement protections that condition every admission.',
+    method: 'Use federal employment and facility-participation rules directly; fund voluntary state compacts; condition new grants with clear prospective terms; enact conforming amendments to the Immigration and Nationality Act for the shortage-occupation designation, the health-talent selection category, and an expanded Conrad-style service-waiver track; preempt only barriers to the enacted national scope or telehealth floor, not general licensure.',
+    phase: 'P1 registries, transition authority, and immigration selection standards; P4 pilots; P5-P7 scale; P8 workforce floors.',
     sources: [
       ['Health professions · 42 USC chapter 6A, subchapter V', 'https://uscode.house.gov/view.xhtml?path=/prelim@title42/chapter6A/subchapter5&edition=prelim'],
-      ['National Health Service Corps · 42 USC §254d', 'https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title42-section254d&num=0&edition=prelim'],
-      ['Public Service Loan Forgiveness · 20 USC §1087e', 'https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title20-section1087e&num=0&edition=prelim']
+      ['Conrad 30 waiver · INA §214(l)', 'https://www.uscis.gov/working-in-the-united-states/students-and-exchange-visitors/conrad-30-waiver-program'],
+      ['WHO Global Code · WHA63.16', 'https://www.who.int/teams/health-workforce/migration/practice/who-global-code-of-practice-on-the-international-recruitment-of-health-personnel']
     ]
   },
   {
@@ -342,8 +343,15 @@ export const ACRONYMS: Record<string, string> = {
   'HIPAA': 'Health Insurance Portability and Accountability Act',
   'HITECH': 'Health Information Technology for Economic and Clinical Health Act',
   'HSA': 'Health Savings Account',
+  'IEN': 'Internationally Educated Nurse',
   'IHS': 'Indian Health Service',
+  'IMG': 'International Medical Graduate',
+  'INA': 'Immigration and Nationality Act',
   'IRA': 'Inflation Reduction Act',
+  'HPSA': 'Health Professional Shortage Area',
+  'MUA': 'Medically Underserved Area',
+  'MUP': 'Medically Underserved Population',
+  'WHO': 'World Health Organization',
   'IRC': 'Internal Revenue Code',
   'JCT': 'Joint Committee on Taxation',
   'LTC': 'Long-Term Care',
