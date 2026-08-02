@@ -406,12 +406,12 @@ table.data th.num { text-align: right; }
 .hospital-score-wrap { margin-top: 16px; }
 #hospital-region-scores {
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 5px; align-items: end; height: 86px; padding-top: 4px; padding-bottom: 6px;
+  gap: 5px; align-items: end; height: 100px; padding-top: 4px; padding-bottom: 7px;
   border-bottom: 1px solid var(--gridline-strong);
 }
 .hospital-score {
   display: flex; flex-direction: column; justify-content: flex-end;
-  align-items: center; gap: 3px; height: 100%;
+  align-items: center; gap: 3px;
   color: var(--text-muted); font-size: 10.5px;
 }
 .hospital-score-bar {

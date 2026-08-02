@@ -102,7 +102,8 @@ function renderGdpChart(): void {
     function tipIt(evt: { clientX: number; clientY: number }): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = r.country;
-      tipRow(box, color, 'LTC spending', r.pct.toFixed(1) + '% of GDP', true);
+      tipRow(box, color, 'Share of GDP', r.pct.toFixed(1) + '%', true);
+      tipRow(box, '', 'Per person', '$' + r.perCapita.toLocaleString('en-US') + ' (2021, PPP)', true);
       tipRow(box, '', '', r.note, false);
       showTip(box, evt.clientX, evt.clientY);
     }
@@ -116,7 +117,7 @@ function renderGdpChart(): void {
     legend(leg, [
       { label: 'Social insurance', color: 'var(--series-1)' },
       { label: 'Tax-funded', color: 'var(--series-3)' },
-      { label: 'United States (public only)', color: 'var(--series-5)' }
+      { label: 'United States', color: 'var(--series-5)' }
     ]);
   }
 }
@@ -157,17 +158,18 @@ function renderWorkforce(): void {
   if (!host) return;
   host.innerHTML = '';
 
-  const W = 860, M = { l: 200, r: 60, t: 8, b: 30 }, rowH = 46;
+  const W = 860, M = { l: 240, r: 60, t: 8, b: 30 }, rowH = 46;
   const rows = [
-    { label: 'Direct-care workers today', v: WORKFORCE_ASSESS.directCare2024, color: 'var(--series-1)' },
-    { label: 'Total openings by 2034', v: WORKFORCE_ASSESS.openings2034, color: 'var(--series-5)' }
+    { label: 'Aides employed today (2024)', v: WORKFORCE_ASSESS.directCare2024, color: 'var(--series-1)' },
+    { label: 'Current system needs by 2034', v: WORKFORCE_ASSESS.projected2034, color: 'var(--series-3)' },
+    { label: 'Universal benefit at maturity', v: WORKFORCE_ASSESS.matureFramework, color: 'var(--series-5)' }
   ];
   const H = M.t + rows.length * rowH + M.b;
   const hi = Math.max.apply(null, rows.map(function (r) { return r.v; })) * 1.15;
   const x = function (v: number): number { return M.l + (W - M.l - M.r) * (v / hi); };
 
   const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg',
-    role: 'img', 'aria-label': 'Direct-care workforce today versus openings by 2034' }, host);
+    role: 'img', 'aria-label': 'Direct-care aides employed today, needed by the current system in 2034, and needed by a universal home-first benefit at maturity, in millions of workers' }, host);
   niceTicks(0, hi, 5).forEach(function (tv) {
     el('line', { x1: x(tv), x2: x(tv), y1: M.t, y2: H - M.b, class: 'gridline' }, svg);
     const t = el('text', { x: x(tv), y: H - 10, class: 'axis-text', 'text-anchor': 'middle' }, svg);

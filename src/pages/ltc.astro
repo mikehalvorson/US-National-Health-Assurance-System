@@ -25,6 +25,11 @@ import ChapterNav from '../components/ChapterNav.astro';
       collapsed, and the gap is filled by unpaid relatives and underpaid aides.
       The result is high cost and low security at the same time.</p>
     <div id="ltc-failure-stats" class="ltc-stats" aria-live="polite"></div>
+    <p class="note"><b>Sources.</b> Spending and payer mix: KFF and Medicaid.gov,
+      2022. Care prices: Genworth and CareScout, 2024. Lifetime risk: HHS ASPE,
+      2022. Waiting lists: KFF, 2024. Unpaid family care: AARP, Valuing the
+      Invaluable, 2021 value. Aide wages and turnover: PHI, 2025. Each figure also
+      carries a confidence grade above.</p>
   </section>
 
   <section class="card ltc-medicare">
@@ -45,19 +50,23 @@ import ChapterNav from '../components/ChapterNav.astro';
       <article>
         <h3>Care rationed by waiting</h3>
         <p>About 711,000 people sit on state waiting lists for home and
-          community care, waiting roughly 40 months on average.</p>
+          community care, waiting roughly 40 months on average (KFF, 2024).</p>
       </article>
       <article>
         <h3>Cost shifted onto families</h3>
         <p>Thirty-eight million relatives provide unpaid care worth about $600B
-          a year, often cutting their own hours, pay, and health to do it.</p>
+          a year (AARP, 2021), often cutting their own hours, pay, and health to
+          do it.</p>
       </article>
       <article>
         <h3>A workforce that cannot hold</h3>
         <p>Aides earn a median of $17.36 an hour; home-care turnover runs near
-          75%, so the person who knows a client keeps disappearing.</p>
+          75% (PHI, 2025), so the person who knows a client keeps disappearing.</p>
       </article>
     </div>
+    <p class="note"><b>Sources.</b> Medicare's 100-day skilled-care limit and the
+      roughly $2,000 Medicaid asset test: CMS and Medicaid.gov. Waiting lists:
+      KFF, 2024. Unpaid family care: AARP, 2021. Aide pay and turnover: PHI, 2025.</p>
   </section>
 
   <!-- ============================ PART 2 ============================ -->
@@ -73,18 +82,31 @@ import ChapterNav from '../components/ChapterNav.astro';
       <div id="ltc-gdp-chart"></div>
       <div id="ltc-gdp-legend" class="ltc-legend"></div>
     </div>
-    <p class="note">Share of GDP is used on purpose: it compares national effort
-      without crossing dollar scales. The U.S. figure is public spending only
-      and understates true need, because it leaves out unpaid family care and
-      the care rationed away by spend-down and waiting lists.</p>
+    <p class="note">Each bar's tooltip carries two readings. Share of GDP shows
+      how much of a whole economy goes to care: the United States commits the
+      least, 1.3%, against 2.2% to 4.4% in the countries that cover everyone.
+      Dollars per person shows the raw amount, and here the gap narrows, because
+      the United States is a wealthy country. It spends about $929 a head, near
+      the OECD average, while the top spenders reach two to three times that. So
+      the problem is not simply that America spends too few dollars. It is that
+      the dollars it does spend are means-tested and rationed, and neither reading
+      counts the roughly $600B of care that families provide unpaid.</p>
+    <p class="note"><b>Sources.</b> Long-term care as a share of GDP, 2021: OECD
+      Health at a Glance 2023 (total public and private long-term care). Dollars
+      per person: that share applied to World Bank GDP per capita, price-adjusted,
+      2021. The derivation is set out in the methodology linked below.</p>
   </section>
 
   <section class="card">
     <span class="ltc-kicker">Four models, one lesson</span>
     <h2>How the working systems are actually built</h2>
     <div id="ltc-country-cards" class="ltc-country-cards"></div>
-    <p class="note">Sources and methodology are linked at the foot of this
-      chapter. Figures are dated to their source year.</p>
+    <p class="note"><b>Sources.</b> Country designs and dates: OECD Health at a
+      Glance 2023; Commonwealth Fund country profiles for Japan and the Buurtzorg
+      model; EURAXESS and the German Federal Ministry of Health for
+      Pflegeversicherung; Healthcare Denmark and OECD for Nordic reablement.
+      Figures are dated to their source year, and the full methodology is linked
+      at the foot of this chapter.</p>
   </section>
 
   <section class="card ltc-threads">
@@ -119,33 +141,55 @@ import ChapterNav from '../components/ChapterNav.astro';
     <span class="ltc-kicker">What it costs, and where the cost already lives</span>
     <h2>The largest single benefit expansion, already inside the total</h2>
     <p id="ltc-cost-note" class="desc"></p>
-    <p class="note">Because the benefit pays for care that families now provide
-      unpaid and for people now turned away, most of it is genuinely new
-      national spending, not a reshuffling of today's bills. It is counted in
-      the framework total rather than added on afterward, so the headline cost
-      of the plan already includes it.</p>
+    <p class="note"><b>Sources.</b> Today's $415B in long-term care spending: KFF
+      and Medicaid.gov, 2022. The added cost of a universal benefit is the
+      framework's own estimate, anchored to the Congressional Budget Office's
+      comprehensive long-term-care option; it is carried inside the plan total and
+      inside the new-tax requirement shown on the Tax and Healthcare tabs. The
+      confidence grade sits on the figure above.</p>
   </section>
 
   <section class="card ltc-workforce">
     <span class="ltc-kicker">Can we staff it?</span>
     <h2>The binding constraint is the direct-care workforce, not doctors</h2>
-    <p class="desc">A home-first benefit lives or dies on aides: home care
-      workers, residential aides, and nursing assistants. This workforce is
-      already the fastest-growing occupation group in the country and already
-      short. A universal benefit adds demand on top of that.</p>
+    <p class="desc">A home-first benefit rests on one workforce above all: the
+      direct-care aides, meaning the home care workers, residential aides, and
+      nursing assistants who show up at the door. Without them the benefit is a
+      promise on paper. This is already the fastest-growing occupation group in
+      the country, and already short, and a universal benefit adds demand on top
+      of that.</p>
     <div id="ltc-workforce-fig"></div>
+    <p class="note">These bars are headcounts of direct-care workers at three
+      moments: how many are employed today, how many the current system already
+      needs by 2034 just to keep pace with aging, and how many a universal
+      home-first benefit needs once it matures and reaches people now turned
+      away. The year 2034 is the end of the latest ten-year federal projection
+      window (2024 to 2034), and it is also about eight years into a benefit that
+      begins in 2026. A separate, larger figure, roughly 9.7 million, counts every
+      hire needed across the whole decade including all the workers who leave and
+      must be replaced; that is a flow of job openings, not a headcount at any one
+      time, so it is described here rather than drawn as a bar.</p>
     <div class="ltc-workforce-assess">
       <h3>How this squares with the Workforce and immigration plans</h3>
       <p>The Workforce chapter now sizes the direct-care aide workforce as its
         own block, separate from the insurance-transition ledger: about 5.4
-        million aides today against 9.7 million openings projected by 2034. It
-        sets a wage floor that lifts aide pay above today's $17.36-an-hour
-        median, and the net-new compensation that floor costs is carried in the
-        framework cost model on the Healthcare tab. The merit immigration
-        pathway now lists direct-care roles alongside physicians and nurses, and
-        scope-of-practice floors let aides and home-care nurses work to their
-        training everywhere. The benefit is funded, and now it is staffable.</p>
+        million aides today, roughly 6.2 million needed by 2034 just to keep pace
+        with aging, and on the order of 7.5 million once a universal benefit
+        matures. Filling those seats and replacing everyone who leaves adds up to
+        about 9.7 million total hires over the decade. The plan sets a wage floor
+        that lifts aide pay above today's $17.36-an-hour median, and the net-new
+        compensation that floor costs is carried in the framework cost model on
+        the Healthcare tab, which is what the Tax tab has to raise. The merit
+        immigration pathway now lists direct-care roles alongside physicians and
+        nurses, and scope-of-practice floors let aides and home-care nurses work
+        to their training everywhere. The benefit is funded, and now it is
+        staffable.</p>
     </div>
+    <p class="note"><b>Sources.</b> Direct-care headcounts, new jobs, total
+      openings, wages, and turnover: PHI, Direct Care Workers in the United
+      States, Key Facts 2025, drawing on Bureau of Labor Statistics employment
+      projections. The maturity figure is the framework's own estimate, derived
+      from the plan's covered full-time-equivalent aides; see the methodology.</p>
     <p class="rollout-source">
       <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/long_term_care_methodology.md"
         target="_blank" rel="noopener">Sources and long-term care methodology</a>.

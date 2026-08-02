@@ -16,22 +16,22 @@ export interface CostStat {
 
 export const US_FAILURE_STATS: CostStat[] = [
   { value: '$415B', label: 'spent on long-term care in 2022, and it still leaves most families exposed',
-    note: 'Medicaid paid 61%, out-of-pocket 17%; $284B went to home and community care, $131B to nursing facilities.',
+    note: 'Medicaid paid 61%, out-of-pocket 17%; $284B went to home and community care, $131B to nursing facilities. KFF and Medicaid.gov, 2022.',
     confidence: 'high' },
   { value: '$127,750', label: 'median cost of one year in a private nursing-home room, 2024',
-    note: 'In-home care with a home health aide ran $77,792 a year; assisted living was in the low-to-mid $60,000s.',
+    note: 'In-home care with a home health aide ran $77,792 a year; assisted living was in the low-to-mid $60,000s. Genworth and CareScout Cost of Care Survey, 2024.',
     confidence: 'high' },
   { value: '70%', label: 'of people who reach 65 will need long-term care before they die',
-    note: 'Women need it 3.7 years on average, men 2.2 years; about one in seven spends over two years in a nursing home.',
+    note: 'Women need it 3.7 years on average, men 2.2 years; about one in seven spends over two years in a nursing home. HHS ASPE, 2022.',
     confidence: 'high' },
   { value: '~711,000', label: 'people stuck on Medicaid waiting lists for home and community care in 2024',
-    note: 'The average wait was about 40 months. The waiting list is the visible edge of far larger unmet need.',
+    note: 'The average wait was about 40 months, up from 36 the year before. The waiting list is the visible edge of far larger unmet need. KFF, 2024.',
     confidence: 'high' },
   { value: '$600B', label: 'unpaid care that 38 million family members provided in one year',
-    note: 'About 36 billion hours, worth more than all U.S. out-of-pocket health spending that year (AARP, 2021 value).',
+    note: 'About 36 billion hours, worth more than all U.S. out-of-pocket health spending that year. AARP, Valuing the Invaluable, 2021 value.',
     confidence: 'high' },
   { value: '$17.36/hr', label: 'median wage for the aides who do the work, in 2024',
-    note: 'Median annual earnings under $26,000; home-care turnover ran near 75%, so continuity of care collapses.',
+    note: 'Median annual earnings under $26,000; home-care turnover ran near 75%, so continuity of care collapses. PHI, 2025.',
     confidence: 'high' }
 ];
 
@@ -46,34 +46,40 @@ export const MEDICARE_GAP = {
   confidence: 'high' as Conf
 };
 
-/* ---- Long-term care spending, % of GDP, 2021 (OECD). % GDP is used on
-   purpose: it compares effort across economies without crossing dollar
-   scales. ---- */
+/* ---- Long-term care spending, 2021, from one source for every bar: OECD
+   Health at a Glance 2023 (total long-term care as a share of GDP). Two
+   readings are shown together. Share of GDP measures national effort against
+   the size of each economy. Dollars per person (perCapita) is the same
+   spending divided by population, so a reader can also see the raw amount.
+   perCapita is derived transparently as pct x GDP per capita (USD, adjusted
+   for local prices, World Bank 2021); it is not a cross-scale comparison
+   because every figure is the same unit, spending per person. ---- */
 export interface GdpBar {
   country: string;
-  pct: number;
+  pct: number;              // total LTC spending, % of GDP, 2021 (OECD HaG 2023)
+  perCapita: number;        // LTC spending per person, USD PPP, 2021 (derived)
   kind: 'insurance' | 'tax' | 'us';
   confidence: Conf;
   note: string;
 }
 
 export const LTC_GDP_2021: GdpBar[] = [
-  { country: 'Netherlands', pct: 4.4, kind: 'insurance', confidence: 'high',
-    note: 'Universal insurance for intensive care, municipal social support, insured district nursing.' },
-  { country: 'Norway', pct: 3.5, kind: 'tax', confidence: 'high',
-    note: 'Tax-funded municipal care.' },
-  { country: 'Sweden', pct: 3.4, kind: 'tax', confidence: 'high',
+  { country: 'Netherlands', pct: 4.4, perCapita: 3017, kind: 'insurance', confidence: 'high',
+    note: 'The OECD high mark. Universal insurance for intensive care, municipal social support, insured district nursing.' },
+  { country: 'Norway', pct: 3.5, perCapita: 3227, kind: 'tax', confidence: 'high',
+    note: 'Tax-funded municipal care. The highest dollars per person here, partly because Norway is a rich, oil-funded economy.' },
+  { country: 'Sweden', pct: 3.4, perCapita: 2114, kind: 'tax', confidence: 'high',
     note: 'Tax-funded municipal care under the Social Services Act.' },
-  { country: 'Denmark', pct: 3.2, kind: 'tax', confidence: 'high',
-    note: 'Tax-funded, reablement-first, mandatory preventive home visits.' },
-  { country: 'Japan', pct: 2.0, kind: 'insurance', confidence: 'high',
-    note: 'Mandatory insurance from age 40; home and community-based tilt.' },
-  { country: 'Germany', pct: 2.1, kind: 'insurance', confidence: 'medium',
-    note: 'Statutory insurance since 1995; cash option for family caregivers.' },
-  { country: 'OECD average', pct: 1.8, kind: 'tax', confidence: 'high',
-    note: 'Average across OECD countries in 2021.' },
-  { country: 'United States (public)', pct: 1.0, kind: 'us', confidence: 'medium',
-    note: 'Public spending only; excludes the roughly $600B in unpaid family care and understates need rationed away by waiting lists and spend-down.' }
+  { country: 'Denmark', pct: 3.2, perCapita: 2218, kind: 'tax', confidence: 'high',
+    note: 'Tax-funded, reablement-first, with mandatory preventive home visits.' },
+  { country: 'Japan', pct: 2.2, perCapita: 1012, kind: 'insurance', confidence: 'high',
+    note: 'Mandatory insurance from age 40, with a home and community-based tilt.' },
+  { country: 'Germany', pct: 2.5, perCapita: 1566, kind: 'insurance', confidence: 'high',
+    note: 'Statutory insurance since 1995, with a cash option for family caregivers.' },
+  { country: 'OECD average', pct: 1.8, perCapita: 922, kind: 'tax', confidence: 'high',
+    note: 'The average across OECD countries in 2021.' },
+  { country: 'United States', pct: 1.3, perCapita: 929, kind: 'us', confidence: 'high',
+    note: 'The lowest share of any country shown, yet close to the OECD average in raw dollars per person, because the U.S. economy is large. The money is means-tested and rationed, and this figure still leaves out the roughly $600B in unpaid family care.' }
 ];
 
 /* ---- The systems that work ---- */
@@ -165,20 +171,38 @@ export const PLAN_PILLARS: Pillar[] = [
   }
 ];
 
-/* ---- Workforce assessment: demand this benefit creates vs. the plan's
-   current workforce numbers ---- */
+/* ---- Workforce assessment: three honest headcounts, all in millions of
+   direct-care workers (home care aides, residential aides, nursing
+   assistants), so the bars compare like with like.
+     directCare2024    today's workforce (PHI 2025).
+     projected2034     what the CURRENT system already needs by 2034: today
+                       plus the 772,000 new jobs PHI projects over 2024-2034.
+     matureFramework   what a UNIVERSAL, home-first benefit needs at maturity:
+                       the 2034 baseline plus the staff to serve people now
+                       rationed out and to expand paid home care. Derived from
+                       the plan's ~5.0M covered full-time-equivalent aides
+                       divided by a ~0.67 full-time fraction (direct care is
+                       heavily part-time), which lands near 7.5M workers.
+   openings2034 (9.7M) is a DIFFERENT kind of number: total hires needed over
+   the decade including everyone who must be replaced, not a headcount at a
+   point in time, so it is quoted in prose, never drawn as a bar. ---- */
 export const WORKFORCE_ASSESS = {
-  directCare2024: 5.4,          // million, PHI
-  openings2034: 9.7,            // million total openings 2024-2034, PHI
-  medianWage2024: 17.36,        // $/hr, PHI
-  homeTurnover: 75,             // %, PHI
-  note: 'The Workforce tab now sizes the direct-care aide workforce as its own ' +
-    'block: 5.4M aides today, 9.7M openings by 2034, a wage floor lifting pay ' +
-    'above the $17.36/hr median, and the net-new compensation that floor costs, ' +
-    'carried in the framework total. The merit immigration pathway now lists ' +
-    'direct-care roles alongside physicians and nurses. Aides are the binding ' +
-    'constraint, so pay and recruitment, not headcount alone, decide whether ' +
-    'the benefit can be staffed.',
+  directCare2024: 5.4,          // million workers today, PHI 2025
+  newJobs2034: 0.772,           // million NEW jobs added 2024-2034, PHI 2025
+  projected2034: 6.2,           // million workers the current system needs by 2034 (5.4 + 0.772)
+  matureFramework: 7.5,         // million workers a universal home-first benefit needs at maturity
+  openings2034: 9.7,            // million TOTAL openings 2024-2034 incl. replacements, PHI 2025
+  medianWage2024: 17.36,        // $/hr, PHI 2025
+  homeTurnover: 75,             // %, PHI 2025
+  note: 'Direct-care aides are the workforce that actually delivers a home-first ' +
+    'benefit. The country employs about 5.4 million of them today, and the ' +
+    'current system already needs roughly 6.2 million by 2034 just to keep pace ' +
+    'with aging. A universal benefit that also reaches people now turned away ' +
+    'needs on the order of 7.5 million at maturity. Turnover near 75% and a ' +
+    'median wage of $17.36 an hour are why the constraint is pay and retention, ' +
+    'not just headcount. The wage floor that addresses this is costed in the ' +
+    'framework total, and the merit immigration pathway now lists direct-care ' +
+    'roles alongside physicians and nurses.',
   confidence: 'medium' as Conf
 };
 
@@ -195,12 +219,18 @@ function ltcParam() {
 export const LTC_COST_2024 = ltcParam(); // { low, mode, high } in $B, 2024 scale
 
 export const COST_IN_FRAMEWORK = {
-  headline: 'The benefit is already the framework\'s largest single expansion, and it is inside the total',
-  body: 'Long-term care is carried in the fiscal model as net new national ' +
-    'spending of about $' + LTC_COST_2024.mode + 'B a year at maturity (range $' +
-    LTC_COST_2024.low + 'B to $' + LTC_COST_2024.high + 'B), summed into the ' +
-    'framework total, not bolted on after. It is net new above the $415B ' +
-    'already spent on long-term care today, because a universal benefit pays ' +
-    'for care that families now give unpaid and for people now turned away.',
+  headline: 'The largest single new benefit, and its price is already inside the plan total',
+  body: 'Start with what happens now. The country already spends about $415B a ' +
+    'year on long-term care, most of it through Medicaid and only after a family ' +
+    'has spent almost everything it saved. On top of that, relatives provide ' +
+    'roughly $600B a year in care for free. A universal benefit would add about ' +
+    '$' + LTC_COST_2024.mode + 'B a year once it is fully up and running ' +
+    '(somewhere between $' + LTC_COST_2024.low + 'B and $' + LTC_COST_2024.high +
+    'B). That money is genuinely new, not a reshuffle of today\'s bills, because ' +
+    'it finally pays for two things the current system does not: the people who ' +
+    'are turned away or left on waiting lists, and the care that families now ' +
+    'give unpaid. This added cost is built into the plan\'s overall price from ' +
+    'the start. When the plan says what it costs and how taxes cover it, ' +
+    'long-term care is already counted inside that number.',
   confidence: 'medium' as Conf
 };

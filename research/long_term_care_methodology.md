@@ -94,12 +94,30 @@ of their source year; the fiscal model's net-new LTC cost is carried in real
   Sweden 3.4%, Denmark 3.2% of GDP). Confidence: high. Source: OECD Health at a
   Glance 2023; Healthcare Denmark; peer-reviewed reablement evaluations.
 
-- **Comparative spending anchor.** OECD countries spent on average 1.8% of GDP
-  on long-term care in 2021, ranging from 4.4% (Netherlands) to under 0.5%.
-  Countries that cover the benefit universally cluster at 2.0-4.4%. The United
-  States spends less publicly and rations by impoverishment and waiting lists.
-  Confidence: high. Source: OECD "Spending on long-term care"; Health at a
-  Glance 2023.
+- **Comparative spending anchor (one source for every bar).** All eight bars in
+  the GDP chart use OECD Health at a Glance 2023, total long-term care as a share
+  of GDP, 2021: Netherlands 4.4%, Norway 3.5%, Sweden 3.4%, Denmark 3.2%, Germany
+  2.5%, Japan 2.2%, OECD average 1.8%, United States 1.3%. This replaces an
+  earlier mix that had Germany at 2.1%, Japan at 2.0%, and a public-only U.S.
+  figure of 1.0%; the single-series values above are what HaG 2023 reports and
+  are internally consistent. Countries that cover the benefit universally cluster
+  at 2.2-4.4%; the United States commits the smallest share and rations by
+  impoverishment and waiting lists. Confidence: high. Source: OECD Health at a
+  Glance 2023, "Long-term care spending and unit costs"; cross-checked against
+  the A-Mark Foundation's HaG 2023 digest.
+
+- **Dollars per person (the second reading in each tooltip).** Long-term care
+  spending per person is derived transparently as (share of GDP) x (GDP per
+  capita, USD PPP, 2021, World Bank NY.GDP.PCAP.PP.CD): Norway ~$3,227,
+  Netherlands ~$3,017, Denmark ~$2,218, Sweden ~$2,114, Germany ~$1,566, Japan
+  ~$1,012, United States ~$929, OECD average ~$922. This is the same spending
+  divided by population, so it is a same-unit (per-person) comparison, not a
+  cross-scale one. The point it makes: in raw price-adjusted dollars the U.S.
+  sits near the OECD average, because the U.S. economy is large; the failure is
+  that the money is means-tested and rationed, and the per-capita figure still
+  omits the ~$600B in unpaid family care. Confidence: high (arithmetic on two
+  high-confidence series). Source: OECD HaG 2023 (shares); World Bank (GDP per
+  capita, PPP, 2021).
 
 Common threads in the systems that work: coverage is universal and automatic;
 financing is a predictable dedicated stream, not a means-tested trapdoor; the
@@ -122,14 +140,31 @@ rather than assumed free; and one accountable public body plans capacity.
   Delivery and Regional Health, with a 70% home-and-community service target
   (`gov.ts`). Confidence: high (design).
 
-- **Workforce assessment.** The binding constraint is the direct-care workforce
-  (aides), not physicians. PHI projects ~9.7 million direct-care openings by
-  2034; a universal home-first benefit adds demand on top. The Workforce tab now
-  sizes this as its own block (`LTC_WORKFORCE` in `workforce.ts`), kept out of
-  the insurance-transition ledger (whose entrant-pace math must not absorb
-  millions of aides). The merit immigration pathway (NHTIB shortage lists, HCRB
-  credential recognition) now lists direct-care roles alongside clinicians.
-  Confidence: medium.
+- **Workforce assessment (three honest headcounts).** The binding constraint is
+  the direct-care workforce (aides), not physicians. The staffing figure is
+  presented as three headcounts of workers, all in the same unit so the bars
+  compare like with like:
+  - **Today (2024): ~5.4M** direct-care workers (PHI 2025). High.
+  - **Current system by 2034: ~6.2M.** PHI 2025 projects ~772,000 NEW direct-care
+    jobs over 2024-2034; 5.4M + 0.772M = ~6.2M is the employment level the
+    existing system needs simply to keep pace with aging. High.
+  - **Universal benefit at maturity: ~7.5M.** A planning estimate: the plan's
+    ~5.0M covered full-time-equivalent (FTE) aides divided by a ~0.67 full-time
+    fraction (direct care is heavily part-time) is ~7.5M workers. It exceeds the
+    2034 baseline because the benefit also serves people now rationed out (the
+    ~711k on waiting lists and broader unmet need) and expands paid home care
+    under the 70% home-first target. Confidence: low (the FTE count and part-time
+    fraction are planning assumptions).
+
+  Separately, PHI's **~9.7M "total openings" 2024-2034** is a flow (new jobs plus
+  all replacement hires as workers churn out at ~75% home-care turnover), not a
+  point-in-time headcount; it is quoted in prose and never drawn as a bar next to
+  the stock figures. The 2034 horizon is PHI/BLS's ten-year projection window and
+  also ~8 years into a 2026 start. The Workforce tab sizes this as its own block
+  (`LTC_WORKFORCE` in `workforce.ts`), kept out of the insurance-transition
+  ledger (whose entrant-pace math must not absorb millions of aides). The merit
+  immigration pathway (NHTIB shortage lists, HCRB credential recognition) now
+  lists direct-care roles alongside clinicians. Confidence: medium overall.
 
 - **Aide wage-floor cost (net new, and separate from `ltcExpansion`).** The base
   LTC benefit prices care at prevailing wages; a wage floor above the $17.36/hr
@@ -150,7 +185,12 @@ rather than assumed free; and one accountable public body plans capacity.
 - Mathematica / Medicaid.gov, Medicaid LTSS users and expenditures 2022.
 - AARP, Valuing the Invaluable 2023 Update.
 - PHI, Direct Care Workers in the United States: Key Facts 2024 and 2025.
-- OECD, Spending on Long-Term Care; Health at a Glance 2023.
+- OECD, Health at a Glance 2023, "Long-term care spending and unit costs";
+  Spending on Long-Term Care.
+- A-Mark Foundation, "How Is Long-Term Care Handled by OECD Countries?" (2024),
+  digesting the HaG 2023 shares used above.
+- World Bank, GDP per capita, PPP (current international $), 2021 series
+  NY.GDP.PCAP.PP.CD, used to derive long-term care dollars per person.
 - Commonwealth Fund, Japan country profile; Buurtzorg case study.
 - Urban Institute, Buurtzorg self-governing nursing teams case study.
 - EURAXESS Germany, long-term care insurance guide.

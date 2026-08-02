@@ -12,12 +12,24 @@ test('COUNTRY_SYSTEMS: four working systems, all fields present', () => {
   expect(ok).toBe(true);
 });
 
-test('LTC_GDP_2021: includes a United States public bar and an OECD average', () => {
+test('LTC_GDP_2021: includes a United States bar and an OECD average', () => {
   expect(LTC_GDP_2021.length).toBeGreaterThanOrEqual(6);
   expect(LTC_GDP_2021.some((r) => r.kind === 'us')).toBe(true);
   expect(LTC_GDP_2021.some((r) => /OECD/.test(r.country))).toBe(true);
   // every share is a plausible percent of GDP
   expect(LTC_GDP_2021.every((r) => r.pct > 0 && r.pct < 10)).toBe(true);
+  // every bar also carries a per-person dollar figure for the tooltip
+  expect(LTC_GDP_2021.every((r) => r.perCapita > 0 && r.perCapita < 10000)).toBe(true);
+});
+
+test('WORKFORCE_ASSESS: three headcounts rise from today to 2034 to maturity', () => {
+  const w = WORKFORCE_ASSESS;
+  expect(w.directCare2024).toBeLessThan(w.projected2034);
+  expect(w.projected2034).toBeLessThan(w.matureFramework);
+  // the openings flow is larger than any single-point headcount and is not a bar
+  expect(w.openings2034).toBeGreaterThan(w.matureFramework);
+  // 2034 stock ties to today plus PHI's new-jobs projection
+  expect(Math.abs(w.directCare2024 + w.newJobs2034 - w.projected2034)).toBeLessThan(0.05);
 });
 
 test('LTC cost is read from the fiscal model, not a separate number', () => {

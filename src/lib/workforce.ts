@@ -199,13 +199,17 @@ export const CREATED: CreatedItem[] = [
    millions of workers unless noted; sourced in
    research/long_term_care_methodology.md (PHI 2024, BLS). */
 export const LTC_WORKFORCE = {
-  currentDirectCareM: 5.4,   // total direct-care workers, 2024 (PHI)
-  homeCareM: 3.2,            // home-care share of that total, 2024 (PHI)
-  openings2034M: 9.7,        // total direct-care job openings 2024-2034 (PHI)
-  medianWageNow: 17.36,      // $/hr median, 2024 (PHI)
+  currentDirectCareM: 5.4,   // total direct-care workers, 2024 (PHI 2025)
+  homeCareM: 3.2,            // home-care share of that total, 2024 (PHI 2025)
+  newJobs2034M: 0.772,       // NEW direct-care jobs added 2024-2034 (PHI 2025)
+  projected2034M: 6.2,       // workers the current system needs by 2034 = 5.4 + 0.772 (PHI 2025)
+  openings2034M: 9.7,        // total direct-care job openings 2024-2034, incl. replacements (PHI 2025)
+  medianWageNow: 17.36,      // $/hr median, 2024 (PHI 2025)
   wageFloorTarget: 22.00,    // $/hr living-wage floor (plan design)
-  homeTurnoverPct: 75,       // home-care annual turnover, % (PHI)
+  homeTurnoverPct: 75,       // home-care annual turnover, % (PHI 2025)
   coveredFteM: 5.0,          // covered direct-care FTE at maturity (planning)
+  fteFraction: 0.67,         // full-time-equivalent per worker (direct care is heavily part-time)
+  matureFrameworkM: 7.5,     // workers a universal home-first benefit needs at maturity ~= coveredFteM / fteFraction (planning, low confidence)
   hoursPerFteYear: 2080,     // full-time-equivalent hours
   loadedUpliftPerHour: 5.00  // loaded $/hr lift toward the floor (incl. benefits allowance)
 };
