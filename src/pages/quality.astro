@@ -42,36 +42,91 @@ import ChapterNav from '../components/ChapterNav.astro';
 
   <section class="card">
     <h2>Targets across the twelve-year rollout</h2>
-    <p class="desc">Every KPP and TPP now carries a target at every phase
+    <p class="desc">Every KPP and TPP carries a target at every phase
       where it is measurable, built from three sources in priority order:
       the plan's own gate floors and milestones (authoritative, shown
       below), the Data tab's hand-derived information-mesh plan (reused
-      verbatim so the two tabs always agree), and published ramp rules for
-      everything else. The panel and table here show only the
-      the plan's explicit floors; each parameter's full phase-by-phase
-      strip, including derived interim targets, lives in the explorer.</p>
+      verbatim so the two tabs always agree), and a calculated value from
+      that parameter's own equation for everything else. The panel and
+      table here show only the plan's explicit floors; each parameter's
+      full phase-by-phase strip, including the equation-derived targets,
+      lives in the explorer.</p>
     <div id="quality-phase-overview" class="quality-phase-overview"
       aria-label="Numeric parameter milestones and gate floors across rollout phases"></div>
     <div id="quality-floor-table" class="tbl-scroll quality-floor-wrap"></div>
-    <p class="note"><b>How derived interim targets are built.</b>
-      Maximize-percentage targets enter at a deficit of four times the
-      maturity headroom (capped at 10 points) and tighten linearly;
-      minimize targets (error rates, waits, cost ceilings) enter at a
-      multiple of the mature ceiling and tighten geometrically;
-      vs-baseline targets ramp as even fractions of the mature delta; and
-      the seven "to be calibrated" outcome metrics carry qualitative
-      obligations (baseline, trend, calibration, certification) because
-      inventing numbers the plan deliberately deferred would be false
-      precision. Each derived entry states its rule and why the metric
-      becomes measurable at that phase.</p>
+    <p class="note"><b>How equation-derived targets are built.</b>
+      Each parameter's equation combines the cost model's sourced inputs,
+      the rollout build state at that phase (coverage, cost-sharing
+      elimination, units, pharmacy, hospitals, expanded benefits, and
+      infrastructure), and other performance parameters it depends on.
+      The equation explorer below shows every formula and how results flow
+      from one parameter into the next. Where an equation would cross one
+      of the plan's committed floors or milestones, the committed value
+      holds, so targets never regress between phases.</p>
+  </section>
+
+  <section class="card">
+    <h2>The equation behind every target</h2>
+    <p class="desc">Targets here are calculated, not asserted. Pick a
+      stress scenario from the healthcare model and every equation
+      recomputes: the same inputs that move total system cost also move
+      what each phase can credibly demand. Pick a diagram to see how
+      equations feed each other, reading left to right from model inputs
+      through operating parameters (TPP) to system outcomes (KPP). Select
+      any node for its formula, inputs, and phase-by-phase values.</p>
+    <div class="quality-controls" role="group" aria-label="Equation explorer controls">
+      <label class="quality-control">
+        <span>Stress scenario</span>
+        <select id="quality-eq-scenario"></select>
+      </label>
+      <label class="quality-control">
+        <span>Diagram</span>
+        <select id="quality-eq-group"></select>
+      </label>
+      <label class="quality-control">
+        <span>Phase for input values</span>
+        <select id="quality-eq-phase">
+          <option value="P0">P0 (Year 1)</option>
+          <option value="P1">P1 (Year 2)</option>
+          <option value="P2">P2 (Year 3)</option>
+          <option value="P3">P3 (Year 4)</option>
+          <option value="P4">P4 (Year 6)</option>
+          <option value="P5">P5 (Year 7)</option>
+          <option value="P6">P6 (Year 8)</option>
+          <option value="P7">P7 (Year 10)</option>
+          <option value="P8" selected>P8 (Year 12)</option>
+        </select>
+      </label>
+    </div>
+    <p id="quality-eq-groupdesc" class="note quality-eq-groupdesc"></p>
+    <div class="quality-eq-legend" aria-hidden="true">
+      <span class="quality-eq-chip chip-param">cost model input</span>
+      <span class="quality-eq-chip chip-ramp">rollout build state</span>
+      <span class="quality-eq-chip chip-model">fiscal engine value</span>
+      <span class="quality-eq-chip chip-index">derived index</span>
+      <span class="quality-eq-chip chip-tpp">TPP</span>
+      <span class="quality-eq-chip chip-kpp">KPP</span>
+    </div>
+    <div id="quality-eq-diagram" class="quality-eq-diagram tbl-scroll"
+      aria-label="Traversable equation flow diagram"></div>
+    <div id="quality-eq-detail" class="quality-eq-detail" aria-live="polite"></div>
+    <p class="note"><b>Reading the diagrams.</b> KPPs sit at the far right
+      unless they feed another equation. Values shown for inputs use the
+      selected phase and scenario. Committed floors, milestones, and the
+      Data tab's plan stay authoritative in the catalog below; under a
+      stress scenario the explorer shows what the equations say the system
+      could actually deliver, which is the honest gap a gate review would
+      have to confront.</p>
   </section>
 
   <section class="card">
     <h2>Explore all 440 parameters</h2>
     <p class="desc">Search the controlled identifier or text, narrow the
       catalog by parameter type or concept, and choose a rollout phase. Select
-      any row for its calculation, owner, datasets, status, and complete
-      phase-by-phase target strip.</p>
+      any row for its calculation, owner, datasets, status, its target
+      equation, and the complete phase-by-phase target strip. With a stress
+      scenario active in the explorer above, equation-derived targets in the
+      strip and table recompute for that scenario.</p>
     <div class="quality-controls" role="group" aria-label="Quality catalog filters">
       <label class="quality-control quality-search">
         <span>Search</span>

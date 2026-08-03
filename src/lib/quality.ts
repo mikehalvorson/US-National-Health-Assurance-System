@@ -5,8 +5,12 @@
 import { NHA_QUALITY_DATA } from './quality-data';
 import { DATA_PHASES } from './data-phases';
 import { applyPhaseTargets } from './phase-targets';
+import { computeTargets, applyEquationTargets } from './equations';
 
 applyPhaseTargets(NHA_QUALITY_DATA, DATA_PHASES);
+/* Replace the rule-derived interim values with base-case equation values
+   (committed floors, milestones, and data-plan entries stay authoritative). */
+applyEquationTargets(NHA_QUALITY_DATA, computeTargets(NHA_QUALITY_DATA, 'SCN-BASE'));
 
 /* Build the search index (quality.js:89-97). */
 NHA_QUALITY_DATA.parameters.forEach(function (parameter) {

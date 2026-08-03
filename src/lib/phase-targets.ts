@@ -71,9 +71,9 @@ function stripTemporal(s: string): string {
   return s.replace(/\s*\b(by|at)\s+(maturity|phase\s*8|ph-?p?8|p8)\b/ig, '')
           .replace(/\s{2,}/g, ' ').trim();
 }
-interface NumMeta { num: number; cmp: '>=' | '<=' | null; unit: string; decimals: number; comma: boolean; }
+export interface NumMeta { num: number; cmp: '>=' | '<=' | null; unit: string; decimals: number; comma: boolean; }
 /* returns {num, cmp:'>='|'<=', unit, decimals} or null */
-function parseNum(str: string | undefined): NumMeta | null {
+export function parseNum(str: string | undefined): NumMeta | null {
   if (!str) return null;
   const m = str.match(/(median\s*)?(>=|<=|≥|≤)?\s*\$?([\d][\d,]*(?:\.\d+)?)/);
   if (!m) return null;
@@ -94,7 +94,7 @@ function parseNum(str: string | undefined): NumMeta | null {
   return { num: num, cmp: cmp, unit: unit, decimals: decimals, comma: comma };
 }
 /* re-render a template string with the first numeric token replaced */
-function withNum(template: string, num: number, meta: NumMeta): string {
+export function withNum(template: string, num: number, meta: NumMeta): string {
   const t = stripTemporal(template);
   let txt: string;
   if (meta.comma || num >= 1000) txt = Math.round(num).toLocaleString('en-US');

@@ -9,5 +9,9 @@ test('quality page renders prose + filter controls, no em dash', async () => {
   expect(html).toContain('id="quality-table"');
   expect(html).toContain('id="quality-phase-overview"');
   expect(html).toContain('id="quality-selected"');
+  expect(html).toContain('The equation behind every target');
+  expect(html).toContain('id="quality-eq-scenario"');
+  expect(html).toContain('id="quality-eq-diagram"');
+  expect(html).toContain('id="quality-eq-detail"');
   expect(html.includes('—')).toBe(false);
 });
