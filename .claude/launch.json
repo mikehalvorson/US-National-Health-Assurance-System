@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nha-dashboard",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tools/serve.ps1", "-Port", "8517"],
+      "port": 8517
+    },
+    {
+      "name": "astro-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--port", "4321"],
+      "port": 4321
+    },
+    {
+      "name": "astro-dev-fmea",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--port", "4338"],
+      "autoPort": false,
+      "port": 4338
+    }
+  ]
+}
