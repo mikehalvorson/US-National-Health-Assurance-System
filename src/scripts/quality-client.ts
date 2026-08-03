@@ -478,4 +478,15 @@ function initQuality(): void {
   });
 }
 
+/* Run on astro:page-load for View Transition navigations, and also on the
+   initial load without waiting for that event: this module is the heaviest on
+   the site (it statically imports the full 440-record catalog), so on a real
+   network it can finish evaluating after the ClientRouter has already fired the
+   first astro:page-load, missing it and leaving the catalog blank. Mirrors the
+   fallback in acronyms-client.ts; initQuality is idempotent via dataset.wired. */
 document.addEventListener('astro:page-load', initQuality);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initQuality);
+} else {
+  initQuality();
+}
