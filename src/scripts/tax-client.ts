@@ -425,4 +425,13 @@ function initTax(): void {
   applyScenario(activeScenario); /* builds controls + refreshes, goal met */
 }
 
+/* Also init on first load without waiting for astro:page-load: if this module
+   finishes evaluating after ClientRouter fired that event, the listener alone
+   would miss it and leave the page blank (see quality-client.ts). initTax is
+   idempotent via dataset.wired. */
 document.addEventListener('astro:page-load', initTax);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTax);
+} else {
+  initTax();
+}

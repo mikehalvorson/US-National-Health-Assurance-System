@@ -212,4 +212,13 @@ function initHealth(): void {
   render();
 }
 
+/* Also init on first load without waiting for astro:page-load: if this module
+   finishes evaluating after ClientRouter fired that event, the listener alone
+   would miss it and leave the page blank (see quality-client.ts). initHealth is
+   idempotent via dataset.wired. */
 document.addEventListener('astro:page-load', initHealth);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHealth);
+} else {
+  initHealth();
+}

@@ -18,4 +18,13 @@ function initOverview(): void {
   renderFlowDiagram(solo, todayFlowSpec());
 }
 
+/* Also init on first load without waiting for astro:page-load: if this module
+   finishes evaluating after ClientRouter fired that event, the listener alone
+   would miss it and leave the page blank (see quality-client.ts). initOverview
+   is idempotent via dataset.wired. */
 document.addEventListener('astro:page-load', initOverview);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initOverview);
+} else {
+  initOverview();
+}
