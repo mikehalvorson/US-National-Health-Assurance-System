@@ -1,0 +1,121 @@
+canonical_id,name,definition,value,unit,year,source,appendix_or_section,notes
+KPP-A1,National continuous coverage rate,,>=99.5%,,,,KPP Dictionary,Domain: coverage/affordability; Trace: SN-02
+KPP-A2,Residual uninsured rate,,<=0.2%,,,,KPP Dictionary,Domain: coverage/affordability; Trace: SN-02
+KPP-A3,Covered-care patient-billing rate,,<=0.5%,,,,KPP Dictionary,Domain: coverage/affordability; Trace: SN-01
+KPP-A4,New covered-care medical debt incidence,,<=1% baseline,,,,KPP Dictionary,Domain: coverage/affordability; Trace: SN-01
+KPP-A5,Household direct health burden,,>=90% reduction from baseline,,,,KPP Dictionary,Domain: coverage/affordability; Trace: SN-01
+KPP-A6,Worker premium elimination rate,,>=98%,,,,KPP Dictionary,Domain: coverage/affordability; Trace: SN-25
+KPP-A7,Medical bankruptcy reduction,,>=90% reduction,,,,KPP Dictionary,Domain: coverage/affordability; Trace: SN-01
+KPP-B1,Primary front-door access time,,median <=24 hours,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-03
+KPP-B2,Same-day low-acuity access rate,,>=85%,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-03
+KPP-B3,Avoidable ED diversion rate,,>=30% low-acuity ED reduction,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-03
+KPP-B4,Specialist e-consult resolution rate,,>=40%,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-04
+KPP-B5,Routine specialist wait time,,median <=30 days,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-04
+KPP-B6,Urgent specialist timeliness,,>=95% within urgency-class target,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-04
+KPP-B7,Diagnostic-treatment unit coverage,,>=95% population within access standard by P8,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-03
+KPP-B8,Unit-resolved encounter rate,,>=70% without escalation within 7 days,,,,KPP Dictionary,Domain: access/capacity; Trace: SN-03
+KPP-B9,Unsafe under-referral rate,,"<=3 per 10,000 non-escalated encounters",,,,KPP Dictionary,Domain: access/safety; Trace: SN-16
+KPP-C1,Total national health expenditure ratio,,<=15.2% GDP by P8,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-11
+KPP-C2,Per-capita system cost,,to be reconciled with $4.75T total system cost and current population denominator,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-11
+KPP-C3,Administrative cost ratio,,>=50% reduction vs baseline,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-11
+KPP-C4,Claims clean-processing cost,,<=$3 per clean paid claim,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-11
+KPP-C5,Dedicated revenue sufficiency,,>=100% obligations by maturity,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-11
+KPP-C6,Stabilization reserve adequacy,,>=12 months volatile revenue exposure by P8,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-11
+KPP-C7,Wealth-financing collection efficiency,,>=92%,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-11
+KPP-C8,Ordinary taxpayer protection ratio,,<=5% incremental burden share,,,,KPP Dictionary,Domain: cost/fiscal; Trace: SN-12
+KPP-D1,Avoidable hospitalization rate,,reduction to be calibrated,,,,KPP Dictionary,Domain: quality/safety; Trace: SN-16
+KPP-D2,30-day readmission rate,,reduction to be calibrated,,,,KPP Dictionary,Domain: quality/safety; Trace: SN-16
+KPP-D3,Preventive service completion,,increase to be calibrated,,,,KPP Dictionary,Domain: quality/safety; Trace: SN-16
+KPP-D4,Chronic disease control composite,,increase to be calibrated,,,,KPP Dictionary,Domain: quality/safety; Trace: SN-16
+KPP-D5,Medication adherence for priority chronic drugs,,increase to be calibrated,,,,KPP Dictionary,Domain: quality/safety; Trace: SN-08
+KPP-D6,Serious safety event reporting completeness,,to be calibrated,,,,KPP Dictionary,Domain: quality/safety; Trace: SN-16
+KPP-D7,Patient-reported care experience,,to be calibrated,,,,KPP Dictionary,Domain: quality/safety; Trace: SN-19
+KPP-E1,Coverage equity gap,,<=0.5 percentage points,,,,KPP Dictionary,Domain: equity; Trace: SN-18
+KPP-E2,Access equity gap,,<=5%,,,,KPP Dictionary,Domain: equity; Trace: SN-18
+KPP-E3,Specialist wait equity ratio,,<=1.10,,,,KPP Dictionary,Domain: equity; Trace: SN-18
+KPP-E4,Rural essential access index,,>=60 percentage point improvement,,,,KPP Dictionary,Domain: equity/rural; Trace: SN-18/SN-23
+KPP-E5,Language-access compliance,,>=98%,,,,KPP Dictionary,Domain: equity/usability; Trace: SN-18/SN-19
+KPP-T1,Active treatment transfer success,,>=99%,,,,KPP Dictionary,Domain: transition; Trace: SN-05
+KPP-T2,Critical medication interruption rate,,<=0.2%,,,,KPP Dictionary,Domain: transition/drugs; Trace: SN-05/SN-08
+KPP-W1,Displaced worker placement/training rate,,>=75%,,,,KPP Dictionary,Domain: workforce transition; Trace: SN-10
+KPP-TRUST1,Public trust in fairness,,baseline +25 percentage points,,,,KPP Dictionary,Domain: legitimacy; Trace: SN-20
+KPP-CULT1,Clinician safety-culture score,,baseline +25 percentage points,,,,KPP Dictionary,Domain: safety/workforce; Trace: SN-09/SN-16
+TPP-1.1,Master person index match accuracy,,>=99.8%,,,,TPP Dictionary,
+TPP-1.2,Eligibility determination latency,,>=99% real-time confirmation,,,,TPP Dictionary,
+TPP-1.3,Erroneous coverage termination rate,,"<=2 per 100,000/year",,,,TPP Dictionary,
+TPP-1.4,Provisional coverage activation rate,,>=99.5% within 24 hours,,,,TPP Dictionary,
+TPP-2.1,Clean claim auto-adjudication rate,,>=95% by P8,,,,TPP Dictionary,
+TPP-2.2,Clean claim payment timeliness,,>=99%,,,,TPP Dictionary,
+TPP-2.3,Improper payment rate,,<=1%,,,,TPP Dictionary,
+TPP-2.4,Provider cash-flow disruption rate,,<=0.5% delayed >30 days,,,,TPP Dictionary,
+TPP-2.5,OMB/apportionment bypass success,,>=99.8% mandatory disbursements,,,,TPP Dictionary,
+TPP-3.1,Pharmacy claims real-time adjudication,,>=99.5%,,,,TPP Dictionary,
+TPP-3.2,Essential drug $0-access rate,,>=98% essential fills,,,,TPP Dictionary,
+TPP-3.3,Net unit drug price reduction,,>=55% target-drug reduction,,,,TPP Dictionary,
+TPP-3.4,PBM displacement rate,,>=98% core benefit dollars outside PBM model,,,,TPP Dictionary,
+TPP-3.5,Critical drug shortage exposure,,<=3% critical list,,,,TPP Dictionary,
+TPP-3.6,Therapeutic substitution success,,>=75% eligible nonpreferred prescriptions,,,,TPP Dictionary,
+TPP-4.1,PMC product coverage,,>=200 essential product families,,,,TPP Dictionary,
+TPP-4.2,Critical product dual-source rate,,>=90%,,,,TPP Dictionary,
+TPP-4.3,Batch quality release success,,>=99.2%,,,,TPP Dictionary,
+TPP-4.4,API domestic/friendly-source coverage,,>=80% critical products,,,,TPP Dictionary,
+TPP-4.5,Inventory visibility rate,,>=98% critical SKUs,,,,TPP Dictionary,
+TPP-5.1,Hospital budget migration,,>=95% hospital facility spending,,,,TPP Dictionary,
+TPP-5.2,Global budget variance,,<=2% absolute variance,,,,TPP Dictionary,
+TPP-5.3,Facility-fee elimination rate,,>=99% applicable encounters,,,,TPP Dictionary,
+TPP-5.4,Essential service continuity,,>=95% regions,,,,TPP Dictionary,
+TPP-5.5,Hospital staffing safety compliance,,>=97%,,,,TPP Dictionary,
+TPP-5.6,Related-party extraction ratio,,<=0.5% hospital budget,,,,TPP Dictionary,
+TPP-6.1,Certified unit count,,">=15,000 Type A/B/C/D units",,,,TPP Dictionary,
+TPP-6.2,Unit diagnostic completeness,,>=98% applicable encounters,,,,TPP Dictionary,
+TPP-6.3,Unit follow-up closure,,>=99% abnormal results,,,,TPP Dictionary,
+TPP-6.4,Antibiotic stewardship compliance,,>=95%,,,,TPP Dictionary,
+TPP-6.5,Unit bounce-back rate,,<=3.5%,,,,TPP Dictionary,
+TPP-6.6,AI-assisted clinician productivity,,>=125% improvement in safely closed encounters per clinician-hour,,,,TPP Dictionary,
+TPP-7.1,Referral packet completeness,,>=98%,,,,TPP Dictionary,
+TPP-7.2,E-consult response time,,median <=24 hours,,,,TPP Dictionary,
+TPP-7.3,Inappropriate specialist referral rate,,<=5%,,,,TPP Dictionary,
+TPP-7.4,Specialist urgent/e-consult capacity reservation,,>=30% public specialist capacity,,,,TPP Dictionary,
+TPP-7.5,Regional queue participation,,>=95% publicly paid specialists,,,,TPP Dictionary,
+TPP-8.1,Critical workforce vacancy rate,,<=5%,,,,TPP Dictionary,
+TPP-8.2,Specialist Bottleneck Index reduction,,>=50%,,,,TPP Dictionary,
+TPP-8.3,Publicly funded training slots,,">=55,000 annual slots",,,,TPP Dictionary,
+TPP-8.4,Service obligation fulfillment,,>=96%,,,,TPP Dictionary,
+TPP-8.5,Scope-rule implementation,,>=98% regions,,,,TPP Dictionary,
+TPP-8.6,Clinician burnout risk index,,>=30% reduction,,,,TPP Dictionary,
+TPP-9.1,LTC functional assessment timeliness,,>=95%,,,,TPP Dictionary,
+TPP-9.2,Home-first LTC placement rate,,>=70%,,,,TPP Dictionary,
+TPP-9.3,Behavioral health first-contact access,,median <=48 hours,,,,TPP Dictionary,
+TPP-9.4,Behavioral health crisis response time,,>=95% within target,,,,TPP Dictionary,
+TPP-9.5,Dental basic access time,,median <=21 days,,,,TPP Dictionary,
+TPP-9.6,Hearing/vision standard device fulfillment,,>=95% within target,,,,TPP Dictionary,
+TPP-9.7,EMS readiness compliance,,>=95% regions,,,,TPP Dictionary,
+TPP-10.1,Provider/facility registry completeness,,>=99.5% active records verified,,,,TPP Dictionary,
+TPP-10.2,Medication record completeness,,>=95% covered persons,,,,TPP Dictionary,
+TPP-10.3,Lab result interoperability,,>=98% within target,,,,TPP Dictionary,
+TPP-10.4,Discharge summary availability,,>=98% structured within 24 hours,,,,TPP Dictionary,
+TPP-10.5,Record correction closure,,>=97% within statutory timeframe,,,,TPP Dictionary,
+TPP-10.6,API conformance rate,,>=98%,,,,TPP Dictionary,
+TPP-11.1,Critical system uptime,,>=99.97%,,,,TPP Dictionary,
+TPP-11.2,Downtime continuity success,,>=98% drills passed,,,,TPP Dictionary,
+TPP-11.3,Critical vulnerability remediation,,>=99% within 15 days,,,,TPP Dictionary,
+TPP-11.4,AI clinical safety validation,,>=98% protocols validated/monitored,,,,TPP Dictionary,
+TPP-11.5,AI override/audit capture,,>=99% high-stakes decisions,,,,TPP Dictionary,
+TPP-11.6,AI equity drift,,<=3% maximum protected-group deviation,,,,TPP Dictionary,
+TPP-12.1,Mandatory payment protection coverage,,>=99.5% core spending,,,,TPP Dictionary,
+TPP-12.2,Statutory staffing floor compliance,,>=98%,,,,TPP Dictionary,
+TPP-12.3,Vacancy-proof operating continuity,,>=99% critical functions,,,,TPP Dictionary,
+TPP-12.4,Required public data publication timeliness,,>=99%,,,,TPP Dictionary,
+TPP-12.5,Anti-impoundment response time,,<=24 hours,,,,TPP Dictionary,
+TPP-12.6,Appeals resolution timeliness,,>=97% by urgency class,,,,TPP Dictionary,
+TPP-13.1,Public R&D portfolio coverage,,>=95% priority unmet-need areas,,,,TPP Dictionary,
+TPP-13.2,Public-interest licensing attachment,,>=98% materially funded technologies,,,,TPP Dictionary,
+TPP-13.3,Comparative effectiveness cycle time,,median <=6 months,,,,TPP Dictionary,
+TPP-13.4,Innovation reward value alignment,,>=90% post-market reconciliation,,,,TPP Dictionary,
+TPP-EMP1,Employer wage-pass-through compliance,,>=95%,,,,TPP Dictionary,
+TPP-LEG1,Denial/routing explanation completeness,,>=98%,,,,TPP Dictionary,
+TPP-USE1,Patient rights notice comprehension,,>=90%,,,,TPP Dictionary,
+TPP-USE2,Appeal filing completion without assistance,,>=85%,,,,TPP Dictionary,
+TPP-TRIB1,Tribal compact compliance,,>=98%,,,,TPP Dictionary,
+TPP-REG1,Regional adaptation waiver evaluation completion,,>=95%,,,,TPP Dictionary,
+TPP-FORM1,Formula registry completeness,,>=99%,,,,TPP Dictionary,
