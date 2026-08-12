@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 11b): Overview household calculator + flow-takeaway Implementation Plan
+# NHA Astro Migration - P3 (slice 11b): Overview household calculator + flow-takeaway Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -13,7 +13,7 @@
 - Platform: Windows. Bash tool or PowerShell. node 22.23.1 / pnpm 11.17.0 (Volta). Working dir: `C:\Users\micha\OneDrive\Desktop\Healthcare Framework\ChatGPT Work Outputs\Claude Outputs`.
 - TypeScript `strict`; avoid gratuitous `any`.
 - **Fidelity:** `HOUSEHOLD_PROFILES` + `HOUSEHOLDS_M` verbatim from `docs/js/care.js:120-151`. `renderHouseholdCalc` ports `docs/js/care.js:204-272` exactly (same labels, same KPP-C8 formula `0.05 * newRevenueB * 1e9 / (HOUSEHOLDS_M * 1e6)`, same caveat text). `flowTakeawayText` ports `docs/js/app.js:482-489` exactly. The household model number is `mc.modePath.detail[mc.years.length - 2].newRevenue * DEF` (plain DEF) per `modelNumbersForHousehold` (`docs/js/app.js:133-135`). The flow-takeaway uses the money-flow scaling `k = (mc.steady.matureToday.p50 / d.nheNha) * DEF` with `d = mc.modePath.detail[mc.years.indexOf(2041)]` (same `d`/`k`/`newRev` as `nhaFlowSpec`). Do NOT re-derive any value.
-- No em dashes (—, U+2014) in reader-visible output. Note the source uses the curly apostrophes `’` inside `$0` notes and `“ ”` in the flow-takeaway; reproduce those exactly (they are not U+2014). En dash `–` (U+2013) allowed. Grep for U+2014 after each task; must be 0.
+- No em dashes ( - , U+2014) in reader-visible output. Note the source uses the curly apostrophes `’` inside `$0` notes and `“ ”` in the flow-takeaway; reproduce those exactly (they are not U+2014). En dash `–` (U+2013) allowed. Grep for U+2014 after each task; must be 0.
 - The household card markup + prose verbatim from `docs/index.html:732-740`; the `#flow-takeaway` element from `docs/index.html:809` (`<div class="takeaway" id="flow-takeaway"></div>`). All `hh-*` and `.takeaway` CSS already exists in `src/styles/global.css`.
 - Client must stay idempotent across View Transitions (guarded by `#controls dataset.wired`, as today); the household re-render closure is created fresh inside `initOverview`.
 - Do NOT modify `docs/` or the engine modules (params/model/scenarios/tax*). You MAY edit `src/lib/care.ts`, `src/lib/money-flow.ts`, `src/scripts/overview-client.ts`, `src/pages/index.astro`, and create `src/lib/household.ts`, plus tests.
@@ -42,7 +42,7 @@ tests/pages/
 
 ---
 
-### Task 1: `care.ts` — HOUSEHOLD_PROFILES + HOUSEHOLDS_M
+### Task 1: `care.ts` - HOUSEHOLD_PROFILES + HOUSEHOLDS_M
 
 **Files:**
 - Modify: `src/lib/care.ts`
@@ -68,7 +68,7 @@ test('HOUSEHOLD_PROFILES: four profiles, employer-family first', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/care.test.ts`
-Expected: FAIL — exports missing.
+Expected: FAIL - exports missing.
 
 - [ ] **Step 3: Add the exports to `src/lib/care.ts`**
 
@@ -82,7 +82,7 @@ export interface HouseholdProfile {
   confidence: string;
 }
 
-/* docs/js/care.js:120 — Census 2024, millions of U.S. households */
+/* docs/js/care.js:120 - Census 2024, millions of U.S. households */
 export const HOUSEHOLDS_M = 132.2;
 
 /* docs/js/care.js:122-151 (verbatim) */
@@ -165,13 +165,13 @@ test('flowTakeawayText: mentions new revenue and household relief, no NaN/em das
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/money-flow.test.ts`
-Expected: FAIL — `flowTakeawayText` not exported.
+Expected: FAIL - `flowTakeawayText` not exported.
 
 - [ ] **Step 3: Add `flowTakeawayText` to `src/lib/money-flow.ts`**
 
 Append (reusing the same `d`/`k`/`newRev` derivation as `nhaFlowSpec`, and `d.householdRelief`):
 ```ts
-/* app.js:482-489 — the "How the money re-routes" takeaway sentence. */
+/* app.js:482-489 - the "How the money re-routes" takeaway sentence. */
 export function flowTakeawayText(mc: MonteCarloResult, DEF: number): string {
   const i41 = mc.years.indexOf(2041);
   const d = mc.modePath.detail[i41];
@@ -204,7 +204,7 @@ git commit -m "Add flowTakeawayText builder (money re-routes takeaway sentence)"
 
 ---
 
-### Task 3: `household.ts` — client DOM calculator module
+### Task 3: `household.ts` - client DOM calculator module
 
 DOM builder (browser-verified in Task 6, like the other `src/lib` chart/DOM modules; not unit-tested since the test env has no `document`).
 
@@ -213,7 +213,7 @@ DOM builder (browser-verified in Task 6, like the other `src/lib` chart/DOM modu
 
 **Interfaces:**
 - Consumes: `HOUSEHOLD_PROFILES`, `HOUSEHOLDS_M`, `moneyRange` from `./care`; `money` from `./format`.
-- Produces: `interface HouseholdModelNumbers { newRevenueB: number }`; `function renderHouseholdCalc(container: HTMLElement, getModelNumbers: () => HouseholdModelNumbers): () => void` — builds the picker + columns once, returns a `render` function the caller invokes whenever the model recomputes.
+- Produces: `interface HouseholdModelNumbers { newRevenueB: number }`; `function renderHouseholdCalc(container: HTMLElement, getModelNumbers: () => HouseholdModelNumbers): () => void` - builds the picker + columns once, returns a `render` function the caller invokes whenever the model recomputes.
 
 - [ ] **Step 1: Create `src/lib/household.ts`**
 
@@ -324,7 +324,7 @@ git commit -m "Add household.ts client calculator (DOM port of renderHouseholdCa
 
 ---
 
-### Task 4: Markup — household-calc card + #flow-takeaway div
+### Task 4: Markup - household-calc card + #flow-takeaway div
 
 **Files:**
 - Modify: `src/pages/index.astro`
@@ -349,7 +349,7 @@ test('overview includes the household-calc and flow-takeaway containers', async 
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — containers absent.
+Expected: FAIL - containers absent.
 
 - [ ] **Step 3: Insert the household-calc card**
 
@@ -412,7 +412,7 @@ import { flowTakeawayText } from '../lib/money-flow';
 import { renderHouseholdCalc } from '../lib/household';
 import type { HouseholdModelNumbers } from '../lib/household';
 ```
-(Extend the existing `money-flow` import rather than duplicating it: it currently imports `todayFlowSpec, nhaFlowSpec, nhaFlowTitle` — add `flowTakeawayText` to that list.)
+(Extend the existing `money-flow` import rather than duplicating it: it currently imports `todayFlowSpec, nhaFlowSpec, nhaFlowTitle` - add `flowTakeawayText` to that list.)
 
 - [ ] **Step 2: Declare the household state inside `initOverview`**
 
@@ -439,7 +439,7 @@ At the end of the `render()` body (after the `fillTable('financing-table', ...)`
       }
     }
 ```
-(The `getModelNumbers` closure reads the outer `householdNumbers`, which is reassigned before each re-render, so the tax line always reflects the latest run — mirroring how `docs/js/app.js` closes over its live `mc`.)
+(The `getModelNumbers` closure reads the outer `householdNumbers`, which is reassigned before each re-render, so the tax line always reflects the latest run - mirroring how `docs/js/app.js` closes over its live `mc`.)
 
 - [ ] **Step 4: Full suite + check + build**
 
@@ -461,7 +461,7 @@ git commit -m "Wire the household calculator + flow-takeaway into the Overview c
 
 - [ ] **Step 1: Serve + inspect the household calc**
 
-Confirm the household card (after the outcomes card) renders `#household-calc` with an `#hh-select` (4 options), a `.hh-grid` with two `.hh-col`s, a "Typical total" line, an NHA `≤ $N` tax line (no `NaN`), and a `.hh-foot` caveat. Change `#hh-select` to "Uninsured adult" and confirm the Today column updates (premium `$0`). `read_console_messages` — zero errors.
+Confirm the household card (after the outcomes card) renders `#household-calc` with an `#hh-select` (4 options), a `.hh-grid` with two `.hh-col`s, a "Typical total" line, an NHA `≤ $N` tax line (no `NaN`), and a `.hh-foot` caveat. Change `#hh-select` to "Uninsured adult" and confirm the Today column updates (premium `$0`). `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Tax line tracks the model**
 
@@ -486,5 +486,5 @@ Navigate to `/health` and back; confirm the household calc re-initialises (singl
 - **Spec coverage:** implements the interactive household calculator + `#flow-takeaway`. Methodology deferred to 11c.
 - **No placeholders:** `HOUSEHOLD_PROFILES`, `renderHouseholdCalc`, and `flowTakeawayText` are given in full; the client wiring shows exact insertion points and closure semantics.
 - **Type/name consistency:** `HouseholdProfile`/`HOUSEHOLD_PROFILES`/`HOUSEHOLDS_M` reuse `CareAmount` from `care.ts`; `HouseholdModelNumbers.newRevenueB` matches the `getModelNumbers` contract; `flowTakeawayText(mc, DEF)` mirrors the `nhaFlowSpec(mc, DEF)` signature and reuses its `d`/`k`; ids `#household-calc`/`#hh-select`/`#flow-takeaway` and classes `hh-*`/`takeaway` match `docs` + existing `global.css`.
-- **Fidelity/NaN:** household number uses `detail[years.length-2].newRevenue * DEF` (plain DEF, per `modelNumbersForHousehold`); flow-takeaway uses the money-flow `k` scaling (per `renderMoneyFlow`); both reuse already-verified model fields, so no new NaN surface. Em-dash greps in every task; the pre-existing `!html.includes('—')` overview test guards the page.
+- **Fidelity/NaN:** household number uses `detail[years.length-2].newRevenue * DEF` (plain DEF, per `modelNumbersForHousehold`); flow-takeaway uses the money-flow `k` scaling (per `renderMoneyFlow`); both reuse already-verified model fields, so no new NaN surface. Em-dash greps in every task; the pre-existing `!html.includes(' - ')` overview test guards the page.
 - **View-Transition safety:** `householdRerender`/`householdNumbers` live inside `initOverview`, recreated on each `astro:page-load`; the `#controls dataset.wired` guard prevents double-wiring within one page instance.

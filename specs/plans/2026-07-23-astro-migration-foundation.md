@@ -1,4 +1,4 @@
-# NHA Astro Migration — Foundation (P0 + P1) Implementation Plan
+# NHA Astro Migration - Foundation (P0 + P1) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,14 +10,14 @@
 
 ## Global Constraints
 
-- Platform: Windows. PowerShell primary; Bash also available. Machine starts with **no Node, no Python** — P0 installs the Node toolchain.
+- Platform: Windows. PowerShell primary; Bash also available. Machine starts with **no Node, no Python** - P0 installs the Node toolchain.
 - Node: LTS (v22.x), pinned via Volta in `package.json`.
 - Package manager: pnpm, pinned via Volta in `package.json`.
 - TypeScript: `strict` mode.
 - Repo: `mikehalvorson/US-National-Health-Assurance-System`.
-  - `site: 'https://mikehalvorson.github.io'`
-  - `base: '/US-National-Health-Assurance-System/'`
-- Hard content rules (unchanged): **No em dashes (—) anywhere a reader can see.** No references to the source document. Every number sourced with a confidence grade. No cross-scale dollar comparisons. Professional voice, not AI voice.
+- `site: 'https://mikehalvorson.github.io'`
+- `base: '/US-National-Health-Assurance-System/'`
+- Hard content rules (unchanged): **No em dashes ( - ) anywhere a reader can see.** No references to the source document. Every number sourced with a confidence grade. No cross-scale dollar comparisons. Professional voice, not AI voice.
 - **Do not touch or break the live site under `docs/`.** GitHub Pages keeps serving `docs/` until the P5 cutover (a later plan). This plan must not change the Pages source setting.
 - All asset URLs in Astro must resolve through `import.meta.env.BASE_URL`, never hardcoded `/`.
 - New build artifacts (`dist/`, `node_modules/`, `.astro/`) must be gitignored.
@@ -319,8 +319,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: withastro/action@v3
+- uses: actions/checkout@v4
+- uses: withastro/action@v3
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -328,7 +328,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+- id: deployment
         uses: actions/deploy-pages@v4
 ```
 Note: the trigger is `workflow_dispatch` **only** (manual). It does not run on push, so it will not fight the live `docs/` site. The P5 cutover plan changes this to `on: push` and switches the Pages source to "GitHub Actions".
@@ -390,7 +390,7 @@ test('TabNav renders all twelve tab buttons in order', async () => {
 test('shell contains no em dashes (hard content rule)', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(TabNav);
-  expect(html.includes('—')).toBe(false);
+  expect(html.includes(' - ')).toBe(false);
 });
 ```
 
@@ -537,7 +537,7 @@ Using the browser pane, open the preview URL, then read the network requests: th
 Per the project's verify-with-`innerText` convention (browser-pane screenshots have hung repeatedly this project; do not rely on them):
 - Read `document.querySelector('header.site').innerText` on the preview and compare it word-for-word to the live `docs/index.html` header text.
 - Read `[...document.querySelectorAll('nav.tabs button')].map(b => b.textContent)` and confirm it equals the 12 labels in order.
-- Count em dashes in the rendered shell: `(document.querySelector('.wrap').innerText.match(/—/g) || []).length` must be `0`.
+- Count em dashes in the rendered shell: `(document.querySelector('.wrap').innerText.match(/ - /g) || []).length` must be `0`.
 
 - [ ] **Step 4: Record the result**
 
@@ -547,10 +547,10 @@ If any check fails, fix the offending component (Task 7) and re-run. When all pa
 
 ## Follow-on plans (out of scope here, listed for continuity)
 
-- **P2 — Model engine:** port `params/model/scenarios/charts/care` and the tax modules to `src/lib/*.ts`, converting `NHA.selfTest()` + `NHA.SELFTESTS` invariants into Vitest suites. Requires reading the model source first.
-- **P3 — Tabs:** port each of the 12 views to `src/pages/*.astro` + island components, DOM-diffed against the live original one at a time.
-- **P4 — Content collections:** move the sourced catalogs into Zod-validated Astro content collections; the build fails on any number missing its confidence grade.
-- **P5 — Cutover:** flip `deploy.yml` to `on: push`, switch the Pages source to "GitHub Actions", retire the old `docs/` static files and the root redirect.
+- **P2 - Model engine:** port `params/model/scenarios/charts/care` and the tax modules to `src/lib/*.ts`, converting `NHA.selfTest()` + `NHA.SELFTESTS` invariants into Vitest suites. Requires reading the model source first.
+- **P3 - Tabs:** port each of the 12 views to `src/pages/*.astro` + island components, DOM-diffed against the live original one at a time.
+- **P4 - Content collections:** move the sourced catalogs into Zod-validated Astro content collections; the build fails on any number missing its confidence grade.
+- **P5 - Cutover:** flip `deploy.yml` to `on: push`, switch the Pages source to "GitHub Actions", retire the old `docs/` static files and the root redirect.
 
 ## Self-review notes
 

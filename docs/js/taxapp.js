@@ -2,7 +2,7 @@
  * Tax view wiring + tab navigation.
  * The healthcare model publishes its financing path via NHA._healthPath
  * (set in app.js recompute); the NHA funding program and the health-relief
- * side of the net-impact chart read it live. Everything else is generic —
+ * side of the net-impact chart read it live. Everything else is generic -
  * add programs, retune instruments, model any funding problem.
  * ========================================================================= */
 "use strict";

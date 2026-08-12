@@ -23,11 +23,11 @@ a quantitative fiscal/access/outcomes simulation of that framework.
                                                             calibrate the framework's cost parameters (see
                                                             research/README.md)
 /research/parameter_baseline_seed.csv                      Machine-readable seed of the highest-confidence,
-                                                            most load-bearing baseline numbers — start here
+                                                            most load-bearing baseline numbers - start here
                                                             for simulation calibration constants
 ```
 
-## The simulator (v2 — built)
+## The simulator (v2 - built)
 
 v2 reorients the dashboard around what the system means for a person, not
 around the framework document's original asserted figure (now noted only in
@@ -38,7 +38,7 @@ the methodology as superseded by the model's computed projections):
   therapy, hearing aids, a nursing-home year, plus family premiums), each
   showing today's typical insured cost, today's uninsured cost, and the
   NHA point-of-care price ($0 for covered care) with the year the benefit
-  arrives on the phase roadmap — every card sourced and confidence-graded.
+  arrives on the phase roadmap - every card sourced and confidence-graded.
 - **A household annual calculator**: pick your situation (employer family,
   employer single, marketplace, uninsured) and compare today's
   premiums + out-of-pocket against the mature system, including a live
@@ -51,7 +51,7 @@ the methodology as superseded by the model's computed projections):
 `docs/` contains the **interactive public dashboard**: a fully client-side
 static web app (plain HTML/JS/SVG, no build step, no dependencies, no
 server) implementing the national-aggregate simulation specified in
-HANDOFF.md. It runs 600 Monte Carlo draws over 27 sourced parameter
+BUILD-BRIEF.md. It runs 600 Monte Carlo draws over 27 sourced parameter
 distributions in ~15ms in the browser, covers the framework's Phase 0–8
 rollout (2027–2042) and all 19 stress scenarios, and validates itself with
 27 built-in integrity tests shown in the page footer.
@@ -96,12 +96,12 @@ within a couple of minutes. To preview locally:
 **Headline v1 finding (base case, seed 42):** the mature system at 2024
 scale computes to ~$5.3T/yr (10th–90th pct ≈ $5.2–5.5T) versus the
 framework's asserted $4.75T (range $4.30–5.25T) and actual 2024 spending
-of ~$5.3T — i.e., the framework's savings levers roughly pay for its
+of ~$5.3T - i.e., the framework's savings levers roughly pay for its
 benefit expansions rather than beating today's spending, and the $4.75T
 claim only lands inside the model's range under the optimistic scenario.
 Mature-year new-revenue requirement computes to ~$3.4T/yr, of which the
 extreme-wealth tax package covers roughly 12%. These results move with the
-sliders — that's the point of the tool.
+sliders - that's the point of the tool.
 
 ## Status
 
@@ -121,7 +121,7 @@ name but that materially affect the simulation.
 **Not yet done:** an executable simulation. The framework's own stated final
 cost position (~$4.75T/year mature steady-state, $4.30-5.25T plausible range)
 has not been independently validated against the sourced baselines in
-`research/` — see `research/README.md` "Reconciling the framework's cost
+`research/` - see `research/README.md` "Reconciling the framework's cost
 claim" for the specific open question a builder needs to resolve first.
 
 ## Next step

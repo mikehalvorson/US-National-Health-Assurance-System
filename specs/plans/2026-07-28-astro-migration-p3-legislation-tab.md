@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 12): Legislation tab Implementation Plan
+# NHA Astro Migration - P3 (slice 12): Legislation tab Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -13,7 +13,7 @@
 - Platform: Windows. Bash tool or PowerShell. node 22.23.1 / pnpm 11.17.0 (Volta). Working dir: `C:\Users\micha\OneDrive\Desktop\Healthcare Framework\ChatGPT Work Outputs\Claude Outputs`.
 - TypeScript `strict`; avoid gratuitous `any`.
 - **Fidelity:** `DOMAINS` (14 entries) + `ACRONYMS` verbatim from `docs/js/legislation.js:10-356`. The master-detail renderer + acronym walker port `docs/js/legislation.js:358-485` exactly (same class names, same `aria-pressed`/`aria-label`, same `Domain NN` numbering, same field labels "What changes"/"What remains protected"/"How the change is performed"/"Activation and sunset"/"Affected laws and legal systems"/"Primary law"). The prose is verbatim from `docs/index.html:429-690`.
-- No em dashes (—, U+2014) in reader-visible output. En dash `–` (U+2013) allowed. Grep after each task; must be 0. (Note the prose + data use hyphens and `§`/`·`; keep them.)
+- No em dashes ( - , U+2014) in reader-visible output. En dash `–` (U+2013) allowed. Grep after each task; must be 0. (Note the prose + data use hyphens and `§`/`·`; keep them.)
 - The two widget containers `#legislation-law-list` and `#legislation-law-detail` render empty at build time; the client fills them. All other legislation content is build-time static.
 - Client re-inits on `astro:page-load` (View Transitions), idempotent-guarded.
 - Do NOT modify `docs/` or the engine modules. You MAY create `src/lib/legislation.ts`, `src/scripts/legislation-client.ts`, `src/pages/legislation.astro`, edit `src/lib/tabs.ts`, plus tests.
@@ -39,7 +39,7 @@ tests/pages/
 
 ---
 
-### Task 1: `src/lib/legislation.ts` — DOMAINS + ACRONYMS
+### Task 1: `src/lib/legislation.ts` - DOMAINS + ACRONYMS
 
 **Files:**
 - Create: `src/lib/legislation.ts`
@@ -71,7 +71,7 @@ test('ACRONYMS: dictionary maps abbreviations to expansions', () => {
 
 - [ ] **Step 2: Run to verify FAIL**
 
-Run: `pnpm exec vitest run tests/lib/legislation.test.ts` — FAIL (module missing).
+Run: `pnpm exec vitest run tests/lib/legislation.test.ts` - FAIL (module missing).
 
 - [ ] **Step 3: Create `src/lib/legislation.ts`**
 
@@ -119,7 +119,7 @@ git commit -m "Add legislation.ts: verbatim DOMAINS + ACRONYMS crosswalk data"
 
 ---
 
-### Task 2: `src/scripts/legislation-client.ts` — master-detail + acronym hovers
+### Task 2: `src/scripts/legislation-client.ts` - master-detail + acronym hovers
 
 DOM module; browser-verified in Task 4 (test env has no `document`).
 
@@ -264,7 +264,7 @@ function initLegislation(): void {
 
 document.addEventListener('astro:page-load', initLegislation);
 ```
-NOTE: the two `// parity` / `host.ownerDocument` lines above are scaffolding hints — remove them; they exist only to flag where the original had incidental statements. The real logic is renderDetail/renderList/addAcronymHovers/initLegislation.
+NOTE: the two `// parity` / `host.ownerDocument` lines above are scaffolding hints - remove them; they exist only to flag where the original had incidental statements. The real logic is renderDetail/renderList/addAcronymHovers/initLegislation.
 
 - [ ] **Step 2: Type-check + no em dash**
 
@@ -304,13 +304,13 @@ test('legislation page renders prose + empty widget containers, no em dash', asy
   expect(html).toContain('What Congress must enact');
   expect(html).toContain('id="legislation-law-list"');
   expect(html).toContain('id="legislation-law-detail"');
-  expect(html.includes('—')).toBe(false);
+  expect(html.includes(' - ')).toBe(false);
 });
 ```
 
 - [ ] **Step 2: Run to verify FAIL**
 
-Run: `pnpm exec vitest run tests/pages/legislation.test.ts` — FAIL (page missing).
+Run: `pnpm exec vitest run tests/pages/legislation.test.ts` - FAIL (page missing).
 
 - [ ] **Step 3: Create `src/pages/legislation.astro`**
 
@@ -344,7 +344,7 @@ Change the legislation entry:
 Run: `pnpm exec vitest run tests/pages/legislation.test.ts` (PASS).
 Run: `grep -c $'\u2014' src/pages/legislation.astro` (must print `0`).
 Run: `pnpm test && pnpm check && pnpm build`
-Expected: all green, 0 type errors, and the build still emits 12 pages (the `[chapter].astro` stub now emits 10 instead of 11 dynamic pages, and `legislation.astro` adds one — net 12).
+Expected: all green, 0 type errors, and the build still emits 12 pages (the `[chapter].astro` stub now emits 10 instead of 11 dynamic pages, and `legislation.astro` adds one - net 12).
 
 - [ ] **Step 6: Commit**
 
@@ -361,7 +361,7 @@ git commit -m "Port Legislation tab: real page + master-detail widget, drop its 
 
 - [ ] **Step 1: Serve + inspect the tab**
 
-Open `/legislation`. Confirm: the prose sections render (hero "The legal operating plan", "What Congress must enact", "Which existing laws change", the authority/constitution grids, the closing), the `#legislation-law-list` has 14 `.legislation-law-button`s, clicking the first shows `#legislation-law-detail` with `Domain 01`, the badges, the five field sections, and the "Primary law" source links, and clicking another domain (e.g. the 4th) swaps the detail and sets `aria-pressed="true"` on it. Acronyms in the prose (e.g. `ERISA`, `HIPAA`) are wrapped in `<abbr class="legislation-acronym">` with a title. `read_console_messages` — zero errors.
+Open `/legislation`. Confirm: the prose sections render (hero "The legal operating plan", "What Congress must enact", "Which existing laws change", the authority/constitution grids, the closing), the `#legislation-law-list` has 14 `.legislation-law-button`s, clicking the first shows `#legislation-law-detail` with `Domain 01`, the badges, the five field sections, and the "Primary law" source links, and clicking another domain (e.g. the 4th) swaps the detail and sets `aria-pressed="true"` on it. Acronyms in the prose (e.g. `ERISA`, `HIPAA`) are wrapped in `<abbr class="legislation-acronym">` with a title. `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Stub is gone + nav works**
 
@@ -379,12 +379,12 @@ Navigate to `/` (Overview) and back to `/legislation`; confirm the master-detail
 
 ## Follow-on (out of scope here)
 
-- **P3 slice 13+:** the remaining tabs — `tax` (needs `taxcharts.js` + `taxapp.js` ports; the tax model libs already exist), `units` (county map + `unitsapp.js`/`unitsmap.js`), `medications` (200 families), `data`, `workforce`, `gov`, `hardening`, `rollout`, `quality` (430-item catalog), and the deferred `health`-tab structure decision. Each replaces its `[chapter].astro` stub via `Tab.ported = true`.
+- **P3 slice 13+:** the remaining tabs - `tax` (needs `taxcharts.js` + `taxapp.js` ports; the tax model libs already exist), `units` (county map + `unitsapp.js`/`unitsmap.js`), `medications` (200 families), `data`, `workforce`, `gov`, `hardening`, `rollout`, `quality` (430-item catalog), and the deferred `health`-tab structure decision. Each replaces its `[chapter].astro` stub via `Tab.ported = true`.
 - **P4/P5:** content collections; cutover.
 
 ## Self-review notes
 
-- **Spec coverage:** ports the whole Legislation tab — prose, the 14-domain master-detail widget, and acronym hovers — and establishes the `Tab.ported` stub-drop pattern for every following tab.
+- **Spec coverage:** ports the whole Legislation tab - prose, the 14-domain master-detail widget, and acronym hovers - and establishes the `Tab.ported` stub-drop pattern for every following tab.
 - **No placeholders:** the client module is given in full; `DOMAINS`/`ACRONYMS` cite an exact verbatim source range (literal data); the prose cites `docs/index.html:429-690` with the one structural edit (strip the `hidden` wrapper, keep the two containers empty).
 - **Type/name consistency:** `Domain`/`DOMAINS`/`ACRONYMS` are new in `legislation.ts`; the client consumes them; class names (`legislation-law-list`, `legislation-law-detail`, `legislation-law-button`, `legislation-law-detail-head`, `legislation-action(-*)`, `legislation-law-field(-wide)`, `legislation-law-fields`, `legislation-law-sources`, `legislation-acronym`) and ids match `docs` + the 152 existing `legislation-*` rules in `global.css`; `Tab.ported` matches the `[chapter].astro` `getStaticPaths` filter.
 - **No em dash:** data + prose use hyphens/`§`/`·`; em-dash greps in every task.

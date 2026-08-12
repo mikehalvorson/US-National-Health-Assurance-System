@@ -2,9 +2,10 @@
    floor table, filterable grouped explorer, per-parameter phase strip, and
    acronym hovers. Port of docs/js/quality.js:1-490. Runs on astro:page-load;
    idempotent via the phase-overview host's dataset.wired guard.
-   NOTE: the " — maturity" suffix on line ~120 is a verbatim em dash from
-   the source; it renders only at runtime in phase-filtered cells (build-time
-   HTML stays em-dash-free) and is preserved for DOM parity with the live docs. */
+   NOTE: the " - maturity" suffix on line ~120 was a U+2014 em dash carried
+   over from the retired docs/ build for DOM parity. It renders only at
+   runtime in phase-filtered cells, so the build-time HTML tests never saw
+   it; converted to a hyphen 2026-08-12 when docs/ parity stopped mattering. */
 import { QUALITY_DATA as DATA } from '../lib/quality';
 import type { QualityParameter } from '../lib/quality-data';
 import {
@@ -127,7 +128,7 @@ function targetForTable(parameter: QualityParameter, phase: string): string {
         return t[phase].text + ' · ' + eqScenarioName();
       }
     }
-    return entry.value + (entry.kind === 'maturity target' ? ' — maturity' : '');
+    return entry.value + (entry.kind === 'maturity target' ? ' - maturity' : '');
   }).join(' · ');
 }
 

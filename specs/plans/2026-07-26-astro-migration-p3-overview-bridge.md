@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 6): Overview bridge waterfall Implementation Plan
+# NHA Astro Migration - P3 (slice 6): Overview bridge waterfall Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -17,7 +17,7 @@
 - **Palette:** bar colors `var(--total-bar)`/`var(--diverge-add)`/`var(--diverge-sub)`; class names `chart-svg`, `gridline`, `axis-text`, `row-label`, `bar-mark`, `connector`, `value-label`, `chart-legend` preserved so `global.css` styles them.
 - **Bridge identity:** the original recorded `NHA._bridgeIdentityError = |baseline + adds - subs - nheNha|` and a self-test asserted it small. There is no self-test footer now, so `bridgeSteps` returns the error and a Vitest test asserts it is `< 0.5` ($B).
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
-- No em dashes (—, U+2014) in reader-visible output. Step labels + card prose use `,`/`(`/`…`; copy verbatim (the ellipsis `…` U+2026 in "EMS, units…" is allowed; it is not an em dash).
+- No em dashes ( - , U+2014) in reader-visible output. Step labels + card prose use `,`/`(`/`…`; copy verbatim (the ellipsis `…` U+2026 in "EMS, units…" is allowed; it is not an em dash).
 - Client render on `astro:page-load` (chart drawn inside the existing `render()`).
 - Do NOT modify anything under `docs/` or the model math. You MAY: add `export` to `buildRamps` (and its return-type interface) in `src/lib/model.ts` (no logic change); add `src/lib/bridge-chart.ts`, `src/lib/bridge.ts`; edit `src/scripts/overview-client.ts` + `src/pages/index.astro`. Do NOT touch other `src/lib/*` engine modules.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -56,7 +56,7 @@ In `src/lib/model.ts`, change `function buildRamps(` to `export function buildRa
 
 - [ ] **Step 2: Type-check + full suite (no behavior change)**
 
-Run: `pnpm exec tsc --noEmit` (0 errors), then `pnpm test` (all prior tests still pass — this is a visibility-only change).
+Run: `pnpm exec tsc --noEmit` (0 errors), then `pnpm test` (all prior tests still pass - this is a visibility-only change).
 
 - [ ] **Step 3: Commit**
 
@@ -77,8 +77,8 @@ git commit -m "Export buildRamps (+ BuiltRamps type) for the bridge builder"
 **Interfaces:**
 - Consumes: `el`, `niceTicks`, `barPath`, `div`, `tipRow`, `showTip`, `hideTip`, `cssVar`, `legend` from `./chart-util`; `money`, `moneyShort`, `axis` from `./format`.
 - Produces:
-  - `interface BridgeStep { label: string; value: number; kind: 'total' | 'add' | 'sub' }`
-  - `function renderBridgeChart(container: HTMLElement, steps: BridgeStep[], deflate: number): void` (from `docs/js/charts.js:244-324`).
+- `interface BridgeStep { label: string; value: number; kind: 'total' | 'add' | 'sub' }`
+- `function renderBridgeChart(container: HTMLElement, steps: BridgeStep[], deflate: number): void` (from `docs/js/charts.js:244-324`).
 
 - [ ] **Step 1: Implement `src/lib/bridge-chart.ts`**
 
@@ -105,7 +105,7 @@ git commit -m "Port renderBridgeChart to src/lib/bridge-chart.ts"
 
 **Interfaces:**
 - Consumes: `BASE2023` from `./params`; `buildRamps` from `./model`; `scenarioStructural` from `./scenarios`; `MonteCarloResult` from `./model-types`; `BridgeStep` from `./bridge-chart`.
-- Produces: `function bridgeSteps(mc: MonteCarloResult): { steps: BridgeStep[]; identityError: number }` — from `docs/js/app.js:235-286` verbatim, using `mc.modeParams` for `p`, `mc.modePath.detail[mc.years.length-2]` for `d`, `scenarioStructural(mc.scenarioId)` + `buildRamps(...)` for ramps, and `mc.years`/`BASE2023` as in the source. Returns the step array and `identityError = |d.nheBase + utilAdd + expansions + oneTime + adminNet - paySave - drugSave - d.offProvAdmin - d.offCareModel - d.offLowValue - d.offExtraction - d.nheNha|`.
+- Produces: `function bridgeSteps(mc: MonteCarloResult): { steps: BridgeStep[]; identityError: number }` - from `docs/js/app.js:235-286` verbatim, using `mc.modeParams` for `p`, `mc.modePath.detail[mc.years.length-2]` for `d`, `scenarioStructural(mc.scenarioId)` + `buildRamps(...)` for ramps, and `mc.years`/`BASE2023` as in the source. Returns the step array and `identityError = |d.nheBase + utilAdd + expansions + oneTime + adminNet - paySave - drugSave - d.offProvAdmin - d.offCareModel - d.offLowValue - d.offExtraction - d.nheNha|`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -143,7 +143,7 @@ test('a stress scenario still closes the identity', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/bridge.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/bridge`.
+Expected: FAIL - cannot resolve `../../src/lib/bridge`.
 
 - [ ] **Step 3: Implement `src/lib/bridge.ts`**
 
@@ -152,7 +152,7 @@ Port `bridgeSteps` verbatim from `app.js:235-286` (drop the `NHA._bridgeIdentity
 - [ ] **Step 4: Run to verify PASS**
 
 Run: `pnpm exec vitest run tests/lib/bridge.test.ts`
-Expected: PASS (3/3). If the identity test fails, a step term diverged from the source — compare against `app.js:235-286`.
+Expected: PASS (3/3). If the identity test fails, a step term diverged from the source - compare against `app.js:235-286`.
 
 - [ ] **Step 5: Type-check + commit**
 
@@ -188,7 +188,7 @@ test('overview includes the bridge card container', async () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — bridge container absent.
+Expected: FAIL - bridge container absent.
 
 - [ ] **Step 3: Add the card to `src/pages/index.astro`**
 
@@ -248,7 +248,7 @@ git commit -m "Render the Overview cost-bridge chart from the shared Monte Carlo
 
 - [ ] **Step 1: Serve + inspect**
 
-`pnpm preview`; open the Overview. Confirm `#bridge-chart` contains an `<svg class="chart-svg">` with gridline ticks, one `.bar-mark` per step (first + last are `var(--total-bar)` totals; adds/subs between), `.connector` lines, `.value-label`s, and a 3-item `.chart-legend`. Grep the SVG `d`/attrs for `NaN` (must be none). `read_console_messages` — zero errors.
+`pnpm preview`; open the Overview. Confirm `#bridge-chart` contains an `<svg class="chart-svg">` with gridline ticks, one `.bar-mark` per step (first + last are `var(--total-bar)` totals; adds/subs between), `.connector` lines, `.value-label`s, and a 3-item `.chart-legend`. Grep the SVG `d`/attrs for `NaN` (must be none). `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Interactivity**
 

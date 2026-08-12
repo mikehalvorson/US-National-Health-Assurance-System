@@ -5,7 +5,7 @@ sourced real-world baseline values to calibrate the framework's `CP-*` cost para
 dictionary (defined in `National_Health_Assurance_Framework_Source_Package.docx`).
 Every number in these files carries a source name, publication/dataset,
 year, and URL, plus a confidence/caveat note. Where no clean authoritative
-figure exists, the file says so explicitly rather than guessing — treat
+figure exists, the file says so explicitly rather than guessing - treat
 those as open research items, not silent gaps.
 
 | File | Covers | Framework parameter groups |
@@ -24,20 +24,20 @@ those as open research items, not silent gaps.
 
 [parameter_baseline_seed.csv](parameter_baseline_seed.csv) pulls the ~45
 highest-confidence, most load-bearing numbers from the core parameter files
-into one machine-readable table — use it as the starting calibration set,
+into one machine-readable table - use it as the starting calibration set,
 then go to the relevant detail file for anything it doesn't cover.
 
-## Calibration base year — do not sum across vintages
+## Calibration base year - do not sum across vintages
 
 CMS's National Health Expenditure series is the anchor for most figures in
 this repo, but not every row uses the same vintage: **2023 is the last
 fully-finalized historical year** and is what most figures use (total NHE
 $4,866.5B, hospital $1,519.7B, physician/clinical $978.0B, etc.). A few rows
-— pulled by a different research pass — use **2024 preliminary/CMS-estimate**
+- pulled by a different research pass - use **2024 preliminary/CMS-estimate**
 figures instead (total NHE $5.3T-$5.28T, retail Rx $467.0B, dental $189.2B).
 Both vintages are individually correct and labeled with their `year` column
 in `parameter_baseline_seed.csv`, but **do not sum line items across the two
-vintages into a single-year total** — that will silently overstate spending
+vintages into a single-year total** - that will silently overstate spending
 by a year's growth (NHE grew ~9-10% between 2023 and 2024). Pick 2023 as the
 internally-consistent base year for the model's calibration point, and treat
 any 2024 figures either as trend/growth-rate inputs or inflate the 2023
@@ -52,21 +52,21 @@ None of the research in this directory validates or refutes that number,
 because it's not clear what it's meant to represent. The candidates, per
 `01_macro_financing_population_offsets.md` (CP-FIN-015/016):
 
-- **Total national health expenditure** (all payers, all spending) — CMS
+- **Total national health expenditure** (all payers, all spending) - CMS
   NHE was $4.87T in 2023 and is *projected* to hit $8.6T by 2033 under the
   status quo. A framework claiming $4.75T total system cost in "2024
   dollars" would need to be claiming the new system costs *less* than
   today's baseline in real terms, which is a strong claim that should be
   explicit and defended, not implicit.
-- **Net new federal spending** — CBO's own single-payer costing methodology
+- **Net new federal spending** - CBO's own single-payer costing methodology
   (its most authoritative directly-comparable estimate) found federal
   subsidies would rise $1.5-3.0T in a single year (2030), while total NHE
   could change anywhere from -$0.7T to +$0.3T depending on plan design.
   Independent 10-year federal cost estimates from Urban Institute and the
   Mercatus Center converge remarkably on ~$32-34T over 10 years despite
-  opposite institutional leanings — call it ~$3.2-3.4T/year average, which
+  opposite institutional leanings - call it ~$3.2-3.4T/year average, which
   is a different number again from $4.75T.
-- **Net new revenue required** — PERI's Sanders-bill costing found a
+- **Net new revenue required** - PERI's Sanders-bill costing found a
   ~$1.05T/year *gap* needing new revenue after redirecting existing public
   spending, a much smaller number than $4.75T.
 
@@ -91,7 +91,7 @@ Each file ends with its own "gaps for follow-up" section. Recurring themes:
   forecast.
 - A handful of parameters (age-cost multiplier, national aggregate employer
   spending, CHIP-only spending, a clean adult diabetes prevalence topline)
-  were only found as derived or partial figures — flagged inline rather than
+  were only found as derived or partial figures - flagged inline rather than
   presented as more precise than they are.
 
 ## New parameters proposed beyond the framework's original CP-* list

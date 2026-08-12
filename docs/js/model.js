@@ -1,12 +1,12 @@
 /* =========================================================================
- * National Health Assurance Simulation — Model Engine
+ * National Health Assurance Simulation - Model Engine
  * =========================================================================
  * Computes, for each calendar year 2027–2042:
  *   (a) the status-quo baseline world (CMS-trajectory NHE by category), and
  *   (b) the NHA world (phase-ramped policy path),
  * from one sampled parameter set. Offsets are DERIVED as differences between
  * directly-computed quantities, so a savings mechanism can never be counted
- * twice — each has exactly one home:
+ * twice - each has exactly one home:
  *
  *   Mechanism                      Where it lives
  *   -----------------------------  -------------------------------------
@@ -102,7 +102,7 @@ NHA.runPath = function (p, structural) {
   var gPop = p.popGrowth / 100;
   var gWage = 0.012; // real input-cost growth for program-based expansions
 
-  /* Baseline PHC categories (2023 $B) — drugs pulled out with embedded share */
+  /* Baseline PHC categories (2023 $B) - drugs pulled out with embedded share */
   var embedded = p.embeddedDrugSpend;
   var hospBase0 = B.hospital - 0.6 * embedded;
   var clinBase0 = B.physician + B.otherProf - 0.4 * embedded;
@@ -156,7 +156,7 @@ NHA.runPath = function (p, structural) {
     var cItOp  = p.itOperating    * Gw * infR;
     var cExpansions = cLtc + cBh + cDvh + cEmsPh + cUnits + cRd + cWf + cItOp;
 
-    /* Administration — both worlds computed directly */
+    /* Administration - both worlds computed directly */
     var legacyAdmin = admin0 * G * (1 - (1 - p.legacyAdminFloor) * covR);
     /* public benefit base for admin/governance rates (excl. admin itself) */
     var pubShare = covR * (1 - p.residualPrivateShare / 100);
@@ -230,7 +230,7 @@ NHA.runPath = function (p, structural) {
 
 /* ---- Mature system at an arbitrary scale year ---------------------------
  * Computes ONE synthetic year with the policy fully mature (ramps at their
- * 2041 values) but the economy at `yearsFrom2023` of growth — so
+ * 2041 values) but the economy at `yearsFrom2023` of growth - so
  * yearsFrom2023 = 1 answers: "what would the mature system cost if it
  * existed at 2024 scale?", directly comparable with the framework's claim
  * and with actual 2024 spending. Mirrors runPath's math exactly; the

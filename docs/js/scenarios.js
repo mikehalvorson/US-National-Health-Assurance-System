@@ -1,5 +1,5 @@
 /* =========================================================================
- * Scenario Catalog — SCN-BASE through SCN-RURAL-STRESS
+ * Scenario Catalog - SCN-BASE through SCN-RURAL-STRESS
  * =========================================================================
  * Implements the Source Package's 19-scenario catalog as parameter
  * perturbations on top of the base model. Each override either:
@@ -83,7 +83,7 @@ NHA.SCENARIOS = [
   },
   {
     id: "SCN-WEALTH-LOW", name: "Wealth financing underperforms",
-    desc: "Avoidance/evasion cuts extreme-wealth revenue roughly in half; the financing gap shifts to other instruments (visible in the financing panel — total cost is unchanged).",
+    desc: "Avoidance/evasion cuts extreme-wealth revenue roughly in half; the financing gap shifts to other instruments (visible in the financing panel - total cost is unchanged).",
     overrides: {
       wealthTaxPotential: [140, 200, 270],
       wealthCollectionEff: [55, 68, 80]

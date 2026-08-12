@@ -10,7 +10,7 @@ One object per U.S. county-equivalent (50 states + DC; Puerto Rico and territori
 |---|---|
 | `p`, `n` | Census Bureau county population estimates, vintage 2024: <https://www2.census.gov/programs-surveys/popest/datasets/2020-2024/counties/totals/co-est2024-alldata.csv> (SUMLEV 050 rows, POPESTIMATE2024) |
 | `la`, `lo`, `s` | Census 2024 Gazetteer, counties national file: <https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_counties_national.zip> (GEOID, USPS, INTPTLAT, INTPTLONG) |
-| `r` | Census 2020 urban–rural county file: <https://www2.census.gov/geo/docs/reference/ua/2020_UA_COUNTY.xlsx> — `r = POP_RUR / POP_COU` from the `2020_UA_COUNTY` sheet; Connecticut planning-region values from the `CT_2022` sheet of the same workbook |
+| `r` | Census 2020 urban–rural county file: <https://www2.census.gov/geo/docs/reference/ua/2020_UA_COUNTY.xlsx> - `r = POP_RUR / POP_COU` from the `2020_UA_COUNTY` sheet; Connecticut planning-region values from the `CT_2022` sheet of the same workbook |
 
 **Rural-share fallback note:** the plan of record was the 2020 DHC API (table P2), but `api.census.gov` now refuses keyless requests ("A valid key must be included with each data API request"), so the published 2020 urban–rural county workbook above was used instead. It contains the same 2020 Census urban/rural population counts.
 

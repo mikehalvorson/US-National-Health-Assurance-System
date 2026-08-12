@@ -1,5 +1,5 @@
 /* =========================================================================
- * Tax view charts — same spec as charts.js (2px lines, 10% washes, ≤24px
+ * Tax view charts - same spec as charts.js (2px lines, 10% washes, ≤24px
  * bars with 4px rounded data-ends, hairline grids, crosshair/per-mark
  * tooltips, legends for ≥2 series, ink-token text).
  * ========================================================================= */

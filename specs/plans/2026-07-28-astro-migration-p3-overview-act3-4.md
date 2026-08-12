@@ -1,8 +1,8 @@
-# NHA Astro Migration — P3 (slice 10): Overview Act 3-4 + operating-system diagrams + chapter-nav Implementation Plan
+# NHA Astro Migration - P3 (slice 10): Overview Act 3-4 + operating-system diagrams + chapter-nav Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Port the middle of the Overview narrative — Act 3 "The fixable part", Act 4 "The proposal", the four static operating-system diagrams (system map, care pathway, money shift, rollout arc), and the chapter-navigation grid — as build-time static HTML with zero client JS, matching `docs/index.html` verbatim.
+**Goal:** Port the middle of the Overview narrative - Act 3 "The fixable part", Act 4 "The proposal", the four static operating-system diagrams (system map, care pathway, money shift, rollout arc), and the chapter-navigation grid - as build-time static HTML with zero client JS, matching `docs/index.html` verbatim.
 
 **Architecture:** All seven cards are pure static markup already styled by existing `src/styles/global.css` rules. The only transformation from the docs source is that every `<button type="button" data-dashboard-view="X">` (a SPA tab-switch control in the single-page docs) becomes a base-aware `<a href={base + 'X'}>` link, because the Astro build is multi-page. The view name `X` equals the target `Tab.path` slug 1:1 (see `src/lib/tabs.ts`), so no mapping table is needed. `global.css` gains `a` alongside `button` in the three relevant `.overview-*` selector groups so the links render pixel-identically to the buttons they replace.
 
@@ -14,7 +14,7 @@
 - TypeScript `strict`; avoid gratuitous `any`.
 - **Fidelity:** card markup + prose ported verbatim from `docs/index.html:86-424`. The ONLY permitted change is `<button type="button" data-dashboard-view="X">LABEL</button>` becoming `<a href={base + 'X'}>LABEL</a>` (drop `type="button"`, drop `data-dashboard-view`, add base-aware `href`). Do not reword prose, do not re-derive any number.
 - Base path `/US-National-Health-Assurance-System/`; `const base = import.meta.env.BASE_URL` (ends with `/`), so `base + 'health'` = `/US-National-Health-Assurance-System/health`.
-- No em dashes (—, U+2014) in reader-visible output. En dash `–` (U+2013, used in ranges like `38–79%`, `2027–2038`, `Years 1–2`) and `&rarr;`/`&darr;` entities are allowed and present in this source; they are NOT U+2014. Grep for U+2014 after each markup task; must be 0.
+- No em dashes ( - , U+2014) in reader-visible output. En dash `–` (U+2013, used in ranges like `38–79%`, `2027–2038`, `Years 1–2`) and `&rarr;`/`&darr;` entities are allowed and present in this source; they are NOT U+2014. Grep for U+2014 after each markup task; must be 0.
 - Zero client JS added. All seven cards render fully at build time. Do NOT touch `src/scripts/overview-client.ts`.
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules. You MAY edit `src/pages/index.astro`, `src/styles/global.css`, `tests/pages/overview.test.ts`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -67,7 +67,7 @@ test('overview includes Act-3/Act-4 proposal prose', async () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — Act-3/Act-4 absent.
+Expected: FAIL - Act-3/Act-4 absent.
 
 - [ ] **Step 3: Add `const base` to the frontmatter**
 
@@ -78,7 +78,7 @@ const base = import.meta.env.BASE_URL; // ends with '/'
 
 - [ ] **Step 4: Insert the Act-3 and Act-4 cards**
 
-In `src/pages/index.astro`, immediately after the closing `</section>` of the Act-2 "What's wrong, by the numbers" card and before `<section class="card" id="hero-card">`, paste the two cards verbatim from `docs/index.html:86-159` (the `<!-- ACT 3 -->` section through the end of the `<!-- ACT 4 -->` section). These are plain HTML — no `data-dashboard-view`, no Astro expressions — so copy them exactly, including the `<abbr class="overview-acronym" ...>` tags, the `<ul class="lever-list">` items, and Act 4's external `<a href="https://github.com/...">dashboard</a>` link. Do not alter the en dashes (`38–79%`) or the prose.
+In `src/pages/index.astro`, immediately after the closing `</section>` of the Act-2 "What's wrong, by the numbers" card and before `<section class="card" id="hero-card">`, paste the two cards verbatim from `docs/index.html:86-159` (the `<!-- ACT 3 -->` section through the end of the `<!-- ACT 4 -->` section). These are plain HTML - no `data-dashboard-view`, no Astro expressions - so copy them exactly, including the `<abbr class="overview-acronym" ...>` tags, the `<ul class="lever-list">` items, and Act 4's external `<a href="https://github.com/...">dashboard</a>` link. Do not alter the en dashes (`38–79%`) or the prose.
 
 - [ ] **Step 5: Verify PASS + no em dash + build**
 
@@ -129,11 +129,11 @@ test('overview includes the four operating-system diagrams with base-aware links
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — diagrams absent (and, until Task 3 too, `data-dashboard-view` assertion is moot here).
+Expected: FAIL - diagrams absent (and, until Task 3 too, `data-dashboard-view` assertion is moot here).
 
 - [ ] **Step 3: Insert the four cards, converting each SPA button to a link**
 
-In `src/pages/index.astro`, after the Act-4 card and before `#hero-card`, paste the four cards from `docs/index.html:161-371` verbatim — the `.overview-map-card` section (161-241), the care-pathway section (243-285), the money-shift section (287-320), and the rollout-arc section (322-371) — applying this ONE transformation to every occurrence:
+In `src/pages/index.astro`, after the Act-4 card and before `#hero-card`, paste the four cards from `docs/index.html:161-371` verbatim - the `.overview-map-card` section (161-241), the care-pathway section (243-285), the money-shift section (287-320), and the rollout-arc section (322-371) - applying this ONE transformation to every occurrence:
 
 Replace each
 ```html
@@ -228,7 +228,7 @@ to:
 
 - [ ] **Step 5: Verify PASS + no em dash + build**
 
-Run: `pnpm exec vitest run tests/pages/overview.test.ts` (the diagrams test PASSes; the `not.toContain('data-dashboard-view')` now holds because Act 3-4 had none and these four are converted — the chapter-nav card is added in Task 3 and must also use links).
+Run: `pnpm exec vitest run tests/pages/overview.test.ts` (the diagrams test PASSes; the `not.toContain('data-dashboard-view')` now holds because Act 3-4 had none and these four are converted - the chapter-nav card is added in Task 3 and must also use links).
 Run: `grep -c $'\u2014' src/pages/index.astro` (must print `0`).
 Run: `pnpm check && pnpm build` (0 errors, 12 pages).
 
@@ -273,7 +273,7 @@ test('overview ends with the chapter-nav grid of 11 base-aware links', async () 
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — chapter-nav absent.
+Expected: FAIL - chapter-nav absent.
 
 - [ ] **Step 3: Insert the chapter-nav card as the last card in `<main>`**
 
@@ -343,7 +343,7 @@ Confirm, on the Overview page, the card order: hero-preamble Act-1 (system today
 
 - [ ] **Step 2: Links are base-aware and resolve**
 
-In the browser, read several link hrefs (e.g. the map's "Healthcare" link, the chapter-grid's "Quality" link) and confirm they equal `/US-National-Health-Assurance-System/health` and `/US-National-Health-Assurance-System/quality`. Click one (e.g. "Healthcare") and confirm navigation lands on that tab's page (a stub is fine) with no console error. `read_console_messages` — zero errors on the Overview.
+In the browser, read several link hrefs (e.g. the map's "Healthcare" link, the chapter-grid's "Quality" link) and confirm they equal `/US-National-Health-Assurance-System/health` and `/US-National-Health-Assurance-System/quality`. Click one (e.g. "Healthcare") and confirm navigation lands on that tab's page (a stub is fine) with no console error. `read_console_messages` - zero errors on the Overview.
 
 - [ ] **Step 3: Static-render + parity check**
 
@@ -367,5 +367,5 @@ Navigate to `/health` and back to Overview; confirm the diagrams and chapter gri
 - **No govdata needed:** contrary to the earlier roadmap guess, all four diagrams are static HTML in the source (no JS renderers, no data binding); the only dynamic aspect was SPA navigation, handled by converting buttons to real base-aware links.
 - **No placeholders:** every card cites an exact verbatim source range; the single transformation (button → anchor) is enumerated with a slug table; every CSS edit gives exact before/after text.
 - **Type/name consistency:** `base = import.meta.env.BASE_URL` matches `TabNav.astro`; slugs match `Tab.path` in `src/lib/tabs.ts`; class names (`overview-system-map`, `overview-care-path`, `overview-money-shift`, `overview-rollout-arc`, `overview-chapter-grid`, `overview-inline-links`) match `docs/index.html` + existing `global.css`.
-- **No em dash / no NaN risk:** static prose only; en dashes in the source are U+2013 (allowed). Em-dash grep in every markup task; the pre-existing `!html.includes('—')` overview test guards the rendered output.
+- **No em dash / no NaN risk:** static prose only; en dashes in the source are U+2013 (allowed). Em-dash grep in every markup task; the pre-existing `!html.includes(' - ')` overview test guards the rendered output.
 - **Order rationale:** narrative preamble (Acts 1-4 + diagrams) precedes the model numbers; chapter-nav is the page footer. Slice 11 inserts before the footer, so no future reordering of the chapter-nav card is required.

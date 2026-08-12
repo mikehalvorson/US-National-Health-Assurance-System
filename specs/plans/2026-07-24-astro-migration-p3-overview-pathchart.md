@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 3): Overview path chart Implementation Plan
+# NHA Astro Migration - P3 (slice 3): Overview path chart Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -11,13 +11,13 @@
 ## Global Constraints
 
 - Platform: Windows. Bash tool or PowerShell. node 22.23.1 / pnpm 11.17.0 on PATH (Volta). Working dir: `C:\Users\micha\OneDrive\Desktop\Healthcare Framework\ChatGPT Work Outputs\Claude Outputs`.
-- TypeScript `strict`; avoid gratuitous `any` (SVG element typing may need `SVGElement`/`as` casts — keep them narrow).
+- TypeScript `strict`; avoid gratuitous `any` (SVG element typing may need `SVGElement`/`as` casts - keep them narrow).
 - **Fidelity:** all chart geometry and helpers come verbatim from `docs/js/charts.js` (`el` 16-21, `niceTicks` 52-60, `tooltip`/`showTip`/`hideTip` 62-79, `tipRow` 81-95, `barPath` 97-114, `cssVar` 116-118, `legend` 120+, `renderPathChart` 138-242). Do not change coordinates, tick math, or thresholds.
 - **NaN guard (project rule):** a single NaN/Infinity coordinate hangs the SVG renderer. `renderPathChart` must preserve the source's guards; the client must not call it with an empty/degenerate `mc`.
 - **Palette:** use the CSS variables the source reads via `cssVar(...)` (`--series-1..8`, `--grid`, `--text-*`, etc., already defined in `global.css`). No hardcoded colors beyond what the source uses.
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
-- No em dashes (—, U+2014) in reader-visible output.
-- Client chart render must run on `astro:page-load` (already the Overview client entry) — the chart is drawn inside the existing `render()`.
+- No em dashes ( - , U+2014) in reader-visible output.
+- Client chart render must run on `astro:page-load` (already the Overview client entry) - the chart is drawn inside the existing `render()`.
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY modify `src/lib/overview.ts` (additive refactor) and add `src/lib/chart-util.ts`, `src/lib/path-chart.ts`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 - Scope: chart-util primitives + the Overview path chart ONLY. DEFERRED to later slices: money-flow (Sankey `renderFlowDiagram`), benchmarks, bridge, financing charts, and the other tabs.
@@ -49,14 +49,14 @@ tests/lib/
 **Interfaces:**
 - Consumes: nothing.
 - Produces:
-  - `function el(tag: string, attrs?: Record<string, string | number>, parent?: Element): SVGElement` — creates an SVG-namespaced element, sets attrs, appends to parent. (from charts.js:16-21)
-  - `function niceTicks(min: number, max: number, count: number): number[]` (from charts.js:52-60, verbatim)
-  - `function barPath(x: number, y: number, w: number, h: number, r: number, dir: 'up' | 'right'): string` (from charts.js:97-114, verbatim)
-  - `function tooltip(): HTMLElement`, `function showTip(html: Node, x: number, y: number): void`, `function hideTip(): void` (charts.js:62-78)
-  - `function tipRow(parent: HTMLElement, color: string, label: string, value: string, strong?: boolean): HTMLElement` (charts.js:81-95)
-  - `function cssVar(name: string): string` (charts.js:116-118)
-  - `function legend(container: HTMLElement, items: { color: string; label: string }[]): HTMLElement` (charts.js:120+, read the source for exact shape)
-  - a `div(cls: string, parent?: Element): HTMLElement` helper (charts.js:22-28) if the source defines one — port it too (used by tooltip/tipRow/legend).
+- `function el(tag: string, attrs?: Record<string, string | number>, parent?: Element): SVGElement` - creates an SVG-namespaced element, sets attrs, appends to parent. (from charts.js:16-21)
+- `function niceTicks(min: number, max: number, count: number): number[]` (from charts.js:52-60, verbatim)
+- `function barPath(x: number, y: number, w: number, h: number, r: number, dir: 'up' | 'right'): string` (from charts.js:97-114, verbatim)
+- `function tooltip(): HTMLElement`, `function showTip(html: Node, x: number, y: number): void`, `function hideTip(): void` (charts.js:62-78)
+- `function tipRow(parent: HTMLElement, color: string, label: string, value: string, strong?: boolean): HTMLElement` (charts.js:81-95)
+- `function cssVar(name: string): string` (charts.js:116-118)
+- `function legend(container: HTMLElement, items: { color: string; label: string }[]): HTMLElement` (charts.js:120+, read the source for exact shape)
+- a `div(cls: string, parent?: Element): HTMLElement` helper (charts.js:22-28) if the source defines one - port it too (used by tooltip/tipRow/legend).
 
 - [ ] **Step 1: Write the failing pure tests**
 
@@ -87,16 +87,16 @@ test('barPath up with radius produces rounded top corners', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/chart-util.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/chart-util`.
+Expected: FAIL - cannot resolve `../../src/lib/chart-util`.
 
 - [ ] **Step 3: Implement `src/lib/chart-util.ts`**
 
-Port the helpers from `docs/js/charts.js` verbatim (see line refs in Interfaces). `el` uses `document.createElementNS('http://www.w3.org/2000/svg', tag)`. `niceTicks` and `barPath` are pure — port them exactly (they must satisfy the tests, which encode the source's own output). The DOM helpers (`tooltip`, `showTip`, `tipRow`, `legend`, `div`) reference `document`; that is fine (they run client-side only) — do not add SSR guards, the module is imported only from the client script and pure functions.
+Port the helpers from `docs/js/charts.js` verbatim (see line refs in Interfaces). `el` uses `document.createElementNS('http://www.w3.org/2000/svg', tag)`. `niceTicks` and `barPath` are pure - port them exactly (they must satisfy the tests, which encode the source's own output). The DOM helpers (`tooltip`, `showTip`, `tipRow`, `legend`, `div`) reference `document`; that is fine (they run client-side only) - do not add SSR guards, the module is imported only from the client script and pure functions.
 
 - [ ] **Step 4: Run to verify PASS**
 
 Run: `pnpm exec vitest run tests/lib/chart-util.test.ts`
-Expected: PASS (4/4). (Vitest env is `node`; `niceTicks`/`barPath` do not touch the DOM, so they run fine. The DOM helpers are not exercised by these tests — they are verified in-browser in Task 5.)
+Expected: PASS (4/4). (Vitest env is `node`; `niceTicks`/`barPath` do not touch the DOM, so they run fine. The DOM helpers are not exercised by these tests - they are verified in-browser in Task 5.)
 
 - [ ] **Step 5: Type-check + commit**
 
@@ -115,8 +115,8 @@ git commit -m "Port charts.js primitives to src/lib/chart-util.ts"
 - Test: none (SVG DOM output verified in-browser, Task 5)
 
 **Interfaces:**
-- Consumes: `el`, `niceTicks`, `tooltip`/`showTip`/`hideTip`, `tipRow`, `cssVar`, `legend` from `./chart-util`; `money`/`moneyShort`/`axis` from `./format`; the `mc` shape from `./model` (`MonteCarloResult` — has `baseline: number[]`, `yearBands: {p10,p50,p90}[]`, `years: number[]`).
-- Produces: `function renderPathChart(container: HTMLElement, mc: MonteCarloResult, deflate: number): void` — clears `container` and draws the status-quo vs NHA percentile-band SVG (from `docs/js/charts.js:138-242`).
+- Consumes: `el`, `niceTicks`, `tooltip`/`showTip`/`hideTip`, `tipRow`, `cssVar`, `legend` from `./chart-util`; `money`/`moneyShort`/`axis` from `./format`; the `mc` shape from `./model` (`MonteCarloResult` - has `baseline: number[]`, `yearBands: {p10,p50,p90}[]`, `years: number[]`).
+- Produces: `function renderPathChart(container: HTMLElement, mc: MonteCarloResult, deflate: number): void` - clears `container` and draws the status-quo vs NHA percentile-band SVG (from `docs/js/charts.js:138-242`).
 
 - [ ] **Step 1: Implement `src/lib/path-chart.ts`**
 
@@ -144,9 +144,9 @@ git commit -m "Port renderPathChart to src/lib/path-chart.ts"
 **Interfaces:**
 - Consumes: `runMonteCarlo` from `./model` (already imported).
 - Produces (additive; existing `computeOverview` unchanged in signature and output):
-  - `function runOverviewMc(scenario: string, sliders: Record<string, number> | null): MonteCarloResult` — returns `runMonteCarlo(scenario, sliders, 600, 42)`.
-  - `function computeOverviewFromMc(mc: MonteCarloResult): OverviewView` — the current body of `computeOverview` (all display-string math) but taking a precomputed `mc` instead of running it.
-  - `computeOverview(scenario, sliders)` now = `computeOverviewFromMc(runOverviewMc(scenario, sliders))`.
+- `function runOverviewMc(scenario: string, sliders: Record<string, number> | null): MonteCarloResult` - returns `runMonteCarlo(scenario, sliders, 600, 42)`.
+- `function computeOverviewFromMc(mc: MonteCarloResult): OverviewView` - the current body of `computeOverview` (all display-string math) but taking a precomputed `mc` instead of running it.
+- `computeOverview(scenario, sliders)` now = `computeOverviewFromMc(runOverviewMc(scenario, sliders))`.
 
 - [ ] **Step 1: Write the failing test (delegation invariant)**
 
@@ -164,11 +164,11 @@ test('computeOverview equals computeOverviewFromMc(runOverviewMc(...)) for SCN-B
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/overview.test.ts`
-Expected: FAIL — `runOverviewMc`/`computeOverviewFromMc` not exported.
+Expected: FAIL - `runOverviewMc`/`computeOverviewFromMc` not exported.
 
 - [ ] **Step 3: Refactor `src/lib/overview.ts`**
 
-Extract the MC run into `runOverviewMc` and the display math into `computeOverviewFromMc(mc)`. Re-point `computeOverview` to compose them. Do not change any expression, constant (600/42), or output — the existing SCN-BASE tests and the new delegation test must all pass. Export the two new functions.
+Extract the MC run into `runOverviewMc` and the display math into `computeOverviewFromMc(mc)`. Re-point `computeOverview` to compose them. Do not change any expression, constant (600/42), or output - the existing SCN-BASE tests and the new delegation test must all pass. Export the two new functions.
 
 - [ ] **Step 4: Run to verify PASS**
 
@@ -189,7 +189,7 @@ git commit -m "Refactor overview.ts: share one Monte Carlo run via runOverviewMc
 
 **Files:**
 - Modify: `src/scripts/overview-client.ts`
-- Modify: `src/pages/index.astro` (only if `#path-chart` is absent — add the empty div in its live position)
+- Modify: `src/pages/index.astro` (only if `#path-chart` is absent - add the empty div in its live position)
 
 **Interfaces:**
 - Consumes: `runOverviewMc`, `computeOverviewFromMc` from `../lib/overview`; `renderPathChart` from `../lib/path-chart`; `DEFLATOR_2023_TO_2024` from `../lib/params`.
@@ -197,7 +197,7 @@ git commit -m "Refactor overview.ts: share one Monte Carlo run via runOverviewMc
 
 - [ ] **Step 1: Confirm `#path-chart` exists in `index.astro`**
 
-Read `src/pages/index.astro`. If there is no `<div id="path-chart">`, add it in the same card/position the live site uses (`docs/index.html:845`, inside the percentile/path card). Do not add chart-building markup — just the empty container the client fills.
+Read `src/pages/index.astro`. If there is no `<div id="path-chart">`, add it in the same card/position the live site uses (`docs/index.html:845`, inside the percentile/path card). Do not add chart-building markup - just the empty container the client fills.
 
 - [ ] **Step 2: Update `render()` in `src/scripts/overview-client.ts`**
 
@@ -238,7 +238,7 @@ git commit -m "Render the Overview path chart client-side from the shared Monte 
 
 - [ ] **Step 1: Serve + inspect the chart**
 
-`pnpm preview`; open the Overview in the browser pane. Confirm `#path-chart` contains an `<svg>` with: gridline ticks, a filled band `path`, two line `path`s (status quo + NHA median), and a hover hit-area. Read `read_console_messages` — zero errors (a NaN coordinate would throw or produce `NaN` in path `d`; grep the SVG `d` attributes for `NaN`).
+`pnpm preview`; open the Overview in the browser pane. Confirm `#path-chart` contains an `<svg>` with: gridline ticks, a filled band `path`, two line `path`s (status quo + NHA median), and a hover hit-area. Read `read_console_messages` - zero errors (a NaN coordinate would throw or produce `NaN` in path `d`; grep the SVG `d` attributes for `NaN`).
 
 - [ ] **Step 2: Interactivity**
 

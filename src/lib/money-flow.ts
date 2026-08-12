@@ -58,7 +58,7 @@ export function nhaFlowSpec(mc: MonteCarloResult, DEF: number): FlowSpec {
   };
 }
 
-/* app.js:482-489 — the "How the money re-routes" takeaway sentence. */
+/* app.js:482-489 - the "How the money re-routes" takeaway sentence. */
 export function flowTakeawayText(mc: MonteCarloResult, DEF: number): string {
   const i41 = mc.years.indexOf(2041);
   const d = mc.modePath.detail[i41];

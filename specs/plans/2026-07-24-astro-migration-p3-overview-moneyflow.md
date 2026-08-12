@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 4): Overview money-flow diagram Implementation Plan
+# NHA Astro Migration - P3 (slice 4): Overview money-flow diagram Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -16,7 +16,7 @@
 - **NaN guard (project rule):** a NaN coordinate hangs the SVG renderer; preserve the source's `Math.max(3, ...)` height floor and the per-channel ribbon normalization. Browser-verify no `NaN` in path `d`/rect attrs (Task 5).
 - **Palette:** node/ribbon colors come from the spec (`var(--series-*)`) and `var(--total-bar)` exactly as the source uses; class names `chart-svg`, `flow-ribbon`, `row-label`, `row-note`, `tip-head` preserved so `global.css` styles them.
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
-- No em dashes (—, U+2014) in reader-visible output. The card prose (`docs/index.html:792-812`) uses `;`/`·`, not em dashes — copy verbatim.
+- No em dashes ( - , U+2014) in reader-visible output. The card prose (`docs/index.html:792-812`) uses `;`/`·`, not em dashes - copy verbatim.
 - Client render must run on `astro:page-load` (chart drawn inside the existing `render()`).
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY add `src/lib/flow-diagram.ts`, `src/lib/money-flow.ts`, and edit `src/scripts/overview-client.ts` + `src/pages/index.astro`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -48,10 +48,10 @@ tests/lib/
 **Interfaces:**
 - Consumes: `el`, `div`, `tipRow`, `showTip`, `hideTip` from `./chart-util`; `money`, `moneyShort` from `./format`.
 - Produces:
-  - `interface FlowNode { id: string; label: string; value: number; color?: string }`
-  - `interface FlowRibbon { from: string; to: string; value: number; note?: string }`
-  - `interface FlowSpec { sources: FlowNode[]; channels: FlowNode[]; ribbons: FlowRibbon[]; aria?: string }`
-  - `function renderFlowDiagram(container: HTMLElement, spec: FlowSpec): void` — clears `container` and draws the Sankey-style SVG (from `docs/js/charts.js:452-531`).
+- `interface FlowNode { id: string; label: string; value: number; color?: string }`
+- `interface FlowRibbon { from: string; to: string; value: number; note?: string }`
+- `interface FlowSpec { sources: FlowNode[]; channels: FlowNode[]; ribbons: FlowRibbon[]; aria?: string }`
+- `function renderFlowDiagram(container: HTMLElement, spec: FlowSpec): void` - clears `container` and draws the Sankey-style SVG (from `docs/js/charts.js:452-531`).
 
 - [ ] **Step 1: Implement `src/lib/flow-diagram.ts`**
 
@@ -79,9 +79,9 @@ git commit -m "Port renderFlowDiagram to src/lib/flow-diagram.ts"
 **Interfaces:**
 - Consumes: `MONEYFLOW` from `./params`; `money` from `./format`; `MonteCarloResult` from `./model-types`; `FlowSpec` from `./flow-diagram`.
 - Produces:
-  - `function todayFlowSpec(): FlowSpec` — `{ sources: MONEYFLOW.sources, channels: MONEYFLOW.channels, ribbons: MONEYFLOW.ribbons, aria: '<the app.js:438 aria string>' }`.
-  - `function nhaFlowSpec(mc: MonteCarloResult, DEF: number): FlowSpec` — the NHA panel spec from `docs/js/app.js:443-477` verbatim (compute `i41 = mc.years.indexOf(2041)`, `d = mc.modePath.detail[i41]`, `k = (mc.steady.matureToday.p50 / d.nheNha) * DEF`, `fed/state/emp = d.fedRedirect/stateMoe/empContrib * k`, `newRev = d.newRevenue*k`, `hhTax = 0.05*newRev`, `progTax = 0.95*newRev`, `pub = d.pubCost*k`, `residual = Math.max(0, d.nheNha - d.pubCost)*k`; then the 5 sources / 2 channels / 6 ribbons exactly as the source, with the same colors, labels, and note strings).
-  - `function nhaFlowTitle(mc: MonteCarloResult, DEF: number): string` — `'Under NHA: mature system at 2024 scale (' + money(pub + residual) + ')'` (app.js:453-455).
+- `function todayFlowSpec(): FlowSpec` - `{ sources: MONEYFLOW.sources, channels: MONEYFLOW.channels, ribbons: MONEYFLOW.ribbons, aria: '<the app.js:438 aria string>' }`.
+- `function nhaFlowSpec(mc: MonteCarloResult, DEF: number): FlowSpec` - the NHA panel spec from `docs/js/app.js:443-477` verbatim (compute `i41 = mc.years.indexOf(2041)`, `d = mc.modePath.detail[i41]`, `k = (mc.steady.matureToday.p50 / d.nheNha) * DEF`, `fed/state/emp = d.fedRedirect/stateMoe/empContrib * k`, `newRev = d.newRevenue*k`, `hhTax = 0.05*newRev`, `progTax = 0.95*newRev`, `pub = d.pubCost*k`, `residual = Math.max(0, d.nheNha - d.pubCost)*k`; then the 5 sources / 2 channels / 6 ribbons exactly as the source, with the same colors, labels, and note strings).
+- `function nhaFlowTitle(mc: MonteCarloResult, DEF: number): string` - `'Under NHA: mature system at 2024 scale (' + money(pub + residual) + ')'` (app.js:453-455).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -118,7 +118,7 @@ test('nhaFlowTitle reports the mature-scale total as money', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/money-flow.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/money-flow`.
+Expected: FAIL - cannot resolve `../../src/lib/money-flow`.
 
 - [ ] **Step 3: Implement `src/lib/money-flow.ts`**
 
@@ -165,11 +165,11 @@ test('overview includes the money-flow comparison card containers', async () => 
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — flow containers absent.
+Expected: FAIL - flow containers absent.
 
 - [ ] **Step 3: Add the card to `src/pages/index.astro`**
 
-Reproduce the money-flow card from `docs/index.html:790-812` VERBATIM (the `<section class="card">` with `<h2>How the money re-routes</h2>`, the `.desc` paragraph, the `.flow-grid` with two `.flow-panel`s containing the `.flow-title`s + `#flow-today`/`#flow-nha`, and the `.note` paragraph). Place it after the path-chart card, before `</main>`. Leave `#flow-today`/`#flow-nha` empty and `#flow-nha-title` with its static default text (the client overwrites it). DEFER the `#flow-takeaway` element (omit it this slice) — do not add empty elements you will not fill. Ensure no em dash (U+2014) is introduced (the source prose uses `;`/`·`).
+Reproduce the money-flow card from `docs/index.html:790-812` VERBATIM (the `<section class="card">` with `<h2>How the money re-routes</h2>`, the `.desc` paragraph, the `.flow-grid` with two `.flow-panel`s containing the `.flow-title`s + `#flow-today`/`#flow-nha`, and the `.note` paragraph). Place it after the path-chart card, before `</main>`. Leave `#flow-today`/`#flow-nha` empty and `#flow-nha-title` with its static default text (the client overwrites it). DEFER the `#flow-takeaway` element (omit it this slice) - do not add empty elements you will not fill. Ensure no em dash (U+2014) is introduced (the source prose uses `;`/`·`).
 
 - [ ] **Step 4: Run to verify PASS + build**
 
@@ -229,7 +229,7 @@ git commit -m "Render the Overview money-flow diagrams from the shared Monte Car
 
 - [ ] **Step 1: Serve + inspect both diagrams**
 
-`pnpm preview`; open the Overview. Confirm `#flow-today` and `#flow-nha` each contain an `<svg class="chart-svg">` with: source node `rect`s (5 today / 5 NHA... note NHA has 5 sources, 2 channels), channel `rect`s, `flow-ribbon` `path`s, and `row-label`/`row-note` texts. Grep each SVG's `d`/attrs for `NaN` (must be none). Read `read_console_messages` — zero errors. Confirm `#flow-nha-title` reads "Under NHA: mature system at 2024 scale ($X.XXT)".
+`pnpm preview`; open the Overview. Confirm `#flow-today` and `#flow-nha` each contain an `<svg class="chart-svg">` with: source node `rect`s (5 today / 5 NHA... note NHA has 5 sources, 2 channels), channel `rect`s, `flow-ribbon` `path`s, and `row-label`/`row-note` texts. Grep each SVG's `d`/attrs for `NaN` (must be none). Read `read_console_messages` - zero errors. Confirm `#flow-nha-title` reads "Under NHA: mature system at 2024 scale ($X.XXT)".
 
 - [ ] **Step 2: Interactivity**
 
@@ -247,7 +247,7 @@ Navigate to `/health` and back; confirm both diagrams re-render (single `<svg>` 
 
 ## Follow-on slices (out of scope here)
 
-- **P3 slice 5:** the remaining Overview visuals — Act-1 solo money-flow (`#flow-today-solo`), `#flow-takeaway`, sponsor table, benchmarks, bridge, financing, and the path-table/growth-decomp note.
+- **P3 slice 5:** the remaining Overview visuals - Act-1 solo money-flow (`#flow-today-solo`), `#flow-takeaway`, sponsor table, benchmarks, bridge, financing, and the path-table/growth-decomp note.
 - **P3 slice 6+:** remaining tabs (health, tax + `taxcharts.js`/`taxapp.js`, prose tabs), each replacing its stub, DOM-diffed vs live, with the em-dash/content pass (incl. the family-note "the the" typo).
 - **P4/P5:** content collections; cutover.
 

@@ -1,4 +1,4 @@
-# NHA Astro Migration — P2: Healthcare Model Engine Implementation Plan
+# NHA Astro Migration - P2: Healthcare Model Engine Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,7 +6,7 @@
 
 **Architecture:** Each `docs/js/<name>.js` file that assigns onto the `window.NHA` global becomes a `src/lib/<name>.ts` module with explicit named exports; internal `NHA.x` references become ES `import`s. Behavior and numbers are preserved exactly (this is a translation, not a redesign). The old `NHA.selfTest()` return contract (`{ name, ok, note }[]`) is preserved as an exported function AND its nine checks are additionally expressed as discrete Vitest tests so failures are legible.
 
-**Tech Stack:** TypeScript (strict), Vitest 3.2.7, Astro 5 (already installed). Pure computation only — no DOM, no Astro components in this plan.
+**Tech Stack:** TypeScript (strict), Vitest 3.2.7, Astro 5 (already installed). Pure computation only - no DOM, no Astro components in this plan.
 
 ## Global Constraints
 
@@ -15,7 +15,7 @@
 - **Preserve behavior and numbers exactly.** The source of truth for every value and formula is the corresponding `docs/js/<name>.js` file. Do not "improve", re-derive, or re-tune any number or formula.
 - **Do NOT modify anything under `docs/`.** It is the read-only live site and the parity source of truth.
 - Dollars are internal real-2023; `DEFLATOR_2023_TO_2024 = 1.026`. This plan does no display conversion (that is UI, later).
-- No em dashes (—) in any reader-visible string that is ported (code comments may keep them).
+- No em dashes ( - ) in any reader-visible string that is ported (code comments may keep them).
 - Modules are pure: no `window`, no `document`, no top-level side effects beyond building constant tables. A ported module must import cleanly in a Node (Vitest) environment.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 - Scope: healthcare core only. Tax model (`taxparams`/`taxmodel`), `care.js`, and chart modules are explicitly OUT of scope (separate P2b / P3 plans).
@@ -60,14 +60,14 @@ Source line counts for reference: `params.js` 524, `scenarios.js` 230, `model.js
 **Interfaces:**
 - Consumes: nothing (leaf module).
 - Produces (used by scenarios.ts, model.ts, and tests):
-  - `interface Triangular { low: number; mode: number; high: number }`
-  - `interface ParamDef extends Triangular { id: string; /* plus every metadata field present on entries of docs/js/params.js NHA.PARAM_DEFS: label, unit, source, confidence ('high'|'medium'|'low'), adjustable?, group?, and any others — keep them all */ }`
-  - `const START_YEAR = 2027`, `END_YEAR = 2042`, `PRE_YEARS = 4`
-  - `const DEFLATOR_2023_TO_2024 = 1.026`
-  - `const PARAM_DEFS: ParamDef[]`, `const PARAMS_BY_ID: Record<string, ParamDef>`
-  - `const BASE2023` (object with all fields from the source, including any derived field such as `investmentResidual` that `docs/js/params.js` adds after the literal)
-  - `const RAMPS` (includes `transitionShape: number[]`, `itCapitalShape: number[]`)
-  - `const BENCHMARKS`, `const MONEYFLOW`, `const PROBLEM_STATS`, `const CORR_WEIGHT = 0.35`, `const PARAM_CORR`, `const AGE_STRUCTURE` (`{ bands: { share2024: number; share2041: number; ... }[] }`), `const OUTCOME_STATS`, `const FRAMEWORK_CLAIM`
+- `interface Triangular { low: number; mode: number; high: number }`
+- `interface ParamDef extends Triangular { id: string; /* plus every metadata field present on entries of docs/js/params.js NHA.PARAM_DEFS: label, unit, source, confidence ('high'|'medium'|'low'), adjustable?, group?, and any others - keep them all */ }`
+- `const START_YEAR = 2027`, `END_YEAR = 2042`, `PRE_YEARS = 4`
+- `const DEFLATOR_2023_TO_2024 = 1.026`
+- `const PARAM_DEFS: ParamDef[]`, `const PARAMS_BY_ID: Record<string, ParamDef>`
+- `const BASE2023` (object with all fields from the source, including any derived field such as `investmentResidual` that `docs/js/params.js` adds after the literal)
+- `const RAMPS` (includes `transitionShape: number[]`, `itCapitalShape: number[]`)
+- `const BENCHMARKS`, `const MONEYFLOW`, `const PROBLEM_STATS`, `const CORR_WEIGHT = 0.35`, `const PARAM_CORR`, `const AGE_STRUCTURE` (`{ bands: { share2024: number; share2041: number; ... }[] }`), `const OUTCOME_STATS`, `const FRAMEWORK_CLAIM`
 
 - [ ] **Step 1: Create `src/lib/model-types.ts`**
 
@@ -87,7 +87,7 @@ export interface ParamDef extends Triangular {
   confidence?: 'high' | 'medium' | 'low';
   adjustable?: boolean;
   // Add any additional fields present on entries of docs/js/params.js
-  // NHA.PARAM_DEFS. Read that array and cover every field — do not drop metadata.
+  // NHA.PARAM_DEFS. Read that array and cover every field - do not drop metadata.
 }
 ```
 (You will extend this file with `DetailRow`/`PathResult` in Task 3; leave room.)
@@ -129,7 +129,7 @@ test('age-structure shares sum to 1 in 2024 and 2041', () => {
 - [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `pnpm exec vitest run tests/lib/params.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/params` (module not created yet).
+Expected: FAIL - cannot resolve `../../src/lib/params` (module not created yet).
 
 - [ ] **Step 4: Port `docs/js/params.js` to `src/lib/params.ts`**
 
@@ -138,7 +138,7 @@ Follow the porting rules. Read `docs/js/params.js` in full; translate every cons
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `pnpm exec vitest run tests/lib/params.test.ts`
-Expected: PASS (4/4). If the calibration sum fails, the ported `BASE2023` is missing a field the source defines — re-check against `docs/js/params.js`.
+Expected: PASS (4/4). If the calibration sum fails, the ported `BASE2023` is missing a field the source defines - re-check against `docs/js/params.js`.
 
 - [ ] **Step 6: Type-check**
 
@@ -163,10 +163,10 @@ git commit -m "Port params.js to typed src/lib/params.ts with calibration invari
 **Interfaces:**
 - Consumes: `PARAM_DEFS` from `./params`.
 - Produces:
-  - `const SCENARIOS` (array of scenario objects, each with at least `id: string` and `overrides: Record<string, [number,number,number] | { mult: number }>`)
-  - `const SCENARIOS_BY_ID: Record<string, typeof SCENARIOS[number]>`
-  - `function effectiveParams(scenarioId: string, sliderModes: Record<string, number> | null): Record<string, Triangular>`
-    - returns, for every `ParamDef`, its `{ low, mode, high }` after applying the scenario override and any slider-mode shift, exactly as `docs/js/scenarios.js` does.
+- `const SCENARIOS` (array of scenario objects, each with at least `id: string` and `overrides: Record<string, [number,number,number] | { mult: number }>`)
+- `const SCENARIOS_BY_ID: Record<string, typeof SCENARIOS[number]>`
+- `function effectiveParams(scenarioId: string, sliderModes: Record<string, number> | null): Record<string, Triangular>`
+- returns, for every `ParamDef`, its `{ low, mode, high }` after applying the scenario override and any slider-mode shift, exactly as `docs/js/scenarios.js` does.
 
 - [ ] **Step 1: Write the failing scenarios tests**
 
@@ -204,7 +204,7 @@ test('a slider mode overrides the mode for that parameter', () => {
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm exec vitest run tests/lib/scenarios.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/scenarios`.
+Expected: FAIL - cannot resolve `../../src/lib/scenarios`.
 
 - [ ] **Step 3: Port `docs/js/scenarios.js` to `src/lib/scenarios.ts`**
 
@@ -229,7 +229,7 @@ git commit -m "Port scenarios.js to src/lib/scenarios.ts with effectiveParams te
 
 ---
 
-### Task 3: `model.ts` core — `sampleParams` + `runPath`
+### Task 3: `model.ts` core - `sampleParams` + `runPath`
 
 **Files:**
 - Modify: `src/lib/model-types.ts` (add `DetailRow`, `PathResult`, `SampledParams`)
@@ -239,12 +239,12 @@ git commit -m "Port scenarios.js to src/lib/scenarios.ts with effectiveParams te
 **Interfaces:**
 - Consumes: `BASE2023`, `RAMPS`, `PARAM_CORR`, `CORR_WEIGHT`, `START_YEAR`, `PARAMS_BY_ID`, etc. from `./params`; `effectiveParams` from `./scenarios`.
 - Produces:
-  - `function sampleParams(effective: Record<string, Triangular>, rand: (() => number) | null, z?: number): SampledParams`
-    - `rand === null` returns mode values; a `rand` function draws; `z` is the shared systemic factor. Reproduce `docs/js/model.js` `NHA.sampleParams` exactly.
-  - `function runPath(p: SampledParams, structural: object): PathResult`
-    - `PathResult` has at least `detail: DetailRow[]` and `baseline: number[]`.
-    - `DetailRow` includes the fields the invariants read: `nheNha`, `nheBase`, `cHosp`, `cClin`, `cOtherPhc`, `offProvAdmin`, `offExtraction`, `offCareModel`, `offLowValue`, `newRevenue`, `wageGain`, `taxFeedback` (plus every other field the source row carries — port them all).
-  - `SampledParams` is the object shape `sampleParams` returns (it has mutable fields the self-tests set directly: `utilIncrease`, `drugPriceCut`, `providerPaymentFactor`, `wagePassThrough`, and the many others zeroed in self-test #3 — type it to include every field the source assigns).
+- `function sampleParams(effective: Record<string, Triangular>, rand: (() => number) | null, z?: number): SampledParams`
+- `rand === null` returns mode values; a `rand` function draws; `z` is the shared systemic factor. Reproduce `docs/js/model.js` `NHA.sampleParams` exactly.
+- `function runPath(p: SampledParams, structural: object): PathResult`
+- `PathResult` has at least `detail: DetailRow[]` and `baseline: number[]`.
+- `DetailRow` includes the fields the invariants read: `nheNha`, `nheBase`, `cHosp`, `cClin`, `cOtherPhc`, `offProvAdmin`, `offExtraction`, `offCareModel`, `offLowValue`, `newRevenue`, `wageGain`, `taxFeedback` (plus every other field the source row carries - port them all).
+- `SampledParams` is the object shape `sampleParams` returns (it has mutable fields the self-tests set directly: `utilIncrease`, `drugPriceCut`, `providerPaymentFactor`, `wagePassThrough`, and the many others zeroed in self-test #3 - type it to include every field the source assigns).
 
 - [ ] **Step 1: Extend `src/lib/model-types.ts`**
 
@@ -314,7 +314,7 @@ test('wage pass-through feedback is 28% of wage gain and lowers new revenue', ()
 - [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `pnpm exec vitest run tests/lib/model.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/model`.
+Expected: FAIL - cannot resolve `../../src/lib/model`.
 
 - [ ] **Step 4: Port `sampleParams` and `runPath` into `src/lib/model.ts`**
 
@@ -323,7 +323,7 @@ Read `docs/js/model.js` in full. Port `NHA.sampleParams` and `NHA.runPath` (and 
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `pnpm exec vitest run tests/lib/model.test.ts`
-Expected: PASS (5/5). If the neutral-policy test fails, a savings/offset term was not fully neutralized — compare the ported `runPath` line-by-line against the source.
+Expected: PASS (5/5). If the neutral-policy test fails, a savings/offset term was not fully neutralized - compare the ported `runPath` line-by-line against the source.
 
 - [ ] **Step 6: Type-check**
 
@@ -339,7 +339,7 @@ git commit -m "Port model.js sampleParams + runPath with engine invariants"
 
 ---
 
-### Task 4: `model.ts` completion — `matureAtScale`, `runMonteCarlo`, `selfTest`
+### Task 4: `model.ts` completion - `matureAtScale`, `runMonteCarlo`, `selfTest`
 
 **Files:**
 - Modify: `src/lib/model.ts` (add `matureAtScale`, `runMonteCarlo`, `selfTest`)
@@ -348,9 +348,9 @@ git commit -m "Port model.js sampleParams + runPath with engine invariants"
 **Interfaces:**
 - Consumes: `sampleParams`, `runPath` from Task 3; constants from `./params`; `effectiveParams` from `./scenarios`.
 - Produces:
-  - `function matureAtScale(p: SampledParams, structural: object, yearsFrom2023: number): { nheNha: number; /* + other fields the source returns */ }`
-  - `function runMonteCarlo(scenarioId: string, sliderModes: Record<string, number> | null, nRuns: number, seed: number): { yearBands: { p10: number; p50: number; p90: number }[]; /* + other fields */ }`
-  - `function selfTest(): { name: string; ok: boolean; note: string }[]` — the exact nine-check contract from `docs/js/model.js`, preserved so a build-time badge can consume it later.
+- `function matureAtScale(p: SampledParams, structural: object, yearsFrom2023: number): { nheNha: number; /* + other fields the source returns */ }`
+- `function runMonteCarlo(scenarioId: string, sliderModes: Record<string, number> | null, nRuns: number, seed: number): { yearBands: { p10: number; p50: number; p90: number }[]; /* + other fields */ }`
+- `function selfTest(): { name: string; ok: boolean; note: string }[]` - the exact nine-check contract from `docs/js/model.js`, preserved so a build-time badge can consume it later.
 
 - [ ] **Step 1: Write the failing tests (mature-at-scale, MC ordering, aggregate)**
 
@@ -385,7 +385,7 @@ test('selfTest() reports all nine invariants passing', () => {
 - [ ] **Step 2: Run to verify the new tests fail**
 
 Run: `pnpm exec vitest run tests/lib/model.test.ts`
-Expected: FAIL — `matureAtScale`, `runMonteCarlo`, `selfTest` not exported yet.
+Expected: FAIL - `matureAtScale`, `runMonteCarlo`, `selfTest` not exported yet.
 
 - [ ] **Step 3: Port `matureAtScale`, `runMonteCarlo`, and `selfTest`**
 
@@ -412,10 +412,10 @@ git commit -m "Complete model.ts port: matureAtScale, runMonteCarlo, selfTest su
 
 ## Follow-on plans (out of scope here)
 
-- **P2b — Tax model:** port `docs/js/taxparams.js` + `taxmodel.js` to `src/lib/tax*.ts`; convert the seven `NHA.SELFTESTS` tax invariants into Vitest.
-- **P3 — Tabs:** port each view to `.astro` pages + island components (this is where `care.js`, `charts.js`, `taxcharts.js`, and the other render modules land), each DOM-diffed against the live original.
-- **P4 — Content collections:** move the sourced catalogs into Zod-validated Astro content collections.
-- **P5 — Cutover:** flip the deploy workflow to `on: push`, switch Pages source to GitHub Actions, retire the old `docs/` files.
+- **P2b - Tax model:** port `docs/js/taxparams.js` + `taxmodel.js` to `src/lib/tax*.ts`; convert the seven `NHA.SELFTESTS` tax invariants into Vitest.
+- **P3 - Tabs:** port each view to `.astro` pages + island components (this is where `care.js`, `charts.js`, `taxcharts.js`, and the other render modules land), each DOM-diffed against the live original.
+- **P4 - Content collections:** move the sourced catalogs into Zod-validated Astro content collections.
+- **P5 - Cutover:** flip the deploy workflow to `on: push`, switch Pages source to GitHub Actions, retire the old `docs/` files.
 
 ## Self-review notes
 

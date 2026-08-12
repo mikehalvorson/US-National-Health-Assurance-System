@@ -11,7 +11,7 @@ Back
 
 
 
-  - Minecraft Java & Bedrock
+- Minecraft Java & Bedrock
 
 
     Games
@@ -47,11 +47,11 @@ Back
 
 
 
-    - [Buy Minecraft](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc)
-    - [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
-    - [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
+- [Buy Minecraft](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc)
+- [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
+- [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
 
-  - Minecraft Dungeons II
+- Minecraft Dungeons II
 
 
     Games
@@ -87,9 +87,9 @@ Back
 
 
 
-    - [Buy Minecraft Dungeons II](https://www.minecraft.net/en-us/store/minecraft-dungeons-ii-deluxe-edition)
+- [Buy Minecraft Dungeons II](https://www.minecraft.net/en-us/store/minecraft-dungeons-ii-deluxe-edition)
 
-  - Minecraft Dungeons
+- Minecraft Dungeons
 
 
     Games
@@ -125,9 +125,9 @@ Back
 
 
 
-    - [Buy Minecraft Dungeons](https://www.minecraft.net/en-us/store/minecraft-dungeons-ultimate-edition)
+- [Buy Minecraft Dungeons](https://www.minecraft.net/en-us/store/minecraft-dungeons-ultimate-edition)
 
-  - Minecraft Legends
+- Minecraft Legends
 
 
     Games
@@ -163,9 +163,9 @@ Back
 
 
 
-    - [Buy Minecraft Legends](https://www.minecraft.net/en-us/store/legends-deluxe-edition)
+- [Buy Minecraft Legends](https://www.minecraft.net/en-us/store/legends-deluxe-edition)
 
-  - Minecraft Education
+- Minecraft Education
 
 
     Games
@@ -201,13 +201,13 @@ Back
 
 
 
-    - [Download Demo](https://education.minecraft.net/get-started/download)
-    - [For Parents](https://education.minecraft.net/get-started/parents)
-    - [For Educators](https://education.minecraft.net/get-started/educators)
-    - [How to Buy](https://education.minecraft.net/licensing)
+- [Download Demo](https://education.minecraft.net/get-started/download)
+- [For Parents](https://education.minecraft.net/get-started/parents)
+- [For Educators](https://education.minecraft.net/get-started/educators)
+- [How to Buy](https://education.minecraft.net/licensing)
 
-  - [Download Minecraft](https://www.minecraft.net/en-us/download)
-  - [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
+- [Download Minecraft](https://www.minecraft.net/en-us/download)
+- [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
 
 - Shop
 
@@ -218,7 +218,7 @@ Back
 
 
 
-  - Marketplace
+- Marketplace
 
 
     Shop
@@ -254,12 +254,12 @@ Back
 
 
 
-    - [Visit Marketplace](https://www.minecraft.net/en-us/marketplace)
-    - [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
-    - [Minecoins](https://www.minecraft.net/en-us/marketplace/buy-minecoins)
-    - [Become a Partner](https://www.minecraft.net/en-us/partner)
+- [Visit Marketplace](https://www.minecraft.net/en-us/marketplace)
+- [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
+- [Minecoins](https://www.minecraft.net/en-us/marketplace/buy-minecoins)
+- [Become a Partner](https://www.minecraft.net/en-us/partner)
 
-  - Subscriptions
+- Subscriptions
 
 
     Shop
@@ -288,11 +288,11 @@ Back
 
 
 
-    - [Compare Realms Plans](https://www.minecraft.net/en-us/realms#compare-realms-subscription-plans)
-    - [Realms Tutorial Guides](https://www.minecraft.net/en-us/realms#realms-tutorials)
-    - [Manage your Realm](https://www.minecraft.net/en-us/msaprofile/mygames)
+- [Compare Realms Plans](https://www.minecraft.net/en-us/realms#compare-realms-subscription-plans)
+- [Realms Tutorial Guides](https://www.minecraft.net/en-us/realms#realms-tutorials)
+- [Manage your Realm](https://www.minecraft.net/en-us/msaprofile/mygames)
 
-  - Merch
+- Merch
 
 
     Shop
@@ -328,11 +328,11 @@ Back
 
 
 
-    - [Best Sellers](https://minecraftshop.com/collections/best-sellers?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
-    - [New Arrivals](https://minecraftshop.com/collections/new-arrivals?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
-    - [On Sale](https://minecraftshop.com/collections/sale?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
+- [Best Sellers](https://minecraftshop.com/collections/best-sellers?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
+- [New Arrivals](https://minecraftshop.com/collections/new-arrivals?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
+- [On Sale](https://minecraftshop.com/collections/sale?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
 
-  - Downloads
+- Downloads
 
 
     Shop
@@ -368,12 +368,12 @@ Back
 
 
 
-    - [Wallpapers](https://www.minecraft.net/en-us/collectibles?tabs=%7B%22tab%22%3A0%7D)
-    - [Partnerships & Celebrations](https://www.minecraft.net/en-us/collectibles#partnerships)
-    - [Java Alt Download](https://www.minecraft.net/en-us/download/alternative)
+- [Wallpapers](https://www.minecraft.net/en-us/collectibles?tabs=%7B%22tab%22%3A0%7D)
+- [Partnerships & Celebrations](https://www.minecraft.net/en-us/collectibles#partnerships)
+- [Java Alt Download](https://www.minecraft.net/en-us/download/alternative)
 
-  - [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
-  - [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
+- [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
+- [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
 
 - Explore
 
@@ -384,7 +384,7 @@ Back
 
 
 
-  - News
+- News
 
 
     Explore
@@ -420,10 +420,10 @@ Back
 
 
 
-    - [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
-    - [Submit an Idea](https://feedback.minecraft.net/)
+- [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
+- [Submit an Idea](https://feedback.minecraft.net/)
 
-  - Beyond The Game
+- Beyond The Game
 
 
     Explore
@@ -452,10 +452,10 @@ Back
 
 
 
-    - [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
-    - [Share Feedback](https://feedback.minecraft.net/hc/)
+- [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
+- [Share Feedback](https://feedback.minecraft.net/hc/)
 
-  - Follow Minecraft
+- Follow Minecraft
 
 
     Explore
@@ -491,13 +491,13 @@ Back
 
 
 
-    - [Instagram](https://www.instagram.com/minecraft/)
-    - [Facebook](https://www.facebook.com/minecraft/)
-    - [X](https://x.com/Minecraft)
-    - [Spotify](https://open.spotify.com/artist/7i68fmsIERvgavI8Q1H09h?si=W8eaFDQWRbKHzSIaa4FSyQ)
-    - [WhatsApp](https://aka.ms/MCWhatsApp)
+- [Instagram](https://www.instagram.com/minecraft/)
+- [Facebook](https://www.facebook.com/minecraft/)
+- [X](https://x.com/Minecraft)
+- [Spotify](https://open.spotify.com/artist/7i68fmsIERvgavI8Q1H09h?si=W8eaFDQWRbKHzSIaa4FSyQ)
+- [WhatsApp](https://aka.ms/MCWhatsApp)
 
-  - Creator Learning Portal
+- Creator Learning Portal
 
 
     Explore
@@ -533,11 +533,11 @@ Back
 
 
 
-    - [Bedrock Edition Creator Documentation](https://learn.microsoft.com/minecraft/creator/?view=minecraft-bedrock-stable)
-    - [Marketplace](https://www.minecraft.net/en-us/marketplace)
+- [Bedrock Edition Creator Documentation](https://learn.microsoft.com/minecraft/creator/?view=minecraft-bedrock-stable)
+- [Marketplace](https://www.minecraft.net/en-us/marketplace)
 
-  - [Support](https://help.minecraft.net/)
-  - [Feedback](https://feedback.minecraft.net/)
+- [Support](https://help.minecraft.net/)
+- [Feedback](https://feedback.minecraft.net/)
 
 - Learn
 
@@ -548,7 +548,7 @@ Back
 
 
 
-  - Start Here
+- Start Here
 
 
     Learn
@@ -584,10 +584,10 @@ Back
 
 
 
-    - [Game Guides](https://help.minecraft.net/hc/categories/12617435230477)
-    - [Realms Tutorials](https://www.minecraft.net/en-us/realms#realms-tutorials)
+- [Game Guides](https://help.minecraft.net/hc/categories/12617435230477)
+- [Realms Tutorials](https://www.minecraft.net/en-us/realms#realms-tutorials)
 
-  - Helpful Links
+- Helpful Links
 
 
     Learn
@@ -623,12 +623,12 @@ Back
 
 
 
-    - [Affiliates](https://www.minecraft.net/en-us/affiliates)
-    - [Downloads](https://www.minecraft.net/en-us/download)
-    - [Wallpapers](https://www.minecraft.net/en-us/collectibles)
-    - [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
+- [Affiliates](https://www.minecraft.net/en-us/affiliates)
+- [Downloads](https://www.minecraft.net/en-us/download)
+- [Wallpapers](https://www.minecraft.net/en-us/collectibles)
+- [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
 
-  - Careers
+- Careers
 
 
     Learn
@@ -659,8 +659,8 @@ Back
     Create, collaborate, and craft your future.](https://apply.careers.microsoft.com/careers?query=Mojang)
 
 
-  - [Support](https://help.minecraft.net/)
-  - [Credits](https://www.minecraft.net/credits)
+- [Support](https://help.minecraft.net/)
+- [Credits](https://www.minecraft.net/credits)
 
 - [Support](https://help.minecraft.net/)
 - Search
@@ -768,13 +768,13 @@ Back
 
 
 
-  - [Profile](https://www.minecraft.net/en-us/msaprofile)
-  - [Sign in](https://www.minecraft.net/en-us/login)
-  - [Create account](https://sisu.xboxlive.com/connect/XboxLive/?state=signup&signup=1&cobrandId=8058f65d-ce06-4c30-9559-473c9275a65d&tid=896928775&ru=https%3A%2F%2Fwww.minecraft.net%2Fen-us%2Flogin&aid=1142970254&as=1)
-  - [Download](https://www.minecraft.net/en-us/download)
-  - [Redeem](https://www.minecraft.net/en-us/redeem)
-  - Sign out
-  - Minecoins
+- [Profile](https://www.minecraft.net/en-us/msaprofile)
+- [Sign in](https://www.minecraft.net/en-us/login)
+- [Create account](https://sisu.xboxlive.com/connect/XboxLive/?state=signup&signup=1&cobrandId=8058f65d-ce06-4c30-9559-473c9275a65d&tid=896928775&ru=https%3A%2F%2Fwww.minecraft.net%2Fen-us%2Flogin&aid=1142970254&as=1)
+- [Download](https://www.minecraft.net/en-us/download)
+- [Redeem](https://www.minecraft.net/en-us/redeem)
+- Sign out
+- Minecoins
 
 
 
@@ -861,9 +861,9 @@ Play with your friends on your own personal server.](https://www.minecraft.net/e
 
 
 
-  - [Buy Minecraft](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc)
-  - [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
-  - [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
+- [Buy Minecraft](https://www.minecraft.net/en-us/store/minecraft-deluxe-collection-pc)
+- [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
+- [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
 
 [![Minecraft Dungeons II logo above heroes battling monsters in a glowing blue dungeon.](https://www.minecraft.net/content/dam/minecraftnet/games/spicewood/logos/Global-Header_Image-Tile_MC-Dungeons-II_570x321.jpg)\\
 Minecraft Dungeons II\\
@@ -880,7 +880,7 @@ Dungeons II Newsletter\\
 \\
 Subscribe to stay up to date on Minecraft Dungeons II.](https://www.minecraft.net/en-us/about-dungeons-ii#latest-news)
 
-  - [Buy Minecraft Dungeons II](https://www.minecraft.net/en-us/store/minecraft-dungeons-ii-deluxe-edition)
+- [Buy Minecraft Dungeons II](https://www.minecraft.net/en-us/store/minecraft-dungeons-ii-deluxe-edition)
 
 [![Four heroes face off against a horde of monsters deep in a cave below text reading: Minecraft Dungeons](https://www.minecraft.net/content/dam/minecraftnet/games/dungeons/key-art/Global-Header_Image-Tile_MC-Dungeons_570x321.jpg)\\
 Minecraft Dungeons\\
@@ -897,7 +897,7 @@ Ultimate DLC Bundle\\
 \\
 Pick up all six DLC's with the Ultimate DLC bundle.](https://www.minecraft.net/en-us/store/minecraft-dungeons-ultimate-dlc)
 
-  - [Buy Minecraft Dungeons](https://www.minecraft.net/en-us/store/minecraft-dungeons-ultimate-edition)
+- [Buy Minecraft Dungeons](https://www.minecraft.net/en-us/store/minecraft-dungeons-ultimate-edition)
 
 [![A hero stands between two armies over text reading: Minecraft Legends](https://www.minecraft.net/content/dam/minecraftnet/games/badger/key-art/Global-Header_Image-Tile_MC-Legends_570x321.jpg)\\
 Minecraft Legends\\
@@ -914,7 +914,7 @@ Deluxe Skin Pack\\
 \\
 Dress your hero and their steed in fine garb.](https://www.minecraft.net/en-us/store/legends-deluxe-skin-pack)
 
-  - [Buy Minecraft Legends](https://www.minecraft.net/en-us/store/legends-deluxe-edition)
+- [Buy Minecraft Legends](https://www.minecraft.net/en-us/store/legends-deluxe-edition)
 
 [![Two children sitting on a wooden raft and one child holds a paddle, while another sits and a small robot watches.](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Header-Education-MC-Hero.png)\\
 Minecraft Education\\
@@ -931,13 +931,13 @@ Explore Online Safety\\
 \\
 Dive into digital citizenship skills with new worlds and learning resources.](https://aka.ms/cyber)
 
-  - [Download Demo](https://education.minecraft.net/get-started/download)
-  - [For Parents](https://education.minecraft.net/get-started/parents)
-  - [For Educators](https://education.minecraft.net/get-started/educators)
-  - [How to Buy](https://education.minecraft.net/licensing)
+- [Download Demo](https://education.minecraft.net/get-started/download)
+- [For Parents](https://education.minecraft.net/get-started/parents)
+- [For Educators](https://education.minecraft.net/get-started/educators)
+- [How to Buy](https://education.minecraft.net/licensing)
 
-  - [Download Minecraft](https://www.minecraft.net/en-us/download)
-  - [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
+- [Download Minecraft](https://www.minecraft.net/en-us/download)
+- [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
 
 - Shop
 
@@ -1003,10 +1003,10 @@ Transform the look and feel of your world to fit your imagination!](https://www.
 
 
 
-  - [Visit Marketplace](https://www.minecraft.net/en-us/marketplace)
-  - [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
-  - [Minecoins](https://www.minecraft.net/en-us/marketplace/buy-minecoins)
-  - [Become a Partner](https://www.minecraft.net/en-us/partner)
+- [Visit Marketplace](https://www.minecraft.net/en-us/marketplace)
+- [New to Minecraft?](https://www.minecraft.net/en-us/minecraft-tips-for-beginners)
+- [Minecoins](https://www.minecraft.net/en-us/marketplace/buy-minecoins)
+- [Become a Partner](https://www.minecraft.net/en-us/partner)
 
 [![Steve, Alex, and various other characters and animals burst out of a nether portal below text reading: Minecraft Realms](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/realms/Global-Header_Image-Tile_Realms-Bedrock_570x321_01.png)\\
 Realms\\
@@ -1018,9 +1018,9 @@ Marketplace Pass\\
 \\
 Upgrade your experience with new content every month for one low price.](https://www.minecraft.net/en-us/marketplace/marketplace-pass)
 
-  - [Compare Realms Plans](https://www.minecraft.net/en-us/realms#compare-realms-subscription-plans)
-  - [Realms Tutorial Guides](https://www.minecraft.net/en-us/realms#realms-tutorials)
-  - [Manage your Realm](https://www.minecraft.net/en-us/msaprofile/mygames)
+- [Compare Realms Plans](https://www.minecraft.net/en-us/realms#compare-realms-subscription-plans)
+- [Realms Tutorial Guides](https://www.minecraft.net/en-us/realms#realms-tutorials)
+- [Manage your Realm](https://www.minecraft.net/en-us/msaprofile/mygames)
 
 [![A woman wears a green hoodie with a creeper face on it.](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/merch/MC-hoodie-V3.jpg)\\
 Official Minecraft Gear\\
@@ -1037,9 +1037,9 @@ Minecraft Plush\\
 \\
 Shop cozy cubes and other Minecraft plush pals.](https://minecraftshop.com/collections/plush?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
 
-  - [Best Sellers](https://minecraftshop.com/collections/best-sellers?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
-  - [New Arrivals](https://minecraftshop.com/collections/new-arrivals?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
-  - [On Sale](https://minecraftshop.com/collections/sale?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
+- [Best Sellers](https://minecraftshop.com/collections/best-sellers?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
+- [New Arrivals](https://minecraftshop.com/collections/new-arrivals?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
+- [On Sale](https://minecraftshop.com/collections/sale?utm_source=minecraft.net&utm_medium=referral&utm_campaign=mc-net-nav&utm_content=mc-net-nav)
 
 [![Steve and Alex run out of a cave and enter a forest at night](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Global-Header_Image-Tile_MC-Vanilla-Wallpapers_570x321.jpg)\\
 Download the Launcher\\
@@ -1056,12 +1056,12 @@ Bedrock Servers\\
 \\
 Run a Minecraft Bedrock dedicated server.](https://www.minecraft.net/en-us/download/server/bedrock)
 
-  - [Wallpapers](https://www.minecraft.net/en-us/collectibles?tabs=%7B%22tab%22%3A0%7D)
-  - [Partnerships & Celebrations](https://www.minecraft.net/en-us/collectibles#partnerships)
-  - [Java Alt Download](https://www.minecraft.net/en-us/download/alternative)
+- [Wallpapers](https://www.minecraft.net/en-us/collectibles?tabs=%7B%22tab%22%3A0%7D)
+- [Partnerships & Celebrations](https://www.minecraft.net/en-us/collectibles#partnerships)
+- [Java Alt Download](https://www.minecraft.net/en-us/download/alternative)
 
-  - [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
-  - [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
+- [Redeem a Gift Code](https://www.minecraft.net/en-us/redeem)
+- [Try Minecraft Free](https://www.minecraft.net/en-us/free-trial)
 
 - Explore
 
@@ -1127,8 +1127,8 @@ News about our games, content creators, and more.](https://www.minecraft.net/en-
 
 
 
-  - [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
-  - [Submit an Idea](https://feedback.minecraft.net/)
+- [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
+- [Submit an Idea](https://feedback.minecraft.net/)
 
 [![A Minecraft Movie](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Global-Header_Image-Tile_Whats-Happening_570x321_1.jpg)\\
 A Minecraft Movie\\
@@ -1140,8 +1140,8 @@ Minecraft Experiences\\
 \\
 Dig into the first ever in-person, immersive and interactive adventure!](https://www.minecraft.net/en-us/minecraft-experiences)
 
-  - [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
-  - [Share Feedback](https://feedback.minecraft.net/hc/)
+- [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
+- [Share Feedback](https://feedback.minecraft.net/hc/)
 
 [![YouTube logo](https://www.minecraft.net/content/dam/minecraftnet/franchise/logos/Global-Header_Image-Tile_Youtube_570x321.jpg)\\
 YouTube\\
@@ -1158,11 +1158,11 @@ TikTok\\
 \\
 Follow the official Minecraft TikTok for news, updates, and fan creations!](https://www.tiktok.com/@minecraft)
 
-  - [Instagram](https://www.instagram.com/minecraft/)
-  - [Facebook](https://www.facebook.com/minecraft/)
-  - [X](https://x.com/Minecraft)
-  - [Spotify](https://open.spotify.com/artist/7i68fmsIERvgavI8Q1H09h?si=W8eaFDQWRbKHzSIaa4FSyQ)
-  - [WhatsApp](https://aka.ms/MCWhatsApp)
+- [Instagram](https://www.instagram.com/minecraft/)
+- [Facebook](https://www.facebook.com/minecraft/)
+- [X](https://x.com/Minecraft)
+- [Spotify](https://open.spotify.com/artist/7i68fmsIERvgavI8Q1H09h?si=W8eaFDQWRbKHzSIaa4FSyQ)
+- [WhatsApp](https://aka.ms/MCWhatsApp)
 
 [![Alex navigating from a rowboat while being assisted by an allay](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Global-Header_Image-Tile_Help-Center_570x321.jpg)\\
 Minecraft Creators\\
@@ -1179,11 +1179,11 @@ Minecraft Partners\\
 \\
 Find out what it takes to become an official partner.](https://www.minecraft.net/en-us/partner)
 
-  - [Bedrock Edition Creator Documentation](https://learn.microsoft.com/minecraft/creator/?view=minecraft-bedrock-stable)
-  - [Marketplace](https://www.minecraft.net/en-us/marketplace)
+- [Bedrock Edition Creator Documentation](https://learn.microsoft.com/minecraft/creator/?view=minecraft-bedrock-stable)
+- [Marketplace](https://www.minecraft.net/en-us/marketplace)
 
-  - [Support](https://help.minecraft.net/)
-  - [Feedback](https://feedback.minecraft.net/)
+- [Support](https://help.minecraft.net/)
+- [Feedback](https://feedback.minecraft.net/)
 
 - Learn
 
@@ -1249,8 +1249,8 @@ Play with your friends on your own personal server.](https://www.minecraft.net/e
 
 
 
-  - [Game Guides](https://help.minecraft.net/hc/categories/12617435230477)
-  - [Realms Tutorials](https://www.minecraft.net/en-us/realms#realms-tutorials)
+- [Game Guides](https://help.minecraft.net/hc/categories/12617435230477)
+- [Realms Tutorials](https://www.minecraft.net/en-us/realms#realms-tutorials)
 
 [![Multiple bees hover around their beehives, flowers and trees surround the area. ](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Get_Support.jpg)\\
 Get Support\\
@@ -1267,10 +1267,10 @@ Report Bugs\\
 \\
 Submit bugs you've found while playing.](https://bugs.mojang.com/)
 
-  - [Affiliates](https://www.minecraft.net/en-us/affiliates)
-  - [Downloads](https://www.minecraft.net/en-us/download)
-  - [Wallpapers](https://www.minecraft.net/en-us/collectibles)
-  - [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
+- [Affiliates](https://www.minecraft.net/en-us/affiliates)
+- [Downloads](https://www.minecraft.net/en-us/download)
+- [Wallpapers](https://www.minecraft.net/en-us/collectibles)
+- [Send Fan Mail](https://help.minecraft.net/hc/articles/4408904068621-Feedback-and-Fan-Mail)
 
 [![Mojang Studios](https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Global-Header_Image-Tile_Build-Worlds-Shape-Play_570x321.jpg.jpg)\\
 Build Worlds. Shape Play.\\
@@ -1287,8 +1287,8 @@ Redmond, WA\\
 \\
 Create, collaborate, and craft your future.](https://apply.careers.microsoft.com/careers?query=Mojang)
 
-  - [Support](https://help.minecraft.net/)
-  - [Credits](https://www.minecraft.net/credits)
+- [Support](https://help.minecraft.net/)
+- [Credits](https://www.minecraft.net/credits)
 
 - [Support](https://help.minecraft.net/)
 
@@ -1380,13 +1380,13 @@ Minecraft Realms](https://www.minecraft.net/en-us/realms)
 
 
 
-  - [Profile](https://www.minecraft.net/en-us/msaprofile)
-  - [Sign in](https://www.minecraft.net/en-us/login)
-  - [Create account](https://sisu.xboxlive.com/connect/XboxLive/?state=signup&signup=1&cobrandId=8058f65d-ce06-4c30-9559-473c9275a65d&tid=896928775&ru=https%3A%2F%2Fwww.minecraft.net%2Fen-us%2Flogin&aid=1142970254&as=1)
-  - [Download](https://www.minecraft.net/en-us/download)
-  - [Redeem](https://www.minecraft.net/en-us/redeem)
-  - Sign out
-  - Minecoins
+- [Profile](https://www.minecraft.net/en-us/msaprofile)
+- [Sign in](https://www.minecraft.net/en-us/login)
+- [Create account](https://sisu.xboxlive.com/connect/XboxLive/?state=signup&signup=1&cobrandId=8058f65d-ce06-4c30-9559-473c9275a65d&tid=896928775&ru=https%3A%2F%2Fwww.minecraft.net%2Fen-us%2Flogin&aid=1142970254&as=1)
+- [Download](https://www.minecraft.net/en-us/download)
+- [Redeem](https://www.minecraft.net/en-us/redeem)
+- Sign out
+- Minecoins
 
 
 
@@ -1728,7 +1728,7 @@ With Minecraft Realms, you'll get a subscription to your own personal Minecraft 
 
 ### Minecraft Marketplace
 
-Keep your gameplay endlessly inventive and fun with skin packs, texture packs, and more—some of which were built by our very own community members!
+Keep your gameplay endlessly inventive and fun with skin packs, texture packs, and more - some of which were built by our very own community members!
 
 [Explore the Marketplace](https://www.minecraft.net/catalog)
 
@@ -1880,7 +1880,7 @@ With Minecraft Realms, you'll get a subscription to your own personal Minecraft 
 
 ### Minecraft Marketplace
 
-Keep your gameplay endlessly inventive and fun with skin packs, texture packs, and more—some of which were built by our very own community members!
+Keep your gameplay endlessly inventive and fun with skin packs, texture packs, and more - some of which were built by our very own community members!
 
 [Explore the Marketplace](https://www.minecraft.net/catalog)
 
@@ -2032,7 +2032,7 @@ With Minecraft Realms, you'll get a subscription to your own personal Minecraft 
 
 ### Minecraft Marketplace
 
-Keep your gameplay endlessly inventive and fun with skin packs, texture packs, and more—some of which were built by our very own community members!
+Keep your gameplay endlessly inventive and fun with skin packs, texture packs, and more - some of which were built by our very own community members!
 
 [Explore the Marketplace](https://www.minecraft.net/catalog)
 

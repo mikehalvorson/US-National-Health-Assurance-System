@@ -9,7 +9,7 @@ actual build.
 ## Goal
 
 Determine what the National Health Assurance Framework would actually cost
-and deliver, computed bottom-up from real-world parameters — not reproduce
+and deliver, computed bottom-up from real-world parameters - not reproduce
 the framework document's own stated numbers. The framework claims a mature
 steady-state cost of ~$4.75T/year (2024 dollars, range $4.30-5.25T) and a
 transition cost of $1.2-2.0T over 10-12 years. **Those figures are asserted,
@@ -18,7 +18,7 @@ is explicitly superseded/deprecated within the framework's own source
 documents and should not be used at all. The simulation's job is to find out
 what the number actually is when built from sourced parameters, then compare
 that result against the framework's claim and against independent
-benchmarks (below) — and report the gap if there is one.
+benchmarks (below) - and report the gap if there is one.
 
 ## Design constraints
 
@@ -28,7 +28,7 @@ benchmarks (below) — and report the gap if there is one.
 2. **Single consistent calibration base year: 2023.** CMS's National Health
    Expenditure series is the primary anchor; 2023 is the last fully
    finalized historical year. `research/parameter_baseline_seed.csv` has a
-   few rows pulled from 2024 preliminary data — see
+   few rows pulled from 2024 preliminary data - see
    `research/README.md` ("Calibration base year") before using those; don't
    sum figures across vintages.
 
@@ -39,19 +39,19 @@ benchmarks (below) — and report the gap if there is one.
 
 4. **`C_offsets(t)` needs one non-overlapping definition.** The research
    surfaced multiple non-comparable "administrative savings" estimates for
-   the same underlying phenomenon — e.g. CMS's narrow accounting figure
+   the same underlying phenomenon - e.g. CMS's narrow accounting figure
    ($360.3B, CP-TOT-005) vs. the broader Himmelstein/Woolhandler academic
    estimate ($1.1T, CP-OFF-001) vs. the CBO-scored IRA drug-negotiation
    savings ($98.5B/10yr, CP-OFF-003, the most authoritative single figure
    because it's the only one based on actual enacted-policy results rather
    than a modeled estimate). Pick one explicit, itemized, non-overlapping
-   list of what's inside `C_offsets(t)` before coding it — don't blend
+   list of what's inside `C_offsets(t)` before coding it - don't blend
    figures from studies with different scopes into one number.
 
 5. **Source a real utilization-elasticity coefficient before modeling
    induced demand.** The framework names the right concept
    (`CP-POP-005`/`006`, "zero-cost utilization elasticity") but no research
-   pass in this repo pinned down an actual number — this is a real gap, not
+   pass in this repo pinned down an actual number - this is a real gap, not
    just missing data-entry. Cost = price × volume, and volume responds to
    price, so this materially changes the output. The RAND Health Insurance
    Experiment and its modern replications are the standard academic anchor
@@ -66,9 +66,9 @@ Build a **national-aggregate annual time series model** first:
 - Covers the master cost equation's ~19 spending categories plus the
   `C_offsets(t)` term (Source Package "Master cost equation")
 - Models the Phase 0-8 rollout timeline (Source Package "Implementation
-  Phases and Phase Gates") year by year — coverage %, unit-network buildout
+  Phases and Phase Gates") year by year - coverage %, unit-network buildout
   %, cost-sharing elimination, etc. all ramp rather than switching on
-  instantly — so the model produces both the transition-period cost path and
+  instantly - so the model produces both the transition-period cost path and
   the mature steady-state
 - Implements the 19-scenario catalog (`SCN-BASE` through `SCN-RURAL-STRESS`
   in the Source Package "Scenario Catalog") as parameter-perturbation
@@ -82,7 +82,7 @@ Build a **national-aggregate annual time series model** first:
 
 Region, population-group, and specialty-level granularity (the full
 dimensional schema in the Source Package's "Simulation Input Schema
-Dimensions") is explicitly v2 — don't build it now, but don't architect the
+Dimensions") is explicitly v2 - don't build it now, but don't architect the
 v1 model in a way that makes adding those dimensions later painful (e.g.
 keep cost categories as named, parameterized functions rather than
 hard-coded scalars).
@@ -98,18 +98,18 @@ projected cost/access/outcome effects directly, rather than reading a
   catalog presets, and ideally individual high-impact parameters like the
   utilization elasticity, admin-savings assumption, and wealth-tax
   collection efficiency) and see cost/access/outcome projections update
-  - Output should show the transition-period path (year by year through
+- Output should show the transition-period path (year by year through
     Phase 8) and the mature steady-state, with uncertainty ranges visible,
     not just point estimates
-  - Should visibly show the comparison against the framework's own $4.75T
+- Should visibly show the comparison against the framework's own $4.75T
     claim and against the CBO/Urban Institute/Mercatus benchmarks, so a
     visitor can see whether the framework's claim holds up
 - The technical approach (framework, hosting model, whether computation runs
-  client-side or server-side) is left to whoever builds it — but the
+  client-side or server-side) is left to whoever builds it - but the
   interactive-public-dashboard requirement should drive that choice from the
   start, not be bolted on after a notebook-style model is already built
 
-## Known open gaps (don't silently patch these — flag them in the UI/output)
+## Known open gaps (don't silently patch these - flag them in the UI/output)
 
 From the research files' own "gaps for follow-up" sections:
 - Several CBO and CMS source PDFs returned HTTP 403 to automated fetch;
@@ -117,10 +117,10 @@ From the research files' own "gaps for follow-up" sections:
   Affairs, Brookings commentary) that are reliable but not a substitute for
   the primary table
 - BLS occupational headcount data (insurance claims processors, medical
-  billing clerks — needed to size the displaced-worker transition cohort)
+  billing clerks - needed to size the displaced-worker transition cohort)
   blocked automated fetch and needs the BLS API directly
 - No clean single citation yet for: age-based per-capita spending
-  multiplier (65+ vs. under-65 — needed to connect population aging to cost
+  multiplier (65+ vs. under-65 - needed to connect population aging to cost
   growth), a topline adult diabetes prevalence %, CHIP-only spending
   isolated from Medicaid, national aggregate employer health spending (only
   a derived proxy exists), and a broader RAND-style international drug price
@@ -129,5 +129,5 @@ From the research files' own "gaps for follow-up" sections:
 
 These are documented per-file in `research/`. Treat them as inputs to build
 with visible confidence levels (the seed CSV already has a `confidence`
-column), not blockers — but the dashboard should be honest about which
+column), not blockers - but the dashboard should be honest about which
 outputs rest on lower-confidence inputs.

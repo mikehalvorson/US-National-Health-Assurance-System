@@ -1,5 +1,5 @@
 /* =========================================================================
- * National Health Assurance Simulation — Model Engine
+ * National Health Assurance Simulation - Model Engine
  * =========================================================================
  * Computes, for each calendar year 2027-2042:
  *   (a) the status-quo baseline world (CMS-trajectory NHE by category), and

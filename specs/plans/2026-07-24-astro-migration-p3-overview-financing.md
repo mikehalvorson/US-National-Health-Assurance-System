@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 5): Overview financing chart Implementation Plan
+# NHA Astro Migration - P3 (slice 5): Overview financing chart Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -16,7 +16,7 @@
 - **NaN guard (project rule):** preserve `Math.max(0, ...)`/`Math.max(2, ...)` width floors and the `|| 1` divisor guards; browser-verify no `NaN` in path `d` (Task 5).
 - **Palette:** segment colors come from the spec (`var(--series-*)`); class names `chart-svg`, `bar-mark`, `inbar-label`, `row-label`, `value-label`, `chart-legend` preserved so `global.css` styles them.
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
-- No em dashes (—, U+2014) in reader-visible output. The card prose (`docs/index.html` "Who pays" card) and the note string use `;`/`,`; copy verbatim.
+- No em dashes ( - , U+2014) in reader-visible output. The card prose (`docs/index.html` "Who pays" card) and the note string use `;`/`,`; copy verbatim.
 - Client render must run on `astro:page-load` (chart drawn inside the existing `render()`).
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY add `src/lib/financing-chart.ts`, `src/lib/financing.ts`, and edit `src/scripts/overview-client.ts` + `src/pages/index.astro`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -48,9 +48,9 @@ tests/lib/
 **Interfaces:**
 - Consumes: `el`, `barPath`, `tipRow`, `showTip`, `hideTip`, `legend` from `./chart-util`; `money`, `moneyShort`, `pct` from `./format`.
 - Produces:
-  - `interface FinancingSegment { label: string; value: number; color: string }`
-  - `interface FinancingSpec { segments: FinancingSegment[]; gap: { label: string; value: number }; wealth: { label: string; value: number } }`
-  - `function renderFinancingChart(container: HTMLElement, fin: FinancingSpec, deflate: number): void` (from `docs/js/charts.js:329-385`).
+- `interface FinancingSegment { label: string; value: number; color: string }`
+- `interface FinancingSpec { segments: FinancingSegment[]; gap: { label: string; value: number }; wealth: { label: string; value: number } }`
+- `function renderFinancingChart(container: HTMLElement, fin: FinancingSpec, deflate: number): void` (from `docs/js/charts.js:329-385`).
 
 - [ ] **Step 1: Implement `src/lib/financing-chart.ts`**
 
@@ -76,10 +76,10 @@ git commit -m "Port renderFinancingChart to src/lib/financing-chart.ts"
 - Test: `tests/lib/financing.test.ts`
 
 **Interfaces:**
-- Consumes: `MonteCarloResult` from `./model-types`; `FinancingSpec` from `./financing-chart`; `money`, `moneyShort`, `pct` (only if the note needs them — the note uses plain rounding, so likely none) from `./format`.
+- Consumes: `MonteCarloResult` from `./model-types`; `FinancingSpec` from `./financing-chart`; `money`, `moneyShort`, `pct` (only if the note needs them - the note uses plain rounding, so likely none) from `./format`.
 - Produces:
-  - `function financingSpec(mc: MonteCarloResult, DEF: number): FinancingSpec` — from `docs/js/app.js:313-333` verbatim: `t = mc.years.length - 2`, `d = mc.modePath.detail[t]`, `need = d.pubCost`, `fedUse = Math.min(d.fedRedirect, need)`, `stateUse = Math.min(d.stateMoe, Math.max(0, need - fedUse))`, `empUse = Math.min(d.empContrib, Math.max(0, need - fedUse - stateUse))`, `fbUse = Math.min(d.taxFeedback || 0, Math.max(0, need - fedUse - stateUse - empUse))`, `newRev = Math.max(0, need - fedUse - stateUse - empUse - fbUse)`; the 5 segments (labels/colors exactly as source), `gap = { label: 'New revenue needed', value: newRev }`, `wealth = { label: 'Wealth-tax package (after collection losses)', value: d.wealthRevenue }`.
-  - `function financingNote(mc: MonteCarloResult, DEF: number): string` — from `docs/js/app.js:335-342` verbatim (`covered = d.wealthRevenue / (newRev || 1)`, the "covers X% of the new-revenue requirement" text, the `newRev <= 0` branch, the 5%-cap sentence). Note: DEF is not actually used in the note math (percentages), but keep the signature for symmetry.
+- `function financingSpec(mc: MonteCarloResult, DEF: number): FinancingSpec` - from `docs/js/app.js:313-333` verbatim: `t = mc.years.length - 2`, `d = mc.modePath.detail[t]`, `need = d.pubCost`, `fedUse = Math.min(d.fedRedirect, need)`, `stateUse = Math.min(d.stateMoe, Math.max(0, need - fedUse))`, `empUse = Math.min(d.empContrib, Math.max(0, need - fedUse - stateUse))`, `fbUse = Math.min(d.taxFeedback || 0, Math.max(0, need - fedUse - stateUse - empUse))`, `newRev = Math.max(0, need - fedUse - stateUse - empUse - fbUse)`; the 5 segments (labels/colors exactly as source), `gap = { label: 'New revenue needed', value: newRev }`, `wealth = { label: 'Wealth-tax package (after collection losses)', value: d.wealthRevenue }`.
+- `function financingNote(mc: MonteCarloResult, DEF: number): string` - from `docs/js/app.js:335-342` verbatim (`covered = d.wealthRevenue / (newRev || 1)`, the "covers X% of the new-revenue requirement" text, the `newRev <= 0` branch, the 5%-cap sentence). Note: DEF is not actually used in the note math (percentages), but keep the signature for symmetry.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -114,14 +114,14 @@ test('financingNote mentions the 5% household cap and is em-dash-free', () => {
   const mc = runOverviewMc('SCN-BASE', null);
   const note = financingNote(mc, DEF);
   expect(note).toContain('5% of new financing');
-  expect(note.includes('—')).toBe(false); // U+2014
+  expect(note.includes(' - ')).toBe(false); // U+2014
 });
 ```
 
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/financing.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/financing`.
+Expected: FAIL - cannot resolve `../../src/lib/financing`.
 
 - [ ] **Step 3: Implement `src/lib/financing.ts`**
 
@@ -167,11 +167,11 @@ test('overview includes the financing card containers', async () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — financing containers absent.
+Expected: FAIL - financing containers absent.
 
 - [ ] **Step 3: Add the card to `src/pages/index.astro`**
 
-Reproduce the "Who pays" financing card from `docs/index.html` VERBATIM (the `<section class="card">` with `<h2>Who pays</h2>`, the `.desc` paragraph, `<div id="financing-chart"></div>`, `<p class="note" id="financing-note"></p>`). Place it after the money-flow card, before `</main>`. DEFER the `<details class="tableview">` table block (`#financing-table`) — omit it this slice. Ensure no em dash (U+2014).
+Reproduce the "Who pays" financing card from `docs/index.html` VERBATIM (the `<section class="card">` with `<h2>Who pays</h2>`, the `.desc` paragraph, `<div id="financing-chart"></div>`, `<p class="note" id="financing-note"></p>`). Place it after the money-flow card, before `</main>`. DEFER the `<details class="tableview">` table block (`#financing-table`) - omit it this slice. Ensure no em dash (U+2014).
 
 - [ ] **Step 4: Run to verify PASS + build**
 
@@ -229,7 +229,7 @@ git commit -m "Render the Overview financing chart from the shared Monte Carlo r
 
 - [ ] **Step 1: Serve + inspect**
 
-`pnpm preview`; open the Overview. Confirm `#financing-chart` contains an `<svg class="chart-svg">` with 5 `.bar-mark` segment paths, the wealth-vs-gap comparison bars, and a `.chart-legend`. Grep the SVG `d`/attrs for `NaN` (must be none). Confirm `#financing-note` has prose containing "5% of new financing". `read_console_messages` — zero errors.
+`pnpm preview`; open the Overview. Confirm `#financing-chart` contains an `<svg class="chart-svg">` with 5 `.bar-mark` segment paths, the wealth-vs-gap comparison bars, and a `.chart-legend`. Grep the SVG `d`/attrs for `NaN` (must be none). Confirm `#financing-note` has prose containing "5% of new financing". `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Interactivity**
 

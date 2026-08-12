@@ -18,17 +18,17 @@ map,” not “every affected section has been validated.”
 
 Every legacy legal function must receive one disposition:
 
-- **PRESERVE** — continue the existing authority or protection.
-- **PARALLEL** — operate the predecessor and successor together during a
+- **PRESERVE** - continue the existing authority or protection.
+- **PARALLEL** - operate the predecessor and successor together during a
   certified transition.
-- **TRANSFER** — move the function, record, obligation, funding stream, or
+- **TRANSFER** - move the function, record, obligation, funding stream, or
   pending case to the successor.
-- **AMEND** — revise current statutory language.
-- **PREEMPT** — displace only a state-law conflict within Congress’s valid
+- **AMEND** - revise current statutory language.
+- **PREEMPT** - displace only a state-law conflict within Congress’s valid
   authority.
-- **SUNSET** — terminate a duplicative predecessor only after the required
+- **SUNSET** - terminate a duplicative predecessor only after the required
   evidence passes.
-- **FALLBACK** — retain or revive a safe statutory default if the successor
+- **FALLBACK** - retain or revive a safe statutory default if the successor
   cannot operate.
 
 The transition sequence is successor-first:

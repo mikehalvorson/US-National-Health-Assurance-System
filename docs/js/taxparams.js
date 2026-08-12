@@ -1,5 +1,5 @@
 /* =========================================================================
- * U.S. tax system model — parameter base (reconciled)
+ * U.S. tax system model - parameter base (reconciled)
  *
  * A generic, extensible tax-financing model: income groups × instruments ×
  * years. Built to fund ANY set of programs (healthcare is just the first),
@@ -21,7 +21,7 @@
  *    (supplemental Table 9) × group incomes.
  * All dollars: real 2024 dollars. All revenues: $ billions/year.
  * Known limits: CBO options predate the July 2025 reconciliation act
- * (OBBBA) — scores tied to the old baseline are noted per instrument.
+ * (OBBBA) - scores tied to the old baseline are noted per instrument.
  * ========================================================================= */
 "use strict";
 var NHA = window.NHA || {};
@@ -33,15 +33,15 @@ NHA.TAX = {};
  * counts differ). avgIncome: household income before transfers & taxes.
  * curRate: average federal tax rate, all federal taxes (CBO Table 1/9).
  * Share columns each sum to 1.0 across groups:
- *   wageShare    — share of payroll-taxed earnings (derived from CBO's
+ *   wageShare - share of payroll-taxed earnings (derived from CBO's
  *                  payroll-rate-by-group × income matrix)
- *   capShare     — share of capital income (derived from CBO's imputed
+ *   capShare - share of capital income (derived from CBO's imputed
  *                  corporate-tax burden by group)
- *   consumpShare — share of total consumption (BLS CES 2024; top-quintile
+ *   consumpShare - share of total consumption (BLS CES 2024; top-quintile
  *                  split by declining consumption propensity)
- *   healthRelief — share of replaced household health spending (CES 2024
+ *   healthRelief - share of replaced household health spending (CES 2024
  *                  healthcare outlays by quintile: $3,445 → $9,771 bottom
- *                  to top — only a 3:1 spread against a 16:1 income spread,
+ *                  to top - only a 3:1 spread against a 16:1 income spread,
  *                  which is why relief is so progressive as % of income)
  * ------------------------------------------------------------------------ */
 NHA.TAX.GROUPS = [
@@ -81,12 +81,12 @@ NHA.TAX.GROUPS = [
  * wage & capital shares MEDIUM (derived from CBO Table 9 rate matrix);
  * consumption MEDIUM (CES 2024, consumer units ≠ CBO households);
  * healthRelief MEDIUM (CES 2024 outlay pattern; bottom-quintile relief is
- * real — Medicare premiums, marketplace plans — even though most premium
+ * real - Medicare premiums, marketplace plans - even though most premium
  * relief accrues to employer-covered middle groups). */
 
 /* ---- Economy-wide aggregates (2024$) ------------------------------------ */
 NHA.TAX.ECON = {
-  wagesB: 13700,        // Medicare (HI) taxable earnings 2024 ≈ $13.7T — the
+  wagesB: 13700,        // Medicare (HI) taxable earnings 2024 ≈ $13.7T - the
                         // uncapped payroll base (SSA contributions ÷ 2.9%)
   aboveCapShare: 0.17,  // share of covered earnings above the SS cap (SSA: 83% below)
   realGrowth: 0.019,    // legacy default (GDP class); kept for compatibility
@@ -101,7 +101,7 @@ NHA.TAX.ECON = {
 };
 
 /* ---- Tax instruments -----------------------------------------------------
- * rev1x — $B/yr at default setting (scale=1), 2024 economy (annualized from
+ * rev1x - $B/yr at default setting (scale=1), 2024 economy (annualized from
  * the cited 10-year scores). kind 'scale' (slider, linear) or 'toggle'.
  * incidence sums to 1.0. phaseStart/phaseYears adjustable in the UI.
  * ------------------------------------------------------------------------ */

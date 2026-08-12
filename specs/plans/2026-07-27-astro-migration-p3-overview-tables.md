@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 8): Overview tables + growth-decomp Implementation Plan
+# NHA Astro Migration - P3 (slice 8): Overview tables + growth-decomp Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -12,10 +12,10 @@
 
 - Platform: Windows. Bash tool or PowerShell. node 22.23.1 / pnpm 11.17.0 on PATH (Volta). Working dir: `C:\Users\micha\OneDrive\Desktop\Healthcare Framework\ChatGPT Work Outputs\Claude Outputs`.
 - TypeScript `strict`; avoid gratuitous `any`.
-- **Fidelity:** table columns/rows/formatting from `docs/js/app.js` verbatim — `renderPathTable` (213-232), the bridge table loop (292-308), the financing table array (344-363), and `renderGrowthDecomp` (512-529). Same money formatting via `src/lib/format`.
+- **Fidelity:** table columns/rows/formatting from `docs/js/app.js` verbatim - `renderPathTable` (213-232), the bridge table loop (292-308), the financing table array (344-363), and `renderGrowthDecomp` (512-529). Same money formatting via `src/lib/format`.
 - **Palette/markup:** tables use `<table class="data">` inside `<details class="tableview"><summary>View as table</summary><div class="tbl-scroll">…</div></details>`, exactly as `docs/index.html`. Numeric cells get `class="num"`; header numeric cells too. The note is `<p class="note" id="growth-decomp">`.
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
-- No em dashes (—, U+2014) in reader-visible output. The growth-decomp prose uses `~`, `+`, en-dash ranges, and the `→` arrow in a comment only; the visible string has no U+2014. Age band ids like `"0–18"` use U+2013 (allowed).
+- No em dashes ( - , U+2014) in reader-visible output. The growth-decomp prose uses `~`, `+`, en-dash ranges, and the `→` arrow in a comment only; the visible string has no U+2014. Age band ids like `"0–18"` use U+2013 (allowed).
 - Client render on `astro:page-load` (tables + note rebuilt inside the existing `render()`).
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY add `src/lib/overview-tables.ts`, `src/lib/growth-decomp.ts`, and edit `src/scripts/overview-client.ts` + `src/pages/index.astro`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -48,11 +48,11 @@ tests/lib/
 **Interfaces:**
 - Consumes: `MonteCarloResult` from `./model-types`; `money`, `moneyShort` from `./format`; `bridgeSteps` from `./bridge`.
 - Produces:
-  - `interface TableData { head: string[]; rows: string[][] }` — column 0 is text; columns >= 1 are numeric (get `class="num"`).
-  - `function renderDataTable(tableEl: HTMLTableElement, data: TableData): void` — clears the table, builds a `<thead>` row (each `<th>`; those at index >= 1 get `class="num"`) and a `<tbody>` with one row per `data.rows` entry (each `<td>`; those at index >= 1 get `class="num"`).
-  - `function pathTableData(mc: MonteCarloResult, DEF: number): TableData` — head `['Year','Status quo','NHA p10','NHA median','NHA p90']`; one row per `mc.years[i]`: `[String(yr), money(mc.baseline[i]*DEF), money(mc.yearBands[i].p10*DEF), money(mc.yearBands[i].p50*DEF), money(mc.yearBands[i].p90*DEF)]` (app.js:213-232).
-  - `function bridgeTableData(mc: MonteCarloResult, DEF: number): TableData` — head `['Component','Effect (2024$)']`; from `bridgeSteps(mc).steps`, one row per step: `[s.label, (s.kind === 'total' ? '' : (s.value*DEF >= 0 ? '+' : '−')) + money(Math.abs(s.value*DEF))]` (app.js:292-308).
-  - `function financingTableData(mc: MonteCarloResult, DEF: number): TableData` — head `['Source (mature year 2041)','Amount (2024$)']`; recompute the same waterfall as `financingSpec` (t/d/need/fedUse/stateUse/empUse/fbUse/newRev) and emit the 7 rows from app.js:353-357: `['Total public cost', need]`, `['Redirected federal spending', fedUse]`, `['State maintenance-of-effort', stateUse]`, `['Employer contribution', empUse]`, `['Income/payroll tax on wages passed through from employer savings', fbUse]`, `['New revenue needed', newRev]`, `['...of which the wealth-tax package could cover', Math.min(newRev, d.wealthRevenue)]`, each amount as `money(value*DEF)`.
+- `interface TableData { head: string[]; rows: string[][] }` - column 0 is text; columns >= 1 are numeric (get `class="num"`).
+- `function renderDataTable(tableEl: HTMLTableElement, data: TableData): void` - clears the table, builds a `<thead>` row (each `<th>`; those at index >= 1 get `class="num"`) and a `<tbody>` with one row per `data.rows` entry (each `<td>`; those at index >= 1 get `class="num"`).
+- `function pathTableData(mc: MonteCarloResult, DEF: number): TableData` - head `['Year','Status quo','NHA p10','NHA median','NHA p90']`; one row per `mc.years[i]`: `[String(yr), money(mc.baseline[i]*DEF), money(mc.yearBands[i].p10*DEF), money(mc.yearBands[i].p50*DEF), money(mc.yearBands[i].p90*DEF)]` (app.js:213-232).
+- `function bridgeTableData(mc: MonteCarloResult, DEF: number): TableData` - head `['Component','Effect (2024$)']`; from `bridgeSteps(mc).steps`, one row per step: `[s.label, (s.kind === 'total' ? '' : (s.value*DEF >= 0 ? '+' : '−')) + money(Math.abs(s.value*DEF))]` (app.js:292-308).
+- `function financingTableData(mc: MonteCarloResult, DEF: number): TableData` - head `['Source (mature year 2041)','Amount (2024$)']`; recompute the same waterfall as `financingSpec` (t/d/need/fedUse/stateUse/empUse/fbUse/newRev) and emit the 7 rows from app.js:353-357: `['Total public cost', need]`, `['Redirected federal spending', fedUse]`, `['State maintenance-of-effort', stateUse]`, `['Employer contribution', empUse]`, `['Income/payroll tax on wages passed through from employer savings', fbUse]`, `['New revenue needed', newRev]`, `['...of which the wealth-tax package could cover', Math.min(newRev, d.wealthRevenue)]`, each amount as `money(value*DEF)`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -94,7 +94,7 @@ test('financingTableData: 7 rows, amounts formatted', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/overview-tables.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/overview-tables`.
+Expected: FAIL - cannot resolve `../../src/lib/overview-tables`.
 
 - [ ] **Step 3: Implement `src/lib/overview-tables.ts`**
 
@@ -123,7 +123,7 @@ git commit -m "Add Overview data tables: renderDataTable + path/bridge/financing
 
 **Interfaces:**
 - Consumes: `AGE_STRUCTURE` from `./params`; `effectiveParams` from `./scenarios`.
-- Produces: `function growthDecompNote(scenario: string, sliders: Record<string, number> | null): string` — from `docs/js/app.js:512-529` verbatim (compute `idx24`/`idx41` from `AGE_STRUCTURE.bands` (`share2024*costw`, `share2041*costw`), `agingPP = 100*(Math.pow(idx41/idx24, 1/17) - 1)`, `totalG = effectiveParams(scenario, sliders).baselineRealGrowth.mode`, then the prose string with `agingPP.toFixed(1)` and `totalG.toFixed(1)`).
+- Produces: `function growthDecompNote(scenario: string, sliders: Record<string, number> | null): string` - from `docs/js/app.js:512-529` verbatim (compute `idx24`/`idx41` from `AGE_STRUCTURE.bands` (`share2024*costw`, `share2041*costw`), `agingPP = 100*(Math.pow(idx41/idx24, 1/17) - 1)`, `totalG = effectiveParams(scenario, sliders).baselineRealGrowth.mode`, then the prose string with `agingPP.toFixed(1)` and `totalG.toFixed(1)`).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -136,14 +136,14 @@ test('growthDecompNote reports the aging and total growth figures, em-dash-free'
   const note = growthDecompNote('SCN-BASE', null);
   expect(note).toContain('%/yr real growth assumption');
   expect(note).toMatch(/\d\.\d points/);
-  expect(note.includes('—')).toBe(false); // U+2014
+  expect(note.includes(' - ')).toBe(false); // U+2014
 });
 ```
 
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/growth-decomp.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/growth-decomp`.
+Expected: FAIL - cannot resolve `../../src/lib/growth-decomp`.
 
 - [ ] **Step 3: Implement `src/lib/growth-decomp.ts`**
 
@@ -191,7 +191,7 @@ test('overview includes the data-table containers and growth-decomp note', async
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — table/note containers absent.
+Expected: FAIL - table/note containers absent.
 
 - [ ] **Step 3: Add the markup to `src/pages/index.astro`**
 
@@ -277,7 +277,7 @@ git commit -m "Fill the Overview tables and growth-decomp note in the client"
 
 - [ ] **Step 1: Serve + inspect**
 
-`pnpm preview`; open the Overview. For each of `#path-table`, `#bridge-table`, `#financing-table`: confirm the `<table class="data">` has a `<thead>` with the expected column count and a `<tbody>` with rows (path: one per year; bridge: one per step; financing: 7). Confirm cells at column >= 1 carry `class="num"`. Confirm `#growth-decomp` has prose containing "%/yr real growth assumption". `read_console_messages` — zero errors.
+`pnpm preview`; open the Overview. For each of `#path-table`, `#bridge-table`, `#financing-table`: confirm the `<table class="data">` has a `<thead>` with the expected column count and a `<tbody>` with rows (path: one per year; bridge: one per step; financing: 7). Confirm cells at column >= 1 carry `class="num"`. Confirm `#growth-decomp` has prose containing "%/yr real growth assumption". `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Interactivity**
 
@@ -295,7 +295,7 @@ Navigate to `/health` and back; confirm the tables re-fill (one `<tbody>`, no du
 
 ## Follow-on slices (out of scope here)
 
-- **P3 slice 9 (finishes Overview Act-1):** the un-ported top-of-page Act-1 content — the problem-stats tiles, care-cost cards, household calculator, the money-shift, the sponsor-table, and the Act-1 solo money-flow (`#flow-today-solo`) + `#flow-takeaway` + the Methodology card.
+- **P3 slice 9 (finishes Overview Act-1):** the un-ported top-of-page Act-1 content - the problem-stats tiles, care-cost cards, household calculator, the money-shift, the sponsor-table, and the Act-1 solo money-flow (`#flow-today-solo`) + `#flow-takeaway` + the Methodology card.
 - **P3 slice 10+:** remaining tabs (health, tax + `taxcharts.js`/`taxapp.js`, prose tabs), each replacing its stub, DOM-diffed vs live, with the em-dash/content pass (incl. the family-note "the the" typo).
 - **P4/P5:** content collections; cutover.
 

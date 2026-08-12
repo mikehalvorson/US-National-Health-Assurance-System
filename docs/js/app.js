@@ -3,7 +3,7 @@
  * All internal dollars are real 2023 $B; display applies the 2023→2024
  * deflator so results are comparable with the framework's "$4.75T (2024$)"
  * claim. Published benchmarks (CBO, Urban/Mercatus) are shown in their own
- * studies' dollars — flagged in the note as order-of-magnitude comparisons.
+ * studies' dollars - flagged in the note as order-of-magnitude comparisons.
  * ========================================================================= */
 "use strict";
 (function () {
@@ -279,7 +279,7 @@
       { label: "NHA total (2041)", value: d.nheNha, kind: "total" }
     );
 
-    /* identity check — surfaced in the self-test footer */
+    /* identity check - surfaced in the self-test footer */
     var running = d.nheBase + utilAdd + expansions + oneTime + adminNet -
       paySave - drugSave - d.offProvAdmin - d.offCareModel - d.offLowValue - d.offExtraction;
     NHA._bridgeIdentityError = Math.abs(running - d.nheNha);
@@ -429,7 +429,7 @@
 
   /* ---------- Money flow (today vs NHA) ---------- */
   function renderMoneyFlow() {
-    /* Today: static CMS 2023 sponsor→channel map — rendered twice: solo in
+    /* Today: static CMS 2023 sponsor→channel map - rendered twice: solo in
        "The system today" (Act 1) and again in the comparison section */
     var todaySpec = {
       sources: NHA.MONEYFLOW.sources,
@@ -529,7 +529,7 @@
       "and prices. Population growth adds ~0.4%/yr on top in the totals.";
   }
 
-  /* "What's wrong, by the numbers" — static sourced stat tiles */
+  /* "What's wrong, by the numbers" - static sourced stat tiles */
   function renderProblemTiles() {
     var host = $("problem-tiles");
     host.innerHTML = "";
@@ -546,7 +546,7 @@
   /* Sponsor table: today's distribution with composition notes */
   function renderSponsorTable() {
     var tbl = $("sponsor-table");
-    if (tbl.rows.length) return; /* static — build once */
+    if (tbl.rows.length) return; /* static - build once */
     var hd = tbl.insertRow();
     ["Who pays", "2023 amount", "Share", "What it consists of"].forEach(function (h) {
       var th = document.createElement("th"); th.textContent = h; hd.appendChild(th);

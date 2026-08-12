@@ -1,11 +1,11 @@
 /* =========================================================================
- * National Health Assurance Simulation — Parameter Base
+ * National Health Assurance Simulation - Parameter Base
  * =========================================================================
  * Every uncertain parameter is a triangular distribution (low / mode / high)
  * with a source citation and a confidence grade. Fixed calibration constants
  * (finalized CMS 2023 historical figures) are point values.
  *
- * DESIGN RULES (from HANDOFF.md):
+ * DESIGN RULES (from BUILD-BRIEF.md):
  *  - Calibration base year is 2023 (last finalized CMS NHE historical year).
  *    All dollars are REAL 2023 dollars internally; the UI displays real 2024
  *    dollars via DEFLATOR_2023_TO_2024 so results are comparable with the
@@ -40,7 +40,7 @@ NHA.BASE2023 = {
   populationM:     334.0   // implied by CMS $14,570 per capita ✓
 };
 /* Investment residual (structures & equipment + noncommercial research):
- * derived so categories sum exactly to nheTotal. Flagged medium confidence —
+ * derived so categories sum exactly to nheTotal. Flagged medium confidence -
  * see research/01 CP-TOT-004 note about the bundled CMS line. */
 (function () {
   var b = NHA.BASE2023;
@@ -108,7 +108,7 @@ NHA.PARAM_DEFS = [
     label: "Utilization increase at mature NHA (universal coverage + zero point-of-care cost)",
     low: 6, mode: 10, high: 16,
     confidence: "low",
-    source: "DERIVED; no direct citation exists for this exact policy. Anchors: RAND Health Insurance Experiment arc elasticity ≈ −0.2; OOP is ~10.4% of NHE today; CBO single-payer working paper demand-increase discussion; 26.7M uninsured gaining full coverage (KFF 2024). Flagged in HANDOFF.md as the model's most consequential assumption.",
+    source: "DERIVED; no direct citation exists for this exact policy. Anchors: RAND Health Insurance Experiment arc elasticity ≈ −0.2; OOP is ~10.4% of NHE today; CBO single-payer working paper demand-increase discussion; 26.7M uninsured gaining full coverage (KFF 2024). Flagged in BUILD-BRIEF.md as the model's most consequential assumption.",
     url: "https://www.rand.org/health-care/projects/hie.html",
     adjustable: true, sliderMin: 0, sliderMax: 30
   },
@@ -393,7 +393,7 @@ NHA.RAMPS = {
 };
 
 /* Benchmarks for the comparison panel (research/01, CP-FIN-015/016).
- * All are single-year or annualized federal-cost concepts — the UI explains
+ * All are single-year or annualized federal-cost concepts - the UI explains
  * that these are different accounting concepts, not one axis. */
 NHA.BENCHMARKS = {
   cboFedIncrease: { low: 1500, high: 3000, year: 2030,
@@ -451,7 +451,7 @@ NHA.MONEYFLOW = {
   ]
 };
 
-/* ---- "What's wrong, by the numbers" — sourced problem statistics --------
+/* ---- "What's wrong, by the numbers" - sourced problem statistics --------
  * Every figure traces to the research files in the repo (research/01–06). */
 NHA.PROBLEM_STATS = [
   { value: "17.6% of GDP", label: "U.S. health spending, 2023",

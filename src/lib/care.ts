@@ -121,7 +121,7 @@ export interface HouseholdProfile {
   confidence: string;
 }
 
-/* docs/js/care.js:120 — Census 2024, millions of U.S. households */
+/* docs/js/care.js:120 - Census 2024, millions of U.S. households */
 export const HOUSEHOLDS_M = 132.2;
 
 /* docs/js/care.js:122-151 (verbatim) */

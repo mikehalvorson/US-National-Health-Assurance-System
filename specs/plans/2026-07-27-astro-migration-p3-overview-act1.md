@@ -1,8 +1,8 @@
-# NHA Astro Migration — P3 (slice 9): Overview Act-1/Act-2 (system today + problems) Implementation Plan
+# NHA Astro Migration - P3 (slice 9): Overview Act-1/Act-2 (system today + problems) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Port the top of the Overview narrative — Act 1 "The system today" (solo money-flow + sponsor table) and Act 2 "What's wrong, by the numbers" (problem-stats tiles) — prepended above the existing model section, using static build-time rendering plus one client-drawn SVG.
+**Goal:** Port the top of the Overview narrative - Act 1 "The system today" (solo money-flow + sponsor table) and Act 2 "What's wrong, by the numbers" (problem-stats tiles) - prepended above the existing model section, using static build-time rendering plus one client-drawn SVG.
 
 **Architecture:** Add a pure `sponsorTableData()` builder (static, from `MONEYFLOW`) to `src/lib/overview-tables.ts`. In `src/pages/index.astro`, prepend the Act-1 + Act-2 cards, rendering the problem-stats tiles and the sponsor table at build time (zero client JS) from `PROBLEM_STATS` and `sponsorTableData()`. The Act-1 solo money-flow (`#flow-today-solo`) is drawn client-side in `render()` with the existing `todayFlowSpec()`.
 
@@ -15,7 +15,7 @@
 - **Fidelity:** Act-1/Act-2 card markup + prose from `docs/index.html:47-84` verbatim. The problem tiles from `renderProblemTiles` (app.js:533-543): each `<div class="tile">` with `.value`/`.label`/`.range` = `PROBLEM_STATS[i].value`/`.label`/`.note`. The sponsor table from `renderSponsorTable` (app.js:547-573): head `['Who pays','2023 amount','Share','What it consists of']`, one row per `MONEYFLOW.sources`: `[label, money(value), round(100*value/total)+'%', notesJoined]` where `notesJoined` = for each ribbon with `from === source.id`, `channel.label + ' ' + moneyShort(ribbon.value) + ' (' + ribbon.note + ')'`, joined with `'; '`. NOTE: the sponsor table has NO `class="num"` cells (unlike `renderDataTable`), so render it as a plain build-time table, not via `renderDataTable`.
 - **Placement:** Act-1 and Act-2 go at the TOP of `<main>` in `index.astro`, before the current hero card, matching the docs narrative order (system today → problems → … → model section).
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
-- No em dashes (—, U+2014) in reader-visible output. The Act-1/Act-2 prose uses `&amp;`, `~`, `$`, and `<abbr>`; none are U+2014.
+- No em dashes ( - , U+2014) in reader-visible output. The Act-1/Act-2 prose uses `&amp;`, `~`, `$`, and `<abbr>`; none are U+2014.
 - Client render on `astro:page-load` (the solo flow is drawn inside the existing `render()`).
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY edit `src/lib/overview-tables.ts` (additive), `src/scripts/overview-client.ts`, `src/pages/index.astro`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -45,7 +45,7 @@ tests/lib/
 
 **Interfaces:**
 - Consumes: `MONEYFLOW` from `./params`; `money`, `moneyShort` from `./format`.
-- Produces: `function sponsorTableData(): TableData` — head `['Who pays','2023 amount','Share','What it consists of']`; one row per `MONEYFLOW.sources` per `renderSponsorTable` (app.js:547-573).
+- Produces: `function sponsorTableData(): TableData` - head `['Who pays','2023 amount','Share','What it consists of']`; one row per `MONEYFLOW.sources` per `renderSponsorTable` (app.js:547-573).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -66,7 +66,7 @@ test('sponsorTableData: one row per MONEYFLOW source, 4 columns', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/overview-tables.test.ts`
-Expected: FAIL — `sponsorTableData` not exported.
+Expected: FAIL - `sponsorTableData` not exported.
 
 - [ ] **Step 3: Implement `sponsorTableData`**
 
@@ -142,7 +142,7 @@ test('overview includes Act-1/Act-2 with build-time tiles and sponsor table', as
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — Act-1/Act-2 absent.
+Expected: FAIL - Act-1/Act-2 absent.
 
 - [ ] **Step 3: Add Act-1 + Act-2 to `src/pages/index.astro`**
 
@@ -251,11 +251,11 @@ git commit -m "Draw the Act-1 solo money-flow diagram in the Overview client"
 
 - [ ] **Step 1: Serve + inspect**
 
-`pnpm preview`; open the Overview. Confirm at the top of the page: the "The system today" card with `#flow-today-solo` containing an `<svg class="chart-svg">` (source/channel rects + `.flow-ribbon` paths, no `NaN`), and the `#sponsor-table` (inside `<details>`) with a `<thead>` (4 columns) and 5 `<tbody>` rows pre-rendered (present even before any client JS). Confirm the "What's wrong, by the numbers" card's `#problem-tiles` has multiple `.tile`s (e.g. one showing "17.6% of GDP"). Confirm the model section (hero, charts, tables) still follows below. `read_console_messages` — zero errors.
+`pnpm preview`; open the Overview. Confirm at the top of the page: the "The system today" card with `#flow-today-solo` containing an `<svg class="chart-svg">` (source/channel rects + `.flow-ribbon` paths, no `NaN`), and the `#sponsor-table` (inside `<details>`) with a `<thead>` (4 columns) and 5 `<tbody>` rows pre-rendered (present even before any client JS). Confirm the "What's wrong, by the numbers" card's `#problem-tiles` has multiple `.tile`s (e.g. one showing "17.6% of GDP"). Confirm the model section (hero, charts, tables) still follows below. `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Static-render check**
 
-Confirm the sponsor table and problem tiles are in the built HTML directly (view `dist/index.html` contains "Households" and "17.6% of GDP") — i.e. they render with zero client JS.
+Confirm the sponsor table and problem tiles are in the built HTML directly (view `dist/index.html` contains "Households" and "17.6% of GDP") - i.e. they render with zero client JS.
 
 - [ ] **Step 3: View Transitions**
 
@@ -265,7 +265,7 @@ Navigate to `/health` and back; confirm the solo money-flow re-renders (single `
 
 ## Follow-on slices (out of scope here)
 
-- **P3 slice 10:** Act 3-4 narrative — "the fixable part", "the proposal", and the static operating-system / care-pathway / financing / rollout-preview diagrams + chapter-nav (some may need `govdata`); mostly static prose + SVG.
+- **P3 slice 10:** Act 3-4 narrative - "the fixable part", "the proposal", and the static operating-system / care-pathway / financing / rollout-preview diagrams + chapter-nav (some may need `govdata`); mostly static prose + SVG.
 - **P3 slice 11:** the care-cost cards + the household calculator (port `care.js` `CARE_SCENARIOS` + `HOUSEHOLD_PROFILES`), the outcomes section (`OUTCOME_STATS`), the Methodology card, `#flow-takeaway`. This finishes the Overview.
 - **P3 slice 12+:** remaining tabs (health, tax + `taxcharts.js`/`taxapp.js`, prose tabs), each replacing its stub, DOM-diffed vs live, with the em-dash/content pass.
 - **P4/P5:** content collections; cutover.

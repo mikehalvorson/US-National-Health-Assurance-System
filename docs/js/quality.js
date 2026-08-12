@@ -119,7 +119,7 @@
         : "No numeric target specified";
     }
     return entries.map(function (entry) {
-      return entry.value + (entry.kind === "maturity target" ? " — maturity" : "");
+      return entry.value + (entry.kind === "maturity target" ? " - maturity" : "");
     }).join(" · ");
   }
 

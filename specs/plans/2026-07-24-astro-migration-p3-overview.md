@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 1): Multi-page shell + Overview hero Implementation Plan
+# NHA Astro Migration - P3 (slice 1): Multi-page shell + Overview hero Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -15,7 +15,7 @@
 - Base path `/US-National-Health-Assurance-System/`; every route link and asset MUST resolve through `import.meta.env.BASE_URL` (never a hardcoded `/`).
 - **Visual/behavior parity:** reproduce the live overview hero + tiles DOM structure and class names (`docs/index.html` `#view-overview`) exactly. Same CSS (`src/styles/global.css`, already ported). Do not redesign.
 - **Fidelity:** hero/tiles math and formatting come verbatim from `docs/js/app.js` (`renderHero`/`renderTiles`) and `docs/js/charts.js` (`NHA.fmt`); the model is the already-ported `src/lib/model`. Constants: `N_RUNS = 600`, `SEED = 42`, default scenario `"SCN-BASE"`, no sliders, `DEF = DEFLATOR_2023_TO_2024` (from `src/lib/params`). Because the seed is fixed, build-time output must equal the live site's initial numbers.
-- **No em dashes (—)** in reader-visible output. NOTE: `NHA.fmt.money` uses the MINUS SIGN `−` (U+2212) for negatives, which is allowed (it is not an em dash U+2014). Preserve it.
+- **No em dashes ( - )** in reader-visible output. NOTE: `NHA.fmt.money` uses the MINUS SIGN `−` (U+2212) for negatives, which is allowed (it is not an em dash U+2014). Preserve it.
 - Do NOT modify anything under `docs/`, or any `src/lib/*` engine module from P2/P2b (you MAY add `src/lib/format.ts` and `src/lib/tabs.ts`).
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 - Scope: this slice = multi-page shell + View Transitions + Overview hero & 4 tiles only. DEFERRED to later P3 slices: the family-burden prose note, all charts (money-flow, path, benchmarks), the scenario picker + parameter sliders (interactivity), and the other 11 tabs' real content.
@@ -41,7 +41,7 @@ tests/shell.test.ts    (extend: TabNav renders 12 links w/ correct hrefs + activ
 
 ---
 
-### Task 1: Ported formatters — `src/lib/format.ts`
+### Task 1: Ported formatters - `src/lib/format.ts`
 
 **Files:**
 - Create: `src/lib/format.ts`  (port of `NHA.fmt` from `docs/js/charts.js`)
@@ -49,7 +49,7 @@ tests/shell.test.ts    (extend: TabNav renders 12 links w/ correct hrefs + activ
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `money(b: number): string`, `moneyShort(b: number): string`, `pct(x: number, d?: number): string`, `perCap(x: number): string`, `axis(b: number): string` — reproducing `docs/js/charts.js` `NHA.fmt` exactly (including the `−` U+2212 negative sign and the "n/a" for non-finite in `money`).
+- Produces: `money(b: number): string`, `moneyShort(b: number): string`, `pct(x: number, d?: number): string`, `perCap(x: number): string`, `axis(b: number): string` - reproducing `docs/js/charts.js` `NHA.fmt` exactly (including the `−` U+2212 negative sign and the "n/a" for non-finite in `money`).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -82,7 +82,7 @@ test('pct default one decimal, perCap grouped, axis compact', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/format.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/format`.
+Expected: FAIL - cannot resolve `../../src/lib/format`.
 
 - [ ] **Step 3: Port `NHA.fmt` to `src/lib/format.ts`**
 
@@ -110,7 +110,7 @@ git commit -m "Port NHA.fmt formatters to src/lib/format.ts"
 - Modify: `src/components/TabNav.astro`
 - Modify: `src/layouts/BaseLayout.astro`
 - Create: `src/pages/[chapter].astro`
-- Modify: `src/pages/index.astro` (pass no new content yet; keep placeholder main — Task 3 fills it)
+- Modify: `src/pages/index.astro` (pass no new content yet; keep placeholder main - Task 3 fills it)
 - Modify: `tests/shell.test.ts`
 
 **Interfaces:**
@@ -177,14 +177,14 @@ test('rendered shell contains no em dashes', async () => {
     props: { title: 'x', pathname: BASE },
     slots: { default: '<main></main>' },
   });
-  expect(html.includes('—')).toBe(false); // U+2014 em dash
+  expect(html.includes(' - ')).toBe(false); // U+2014 em dash
 });
 ```
 
 - [ ] **Step 3: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/shell.test.ts`
-Expected: FAIL — TabNav does not yet accept `pathname` / render anchors.
+Expected: FAIL - TabNav does not yet accept `pathname` / render anchors.
 
 - [ ] **Step 4: Rewrite `src/components/TabNav.astro` as base-aware links**
 
@@ -206,7 +206,7 @@ const norm = (p: string) => (p.endsWith('/') ? p : p + '/');
   })}
 </nav>
 ```
-Note: the live nav used `<button>`. View Transitions require `<a>` (Astro's `ClientRouter` intercepts anchor clicks, not buttons), so the nav MUST become anchors. `src/styles/global.css` styles the tabs via `button`-specific selectors, so Step 4b extends those selectors to also match `a` — a deliberate, parity-preserving edit. From this slice on, `global.css` intentionally diverges from `docs/style.css` (expected as the DOM evolves).
+Note: the live nav used `<button>`. View Transitions require `<a>` (Astro's `ClientRouter` intercepts anchor clicks, not buttons), so the nav MUST become anchors. `src/styles/global.css` styles the tabs via `button`-specific selectors, so Step 4b extends those selectors to also match `a` - a deliberate, parity-preserving edit. From this slice on, `global.css` intentionally diverges from `docs/style.css` (expected as the DOM evolves).
 
 - [ ] **Step 4b: Extend the tab CSS selectors to also style `<a>` (parity-preserving)**
 
@@ -304,7 +304,7 @@ Reference (from `docs/js/app.js`): compute `mc = runMonteCarlo("SCN-BASE", null,
 
 - [ ] **Step 1: Write the failing overview test**
 
-`tests/pages/overview.test.ts` — assert the page renders the SAME hero value the engine produces (compute the expected value in the test from the same functions, so the test verifies wiring, not a hardcoded number):
+`tests/pages/overview.test.ts` - assert the page renders the SAME hero value the engine produces (compute the expected value in the test from the same functions, so the test verifies wiring, not a hardcoded number):
 ```ts
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { expect, test } from 'vitest';
@@ -330,14 +330,14 @@ test('overview renders four tiles', async () => {
 test('overview shell has no em dash', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
-  expect(html.includes('—')).toBe(false);
+  expect(html.includes(' - ')).toBe(false);
 });
 ```
 
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — index.astro renders no hero value / no tiles yet.
+Expected: FAIL - index.astro renders no hero value / no tiles yet.
 
 - [ ] **Step 3: Implement the Overview hero + tiles in `src/pages/index.astro`**
 
@@ -395,7 +395,7 @@ const tiles = [
   </main>
 </BaseLayout>
 ```
-IMPORTANT: use the ACTUAL hero card markup/classes from `docs/index.html` `#view-overview` (the snippet above is a scaffold — match the real element wrappers, headings, and class names so the ported CSS styles it identically). The computed `const` expressions above are authoritative and must not change. If a `mc.steady.*` field the code reads is missing from the ported `runMonteCarlo` result, STOP and report BLOCKED (it should exist from the P2 verbatim port).
+IMPORTANT: use the ACTUAL hero card markup/classes from `docs/index.html` `#view-overview` (the snippet above is a scaffold - match the real element wrappers, headings, and class names so the ported CSS styles it identically). The computed `const` expressions above are authoritative and must not change. If a `mc.steady.*` field the code reads is missing from the ported `runMonteCarlo` result, STOP and report BLOCKED (it should exist from the P2 verbatim port).
 
 - [ ] **Step 4: Run to verify PASS**
 
@@ -426,7 +426,7 @@ Run `pnpm preview` (serves at `http://localhost:4321/US-National-Health-Assuranc
 
 - [ ] **Step 2: Compare to the live site**
 
-The live overview (served from `docs/`) computes the same model with the same seed. Confirm the ported page's hero value, 2041 pair, and four tile values are byte-identical to the live site's initial (SCN-BASE, no slider) values. If any differs, the wiring or a `* DEF` step diverged — fix and re-verify. Record the compared values.
+The live overview (served from `docs/`) computes the same model with the same seed. Confirm the ported page's hero value, 2041 pair, and four tile values are byte-identical to the live site's initial (SCN-BASE, no slider) values. If any differs, the wiring or a `* DEF` step diverged - fix and re-verify. Record the compared values.
 
 - [ ] **Step 3: Confirm View Transitions + routing**
 
@@ -436,7 +436,7 @@ Navigate overview → health → overview in the browser pane; confirm the URL c
 
 ## Follow-on slices (out of scope here)
 
-- **P3 slice 2:** Overview interactivity — scenario picker + parameter sliders as an island (`client:load`) that recomputes via `src/lib/model` and re-renders hero/tiles; the family-burden prose note; the `runs-note`.
+- **P3 slice 2:** Overview interactivity - scenario picker + parameter sliders as an island (`client:load`) that recomputes via `src/lib/model` and re-renders hero/tiles; the family-burden prose note; the `runs-note`.
 - **P3 slice 3+:** charts (money-flow, path, benchmarks) as islands porting `charts.js`; then the remaining tabs one at a time (health, tax + `taxcharts.js`/`taxapp.js`, then the prose tabs), each replacing its stub, DOM-diffed against the live original, with the em-dash/content pass over ported `desc`/`label` strings.
 - **P3 cleanup:** unify the self-test shapes (`selfTest()` vs `TAX_SELFTESTS`) for a build-time badge.
 - **P4/P5:** content collections; cutover.
@@ -446,4 +446,4 @@ Navigate overview → health → overview in the browser pane; confirm the URL c
 - Spec coverage: implements design spec §1 (per-tab pages), §2 (build-time engine consumption; islands deferred to slice 2), §6 (base-path routing). View Transitions chosen (user decision 2026-07-24) to preserve the single-page feel under multi-page routing.
 - No unresolved placeholders: the two "reproduce the real markup from docs/index.html" instructions are inherent to a parity port (the live markup is the spec) and are each paired with a parity verification (Task 4) and a rendering test.
 - Type/name consistency: `TABS`/`Tab` defined in `tabs.ts` and consumed by TabNav + `[chapter].astro` + tests; `money/moneyShort/pct/perCap/axis` defined in `format.ts` and consumed by the overview + tests; `runMonteCarlo`/`DEFLATOR_2023_TO_2024` come from the P2 `src/lib` with their existing signatures.
-- Resolved risk: `global.css` styles tabs via `nav.tabs button` selectors (confirmed at lines 645/652/655 and responsive ~2813). Since View Transitions require `<a>`, Task 2 Step 4b extends those selectors to `nav.tabs button, nav.tabs a` (declaration bodies unchanged) — a parity-preserving edit. `global.css` intentionally begins to diverge from `docs/style.css` here; that divergence is expected as the DOM migrates and is verified visually in Task 4.
+- Resolved risk: `global.css` styles tabs via `nav.tabs button` selectors (confirmed at lines 645/652/655 and responsive ~2813). Since View Transitions require `<a>`, Task 2 Step 4b extends those selectors to `nav.tabs button, nav.tabs a` (declaration bodies unchanged) - a parity-preserving edit. `global.css` intentionally begins to diverge from `docs/style.css` here; that divergence is expected as the DOM migrates and is verified visually in Task 4.

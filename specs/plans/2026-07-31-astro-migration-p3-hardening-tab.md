@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 13): Executive Hardening tab
+# NHA Astro Migration - P3 (slice 13): Executive Hardening tab
 
 **Goal:** Port docs `#view-hardening` (index.html:2140-2399) to `src/pages/hardening.astro`, replacing its `[chapter].astro` stub. Same shape as the Legislation slice: verbatim static prose + one master-detail widget (the 7-layer "Defense in depth" stepper) + acronym hovers.
 

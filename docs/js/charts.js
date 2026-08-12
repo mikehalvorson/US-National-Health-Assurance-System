@@ -1,5 +1,5 @@
 /* =========================================================================
- * Chart rendering — plain SVG, no dependencies.
+ * Chart rendering - plain SVG, no dependencies.
  * Specs: 2px lines w/ round joins, 10%-opacity area washes, ≤24px bars with
  * 4px rounded data-ends (square at baseline), 2px surface gaps between
  * touching marks, hairline solid gridlines, crosshair + tooltip on line
@@ -133,7 +133,7 @@ window.NHA = NHA;
   }
 
   /* =======================================================================
-   * 1. Path chart — baseline vs NHA with uncertainty band + crosshair
+   * 1. Path chart - baseline vs NHA with uncertainty band + crosshair
    * ===================================================================== */
   NHA.renderPathChart = function (container, mc, deflate) {
     container.innerHTML = "";
@@ -239,11 +239,11 @@ window.NHA = NHA;
   };
 
   /* =======================================================================
-   * 2. Bridge (waterfall) — mature year: baseline → changes → NHA total
+   * 2. Bridge (waterfall) - mature year: baseline → changes → NHA total
    * ===================================================================== */
   NHA.renderBridgeChart = function (container, steps, deflate) {
     /* steps: [{label, value ($B, signed; null = running total marker), kind:
-     *   "total" | "add" | "sub"}] — computed by app.js from the mode run  */
+     *   "total" | "add" | "sub"}] - computed by app.js from the mode run  */
     container.innerHTML = "";
     var W = 860, rowH = 30, gap = 8, M = { l: 300, r: 96, t: 8, b: 30 };
     var H = M.t + steps.length * (rowH + gap) + M.b;
@@ -324,7 +324,7 @@ window.NHA = NHA;
   };
 
   /* =======================================================================
-   * 3. Financing stack — one horizontal stacked bar + gap-vs-wealth rows
+   * 3. Financing stack - one horizontal stacked bar + gap-vs-wealth rows
    * ===================================================================== */
   NHA.renderFinancingChart = function (container, fin, deflate) {
     /* fin: {segments: [{label, value, color}], gap: {label, value},
@@ -385,7 +385,7 @@ window.NHA = NHA;
   };
 
   /* =======================================================================
-   * 4. Benchmark interval chart — rows of ranges + our band
+   * 4. Benchmark interval chart - rows of ranges + our band
    * ===================================================================== */
   NHA.renderBenchmarkChart = function (container, rows, opts) {
     /* rows: [{label, lo, hi, mid (optional), color, note}] all in display $B */

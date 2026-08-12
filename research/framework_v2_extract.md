@@ -517,11 +517,11 @@ Table D1-7. Controlled framework definitions
 
 | Key Performance Parameter | A small set of outcome-oriented parameters whose failure would materially undermine framework success and that therefore receive senior governance attention, independent verification, and phase-gate linkage where applicable. |
 
-| Layer 3 — Transition protection | The temporary and staged protections that preserve patient care, medication access, provider liquidity, hospital services, pharmacy operation, records, workforce pathways, and intergovernmental continuity during migration. |
+| Layer 3 - Transition protection | The temporary and staged protections that preserve patient care, medication access, provider liquidity, hospital services, pharmacy operation, records, workforce pathways, and intergovernmental continuity during migration. |
 
-| Layer 4 — Legitimacy and safety | The durable rights, safety, privacy, transparency, usability, equity, appeal, ombudsman, diagnostic-safety, and human-accountability protections needed for trustworthy operation. |
+| Layer 4 - Legitimacy and safety | The durable rights, safety, privacy, transparency, usability, equity, appeal, ombudsman, diagnostic-safety, and human-accountability protections needed for trustworthy operation. |
 
-| Layer 5 — Adaptation and repair | The durable scorekeeping, formula control, retrospective review, sunset, red-team, legal-contingency, corrective-action, technology-lifecycle, and evidence-based repair functions. |
+| Layer 5 - Adaptation and repair | The durable scorekeeping, formula control, retrospective review, sunset, red-team, legal-contingency, corrective-action, technology-lifecycle, and evidence-based repair functions. |
 
 | Legacy payer | A private or public coverage or claims entity whose pretransition obligations, data, appeals, liabilities, and payment runout must be transferred, reconciled, or wound down. |
 
@@ -872,27 +872,27 @@ This release-level contents list is materialized for deterministic Word and PDF 
 	13.6 Implications for Drug, Device, and Innovation Markets	301
 	13.7 Implications for Public Finance	303
 	13.8 Implications for Communications Planning	305
-	Appendix A — Acronym Glossary	308
-	Appendix B — Assumption Register	311
-	Appendix C — Stakeholder Needs Register	313
-	Appendix D — Requirements Register	316
-	Appendix E — Requirements Allocation Matrix	328
-	Appendix F — KPP/TPP Dictionary	342
-	Appendix G — Cost Parameter Dictionary	351
-	Appendix H — Cost Equations	369
-	Appendix I — Interface Catalog	372
-	Appendix J — Phase Roadmap and Phase Gates	375
-	Appendix K — Governing Agency Catalog	379
-	Appendix L — Legal Conforming Changes	388
-	Appendix M — Transition Playbook	397
-	Appendix N — Legitimacy and Safety Playbook	403
-	Appendix O — Adaptation and Repair Playbook	409
-	Appendix P — Risk Register and Failure-Mode and Effects Analysis	415
-	Appendix Q — Simulation Input Schema	420
-	Appendix R — Public Dashboard Specification	422
-	Appendix S — Open Issues and Research Agenda	429
-	Appendix T — PMC Essential Product Family Register	437
-	Appendix U — Bibliography and Evidence Base	469
+	Appendix A - Acronym Glossary	308
+	Appendix B - Assumption Register	311
+	Appendix C - Stakeholder Needs Register	313
+	Appendix D - Requirements Register	316
+	Appendix E - Requirements Allocation Matrix	328
+	Appendix F - KPP/TPP Dictionary	342
+	Appendix G - Cost Parameter Dictionary	351
+	Appendix H - Cost Equations	369
+	Appendix I - Interface Catalog	372
+	Appendix J - Phase Roadmap and Phase Gates	375
+	Appendix K - Governing Agency Catalog	379
+	Appendix L - Legal Conforming Changes	388
+	Appendix M - Transition Playbook	397
+	Appendix N - Legitimacy and Safety Playbook	403
+	Appendix O - Adaptation and Repair Playbook	409
+	Appendix P - Risk Register and Failure-Mode and Effects Analysis	415
+	Appendix Q - Simulation Input Schema	420
+	Appendix R - Public Dashboard Specification	422
+	Appendix S - Open Issues and Research Agenda	429
+	Appendix T - PMC Essential Product Family Register	437
+	Appendix U - Bibliography and Evidence Base	469
 
 1. Purpose
 PART DECISION QUESTION  What public purpose must the framework serve, what mature system state is intended, and how will success be judged without confusing targets with achieved outcomes?
@@ -1087,9 +1087,9 @@ Section control record
 
 | Principal risks | Causal overclaim; stale evidence; national-average masking; assuming all actors fail in the same way; treating reform targets as baseline facts. |
 
-| Simulation implication | Failure mechanisms become comparator rules, shocks, queues, costs, and transition conditions—not hard-coded claims that the framework performs better. |
+| Simulation implication | Failure mechanisms become comparator rules, shocks, queues, costs, and transition conditions - not hard-coded claims that the framework performs better. |
 The current U.S. health system is not one coherent system. It is an interacting set of public programs, employer-sponsored arrangements, commercial plans, provider organizations, benefit managers, vendors, regulators, and state rules. The same person may move among these arrangements or use several at once. Coverage, payment, records, referral authority, formulary access, and appeals can therefore change without a corresponding change in medical need.
-This fragmentation does not imply that every institution or episode performs poorly. It means that system-level continuity, accountability, capacity allocation, and financial protection are emergent and uneven rather than guaranteed. The comparison must preserve existing strengths and progress—such as broad hospital electronic exchange—while measuring the gaps that remain.
+This fragmentation does not imply that every institution or episode performs poorly. It means that system-level continuity, accountability, capacity allocation, and financial protection are emergent and uneven rather than guaranteed. The comparison must preserve existing strengths and progress - such as broad hospital electronic exchange - while measuring the gaps that remain.
 Empirical anchors
 CMS reports 2024 national health expenditure of $5.3 trillion, $15,474 per person, and 18.0% of GDP. Medicare, Medicaid, private health insurance, and out-of-pocket spending accounted for 21%, 18%, 31%, and 11% of NHE, respectively. These are observed external data, not framework assumptions. [T-ED-001]
 The Census Bureau estimates that 27.1 million people, or 8.0%, were uninsured for all of 2024 under the CPS ASEC annual concept; 66.1% had private coverage and 35.5% had public coverage during the year, with overlap possible. State ACS uninsured rates ranged from 2.8% to 16.7%, demonstrating that a national mean is not an adequate regional initializer. [T-ED-002] [T-ED-003]
@@ -1140,13 +1140,13 @@ Table D2-6. Comparator architecture
 
 | Comparator | Purpose | Time treatment | Policy treatment | Use |
 
-| C0 — Static 2024 | Common initialization and cross-sectional comparison | Observed source year retained; monetary values normalized to 2024 dollars | Policies and coverage as observed in 2024 | Baseline KPP/TPP values and cost reconciliation |
+| C0 - Static 2024 | Common initialization and cross-sectional comparison | Observed source year retained; monetary values normalized to 2024 dollars | Policies and coverage as observed in 2024 | Baseline KPP/TPP values and cost reconciliation |
 
-| C1 — Dynamic current policy | Counterfactual over the framework transition horizon | Annual 2025–2038 state path | Current-policy vintage plus enacted changes explicitly entered | Difference-in-outcomes and cumulative cost |
+| C1 - Dynamic current policy | Counterfactual over the framework transition horizon | Annual 2025–2038 state path | Current-policy vintage plus enacted changes explicitly entered | Difference-in-outcomes and cumulative cost |
 
-| C2 — Existing-system stress | Test resilience under shared shocks | Shock onset, duration, recovery | Existing architecture with shock-specific response | Cyber, recession, pandemic, supply, workforce, legal scenarios |
+| C2 - Existing-system stress | Test resilience under shared shocks | Shock onset, duration, recovery | Existing architecture with shock-specific response | Cyber, recession, pandemic, supply, workforce, legal scenarios |
 
-| F0/F1/F2 — Framework paths | Central, low/high, and transition/stress comparisons | PH-P0–PH-P8 and calendar years | Framework mechanisms and gate outcomes | Performance, risk, and distributional comparison |
+| F0/F1/F2 - Framework paths | Central, low/high, and transition/stress comparisons | PH-P0–PH-P8 and calendar years | Framework mechanisms and gate outcomes | Performance, risk, and distributional comparison |
 Table D2-7. Initial comparator record set
 
 | record_key | Metric | Value | Unit | Year | Class | Source | Links | Limit |
@@ -1513,7 +1513,7 @@ Required cost sensitivities
 Population/eligibility denominator and territory treatment.
 Maturity-year GDP and real-price convention.
 Released unmet demand, price elasticity, and capacity-induced utilization.
-Workforce compensation, training throughput, vacancy, and productivity—with TPP-6.6 alternatives separated.
+Workforce compensation, training throughput, vacancy, and productivity - with TPP-6.6 alternatives separated.
 Hospital readiness, essential-service, rural, capital, teaching, and stabilization requirements.
 LTC scope, home/community share, informal-care substitution, and workforce intensity.
 Drug price, innovation funding, public manufacturing, shortage, and dual-source assumptions.
@@ -3250,7 +3250,7 @@ Table D4-5. Data access and sensitivity classes
 
 | R0 | Public | Approved public records and aggregates | Anonymous access; publication review and version history | Public dashboards, formula registry, certified aggregate metrics |
 
-| R1 | Operational—non-sensitive | Low-risk operational reference data | Role or service account; integrity logging | Facility directory, code sets, public capacity status |
+| R1 | Operational - non-sensitive | Low-risk operational reference data | Role or service account; integrity logging | Facility directory, code sets, public capacity status |
 
 | R2 | Confidential operational | Nonpublic financial, contracting, workforce, or security-adjacent data | Need-to-know; purpose binding; disclosure review | Hospital budget workpapers, workforce plans |
 
@@ -3917,55 +3917,55 @@ Table D4-14. Cost-family ownership and record counts
 | CP-OFF | Offsets | 20 | NHASB/HFASB | SG-ADM |
 5.4.2 Complete parameter catalog
 The source defines all 310 CP records but explicitly states units for only a subset. The catalog preserves explicit units and labels inferred classes. 'Required' means a schema/calibration task, not permission to guess. Exact units should become machine-enforced in Appendix Q's simulation input schema.
-5.4.2.1 CP-TOT — Total system
+5.4.2.1 CP-TOT - Total system
 Table D4-CP-TOT. 10 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-TOT-001 | Total annual system cost — Total public, residual private, and patient-paid health-system cost in year t. | USD_2024/year | derived output | flow | Source explicit; price-year normalized | FA/calibrated output: $4.75T central; $4.30T–$5.25T range; 2024 USD |
+| CP-TOT-001 | Total annual system cost - Total public, residual private, and patient-paid health-system cost in year t. | USD_2024/year | derived output | flow | Source explicit; price-year normalized | FA/calibrated output: $4.75T central; $4.30T–$5.25T range; 2024 USD |
 
-| CP-TOT-002 | Per-capita system cost — C_total(t) divided by covered population. | USD_2024/person/year | state/input | stock/state | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-TOT-002 | Per-capita system cost - C_total(t) divided by covered population. | USD_2024/person/year | state/input | stock/state | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-TOT-003 | System cost as GDP share — C_total(t) divided by GDP(t). | percent GDP | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-TOT-003 | System cost as GDP share - C_total(t) divided by GDP(t). | percent GDP | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-TOT-004 | Public share of system cost — Publicly financed health spending divided by total system cost. | percent | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-TOT-004 | Public share of system cost - Publicly financed health spending divided by total system cost. | percent | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-TOT-005 | Residual private spending — Spending through certified supplemental/substitute coverage and noncovered services. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-TOT-005 | Residual private spending - Spending through certified supplemental/substitute coverage and noncovered services. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-TOT-006 | Patient point-of-care spending — Direct patient payments for covered and noncovered care. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-TOT-006 | Patient point-of-care spending - Direct patient payments for covered and noncovered care. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-TOT-007 | Transition-adjusted annual cost — Operating cost plus annualized transition cost. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | FA: $4.90T–$5.05T/year first-decade transition-adjusted |
+| CP-TOT-007 | Transition-adjusted annual cost - Operating cost plus annualized transition cost. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | FA: $4.90T–$5.05T/year first-decade transition-adjusted |
 
-| CP-TOT-008 | Net savings versus baseline — Baseline national health spending minus framework total cost. | USD_2024/year | derived output | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-TOT-008 | Net savings versus baseline - Baseline national health spending minus framework total cost. | USD_2024/year | derived output | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-TOT-009 | Gross added framework spending — New spending added by expanded benefits, units, workforce, safety, transition, and governance. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-TOT-009 | Gross added framework spending - New spending added by expanded benefits, units, workforce, safety, transition, and governance. | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-TOT-010 | Gross framework savings — Savings from administrative simplification, purchasing, hospital reform, ED diversion, and other offsets. | USD_2024/year | derived output | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
-5.4.2.2 CP-POP — Population and macro
+| CP-TOT-010 | Gross framework savings - Savings from administrative simplification, purchasing, hospital reform, ED diversion, and other offsets. | USD_2024/year | derived output | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+5.4.2.2 CP-POP - Population and macro
 Table D4-CP-POP. 10 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-POP-001 | Covered population — Number of persons covered by National Health Assurance. | count or count/year | state/input | stock/state | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-POP-001 | Covered population - Number of persons covered by National Health Assurance. | count or count/year | state/input | stock/state | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-POP-002 | Eligibility churn rate — Share of population with eligibility status change in year t. | percent/year | state/input | stock/state | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-POP-002 | Eligibility churn rate - Share of population with eligibility status change in year t. | percent/year | state/input | stock/state | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-POP-003 | Age-risk distribution — Covered population by age and risk band. | count or count/year | state/input | stock/state | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-POP-003 | Age-risk distribution - Covered population by age and risk band. | count or count/year | state/input | stock/state | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-POP-004 | Chronic disease prevalence vector — Prevalence of priority chronic diseases by region and population group. | fraction, ratio, or index (protocol-specific) | state/input | stock/state | Inferred class; exact denominator/unit required | Source-defined parameter; unit and value/calibration required |
+| CP-POP-004 | Chronic disease prevalence vector - Prevalence of priority chronic diseases by region and population group. | fraction, ratio, or index (protocol-specific) | state/input | stock/state | Inferred class; exact denominator/unit required | Source-defined parameter; unit and value/calibration required |
 
-| CP-POP-005 | Unmet demand release factor — Increase in utilization caused by newly affordable access. | multiplier | input/derived—resolve | parameter or event | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-POP-005 | Unmet demand release factor - Increase in utilization caused by newly affordable access. | multiplier | input/derived - resolve | parameter or event | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-POP-006 | Zero-cost utilization elasticity — Change in service utilization caused by reduced point-of-care price. | elasticity | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-POP-006 | Zero-cost utilization elasticity - Change in service utilization caused by reduced point-of-care price. | elasticity | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-POP-007 | Regional morbidity adjustment — Relative cost adjustment by regional disease burden. | index | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-POP-007 | Regional morbidity adjustment - Relative cost adjustment by regional disease burden. | index | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-POP-008 | Rural access cost multiplier — Incremental cost factor for rural and frontier delivery. | multiplier | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-POP-008 | Rural access cost multiplier - Incremental cost factor for rural and frontier delivery. | multiplier | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-POP-009 | Disability support intensity index — Relative service intensity for disabled beneficiaries. | index | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-POP-009 | Disability support intensity index - Relative service intensity for disabled beneficiaries. | index | input parameter | parameter | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-POP-010 | Aging pressure factor — Annual utilization or cost increase due to population aging. | percent/year | state/input | stock/state | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
-5.4.2.3 CP-CLM — Claims and payment
+| CP-POP-010 | Aging pressure factor - Annual utilization or cost increase due to population aging. | percent/year | state/input | stock/state | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+5.4.2.3 CP-CLM - Claims and payment
 Table D4-CP-CLM. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -3974,9 +3974,9 @@ Table D4-CP-CLM. 15 parameter records
 
 | CP-CLM-002 | Eligibility transaction cost | USD_2024/transaction | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-CLM-003 | Medical claim volume | claims/year | input/derived—resolve | parameter or event | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-CLM-003 | Medical claim volume | claims/year | input/derived - resolve | parameter or event | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
-| CP-CLM-004 | Pharmacy claim volume | claims/year | input/derived—resolve | parameter or event | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
+| CP-CLM-004 | Pharmacy claim volume | claims/year | input/derived - resolve | parameter or event | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
 | CP-CLM-005 | Clean claim processing cost | USD_2024/claim | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
@@ -3999,75 +3999,75 @@ Table D4-CP-CLM. 15 parameter records
 | CP-CLM-014 | Claims platform fixed operating cost | USD_2024/year | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
 
 | CP-CLM-015 | Treasury disbursement transaction cost | USD_2024/payment | input or derived ledger | flow | Source explicit; price-year normalized | Source-defined parameter; value/calibration required |
-5.4.2.4 CP-HOSP — Hospitals
+5.4.2.4 CP-HOSP - Hospitals
 Table D4-CP-HOSP. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-HOSP-001 | Hospital global budget base — Certified annual operating budget per hospital. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-001 | Hospital global budget base - Certified annual operating budget per hospital. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-002 | Hospital global budget total — Sum of certified hospital budgets. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-002 | Hospital global budget total - Sum of certified hospital budgets. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-003 | Emergency readiness cost — Annual cost to maintain emergency capacity. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-003 | Emergency readiness cost - Annual cost to maintain emergency capacity. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-004 | Essential service-line cost — Annual cost by protected service line. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-004 | Essential service-line cost - Annual cost by protected service line. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-005 | Rural hospital readiness premium — Incremental payment for rural essential capacity. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-005 | Rural hospital readiness premium - Incremental payment for rural essential capacity. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-006 | Hospital staffing compliance cost — Incremental labor cost to meet staffing safety floors. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-006 | Hospital staffing compliance cost - Incremental labor cost to meet staffing safety floors. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-007 | Hospital capital replacement allowance — Annual capital budget required to maintain infrastructure. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-007 | Hospital capital replacement allowance - Annual capital budget required to maintain infrastructure. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-008 | Hospital conversion stabilization payment — Temporary payment to keep hospital inside stabilization corridor. | TBD canonical unit | input or derived ledger | flow | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-008 | Hospital conversion stabilization payment - Temporary payment to keep hospital inside stabilization corridor. | TBD canonical unit | input or derived ledger | flow | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-009 | Global budget variance — Actual spending minus certified budget. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-009 | Global budget variance - Actual spending minus certified budget. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-010 | Facility-fee elimination savings — Spending reduction from eliminating routine outpatient facility fees. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-010 | Facility-fee elimination savings - Spending reduction from eliminating routine outpatient facility fees. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-011 | Related-party extraction savings — Spending reduction from limiting related-party payments and extraction. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-011 | Related-party extraction savings - Spending reduction from limiting related-party payments and extraction. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-012 | Avoidable admission volume — Number of admissions avoided through improved care. | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-012 | Avoidable admission volume - Number of admissions avoided through improved care. | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-013 | Avoided admission unit savings — Average cost avoided per preventable admission. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-013 | Avoided admission unit savings - Average cost avoided per preventable admission. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-014 | Readmission reduction savings — Savings from reduced unplanned 30-day readmissions. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-014 | Readmission reduction savings - Savings from reduced unplanned 30-day readmissions. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-015 | Hospital service-line closure replacement cost — Cost to replace an essential service line. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.5 CP-CLIN — Clinical workforce/services
+| CP-HOSP-015 | Hospital service-line closure replacement cost - Cost to replace an essential service line. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+5.4.2.5 CP-CLIN - Clinical workforce/services
 Table D4-CP-CLIN. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-CLIN-001 | Primary care panel cost — Annual cost per attributed patient. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-001 | Primary care panel cost - Annual cost per attributed patient. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-002 | Primary care complex-care premium — Incremental cost for complex longitudinal care. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-002 | Primary care complex-care premium - Incremental cost for complex longitudinal care. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-003 | Physician compensation cost — Total salary/payment cost for physicians by specialty. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-003 | Physician compensation cost - Total salary/payment cost for physicians by specialty. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-004 | Nonphysician clinician compensation cost — Total compensation for nurses, NPs, PAs, pharmacists, paramedics, therapists, and technicians. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-004 | Nonphysician clinician compensation cost - Total compensation for nurses, NPs, PAs, pharmacists, paramedics, therapists, and technicians. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-005 | Specialist in-person consult cost — Cost per completed in-person specialist visit. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-005 | Specialist in-person consult cost - Cost per completed in-person specialist visit. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-006 | Specialist e-consult cost — Cost per specialist e-consult. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-006 | Specialist e-consult cost - Cost per specialist e-consult. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-007 | Tele-specialist visit cost — Cost per tele-specialist visit. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-007 | Tele-specialist visit cost - Cost per tele-specialist visit. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-008 | Specialist protected-slot cost — Annual cost of urgent/e-consult reserved capacity. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-008 | Specialist protected-slot cost - Annual cost of urgent/e-consult reserved capacity. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-009 | Specialist-routing infrastructure cost — Cost of referral platform, triage staff, and capacity ledger. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-009 | Specialist-routing infrastructure cost - Cost of referral platform, triage staff, and capacity ledger. | USD_2024/year or USD_2024/event | state/input | stock/state | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-010 | Specialist avoidable-visit savings — Savings from e-consult and first-line workups replacing in-person visits. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-010 | Specialist avoidable-visit savings - Savings from e-consult and first-line workups replacing in-person visits. | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-011 | Clinical productivity factor — Encounters safely closed per clinician-hour relative to baseline. | capacity/activity unit (protocol-specific) | input/derived—resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-011 | Clinical productivity factor - Encounters safely closed per clinician-hour relative to baseline. | capacity/activity unit (protocol-specific) | input/derived - resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-012 | Specialty bottleneck cost premium — Incremental cost caused by specialty shortages. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-012 | Specialty bottleneck cost premium - Incremental cost caused by specialty shortages. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-013 | Rural clinician premium — Incremental compensation required to staff rural areas. | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-013 | Rural clinician premium - Incremental compensation required to staff rural areas. | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-014 | Clinician burnout turnover cost — Replacement, vacancy, productivity, and training cost from burnout. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-014 | Clinician burnout turnover cost - Replacement, vacancy, productivity, and training cost from burnout. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-015 | Malpractice/injury compensation cost — Cost of patient injury compensation or system liability program. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.6 CP-UNIT — Diagnostic-treatment units
+| CP-CLIN-015 | Malpractice/injury compensation cost - Cost of patient injury compensation or system liability program. | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+5.4.2.6 CP-UNIT - Diagnostic-treatment units
 Table D4-CP-UNIT. 24 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4096,7 +4096,7 @@ Table D4-CP-UNIT. 24 parameter records
 
 | CP-UNIT-012 | Type D capital cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-UNIT-013 | Unit visit volume by type | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-UNIT-013 | Unit visit volume by type | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-UNIT-014 | Unit variable cost per visit | USD_2024 / named denominator | input or derived ledger | flow | Inferred; denominator required | Source-defined parameter; unit and value/calibration required |
 
@@ -4119,7 +4119,7 @@ Table D4-CP-UNIT. 24 parameter records
 | CP-UNIT-023 | Unit bounce-back cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-UNIT-024 | Unit public-health surge cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.7 CP-LTC — Long-term care
+5.4.2.7 CP-LTC - Long-term care
 Table D4-CP-LTC. 12 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4128,7 +4128,7 @@ Table D4-CP-LTC. 12 parameter records
 
 | CP-LTC-002 | LTC assessment cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-LTC-003 | Home-care hours authorized | TBD canonical unit | input/derived—resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+| CP-LTC-003 | Home-care hours authorized | TBD canonical unit | input/derived - resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-004 | Home-care cost per hour | USD_2024 / named denominator | input or derived ledger | flow | Inferred; denominator required | Source-defined parameter; unit and value/calibration required |
 
@@ -4140,19 +4140,19 @@ Table D4-CP-LTC. 12 parameter records
 
 | CP-LTC-008 | DME and home modification cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-LTC-009 | LTC workforce premium | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-LTC-009 | LTC workforce premium | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-010 | LTC appeal adjustment cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-011 | Avoided institutionalization savings | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-012 | LTC safety failure cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.8 CP-RX — Drugs/pharmacy
+5.4.2.8 CP-RX - Drugs/pharmacy
 Table D4-CP-RX. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-RX-001 | Prescription fill volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-RX-001 | Prescription fill volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-RX-002 | Weighted average net drug unit cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4164,7 +4164,7 @@ Table D4-CP-RX. 15 parameter records
 
 | CP-RX-006 | Public manufacturing variable cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-RX-007 | Public manufacturing capital amortization | TBD canonical unit | input/derived—resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+| CP-RX-007 | Public manufacturing capital amortization | TBD canonical unit | input/derived - resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
 | CP-RX-008 | Strategic stockpile carrying cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4181,20 +4181,20 @@ Table D4-CP-RX. 15 parameter records
 | CP-RX-014 | Formulary exception cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-RX-015 | Drug quality failure cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.9 CP-DX — Devices, labs and diagnostics
+5.4.2.9 CP-DX - Devices, labs and diagnostics
 Table D4-CP-DX. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-DX-001 | Lab test volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-DX-001 | Lab test volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-002 | Average lab test cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-DX-003 | Point-of-care test volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-DX-003 | Point-of-care test volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-004 | Point-of-care test cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-DX-005 | Imaging volume by modality | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-DX-005 | Imaging volume by modality | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-006 | Imaging cost by modality | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4215,16 +4215,16 @@ Table D4-CP-DX. 15 parameter records
 | CP-DX-014 | Missed-diagnosis cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-015 | Diagnostic workforce cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.10 CP-BH — Behavioral health
+5.4.2.10 CP-BH - Behavioral health
 Table D4-CP-BH. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-BH-001 | Behavioral health eligible demand | capacity/activity unit (protocol-specific) | input/derived—resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
+| CP-BH-001 | Behavioral health eligible demand | capacity/activity unit (protocol-specific) | input/derived - resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-002 | First-contact cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-003 | Therapy session volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-BH-003 | Therapy session volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-004 | Therapy session cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4232,7 +4232,7 @@ Table D4-CP-BH. 15 parameter records
 
 | CP-BH-006 | Psychiatry visit cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-007 | Crisis response event volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-BH-007 | Crisis response event volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-008 | Crisis response cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4240,35 +4240,35 @@ Table D4-CP-BH. 15 parameter records
 
 | CP-BH-010 | Medication-assisted treatment cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-011 | Behavioral health unmet-demand release factor | capacity/activity unit (protocol-specific) | input/derived—resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
+| CP-BH-011 | Behavioral health unmet-demand release factor | capacity/activity unit (protocol-specific) | input/derived - resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-012 | Behavioral health avoided ED/hospital savings | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-013 | Behavioral health workforce premium | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-BH-013 | Behavioral health workforce premium | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-014 | Privacy segmentation operating cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-015 | Behavioral health safety failure cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.11 CP-DVH — Dental, vision and hearing
+5.4.2.11 CP-DVH - Dental, vision and hearing
 Table D4-CP-DVH. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
-| CP-DVH-001 | Basic dental visit volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-001 | Basic dental visit volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-002 | Basic dental visit cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-003 | Advanced dental procedure volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-003 | Advanced dental procedure volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-004 | Advanced dental procedure cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-005 | Vision exam volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-005 | Vision exam volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-006 | Vision exam cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-007 | Standard eyewear/device cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-008 | Hearing exam volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-008 | Hearing exam volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-009 | Hearing exam cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4276,29 +4276,29 @@ Table D4-CP-DVH. 15 parameter records
 
 | CP-DVH-011 | DVH workforce cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-012 | DVH unmet-demand release factor | capacity/activity unit (protocol-specific) | input/derived—resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-012 | DVH unmet-demand release factor | capacity/activity unit (protocol-specific) | input/derived - resolve | parameter or event | Inferred; service denominator required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-013 | Preventable medical savings from DVH care | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-014 | DVH device procurement savings | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-015 | DVH access expansion capital cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.12 CP-EMS — Emergency medical services
+5.4.2.12 CP-EMS - Emergency medical services
 Table D4-CP-EMS. 12 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
 | CP-EMS-001 | EMS readiness cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-002 | EMS response volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-002 | EMS response volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-003 | EMS response cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-004 | Medical transport trip volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-004 | Medical transport trip volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-005 | Medical transport trip cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-006 | Air ambulance event volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-006 | Air ambulance event volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-007 | Air ambulance event cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4306,12 +4306,12 @@ Table D4-CP-EMS. 12 parameter records
 
 | CP-EMS-009 | Avoided transport savings | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-010 | Rural escalation premium | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-010 | Rural escalation premium | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-011 | Disaster/surge EMS cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-012 | EMS-unit interface cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.13 CP-PH — Public health
+5.4.2.13 CP-PH - Public health
 Table D4-CP-PH. 12 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4339,7 +4339,7 @@ Table D4-CP-PH. 12 parameter records
 | CP-PH-011 | Public health emergency response cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-PH-012 | Public health data integration cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.14 CP-IT — Information, cyber and AI
+5.4.2.14 CP-IT - Information, cyber and AI
 Table D4-CP-IT. 18 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4379,7 +4379,7 @@ Table D4-CP-IT. 18 parameter records
 | CP-IT-017 | Technical debt remediation cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-IT-018 | Public dashboard operating cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.15 CP-GOV — Governance and oversight
+5.4.2.15 CP-GOV - Governance and oversight
 Table D4-CP-GOV. 20 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4392,11 +4392,11 @@ Table D4-CP-GOV. 20 parameter records
 
 | CP-GOV-004 | CHAO operating cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-GOV-005 | Ombudsman case volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-GOV-005 | Ombudsman case volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-006 | Ombudsman cost per case | USD_2024 / named denominator | input or derived ledger | flow | Inferred; denominator required | Source-defined parameter; unit and value/calibration required |
 
-| CP-GOV-007 | Appeal volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-GOV-007 | Appeal volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-008 | Appeal cost per case | USD_2024 / named denominator | input or derived ledger | flow | Inferred; denominator required | Source-defined parameter; unit and value/calibration required |
 
@@ -4414,7 +4414,7 @@ Table D4-CP-GOV. 20 parameter records
 
 | CP-GOV-015 | Fraud investigation cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-GOV-016 | Fraud recovery amount | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-GOV-016 | Fraud recovery amount | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-017 | Rule review cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4423,7 +4423,7 @@ Table D4-CP-GOV. 20 parameter records
 | CP-GOV-019 | Public trust survey cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-020 | Legal defense and contingency cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.16 CP-RD — Biomedical R&D
+5.4.2.16 CP-RD - Biomedical R&D
 Table D4-CP-RD. 12 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4450,8 +4450,8 @@ Table D4-CP-RD. 12 parameter records
 
 | CP-RD-011 | Innovation avoided-care savings | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-RD-012 | Licensing noncompliance recovery | TBD canonical unit | input/derived—resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
-5.4.2.17 CP-EDU — Education and workforce
+| CP-RD-012 | Licensing noncompliance recovery | TBD canonical unit | input/derived - resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+5.4.2.17 CP-EDU - Education and workforce
 Table D4-CP-EDU. 15 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4485,20 +4485,20 @@ Table D4-CP-EDU. 15 parameter records
 | CP-EDU-014 | Specialist bottleneck premium cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-EDU-015 | Displaced worker retraining cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.18 CP-TRN — Transition
+5.4.2.18 CP-TRN - Transition
 Table D4-CP-TRN. 20 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
 
 | CP-TRN-001 | Transition authority operating cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-TRN-002 | Patient continuity case volume | count or count/year | input/derived—resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
+| CP-TRN-002 | Patient continuity case volume | count or count/year | input/derived - resolve | parameter or event | Inferred; stock/flow grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-003 | Patient continuity cost per case | USD_2024 / named denominator | input or derived ledger | flow | Inferred; denominator required | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-004 | Critical medication continuity cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-TRN-005 | Provider liquidity reserve authority | TBD canonical unit | input/derived—resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+| CP-TRN-005 | Provider liquidity reserve authority | TBD canonical unit | input/derived - resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-006 | Net provider liquidity outlay | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4529,7 +4529,7 @@ Table D4-CP-TRN. 20 parameter records
 | CP-TRN-019 | Transition legal safe-harbor administration cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-020 | Transition complaint remediation cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.19 CP-FIN — Financing and reserves
+5.4.2.19 CP-FIN - Financing and reserves
 Table D4-CP-FIN. 20 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4538,7 +4538,7 @@ Table D4-CP-FIN. 20 parameter records
 
 | CP-FIN-002 | Existing federal spending redirect | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-003 | State/local maintenance contribution | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-003 | State/local maintenance contribution | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-004 | Employer contribution receipts | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
@@ -4552,7 +4552,7 @@ Table D4-CP-FIN. 20 parameter records
 
 | CP-FIN-009 | Wealth collection efficiency | fraction, ratio, or index (protocol-specific) | input parameter | parameter | Inferred class; exact denominator/unit required | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-010 | Wealth tax avoidance leakage | TBD canonical unit | input/derived—resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-010 | Wealth tax avoidance leakage | TBD canonical unit | input/derived - resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-011 | Trust fund operating reserve balance | TBD canonical unit | state/input | stock/state | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
@@ -4560,20 +4560,20 @@ Table D4-CP-FIN. 20 parameter records
 
 | CP-FIN-013 | Permanent endowment balance | TBD canonical unit | state/input | stock/state | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-014 | Trust fund transfer | TBD canonical unit | input/derived—resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-014 | Trust fund transfer | TBD canonical unit | input/derived - resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-015 | Reserve drawdown | TBD canonical unit | input/derived—resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-015 | Reserve drawdown | TBD canonical unit | input/derived - resolve | parameter or event | Open unit resolution | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-016 | Reserve contribution | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-016 | Reserve contribution | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-017 | Ordinary taxpayer burden share | fraction, ratio, or index (protocol-specific) | input parameter | parameter | Inferred class; exact denominator/unit required | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-018 | Employer net savings | USD_2024/year or USD_2024/event | derived output | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-019 | Worker wage pass-through amount | USD_2024/year or USD_2024/event | input/derived—resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-019 | Worker wage pass-through amount | USD_2024/year or USD_2024/event | input/derived - resolve | parameter or event | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-020 | Tax stabilizer activation cost | USD_2024/year or USD_2024/event | input or derived ledger | flow | Inferred; aggregation grain required | Source-defined parameter; unit and value/calibration required |
-5.4.2.20 CP-OFF — Offsets
+5.4.2.20 CP-OFF - Offsets
 Table D4-CP-OFF. 20 parameter records
 
 | ID | Definition | Canonical unit | Model role | Temporal | Unit status | Value/source status |
@@ -4686,7 +4686,7 @@ Table D4-15. Versioned existing-system comparator register
 | baseline.ltc.coverage | Custodial long-term care | Generally not covered by Medicare or most insurance | coverage rule | 2025 publication | September 2025 | ED/T-ED-018 | SR-LTC; scope boundary | Qualitative comparator rule; Medicaid/MA exceptions exist |
 
 | baseline.current_policy.nhe_gdp.2034 | Projected NHE share under current policy | 20.6% | percent GDP | 2034 forecast | June 2026 | ED/T-ED-006 | SCN comparator dynamic | Projection vintage June 2026 |
-COMPARATOR SYMMETRY  A framework target may not be compared with an existing-system observation as though both were achieved values. Primary outputs show observed/current-policy comparator distributions, NHAF simulated distributions, target thresholds, and the difference between systems—each with period, definition and uncertainty.
+COMPARATOR SYMMETRY  A framework target may not be compared with an existing-system observation as though both were achieved values. Primary outputs show observed/current-policy comparator distributions, NHAF simulated distributions, target thresholds, and the difference between systems - each with period, definition and uncertainty.
 5.5.1 Comparator acquisition gaps
 Table D4-16. Calibration gaps and controlled acquisition plan
 
@@ -5038,9 +5038,9 @@ Table D5A-10. Demand absorption ranges
 
 | all_ed | All ED visits | 10%–20% | MP: source expected mature range |
 
-| all_encounters_initial | All encounters—initial | 25%–40% | MP: source expected range |
+| all_encounters_initial | All encounters - initial | 25%–40% | MP: source expected range |
 
-| all_encounters_mature | All encounters—mature | 40%–55% | MP: source expected range |
+| all_encounters_mature | All encounters - mature | 40%–55% | MP: source expected range |
 Table D5A-10A. Exact source performance targets governing Section 6.2
 
 | Metric | Measure | Source target | Status |
@@ -5162,7 +5162,7 @@ Section control record
 | Principal risks | Queue collapse; incomplete packets; false urgency; unsafe deferral; capacity double counting; lost referral; inequitable wait; AI routing bias; patient constraints ignored. |
 
 | Simulation implication | Model specialty-region demand, route level, urgency, packet completeness, service-time distributions, protected capacity, queue/offer/completion, reclassification, safety events, equity and workforce expansion. |
-The specialist routing backplane is a shared national-regional service combining e-consults, tele-specialty, diagnostic-first pathways, structured referral packets, urgency classes, regional specialty capacity ledgers and protected urgent specialist slots. It does not make specialist capacity infinite; it makes demand, diagnostic readiness, urgency, available capacity, responsibility and failure visible. Its core efficiency rule—complete first-line work before routine specialist use—is always subordinate to the safety counter-rule: red flags, instability and time-sensitive disease cannot be held to protect capacity.
+The specialist routing backplane is a shared national-regional service combining e-consults, tele-specialty, diagnostic-first pathways, structured referral packets, urgency classes, regional specialty capacity ledgers and protected urgent specialist slots. It does not make specialist capacity infinite; it makes demand, diagnostic readiness, urgency, available capacity, responsibility and failure visible. Its core efficiency rule - complete first-line work before routine specialist use - is always subordinate to the safety counter-rule: red flags, instability and time-sensitive disease cannot be held to protect capacity.
 6.3.1 Routing ladder
 Table D5A-15. Level 0–7 routing ladder
 
@@ -5190,9 +5190,9 @@ Table D5A-16. Source-controlled urgency classes
 
 | E | Emergency | Immediate EMS/ED | No queue; direct transfer and handoff |
 
-| U1 | Urgent—same day | Same day | Protected urgent specialist/hospital capacity |
+| U1 | Urgent - same day | Same day | Protected urgent specialist/hospital capacity |
 
-| U2 | Urgent—stable | 24–72 hours | Protected urgent capacity; monitor for deterioration |
+| U2 | Urgent - stable | 24–72 hours | Protected urgent capacity; monitor for deterioration |
 
 | T-ED-001 | Expedited | 1–2 weeks | Prioritized regional queue |
 
@@ -5613,7 +5613,7 @@ Table D5A-28. Drug/device/diagnostic product states
 National purchasing uses aggregated demand and public access terms but retains supplier, product, quality, geography and timing detail needed for resilience.
 Critical products require dual-source strategy, secure API/source coverage, inventory visibility and a response plan. A contract name is not equivalent to physically available, quality-released supply.
 PMC shall place all 200 controlled families in routine production through PMC-owned facilities or PMC-controlled public manufacturing affiliates; separate dual-source partners provide redundancy but do not replace the public-production obligation. Quality release, recall, source, lot and capacity are visible; public ownership does not relax quality controls.
-Shortage response may allocate supply, authorize therapeutic substitution, buy emergently, invoke alternate contracts, expand PMC/contract production, coordinate imports under law, or prioritize clinically—but every access decision is reviewable.
+Shortage response may allocate supply, authorize therapeutic substitution, buy emergently, invoke alternate contracts, expand PMC/contract production, coordinate imports under law, or prioritize clinically - but every access decision is reviewable.
 Devices and diagnostics maintain catalog, standards, price, inventory/capacity, maintenance/quality, interoperability and patient-result linkage; high-cost pass-through remains separately reconciled under OI-031.
 6.5.5 Laboratory, device and diagnostic stewardship
 
@@ -5801,7 +5801,7 @@ NPCB publishes compensation bands and authorized adjustments for scarcity, compl
 NCSWB publishes minimum scope floors by role and function with training, competency, supervision, escalation, documentation, data-access and liability requirements. Regions may exceed a floor through controlled evidence, not fall below it by inertia.
 NHWECA funds scholarships, residencies, fellowships, advanced-role programs, diagnostic workforce, continuing education and training hubs. Public-service obligations specify function/location/duration plus hardship, disability, family, appeal and alternative-service rules.
 RS-CORPS packages placement with housing, family/spousal support, supervision, local pipeline, tele-support, transport and retention measures; a signing premium alone is not modeled as durable rural capacity.
-HATC records eligible displaced workers, existing skills, income bridge, training offer, completion, placement quality and retention. Placement means paid work or approved training with a verified start—not a referral or application.
+HATC records eligible displaced workers, existing skills, income bridge, training offer, completion, placement quality and retention. Placement means paid work or approved training with a verified start - not a referral or application.
 6.6.5 Wellbeing, safety culture and anti-gaming
 Burnout-constrained capacity  safe_capacity = nominal_capacity x (1 - absence - turnover_loss - unsafe_overtime_penalty - burnout_impairment)
 The model does not create productivity by extending unsafe hours. Parameters are empirically calibrated and tested in sensitivity analysis; they are not assumed benefits of public employment.
@@ -5860,7 +5860,7 @@ Section control record
 | Principal risks | Released unmet demand; unsafe home substitution; caregiver overload; BH crisis delay; sensitive-data breach; DVH/device backlog; EMS underreadiness; public-health fragmentation; rural/tribal inequity. |
 
 | Simulation implication | Model eligibility, latent/released demand, assessment/queue, service plan, workforce/capacity, site/device/transport, setting choice, continuity, safety events, appeal, outcome, equity, public-health shock and cost by domain. |
-Expanded benefits are not a single catch-all program. The National Long-Term Care Authority, National Behavioral Health Authority, National Dental, Vision, and Hearing Benefit Office, National EMS and Medical Transport Authority, and National Public Health and Prevention Authority each retain domain-specific clinical and operational responsibility while using the same public coverage, rights, data, payment, workforce, regional-capacity and assurance infrastructure. The common contract is a closed pathway from request through assessment, plan, capacity match, delivery, reassessment and appeal. A missing provider, device, transport option or caregiver is a capacity failure to be managed and reported—not an invisible benefit denial.
+Expanded benefits are not a single catch-all program. The National Long-Term Care Authority, National Behavioral Health Authority, National Dental, Vision, and Hearing Benefit Office, National EMS and Medical Transport Authority, and National Public Health and Prevention Authority each retain domain-specific clinical and operational responsibility while using the same public coverage, rights, data, payment, workforce, regional-capacity and assurance infrastructure. The common contract is a closed pathway from request through assessment, plan, capacity match, delivery, reassessment and appeal. A missing provider, device, transport option or caregiver is a capacity failure to be managed and reported - not an invisible benefit denial.
 6.7.1 Domain architecture and benefit contracts
 Table D5B-11. Expanded-benefit domains
 
@@ -6324,7 +6324,7 @@ Compacts allocate administration, data, workforce, facility, public-health, fina
 EPTO publishes employer contribution, payroll interface, effective date, legacy premium cessation, worker notice and wage-pass-through requirements by wave.
 Worker premium relief, employer contribution and wage pass-through are measured as separate flows. An employer cannot count benefit removal or an unrelated wage change as compliance without the controlled attribution method.
 HATC identifies eligible displaced insurance, PBM, billing and revenue-cycle workers before affected wind-down; provides skill assessment, income bridge, approved training/placement options, appeal and retention follow-up.
-Training and placement prioritize usable public-system functions—claims/payment, records, navigation, rights, analytics, compliance, procurement and care-support administration—without guaranteeing a specific job or preserving unnecessary administrative work.
+Training and placement prioritize usable public-system functions - claims/payment, records, navigation, rights, analytics, compliance, procurement and care-support administration - without guaranteeing a specific job or preserving unnecessary administrative work.
 SCN-EMP-FAIL applies enforcement, restitution/correction, worker support and public reporting while preserving the broader conversion unless the failure breaches a wave threshold.
 6.9.7 Legal safe harbor, complaints and sunset
 Transition safe harbors protect good-faith compliance with an approved conversion protocol from conflicting legacy process duties only to the extent specified by statute. They do not waive patient safety, civil rights, privacy, fraud, mandatory payment, labor rights, professional accountability or the duty to preserve records. Patient and provider transition complaints receive accessible intake, urgency, owner, provisional relief, response clock, remedy and escalation to NHAC/Article I review.
@@ -6723,7 +6723,7 @@ At sunset, independent evaluation supports scale, repair, one bounded extension,
 Waiver evaluation completion  TPP-REG1 = approved_waivers_with_completed_independent_evaluation / approved_waivers_due_for_evaluation
 Target >=95%. Terminated or harmful waivers remain in the denominator when their evaluation is due; premature closure cannot erase evidence obligations.
 6.11.5 Appeals learning and public confidence repair
-Appeals and complaints are both individual remedy channels and sensors for systemic defect. A high-overturn category review tests whether the benefit rule, evidence standard, routing practice, notice, data, human review, staffing, queue, formula, or implementation incentive caused repeat error. The response identifies affected prior cases, supplies correction or remedy, changes the responsible control, and verifies recurrence reduction. Public confidence repair uses the same discipline: independent evidence, visible defect, accountable service change, remedy, and follow-up measurement—not a communications campaign detached from operations.
+Appeals and complaints are both individual remedy channels and sensors for systemic defect. A high-overturn category review tests whether the benefit rule, evidence standard, routing practice, notice, data, human review, staffing, queue, formula, or implementation incentive caused repeat error. The response identifies affected prior cases, supplies correction or remedy, changes the responsible control, and verifies recurrence reduction. Public confidence repair uses the same discipline: independent evidence, visible defect, accountable service change, remedy, and follow-up measurement - not a communications campaign detached from operations.
 Table D5C6A-11. Exact adaptation and repair requirements
 
 | Requirement | Exact obligation | Trace | Method |
@@ -6970,11 +6970,11 @@ Table D5C6A-19. Cross-domain dependency chains
 
 | Maturity-to-fiscal readiness | Certified obligations/receipts + reserves + collection + stabilizer + forecast error review | Benefit maturity cannot outrun durable financing | Hold certification; stabilizer/reserve/revenue repair |
 Earliest work-package completion  finish_i = start_i + duration_i(resources, defects, learning) subject to finish_predecessor + interface_lag <= start_i
-Dependencies include legal, data, formula, workforce, facility, supplier, training, rights, verifier, and regional readiness—not only technical predecessor tasks.
+Dependencies include legal, data, formula, workforce, facility, supplier, training, rights, verifier, and regional readiness - not only technical predecessor tasks.
 Regional service-ready capacity  ready_capacity[r,d,t] = min(staffed_capacity, facility_capacity, supply_capacity, payment_capacity, data_capacity, rights_and_safety_capacity)
 A domain cannot claim a service-ready population beyond its constraining component. Mobile, tele, contracted, cross-region, and manual capacity are explicit and cannot be counted twice.
 7.2.4 Regional waves, compacts, and equity
-Wave selection uses readiness, need, representativeness, rural/urban/tribal/frontier conditions, capacity, legal/compact state, data, provider liquidity, and equity—not political convenience or ease alone.
+Wave selection uses readiness, need, representativeness, rural/urban/tribal/frontier conditions, capacity, legal/compact state, data, provider liquidity, and equity - not political convenience or ease alone.
 Each wave declares population, geography, providers/facilities, benefits/functions, effective time, baseline, continuity assets, dual-run/bridge, support, communications, rights, complaints, incident thresholds, rollback point, and exit evidence.
 State/regional/tribal compacts allocate duties and resources while preserving national floors, direct federal fallback, and tribal-approved evidence/data governance. A state certification cannot substitute for tribal approval under VR-026.
 Representative pilot design includes safety-net, rural/frontier, high-need, disabled, low-digital-access, non-English-preferred, and historically underserved populations wherever relevant and lawful.
@@ -7057,7 +7057,7 @@ Table D5C6A-21. PH-G1–PH-G8 readiness gates
 | PH-G7 | Legitimacy readiness | Before large-scale coverage conversion | Rights, usable appeal, no-silent-rationing explanation, ombudsman, public reporting, trust baseline and safety-reporting controls meet approved floors | SR-RGT/SR-EQ; TPP-LEG1/USE1/USE2/12.4/12.6; KPP-TRUST1; case audits and representative tests | Hold/resize conversion; improve notice/navigation/relief; independent review; confidence repair |
 
 | PH-G8 | Transition continuity readiness | Before major legacy payer sunset | Active treatment/medication/record transfer, state/tribal compact or fallback, provider liquidity, open appeal/authorization ownership and legacy reconciliation meet approved floors | PR-TRN; KPP-T1/T2; TPP-12.1/12.5/TRIB1; pre/post patient-level evidence | Maintain legacy/dual-run/bridge duty; protect payments/care; correct transfer; recertify scoped sunset |
-Only source-explicit numeric progression floors are treated as fixed in this installment. Other gate components—such as payment timeliness, eligibility latency, same-day access, follow-up closure, critical vacancy, home-care sufficiency, trust baseline, and record/cyber floors—must be approved through their exact requirements, performance dictionaries, and OI-042 acceptance protocols before they become executable gate thresholds.
+Only source-explicit numeric progression floors are treated as fixed in this installment. Other gate components - such as payment timeliness, eligibility latency, same-day access, follow-up closure, critical vacancy, home-care sufficiency, trust baseline, and record/cyber floors - must be approved through their exact requirements, performance dictionaries, and OI-042 acceptance protocols before they become executable gate thresholds.
 7.3.3 Gateway floors versus maturity specifications
 Table D5C6A-22. Non-equivalent thresholds
 
@@ -7356,7 +7356,7 @@ Section control record
 | Principal risks | Boundary mismatch; transfer/reserve double count; incompatible denominators; offsets without causality; point-of-care confusion; transition/mature mixing; false precision. |
 
 | Simulation implication | Produce time-indexed public and total-system costs, per-capita/GDP ratios, category/region/group distributions, gross additions/offsets, transition/capital/reserve states, uncertainty, comparator difference and consistency flags. |
-The final framework is capacity-first, safety-first, and transition-protected rather than a maximum-savings design. Its mature cost is a controlled total-system assumption, not simply a federal budget estimate. Public financing replaces much—but not necessarily every dollar—of private premium, patient, employer, supplemental, substitute, noncovered, and administrative flows. The accounting model therefore consolidates economic cost while preserving the identities needed for appropriations, cash management, incidence, reserves, and transition.
+The final framework is capacity-first, safety-first, and transition-protected rather than a maximum-savings design. Its mature cost is a controlled total-system assumption, not simply a federal budget estimate. Public financing replaces much - but not necessarily every dollar - of private premium, patient, employer, supplemental, substitute, noncovered, and administrative flows. The accounting model therefore consolidates economic cost while preserving the identities needed for appropriations, cash management, incidence, reserves, and transition.
 Table D6B-5. Final controlled cost position
 
 | Quantity | Controlled value | Classification | Interpretation |
@@ -7553,7 +7553,7 @@ Table D6B-11. Machine-usable category record
 | uncertainty | central/range/distribution, correlation group, scenario sensitivity, calibration source, evidence date/version and confidence |
 
 | assurance | formula version, reconciliation tests, audit sample, equity/distribution analysis, owner/verifier and public release |
-A directly attributable cost is assigned to one category at source. A shared cost uses one registered driver—such as staffed FTE, transactions, storage/compute, square footage, utilization, population, readiness, or benefit share—and retains a shared-pool identity.
+A directly attributable cost is assigned to one category at source. A shared cost uses one registered driver - such as staffed FTE, transactions, storage/compute, square footage, utilization, population, readiness, or benefit share - and retains a shared-pool identity.
 Clinical labor embedded in a hospital, unit, public-health program or benefit may be reported by workforce role as a secondary view, but the consolidated primary category owns the dollar once.
 Capital cash outlay, placed-in-service asset, depreciation/amortization, maintenance and financing flow are separate fields. The chosen total-system view states which is included for the period.
 Regional equalization transfers do not create national cost; the service/capacity purchased by the recipient does. Internal transfers are eliminated while regional sources/uses remain visible.
@@ -7579,7 +7579,7 @@ Comparator and framework use matched scope, price year, population, morbidity an
 Gross-to-net  C_framework_net = C_baseline + CP-TOT-009(gross additions) - CP-TOT-010(gross savings)
 This identity is reported with interaction terms; gross savings are not simply summed when mechanisms overlap.
 8.2.4 Legitimacy, safety, and governance allocation
-PR-CST-010 requires 0.25%–0.50% of annual National Health Assurance spending after Phase 6 for legitimacy, safety, patient rights, transparency, appeals, and trust infrastructure. This is a tagged funding floor/range across eligible CP-GOV, CP-CLM and CP-IT events—not a statement that all governance, claims, courts, clinical safety, cyber, provider quality, or adaptation costs fit inside that percentage. OI-059 must define inclusions and denominator before gate or budget enforcement.
+PR-CST-010 requires 0.25%–0.50% of annual National Health Assurance spending after Phase 6 for legitimacy, safety, patient rights, transparency, appeals, and trust infrastructure. This is a tagged funding floor/range across eligible CP-GOV, CP-CLM and CP-IT events - not a statement that all governance, claims, courts, clinical safety, cyber, provider quality, or adaptation costs fit inside that percentage. OI-059 must define inclusions and denominator before gate or budget enforcement.
 Legitimacy allocation  legitimacy_share = eligible_tagged_legitimacy_safety_rights_transparency_appeals_trust_spending / annual_NHA_spending
 Target 0.25%–0.50% after P6. General category totals remain separately reported; no cost is tagged twice.
 8.2.5 Category cost-parameter allocation
@@ -7870,7 +7870,7 @@ Section control record
 | Principal risks | Structural deficit masked by draw; illiquid/overvalued assets; trigger delay; procyclical replenishment; regressive stabilizer; legal/impoundment shock; account commingling; false maturity certification. |
 
 | Simulation implication | Model account balances, asset eligibility/haircuts/returns/liquidity, receipts/obligations, volatile exposure, trigger states/actions, draws/replenishment, legal delay, burden, service continuity and stress recovery. |
-Fiscal sustainability means that legally available dedicated receipts and eligible reserves can satisfy certified obligations across normal and stressed conditions without shifting unacceptable burden to ordinary households or permitting silent care/payment failure. It is not a single balanced-budget snapshot. The model distinguishes a timing mismatch from a structural gap, operating stabilization from a severe shock, and a reserve stock from annual cost. It also preserves direct Treasury and judicial/default continuity when executive interference—not economics—causes nonpayment.
+Fiscal sustainability means that legally available dedicated receipts and eligible reserves can satisfy certified obligations across normal and stressed conditions without shifting unacceptable burden to ordinary households or permitting silent care/payment failure. It is not a single balanced-budget snapshot. The model distinguishes a timing mismatch from a structural gap, operating stabilization from a severe shock, and a reserve stock from annual cost. It also preserves direct Treasury and judicial/default continuity when executive interference - not economics - causes nonpayment.
 8.5.1 Fund and account architecture
 Table D6B-23. Fiscal accounts
 
@@ -7970,7 +7970,7 @@ HFASB produces baseline and adverse obligation/receipt/reserve/burden forecasts 
 Gate 4 evidence includes certified obligations and legally available receipts, asset-level reserve eligibility/haircuts, volatile-exposure method, collection and burden tests, stabilizer readiness, legal contingencies, forecast error, unresolved findings and protected-payment continuity.
 A pass is scoped and does not convert 98%/six-month gateway floors into maturity. P8 certification requires >=100% sufficiency, >=12 reserve months, >=92% wealth collection, <=5% ordinary burden and all applicable rights/safety/legal/continuity constraints.
 Post-pass monitoring reopens Gate 4 for invalid data/formula, material forecast error, reserve impairment, legal authority loss, impoundment, structural deficit, burden breach or payment continuity failure.
-Fiscal forecast error triggers SR-ADP-013 review and can change parameters, revenue administration, reserve plan, phase/benefit timing, authorized stabilizer or statutory design—but cannot erase observed error.
+Fiscal forecast error triggers SR-ADP-013 review and can change parameters, revenue administration, reserve plan, phase/benefit timing, authorized stabilizer or statutory design - but cannot erase observed error.
 Table D6B-27. Fiscal and financing parameter allocation
 
 | Family | Records | Controlled parameters |
@@ -8063,7 +8063,7 @@ Table D7A-05. Cross-title dependency view
 | Federalism/transition | XIII, XV, XIX | NHTCA; RHA; states; tribal authorities | compact, funding, migration, fallback | refusal; trust-duty erosion; orphan liability |
 
 | Durability/repair | XVII–XVIII | CHAO; NHASB; courts; Congress | default, trigger, remedy, formula, sunset | sabotage; rigidity; unauthorized change |
-SEVERABILITY RULE  Simulation and legislative drafting must test severability by preserved system function: coverage, payment, access, rights, data, transition, tribal duties and fiscal continuity—not only by whether isolated text survives.
+SEVERABILITY RULE  Simulation and legislative drafting must test severability by preserved system function: coverage, payment, access, rights, data, transition, tribal duties and fiscal continuity - not only by whether isolated text survives.
 9.2 Federal Conforming Changes
 WHY THIS SECTION EXISTS  Why it is needed: Existing federal statutes would otherwise leave conflicting payer, privacy, tax, labor, procurement, and benefit rules in force after enactment. Why this structure: Legal authorities are organized around enforceable dependencies and fallback paths so operational duties do not rest on implied power. Improvement mechanism: compared with the current fragmented arrangement, this section makes federal conforming changes explicit, allocates responsibility, and exposes the claim to requirements, verification, risk analysis, and simulation rather than leaving it as an aspiration.
 Section control record
@@ -8243,7 +8243,7 @@ Table D7A-09. Executive-hardening controls
 
 | EH-12 | State/regional fallback | Direct federal administration and continuity contracts are preauthorized | Compact refusal, breach or incapacity threatens service | Temporary federal operation with cure/reentry plan |
 9.4.1 Detection-to-remedy workflow
-Detect through operational logs, statutory clocks, certified obligations, staffing/quorum records, regulation calendars, public-data completeness, escrow status and complaints—not discretionary self-attestation alone.
+Detect through operational logs, statutory clocks, certified obligations, staffing/quorum records, regulation calendars, public-data completeness, escrow status and complaints - not discretionary self-attestation alone.
 Classify the event as lawful adjustment, operational incident, unlawful delay/impoundment, vacancy/nonfeasance, contractor obstruction, data suppression or legal constraint; preserve the evidence package.
 Apply the narrowest self-executing continuity default immediately: payment, acting succession, last-lawful/formula rule, escrow release, offline operation or direct-federal function.
 For an unlawful delay flag, initiate legal or administrative action within 24 hours under SR-LAW-004 while CHAO/NHASB/NHAC receive notice appropriate to their authority.
@@ -8598,7 +8598,7 @@ Table D7B-07. Simulation objectives
 
 | OBJ-05 | Risk propagation | Trace single and compound failures through interfaces, controls, fallbacks and recovery | causal event log, downstream effects and residual risk |
 
-| OBJ-06 | Decision support | Identify robust policies, capacity margins, trigger thresholds and research priorities—not produce a single-point prediction | scenario dominance, sensitivity, tradeoffs and value of information |
+| OBJ-06 | Decision support | Identify robust policies, capacity margins, trigger thresholds and research priorities - not produce a single-point prediction | scenario dominance, sensitivity, tradeoffs and value of information |
 11.1.1 Comparison contract
 Version both comparators. Existing-system continuation includes policy, demographic, price, capacity and behavioral assumptions; NHA includes phase, gate, capacity, financing, transition and legal states.
 Use real 2024 dollars for controlled economic comparisons and retain nominal cash views where financing/operations require them; reconcile total-system cost, public outlay, transfers and reserves.
@@ -9113,7 +9113,7 @@ Section control record
 | Principal risks | fragmentation; premature readiness claims; aggregation; verification capture |
 
 | Simulation implication | Encode conclusions as traceable records; CD/VD conclusions remain hypotheses/conditions in model and dashboards. |
-The system conclusion is conditional but substantive: the framework now defines a coherent national public assurance architecture with explicit delivery capacity, financing, rights, transition and repair mechanisms. Its central design choice is to treat coverage, capacity, payment, information, legitimacy and adaptation as coupled. The same choice creates a demanding verification burden—success cannot be inferred from enrollment, spending or a single national average.
+The system conclusion is conditional but substantive: the framework now defines a coherent national public assurance architecture with explicit delivery capacity, financing, rights, transition and repair mechanisms. Its central design choice is to treat coverage, capacity, payment, information, legitimacy and adaptation as coupled. The same choice creates a demanding verification burden - success cannot be inferred from enrollment, spending or a single national average.
 Table D8A-04. System conclusions
 
 | ID | Conclusion | Status | Basis / trace | Decision implication | Principal qualification |
@@ -9124,7 +9124,7 @@ Table D8A-04. System conclusions
 
 | 62-C03 | The four-unit network and specialist backplane provide a coherent front-door and referral design, but their regional adequacy is unproven until calibrated. | AD/CD | ARCH-NCDTN/NSAA; KPP-B7; KPP-B8/04; CP-UNIT/CLIN | Use units, queues, ledgers and urgency rules as the access model; retain regional siting/capacity as open. | Nominal facility counts can mask staffing, specialty or rural travel deficits. |
 
-| 62-C04 | Hospital global budgets are viable in the architecture only when paired with public-service charters, readiness funding, service-line protection and repairable formulas. | AD/VD | SR-HOSP; VR-017/021; RISK-HOSP-001 | Evaluate budget adequacy through access, staffing and continuity—not expenditure alone. | Underbudgeting may appear as savings while degrading essential capacity. |
+| 62-C04 | Hospital global budgets are viable in the architecture only when paired with public-service charters, readiness funding, service-line protection and repairable formulas. | AD/VD | SR-HOSP; VR-017/021; RISK-HOSP-001 | Evaluate budget adequacy through access, staffing and continuity - not expenditure alone. | Underbudgeting may appear as savings while degrading essential capacity. |
 
 | 62-C05 | Expanded benefits shift the binding constraint from nominal coverage toward workforce, service capacity, coordination and continuity. | AD/CD | LTC/BH/DVH/EMS/PH concepts; MOD-LTC/BH/DVH/EMS/WF | Model delivered service and unmet need, not benefit entitlement alone. | Covered but unavailable services can overstate system success. |
 
@@ -9187,12 +9187,12 @@ Table D8A-05. Fiscal conclusions
 
 | 63-C10 | The framework defines a testable financing and reserve design, but does not yet establish that the financing package will lawfully and reliably fund the controlled cost position. | CD/OI | Sections 8–9; SCN-WEALTH-LOW/LEGAL | Treat adequacy as a principal simulation, legislative and external-scorekeeping question. | Legal invalidation, collection shortfall and macro response may compound. |
 12.2.1 Fiscal determination
-CURRENT FISCAL FINDING  The framework establishes a coherent, testable fiscal hypothesis—not a completed federal score. A mature central total-system cost of approximately $4.75T/year remains the controlled design assumption. Sufficiency, incidence and sustainability are verification-dependent.
+CURRENT FISCAL FINDING  The framework establishes a coherent, testable fiscal hypothesis - not a completed federal score. A mature central total-system cost of approximately $4.75T/year remains the controlled design assumption. Sufficiency, incidence and sustainability are verification-dependent.
 A valid score must reconcile mature, first-decade, transition, capital, public-outlay, receipt, transfer and reserve views without double counting.
 It must test central and adverse cost, collection, legal, macroeconomic, workforce and demand scenarios and preserve ordinary-household and service-continuity constraints.
 It must publish gross additions, offsets, uncertainty and denominator choices and permit independent reproduction by NHASB/CHAO or equivalent external scorekeepers.
 12.3 Operational Conclusions
-WHY THIS SECTION EXISTS  Why it is needed: Operational success requires real capacity, payment continuity, supply, workforce, data, and remedy performance—not enactment or enrollment alone. Why this structure: Conclusions are divided by claim domain so an operational finding cannot be misrepresented as fiscal, legal, or empirical proof. Improvement mechanism: compared with the current fragmented arrangement, this section makes operational conclusions explicit, allocates responsibility, and exposes the claim to requirements, verification, risk analysis, and simulation rather than leaving it as an aspiration.
+WHY THIS SECTION EXISTS  Why it is needed: Operational success requires real capacity, payment continuity, supply, workforce, data, and remedy performance - not enactment or enrollment alone. Why this structure: Conclusions are divided by claim domain so an operational finding cannot be misrepresented as fiscal, legal, or empirical proof. Improvement mechanism: compared with the current fragmented arrangement, this section makes operational conclusions explicit, allocates responsibility, and exposes the claim to requirements, verification, risk analysis, and simulation rather than leaving it as an aspiration.
 Section control record
 
 | Control field | Controlled content |
@@ -9225,7 +9225,7 @@ Table D8A-06. Operational conclusions
 
 | 64-C05 | Expanded LTC, behavioral, dental/vision/hearing, EMS and public-health functions require distinct capacity models and cannot be inferred from acute-care performance. | AD/CD | MOD-LTC/BH/DVH/EMS; CP families | Track eligibility, delivered hours/visits, readiness, queues, workforce and outcomes separately. | Acute-care averages can hide severe non-acute shortages. |
 
-| 64-C06 | Transition is a multi-year operating mode with dual-run, migration, liquidity and continuity obligations—not a one-time administrative switchover. | AD/FA | NHTCA; TW-01–13; Gate 8 | Maintain work-package ledgers, active-treatment protection, worker/provider liquidity and legacy custodians. | Aggressive sunset can orphan appeals, records, liabilities and active care. |
+| 64-C06 | Transition is a multi-year operating mode with dual-run, migration, liquidity and continuity obligations - not a one-time administrative switchover. | AD/FA | NHTCA; TW-01–13; Gate 8 | Maintain work-package ledgers, active-treatment protection, worker/provider liquidity and legacy custodians. | Aggressive sunset can orphan appeals, records, liabilities and active care. |
 
 | 64-C07 | Rural, frontier and tribal performance requires direct capacity, transport, workforce, data and governance adaptations while preserving national rights. | AD/VD | Type C; RHA/tribal compacts; SR-EQ-008–010 | Verify local access and compact duties with tribal-approved and regional evidence. | National averages and state-centered administration can hide or create gaps. |
 
@@ -9306,7 +9306,7 @@ Section control record
 | Principal risks | pipeline lag; burnout; maldistribution; unsafe substitution; displacement; common-cause surge failure |
 
 | Simulation implication | Use stock-flow workforce state linked to every capacity module, phase gate, cost family and stress scenario. |
-The workforce conclusion is unequivocal at the architectural level: labor capacity is one of the framework's principal binding constraints. Facilities, benefits, funding and technology cannot deliver care without role-specific people in the right regions and settings. The framework therefore couples education expansion, compensation, safe workload, scope reform, transition protection and regional planning—but numeric adequacy remains calibration-dependent.
+The workforce conclusion is unequivocal at the architectural level: labor capacity is one of the framework's principal binding constraints. Facilities, benefits, funding and technology cannot deliver care without role-specific people in the right regions and settings. The framework therefore couples education expansion, compensation, safe workload, scope reform, transition protection and regional planning - but numeric adequacy remains calibration-dependent.
 Table D8A-08. Workforce conclusions
 
 | ID | Conclusion | Status | Basis / trace | Decision implication | Principal qualification |
@@ -9350,7 +9350,7 @@ Table D8A-09. Binding cross-domain conclusions
 | Adaptation without sabotage | System / Legal / Operations | Formula Registry, bounded defaults, emergency repair, sunset and review | rigidity or opportunistic rule erosion |
 12.5.2 Workforce maturity determination
 The <=5% critical-vacancy target must be met with safe workload and service performance by region, occupation and setting; an aggregate national result is insufficient.
-Pipeline adequacy includes faculty, placement capacity, completion, licensure, geographic/service uptake, attrition and time to independent practice—not training-slot announcements alone.
+Pipeline adequacy includes faculty, placement capacity, completion, licensure, geographic/service uptake, attrition and time to independent practice - not training-slot announcements alone.
 Transition protection includes displaced administrative workers and workers whose roles, employers, payment systems or scope change; placement and retention outcomes remain auditable.
 Workforce savings are valid only when labor time is genuinely released or redeployed without shifting unpaid work to clinicians, caregivers, patients or communities.
 12.6 Simulation Conclusions
@@ -9445,10 +9445,10 @@ Table D8B-05. Patient implications
 
 | 68-I09 | Benefits expand across LTC, behavioral health/SUD, dental, vision, hearing, EMS and clinically linked supports. | OUTCOME | SN-03/18/19; expanded service concepts | domain-specific timely delivered care and equity metrics | Nominal coverage may exceed workforce and regional capacity. |
 
-| 68-I10 | Patient success is measured by delivered safe care, continuity, affordability, rights and equity—not enrollment alone. | EVIDENCE | KPP/TPP; OUT-009–029; VR-004/010/012 | stratified access/safety/outcome/trust and patient-burden evidence | National averages can conceal disability, language, rural, tribal or income barriers. |
+| 68-I10 | Patient success is measured by delivered safe care, continuity, affordability, rights and equity - not enrollment alone. | EVIDENCE | KPP/TPP; OUT-009–029; VR-004/010/012 | stratified access/safety/outcome/trust and patient-burden evidence | National averages can conceal disability, language, rural, tribal or income barriers. |
 PATIENT CONTROL  No patient benefit is counted as realized when care is nominally covered but unavailable, delayed beyond the clinical standard, financially misbilled, inaccessible because of disability/language/digital barriers, or unsupported by usable explanation and appeal.
 13.2 Implications for Providers
-WHY THIS SECTION EXISTS  Why it is needed: Providers need to understand how payment, workload, documentation, referral, autonomy, review, and transition protections change—not merely that coverage expands. Why this structure: Implications are organized by affected group so aggregate national gains do not conceal local burdens, duties, or transition risks. Improvement mechanism: compared with the current fragmented arrangement, this section makes implications for providers explicit, allocates responsibility, and exposes the claim to requirements, verification, risk analysis, and simulation rather than leaving it as an aspiration.
+WHY THIS SECTION EXISTS  Why it is needed: Providers need to understand how payment, workload, documentation, referral, autonomy, review, and transition protections change - not merely that coverage expands. Why this structure: Implications are organized by affected group so aggregate national gains do not conceal local burdens, duties, or transition risks. Improvement mechanism: compared with the current fragmented arrangement, this section makes implications for providers explicit, allocates responsibility, and exposes the claim to requirements, verification, risk analysis, and simulation rather than leaving it as an aspiration.
 Section control record
 
 | Control field | Controlled content |
@@ -9493,7 +9493,7 @@ Table D8B-06. Provider implications
 13.2.1 Provider transition principle
 Onboard payment, credential, formulary, referral and record interfaces before legacy dependencies are removed.
 Protect payroll and operating liquidity through provisional payment and rapid remedy, then reconcile without shifting system error to patients.
-Measure net administrative work, including transition, correction, reporting and appeal—not only eliminated billing tasks.
+Measure net administrative work, including transition, correction, reporting and appeal - not only eliminated billing tasks.
 Treat workload, autonomy, safety culture and retention as performance constraints during scope, compensation and AI changes.
 13.3 Implications for Hospitals
 WHY THIS SECTION EXISTS  Why it is needed: Hospitals face a shift from service-line revenue to public-service obligations, global budgets, capital review, staffing controls, and community accountability. Why this structure: Implications are organized by affected group so aggregate national gains do not conceal local burdens, duties, or transition risks. Improvement mechanism: compared with the current fragmented arrangement, this section makes implications for hospitals explicit, allocates responsibility, and exposes the claim to requirements, verification, risk analysis, and simulation rather than leaving it as an aspiration.
@@ -9537,7 +9537,7 @@ Table D8B-07. Hospital implications
 
 | 70-I09 | Conversion is protected by a stabilization corridor, provider liquidity and delayed legacy sunset until readiness is certified. | TRANSITION/PROTECTION | NHTCA; Gate 8; RISK-HOSP | liquidity, service-line continuity, migration and reconciliation | Temporary support can become permanent or lock in an inflated base without sunset/review. |
 
-| 70-I10 | Hospital success is defined as stable essential capacity and outcomes within a justified budget—not simply lower expenditure or positive margin. | OUTCOME/EVIDENCE | SN-07; TPP-5.4; OUT-014 | stability components, access, staffing, safety, cost and regional equity | Composite stability scores can hide a failed service line or population. |
+| 70-I10 | Hospital success is defined as stable essential capacity and outcomes within a justified budget - not simply lower expenditure or positive margin. | OUTCOME/EVIDENCE | SN-07; TPP-5.4; OUT-014 | stability components, access, staffing, safety, cost and regional equity | Composite stability scores can hide a failed service line or population. |
 13.3.1 Hospital budget guardrails
 The floor prevents service collapse, unsafe staffing and loss of regionally essential capacity.
 The ceiling and audit controls prevent transition fear, related-party extraction or unsupported base inflation from locking in excessive revenue.
@@ -9762,7 +9762,7 @@ Table D8C-06. Communications-planning implications
 
 | 75-I01 | Every public claim is labeled as framework design, final assumption, target, forecast/scenario, verified result, observed outcome or open issue. | DUTY/PROTECTION | D1 simulation-readiness; D8A status convention | claim audit, source/ID, status label and correction history | Unlabeled claims can turn assumptions into promises. |
 
-| 75-I02 | The central narrative explains the system as coverage plus capacity, payment, rights, transition and repair—not 'free care' or a single-payer slogan alone. | CHANGE | Sections 4–6; Layers 3–5 | audience comprehension of responsibilities, sequence and safeguards | Oversimplification can create demand, cost and trust expectations the design cannot meet. |
+| 75-I02 | The central narrative explains the system as coverage plus capacity, payment, rights, transition and repair - not 'free care' or a single-payer slogan alone. | CHANGE | Sections 4–6; Layers 3–5 | audience comprehension of responsibilities, sequence and safeguards | Oversimplification can create demand, cost and trust expectations the design cannot meet. |
 
 | 75-I03 | Cost communication uses the controlled $4.75T mature assumption and ranges while clearly separating total-system cost, public outlay, transition cost and financing. | DUTY | Section 8; D8A 63-C01/02 | correct classification and denominator understanding | A headline number without boundary/status can mislead in either direction. |
 
@@ -9802,7 +9802,7 @@ Test comprehension and task completion with representative users, including comm
 Publish with correction/appeal channels and monitor misunderstanding, service friction, misinformation, complaints and subgroup disparities.
 Correct the service or policy when feedback exposes a real failure; correct the message when the service is sound but the explanation is not; document both.
 
-Appendix A — Acronym Glossary
+Appendix A - Acronym Glossary
 CANONICAL USE  Use these abbreviations only with the listed meaning in this framework version. A later integration pass must record deprecated aliases and resolve any collision before publication or machine merge.
 This appendix consolidates 141 canonical abbreviations, architecture-body acronyms and identifier/status families. General English abbreviations are included only where they recur in the controlled framework.
 Table A-01. Controlled acronym glossary
@@ -9950,7 +9950,7 @@ Table A-01. Controlled acronym glossary
 | NDPA | National Drug Purchasing Authority | VR | Verification-requirement identifier family |
 
 | NDVHO | National Dental, Vision, and Hearing Benefit Office |  |  |
-Appendix B — Assumption Register
+Appendix B - Assumption Register
 Section control record
 
 | Control field | Controlled content |
@@ -10043,7 +10043,7 @@ Table B-1. ASM-001–ASM-035 controlled assumption register
 | ASM-034 | Target non-achievement Adopted / MP | A requirement or target constrains evaluation but does not force a simulated result to pass. | All PR/SR/KPP/TPP | Compute performance from mechanisms; failed requirements are reported as failures, not corrected by output clipping. |
 
 | ASM-035 | No forecast claim before calibration Adopted / OI | The $4.75T central cost position is a controlling framework assumption, not an empirically validated forecast until the full cost model is calibrated and verified. | CP-TOT-001; ASM-015 | Use central/low/high framework scenarios and report the assumptions and unresolved cost components driving each result. |
-Appendix C — Stakeholder Needs Register
+Appendix C - Stakeholder Needs Register
 Section control record
 
 | Control field | Controlled content |
@@ -10116,7 +10116,7 @@ Table C-1. SN-01–SN-25 stakeholder-needs register
 
 | SN-25 | Employers / workers | Employers need a predictable transition away from core health-benefit sponsorship. | employer wage-pass-through compliance >=95% by maturity. TPP-EMP1 wage-pass-through compliance ≥95% | ARCH-EPTO | Predictable contribution rule and wage-pass-through enforcement | TG |
 TRIBAL TRACE GUARD  SN-24 is a direct federal–tribal sovereignty and trust-duty need. Its satisfaction cannot be inferred from state certification or generic regional performance.
-Appendix D — Requirements Register
+Appendix D - Requirements Register
 Section control record
 
 | Control field | Controlled content |
@@ -10735,7 +10735,7 @@ Table D-21. Verification Requirements
 | VR-029 | Every safety-culture parameter shall be verified using validated workforce safety-culture survey instruments and turnover/workload corroboration data. | No source trace field | Requirement-defined evidence Source-controlled draft |
 
 | VR-030 | Every requirement marked for demonstration shall include an operational scenario, entry criteria, exit criteria, observed outputs, and pass/fail criteria before verification event execution. | No source trace field | Requirement-defined evidence Source-controlled draft |
-Appendix E — Requirements Allocation Matrix
+Appendix E - Requirements Allocation Matrix
 Section control record
 
 | Control field | Controlled content |
@@ -10759,503 +10759,503 @@ Table E-1. Cost, Budget, and Fiscal Project Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| PR-CST-001 | SN-11 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-001 | SN-11 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 
-| PR-CST-002 | SN-11 explicit source trace | KPP-C1 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Open / not baselined (OI-001) |
+| PR-CST-002 | SN-11 explicit source trace | KPP-C1 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Open / not baselined (OI-001) |
 
-| PR-CST-003 | SN-11 explicit source trace | KPP-C2 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Open / not baselined (OI-001) |
+| PR-CST-003 | SN-11 explicit source trace | KPP-C2 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Open / not baselined (OI-001) |
 
-| PR-CST-004 | SN-11 explicit source trace | KPP-C3 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-004 | SN-11 explicit source trace | KPP-C3 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 
-| PR-CST-005 | SN-05, SN-06, SN-10 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-HFASB | ARCH-CHAO / Inspection VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-005 | SN-05, SN-06, SN-10 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-HFASB | ARCH-CHAO / Inspection VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 
-| PR-CST-006 | SN-11 explicit source trace | KPP-C5 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-006 | SN-11 explicit source trace | KPP-C5 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 
-| PR-CST-007 | SN-11 explicit source trace | KPP-C6 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-007 | SN-11 explicit source trace | KPP-C6 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 
-| PR-CST-008 | SN-11 explicit source trace | KPP-C7 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-008 | SN-11 explicit source trace | KPP-C7 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 
-| PR-CST-009 | SN-12 explicit source trace | KPP-C8 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-009 | SN-12 explicit source trace | KPP-C8 explicit source text/trace | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 
-| PR-CST-010 | SN-14, SN-16, SN-20 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | — | Source-controlled draft |
+| PR-CST-010 | SN-14, SN-16, SN-20 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-HFASB | ARCH-CHAO / Analysis VR-001, VR-002, VR-003, VR-024, VR-025 | - | Source-controlled draft |
 Schedule and Phase-Gate Requirements
 Table E-2. Schedule and Phase-Gate Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| PR-SCH-001 | SN-13, SN-20 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Inspection VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-001 | SN-13, SN-20 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Inspection VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-002 | SN-02, SN-06, SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-021, VR-025, VR-030 | — | Source-controlled draft |
+| PR-SCH-002 | SN-02, SN-06, SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-021, VR-025, VR-030 | - | Source-controlled draft |
 
-| PR-SCH-003 | SN-08 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | — | Source-controlled draft |
+| PR-SCH-003 | SN-08 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | - | Source-controlled draft |
 
-| PR-SCH-004 | SN-02, SN-05 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | — | Source-controlled draft |
+| PR-SCH-004 | SN-02, SN-05 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | - | Source-controlled draft |
 
-| PR-SCH-005 | SN-07 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | — | Source-controlled draft |
+| PR-SCH-005 | SN-07 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | - | Source-controlled draft |
 
-| PR-SCH-006 | SN-03 explicit source trace | KPP-B7 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-006 | SN-03 explicit source trace | KPP-B7 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-007 | SN-02 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-007 | SN-02 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-008 | SN-01, SN-03, SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-TRPGO | ARCH-NHASB / Inspection VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-008 | SN-01, SN-03, SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-TRPGO | ARCH-NHASB / Inspection VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-009 | SN-08, SN-15, SN-22 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | — | Source-controlled draft |
+| PR-SCH-009 | SN-08, SN-15, SN-22 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-TRPGO | ARCH-NHASB / Demonstration VR-001, VR-003, VR-025, VR-030 | - | Source-controlled draft |
 
-| PR-SCH-010 | SN-06 explicit source trace | TPP-2.1 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-010 | SN-06 explicit source trace | TPP-2.1 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-011 | SN-03 explicit source trace | KPP-B7 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-011 | SN-03 explicit source trace | KPP-B7 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-012 | SN-16 explicit source trace | KPP-B9 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-012 | SN-16 explicit source trace | KPP-B9 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-013 | SN-05 explicit source trace | TPP-9.1 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-013 | SN-05 explicit source trace | TPP-9.1 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-014 | SN-11 derived through metric trace | KPP-C5 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-014 | SN-11 derived through metric trace | KPP-C5 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Analysis VR-001, VR-003, VR-025 | - | Source-controlled draft |
 
-| PR-SCH-015 | SN-17 explicit source trace | TPP-11.5 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Test VR-001, VR-003, VR-025 | — | Source-controlled draft |
+| PR-SCH-015 | SN-17 explicit source trace | TPP-11.5 explicit source text/trace | ARCH-TRPGO | ARCH-NHASB / Test VR-001, VR-003, VR-025 | - | Source-controlled draft |
 Workforce Project Requirements
 Table E-3. Workforce Project Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| PR-WF-001 | SN-04, SN-09 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-001 | SN-04, SN-09 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-002 | SN-09 explicit source trace | TPP-8.3 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-002 | SN-09 explicit source trace | TPP-8.3 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-003 | SN-09 explicit source trace | TPP-8.1 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-003 | SN-09 explicit source trace | TPP-8.1 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-004 | SN-09 explicit source trace | TPP-8.4 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-004 | SN-09 explicit source trace | TPP-8.4 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-005 | SN-04 explicit source trace | TPP-8.2 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-005 | SN-04 explicit source trace | TPP-8.2 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-006 | SN-10 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-029 | — | Source-controlled draft |
+| PR-WF-006 | SN-10 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-029 | - | Source-controlled draft |
 
-| PR-WF-007 | SN-10 explicit source trace | KPP-W1 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-007 | SN-10 explicit source trace | KPP-W1 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-008 | SN-09 explicit source trace | TPP-8.5 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-008 | SN-09 explicit source trace | TPP-8.5 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Inspection VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-009 | SN-09 explicit source trace | TPP-8.6 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-009 | SN-09 explicit source trace | TPP-8.6 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 
-| PR-WF-010 | SN-09, SN-16 explicit source trace | KPP-CULT1 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | — | Source-controlled draft |
+| PR-WF-010 | SN-09, SN-16 explicit source trace | KPP-CULT1 explicit source text/trace | ARCH-AHWCS | ARCH-NHASB / Analysis VR-001, VR-005, VR-016, VR-025, VR-029 | - | Source-controlled draft |
 Transition Project Requirements
 Table E-4. Transition Project Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| PR-TRN-001 | SN-05 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-001 | SN-05 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-002 | SN-05 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-002 | SN-05 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-003 | SN-05 explicit source trace | KPP-T1 explicit source text/trace | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-003 | SN-05 explicit source trace | KPP-T1 explicit source text/trace | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-004 | SN-05, SN-08 explicit source trace | KPP-T2 explicit source text/trace | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-004 | SN-05, SN-08 explicit source trace | KPP-T2 explicit source text/trace | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-005 | SN-05, SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-005 | SN-05, SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-006 | SN-23 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-006 | SN-23 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-007 | SN-25 explicit source trace | TPP-EMP1 explicit source text/trace | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025, VR-027 | — | Source-controlled draft |
+| PR-TRN-007 | SN-25 explicit source trace | TPP-EMP1 explicit source text/trace | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025, VR-027 | - | Source-controlled draft |
 
-| PR-TRN-008 | SN-05, SN-19 explicit source trace | TPP-USE1 derived through stakeholder-need link | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-008 | SN-05, SN-19 explicit source trace | TPP-USE1 derived through stakeholder-need link | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-009 | SN-06 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-009 | SN-06 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Analysis VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 
-| PR-TRN-010 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | — | Source-controlled draft |
+| PR-TRN-010 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-NHASB / Inspection VR-001, VR-015, VR-016, VR-025 | - | Source-controlled draft |
 Architecture Requirements
 Table E-5. Architecture Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-ARCH-001 | SN-02, SN-03, SN-06 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-001 | SN-02, SN-03, SN-06 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-002 | SN-14, SN-16, SN-20 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-002 | SN-14, SN-16, SN-20 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-003 | SN-22 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-003 | SN-22 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-004 | SN-06, SN-13 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-THDO | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-004 | SN-06, SN-13 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-THDO | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-005 | SN-11 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHETF | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-005 | SN-11 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHETF | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-006 | SN-05, SN-10 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-006 | SN-05, SN-10 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHTCA | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-007 | SN-13, SN-14 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-A1-HCAC | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled / bounded in D3 |
+| SR-ARCH-007 | SN-13, SN-14 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-A1-HCAC | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled / bounded in D3 |
 
-| SR-ARCH-008 | SN-23 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-SRCO | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled / bounded in D3 |
+| SR-ARCH-008 | SN-23 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-SRCO | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled / bounded in D3 |
 
-| SR-ARCH-009 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-009 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-010 | SN-03 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NCDTN | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-010 | SN-03 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NCDTN | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-011 | SN-04 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-011 | SN-04 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-012 | SN-14, SN-16, SN-20 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NOPRSL | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-012 | SN-14, SN-16, SN-20 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NOPRSL | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-013 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NHRA | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-013 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NHRA | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-014 | SN-17 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-CHAO / Inspection VR-001, VR-019 | — | Source-controlled draft |
+| SR-ARCH-014 | SN-17 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-CHAO / Inspection VR-001, VR-019 | - | Source-controlled draft |
 
-| SR-ARCH-015 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-019, VR-021 | — | Source-controlled draft |
+| SR-ARCH-015 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-019, VR-021 | - | Source-controlled draft |
 Coverage, Enrollment, and Financial Protection Requirements
 Table E-6. Coverage, Enrollment, and Financial Protection Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-COV-001 | SN-02 explicit source trace | KPP-A1 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-001 | SN-02 explicit source trace | KPP-A1 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-002 | SN-02 explicit source trace | KPP-A2 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-002 | SN-02 explicit source trace | KPP-A2 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-003 | SN-01 explicit source trace | KPP-A3 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-003 | SN-01 explicit source trace | KPP-A3 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-004 | SN-01 explicit source trace | KPP-A4 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-004 | SN-01 explicit source trace | KPP-A4 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-005 | SN-01 explicit source trace | KPP-A5 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-005 | SN-01 explicit source trace | KPP-A5 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-006 | SN-25 explicit source trace | KPP-A6 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-006 | SN-25 explicit source trace | KPP-A6 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-007 | SN-01 explicit source trace | KPP-A7 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-007 | SN-01 explicit source trace | KPP-A7 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-008 | SN-02 explicit source trace | TPP-1.4 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-008 | SN-02 explicit source trace | TPP-1.4 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-009 | SN-02 explicit source trace | TPP-1.3 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-009 | SN-02 explicit source trace | TPP-1.3 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Analysis VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-010 | SN-02 explicit source trace | TPP-1.2 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Test VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-010 | SN-02 explicit source trace | TPP-1.2 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Test VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 
-| SR-COV-011 | SN-15 explicit source trace | TPP-1.1 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Test VR-001, VR-004, VR-008, VR-025 | — | Source-controlled draft |
+| SR-COV-011 | SN-15 explicit source trace | TPP-1.1 explicit source text/trace | ARCH-NEEA | ARCH-NHASB / Test VR-001, VR-004, VR-008, VR-025 | - | Source-controlled draft |
 Access and Capacity Requirements
 Table E-7. Access and Capacity Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-ACC-001 | SN-03 explicit source trace | KPP-B1 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-001 | SN-03 explicit source trace | KPP-B1 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-002 | SN-03 explicit source trace | KPP-B2 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-002 | SN-03 explicit source trace | KPP-B2 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-003 | SN-03 explicit source trace | KPP-B3 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-003 | SN-03 explicit source trace | KPP-B3 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-004 | SN-04 explicit source trace | KPP-B4 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-004 | SN-04 explicit source trace | KPP-B4 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-005 | SN-04 explicit source trace | KPP-B5 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-005 | SN-04 explicit source trace | KPP-B5 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-006 | SN-04 explicit source trace | KPP-B6 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-006 | SN-04 explicit source trace | KPP-B6 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-007 | SN-03 explicit source trace | KPP-B7 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-007 | SN-03 explicit source trace | KPP-B7 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-008 | SN-03 explicit source trace | KPP-B8 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-008 | SN-03 explicit source trace | KPP-B8 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-009 | SN-16 explicit source trace | KPP-B9 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-009 | SN-16 explicit source trace | KPP-B9 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-010 | SN-03 explicit source trace | TPP-6.1 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Inspection VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-010 | SN-03 explicit source trace | TPP-6.1 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Inspection VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-011 | SN-16 explicit source trace | TPP-6.2 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-011 | SN-16 explicit source trace | TPP-6.2 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-012 | SN-16 explicit source trace | TPP-6.3 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-012 | SN-16 explicit source trace | TPP-6.3 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-013 | SN-16 explicit source trace | TPP-6.4 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-013 | SN-16 explicit source trace | TPP-6.4 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-014 | SN-16 explicit source trace | TPP-6.5 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-014 | SN-16 explicit source trace | TPP-6.5 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-ACC-015 | SN-03, SN-09 explicit source trace | TPP-6.6 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-ACC-015 | SN-03, SN-09 explicit source trace | TPP-6.6 explicit source text/trace | ARCH-OCDTI | ARCH-NHASB / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 Specialist Routing Requirements
 Table E-8. Specialist Routing Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-SPEC-001 | SN-04, SN-14 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014 | — | Source-controlled draft |
+| SR-SPEC-001 | SN-04, SN-14 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014 | - | Source-controlled draft |
 
-| SR-SPEC-002 | SN-04 explicit source trace | TPP-7.1 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Analysis VR-001, VR-011, VR-014, VR-025 | — | Source-controlled draft |
+| SR-SPEC-002 | SN-04 explicit source trace | TPP-7.1 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Analysis VR-001, VR-011, VR-014, VR-025 | - | Source-controlled draft |
 
-| SR-SPEC-003 | SN-04 explicit source trace | TPP-7.2 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Analysis VR-001, VR-011, VR-014, VR-025 | — | Source-controlled draft |
+| SR-SPEC-003 | SN-04 explicit source trace | TPP-7.2 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Analysis VR-001, VR-011, VR-014, VR-025 | - | Source-controlled draft |
 
-| SR-SPEC-004 | SN-04 explicit source trace | TPP-7.3 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Analysis VR-001, VR-011, VR-014, VR-025 | — | Source-controlled draft |
+| SR-SPEC-004 | SN-04 explicit source trace | TPP-7.3 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Analysis VR-001, VR-011, VR-014, VR-025 | - | Source-controlled draft |
 
-| SR-SPEC-005 | SN-04 explicit source trace | TPP-7.4 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014, VR-025 | — | Source-controlled draft |
+| SR-SPEC-005 | SN-04 explicit source trace | TPP-7.4 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014, VR-025 | - | Source-controlled draft |
 
-| SR-SPEC-006 | SN-04 explicit source trace | TPP-7.5 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014, VR-025 | — | Source-controlled draft |
+| SR-SPEC-006 | SN-04 explicit source trace | TPP-7.5 explicit source text/trace | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014, VR-025 | - | Source-controlled draft |
 
-| SR-SPEC-007 | SN-04, SN-16 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Demonstration VR-001, VR-011, VR-014, VR-030 | — | Source-controlled draft |
+| SR-SPEC-007 | SN-04, SN-16 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Demonstration VR-001, VR-011, VR-014, VR-030 | - | Source-controlled draft |
 
-| SR-SPEC-008 | SN-04, SN-23 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Demonstration VR-001, VR-011, VR-014, VR-030 | — | Source-controlled draft |
+| SR-SPEC-008 | SN-04, SN-23 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Demonstration VR-001, VR-011, VR-014, VR-030 | - | Source-controlled draft |
 
-| SR-SPEC-009 | SN-04, SN-14 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014 | — | Source-controlled draft |
+| SR-SPEC-009 | SN-04, SN-14 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014 | - | Source-controlled draft |
 
-| SR-SPEC-010 | SN-04, SN-16 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014 | — | Source-controlled draft |
+| SR-SPEC-010 | SN-04, SN-16 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-NSAA | ARCH-NHASB / Inspection VR-001, VR-011, VR-014 | - | Source-controlled draft |
 Claims, Payment, and Disbursement Requirements
 Table E-9. Claims, Payment, and Disbursement Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-PAY-001 | SN-06 explicit source trace | TPP-2.1 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | — | Source-controlled draft |
+| SR-PAY-001 | SN-06 explicit source trace | TPP-2.1 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | - | Source-controlled draft |
 
-| SR-PAY-002 | SN-06 explicit source trace | TPP-2.2 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | — | Source-controlled draft |
+| SR-PAY-002 | SN-06 explicit source trace | TPP-2.2 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | - | Source-controlled draft |
 
-| SR-PAY-003 | SN-11 explicit source trace | TPP-2.3 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | — | Source-controlled draft |
+| SR-PAY-003 | SN-11 explicit source trace | TPP-2.3 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | - | Source-controlled draft |
 
-| SR-PAY-004 | SN-06 explicit source trace | TPP-2.4 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | — | Source-controlled draft |
+| SR-PAY-004 | SN-06 explicit source trace | TPP-2.4 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | - | Source-controlled draft |
 
-| SR-PAY-005 | SN-13 explicit source trace | TPP-2.5 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | — | Source-controlled draft |
+| SR-PAY-005 | SN-13 explicit source trace | TPP-2.5 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | - | Source-controlled draft |
 
-| SR-PAY-006 | SN-05, SN-06 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NCCA | ARCH-NHASB / Demonstration VR-001, VR-008, VR-009, VR-030 | — | Source-controlled draft |
+| SR-PAY-006 | SN-05, SN-06 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NCCA | ARCH-NHASB / Demonstration VR-001, VR-008, VR-009, VR-030 | - | Source-controlled draft |
 
-| SR-PAY-007 | SN-06, SN-11 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NCCA | ARCH-NHASB / Inspection VR-001, VR-008, VR-009 | — | Source-controlled draft |
+| SR-PAY-007 | SN-06, SN-11 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NCCA | ARCH-NHASB / Inspection VR-001, VR-008, VR-009 | - | Source-controlled draft |
 
-| SR-PAY-008 | SN-06 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NCCA | ARCH-NHASB / Inspection VR-001, VR-008, VR-009 | — | Source-controlled draft |
+| SR-PAY-008 | SN-06 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NCCA | ARCH-NHASB / Inspection VR-001, VR-008, VR-009 | - | Source-controlled draft |
 
-| SR-PAY-009 | SN-08 explicit source trace | TPP-3.1 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Test VR-001, VR-008, VR-009, VR-025 | — | Source-controlled draft |
+| SR-PAY-009 | SN-08 explicit source trace | TPP-3.1 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Test VR-001, VR-008, VR-009, VR-025 | - | Source-controlled draft |
 
-| SR-PAY-010 | SN-11 explicit source trace | KPP-C4 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | — | Source-controlled draft |
+| SR-PAY-010 | SN-11 explicit source trace | KPP-C4 explicit source text/trace | ARCH-NCCA | ARCH-NHASB / Analysis VR-001, VR-008, VR-009, VR-025 | - | Source-controlled draft |
 Pharmacy, Drugs, Manufacturing, and Supply Requirements
 Table E-10. Pharmacy, Drugs, Manufacturing, and Supply Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-DRUG-001 | SN-01, SN-08 explicit source trace | TPP-3.2 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-021, VR-025 | — | Source-controlled draft |
+| SR-DRUG-001 | SN-01, SN-08 explicit source trace | TPP-3.2 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-021, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-002 | SN-11 explicit source trace | TPP-3.3 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-002 | SN-11 explicit source trace | TPP-3.3 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-003 | SN-08 explicit source trace | TPP-3.4 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-003 | SN-08 explicit source trace | TPP-3.4 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-004 | SN-08 explicit source trace | TPP-3.5 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-004 | SN-08 explicit source trace | TPP-3.5 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-005 | SN-08 explicit source trace | TPP-3.6 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-005 | SN-08 explicit source trace | TPP-3.6 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-006 | SN-08 explicit source trace | TPP-4.1 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Inspection VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-006 | SN-08 explicit source trace | TPP-4.1 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Inspection VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-007 | SN-08 explicit source trace | TPP-4.2 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Inspection VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-007 | SN-08 explicit source trace | TPP-4.2 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Inspection VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-008 | SN-08 explicit source trace | TPP-4.3 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-008 | SN-08 explicit source trace | TPP-4.3 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Analysis VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-009 | SN-08 explicit source trace | TPP-4.4 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Inspection VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-009 | SN-08 explicit source trace | TPP-4.4 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Inspection VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-DRUG-010 | SN-08 explicit source trace | TPP-4.5 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Test VR-001, VR-008, VR-018, VR-025 | — | Source-controlled draft |
+| SR-DRUG-010 | SN-08 explicit source trace | TPP-4.5 explicit source text/trace | ARCH-AMDDT | ARCH-NHAC / Test VR-001, VR-008, VR-018, VR-025 | - | Source-controlled draft |
 Hospital, Facility, and Essential-Service Requirements
 Table E-11. Hospital, Facility, and Essential-Service Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-HOSP-001 | SN-07 explicit source trace | TPP-5.1 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | — | Source-controlled draft |
+| SR-HOSP-001 | SN-07 explicit source trace | TPP-5.1 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | - | Source-controlled draft |
 
-| SR-HOSP-002 | SN-07, SN-11 explicit source trace | TPP-5.2 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | — | Source-controlled draft |
+| SR-HOSP-002 | SN-07, SN-11 explicit source trace | TPP-5.2 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | - | Source-controlled draft |
 
-| SR-HOSP-003 | SN-01 explicit source trace | TPP-5.3 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | — | Source-controlled draft |
+| SR-HOSP-003 | SN-01 explicit source trace | TPP-5.3 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | - | Source-controlled draft |
 
-| SR-HOSP-004 | SN-07 explicit source trace | TPP-5.4 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | — | Source-controlled draft |
+| SR-HOSP-004 | SN-07 explicit source trace | TPP-5.4 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | - | Source-controlled draft |
 
-| SR-HOSP-005 | SN-09, SN-16 explicit source trace | TPP-5.5 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | — | Source-controlled draft |
+| SR-HOSP-005 | SN-09, SN-16 explicit source trace | TPP-5.5 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | - | Source-controlled draft |
 
-| SR-HOSP-006 | SN-20 explicit source trace | TPP-5.6 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | — | Source-controlled draft |
+| SR-HOSP-006 | SN-20 explicit source trace | TPP-5.6 explicit source text/trace | ARCH-NHSA | ARCH-HAAO / Analysis VR-001, VR-017, VR-021, VR-025 | - | Source-controlled draft |
 
-| SR-HOSP-007 | SN-07, SN-23 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | — | Source-controlled draft |
+| SR-HOSP-007 | SN-07, SN-23 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | - | Source-controlled draft |
 
-| SR-HOSP-008 | SN-05, SN-07 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | — | Source-controlled draft |
+| SR-HOSP-008 | SN-05, SN-07 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | - | Source-controlled draft |
 
-| SR-HOSP-009 | SN-07, SN-20 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | — | Source-controlled draft |
+| SR-HOSP-009 | SN-07, SN-20 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | - | Source-controlled draft |
 
-| SR-HOSP-010 | SN-07, SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | — | Source-controlled draft |
+| SR-HOSP-010 | SN-07, SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHSA | ARCH-HAAO / Inspection VR-001, VR-017, VR-021 | - | Source-controlled draft |
 Long-Term Care, Behavioral Health, Dental, Vision, Hearing, and EMS Requirements
 Table E-12. Long-Term Care, Behavioral Health, Dental, Vision, Hearing, and EMS Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-LTC-001 | SN-05 explicit source trace | TPP-9.1 explicit source text/trace | ARCH-NLTCA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-LTC-001 | SN-05 explicit source trace | TPP-9.1 explicit source text/trace | ARCH-NLTCA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-LTC-002 | SN-05 explicit source trace | TPP-9.2 explicit source text/trace | ARCH-NLTCA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-LTC-002 | SN-05 explicit source trace | TPP-9.2 explicit source text/trace | ARCH-NLTCA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-LTC-003 | SN-05, SN-14 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NLTCA | ARCH-NHAC / Inspection VR-001, VR-004, VR-010, VR-012 | — | Source-controlled draft |
+| SR-LTC-003 | SN-05, SN-14 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NLTCA | ARCH-NHAC / Inspection VR-001, VR-004, VR-010, VR-012 | - | Source-controlled draft |
 
-| SR-BH-001 | SN-03 explicit source trace | TPP-9.3 explicit source text/trace | ARCH-NBHA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-BH-001 | SN-03 explicit source trace | TPP-9.3 explicit source text/trace | ARCH-NBHA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-BH-002 | SN-16 explicit source trace | TPP-9.4 explicit source text/trace | ARCH-NBHA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | — | Source-controlled draft |
+| SR-BH-002 | SN-16 explicit source trace | TPP-9.4 explicit source text/trace | ARCH-NBHA | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-BH-003 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NBHA | ARCH-NHAC / Test VR-001, VR-004, VR-010, VR-012 | — | Source-controlled draft |
+| SR-BH-003 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NBHA | ARCH-NHAC / Test VR-001, VR-004, VR-010, VR-012 | - | Source-controlled draft |
 
-| SR-DVH-001 | SN-03 explicit source trace | TPP-9.5 explicit source text/trace | ARCH-NDVHO | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-025 | — | Source-controlled draft |
+| SR-DVH-001 | SN-03 explicit source trace | TPP-9.5 explicit source text/trace | ARCH-NDVHO | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-025 | - | Source-controlled draft |
 
-| SR-DVH-002 | SN-03 explicit source trace | TPP-9.6 explicit source text/trace | ARCH-NDVHO | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-025 | — | Source-controlled draft |
+| SR-DVH-002 | SN-03 explicit source trace | TPP-9.6 explicit source text/trace | ARCH-NDVHO | ARCH-NHAC / Analysis VR-001, VR-004, VR-010, VR-025 | - | Source-controlled draft |
 
-| SR-EMS-001 | SN-07 explicit source trace | TPP-9.7 explicit source text/trace | ARCH-NEMTA | ARCH-NHAC / Analysis VR-001, VR-004, VR-012, VR-025 | — | Source-controlled draft |
+| SR-EMS-001 | SN-07 explicit source trace | TPP-9.7 explicit source text/trace | ARCH-NEMTA | ARCH-NHAC / Analysis VR-001, VR-004, VR-012, VR-025 | - | Source-controlled draft |
 
-| SR-EMS-002 | SN-03, SN-16 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NEMTA | ARCH-NHAC / Demonstration VR-001, VR-004, VR-012, VR-030 | — | Source-controlled draft |
+| SR-EMS-002 | SN-03, SN-16 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NEMTA | ARCH-NHAC / Demonstration VR-001, VR-004, VR-012, VR-030 | - | Source-controlled draft |
 Records, Interoperability, Data Rights, and Cybersecurity Requirements
 Table E-13. Records, Interoperability, Data Rights, and Cybersecurity Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-DATA-001 | SN-15 explicit source trace | TPP-10.1 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-001 | SN-15 explicit source trace | TPP-10.1 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-002 | SN-08, SN-15 explicit source trace | TPP-10.2 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-002 | SN-08, SN-15 explicit source trace | TPP-10.2 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-003 | SN-15 explicit source trace | TPP-10.3 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-003 | SN-15 explicit source trace | TPP-10.3 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-004 | SN-15 explicit source trace | TPP-10.4 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-004 | SN-15 explicit source trace | TPP-10.4 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-005 | SN-15 explicit source trace | TPP-10.5 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-005 | SN-15 explicit source trace | TPP-10.5 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-006 | SN-15 explicit source trace | TPP-10.6 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-006 | SN-15 explicit source trace | TPP-10.6 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-007 | SN-13 explicit source trace | TPP-11.1 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-007 | SN-13 explicit source trace | TPP-11.1 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-008 | SN-13 explicit source trace | TPP-11.2 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-008 | SN-13 explicit source trace | TPP-11.2 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-009 | SN-15 explicit source trace | TPP-11.3 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-009 | SN-15 explicit source trace | TPP-11.3 explicit source text/trace | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-010 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | — | Source-controlled draft |
+| SR-DATA-010 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-AHIRC | ARCH-NHAC / Analysis VR-001, VR-008, VR-010, VR-013, VR-025 | - | Source-controlled draft |
 
-| SR-DATA-011 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-AHIRC | ARCH-NHAC / Demonstration VR-001, VR-008, VR-010, VR-013, VR-030 | — | Source-controlled draft |
+| SR-DATA-011 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-AHIRC | ARCH-NHAC / Demonstration VR-001, VR-008, VR-010, VR-013, VR-030 | - | Source-controlled draft |
 
-| SR-DATA-012 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-026 | — | Source-controlled draft |
+| SR-DATA-012 | SN-15 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-AHIRC | ARCH-NHAC / Test VR-001, VR-008, VR-010, VR-013, VR-026 | - | Source-controlled draft |
 AI and Algorithmic Accountability Requirements
 Table E-14. AI and Algorithmic Accountability Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-AI-001 | SN-17 explicit source trace | TPP-11.4 explicit source text/trace | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011, VR-025 | — | Source-controlled draft |
+| SR-AI-001 | SN-17 explicit source trace | TPP-11.4 explicit source text/trace | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011, VR-025 | - | Source-controlled draft |
 
-| SR-AI-002 | SN-17 explicit source trace | TPP-11.5 explicit source text/trace | ARCH-AICIO | ARCH-NHAC / Test VR-001, VR-006, VR-007, VR-011, VR-025 | — | Source-controlled draft |
+| SR-AI-002 | SN-17 explicit source trace | TPP-11.5 explicit source text/trace | ARCH-AICIO | ARCH-NHAC / Test VR-001, VR-006, VR-007, VR-011, VR-025 | - | Source-controlled draft |
 
-| SR-AI-003 | SN-17, SN-18 explicit source trace | TPP-11.6 explicit source text/trace | ARCH-AICIO | ARCH-NHAC / Analysis VR-001, VR-006, VR-007, VR-011, VR-025 | — | Source-controlled draft |
+| SR-AI-003 | SN-17, SN-18 explicit source trace | TPP-11.6 explicit source text/trace | ARCH-AICIO | ARCH-NHAC / Analysis VR-001, VR-006, VR-007, VR-011, VR-025 | - | Source-controlled draft |
 
-| SR-AI-004 | SN-14, SN-17 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | — | Source-controlled draft |
+| SR-AI-004 | SN-14, SN-17 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | - | Source-controlled draft |
 
-| SR-AI-005 | SN-16, SN-17 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | — | Source-controlled draft |
+| SR-AI-005 | SN-16, SN-17 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | - | Source-controlled draft |
 
-| SR-AI-006 | SN-04, SN-17 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | — | Source-controlled draft |
+| SR-AI-006 | SN-04, SN-17 explicit source trace | KPP-B5 derived through stakeholder-need link | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | - | Source-controlled draft |
 
-| SR-AI-007 | SN-17, SN-20 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | — | Source-controlled draft |
+| SR-AI-007 | SN-17, SN-20 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Inspection VR-001, VR-006, VR-007, VR-011 | - | Source-controlled draft |
 
-| SR-AI-008 | SN-14, SN-17 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Test VR-001, VR-006, VR-007, VR-011 | — | Source-controlled draft |
+| SR-AI-008 | SN-14, SN-17 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Test VR-001, VR-006, VR-007, VR-011 | - | Source-controlled draft |
 
-| SR-AI-009 | SN-17, SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-AICIO | ARCH-NHAC / Demonstration VR-001, VR-006, VR-007, VR-011, VR-030 | — | Source-controlled draft |
+| SR-AI-009 | SN-17, SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-AICIO | ARCH-NHAC / Demonstration VR-001, VR-006, VR-007, VR-011, VR-030 | - | Source-controlled draft |
 
-| SR-AI-010 | SN-14, SN-17 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Demonstration VR-001, VR-006, VR-007, VR-011, VR-030 | — | Source-controlled draft |
+| SR-AI-010 | SN-14, SN-17 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-AICIO | ARCH-NHAC / Demonstration VR-001, VR-006, VR-007, VR-011, VR-030 | - | Source-controlled draft |
 Rights, Legitimacy, Safety, and Appeal Requirements
 Table E-15. Rights, Legitimacy, Safety, and Appeal Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-RGT-001 | SN-14, SN-19 explicit source trace | TPP-USE1 derived through stakeholder-need link | ARCH-NHAC | ARCH-NHASB / Inspection VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-001 | SN-14, SN-19 explicit source trace | TPP-USE1 derived through stakeholder-need link | ARCH-NHAC | ARCH-NHASB / Inspection VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-002 | SN-14 explicit source trace | TPP-LEG1 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-002 | SN-14 explicit source trace | TPP-LEG1 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-003 | SN-19 explicit source trace | TPP-USE1 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-003 | SN-19 explicit source trace | TPP-USE1 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-004 | SN-19 explicit source trace | TPP-USE2 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Test VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-004 | SN-19 explicit source trace | TPP-USE2 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Test VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-005 | SN-14 explicit source trace | TPP-12.6 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-005 | SN-14 explicit source trace | TPP-12.6 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-006 | SN-16 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-006 | SN-16 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-007 | SN-16 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-007 | SN-16 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-008 | SN-18, SN-19 explicit source trace | KPP-E5 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-008 | SN-18, SN-19 explicit source trace | KPP-E5 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-009 | SN-18, SN-19 explicit source trace | KPP-E1, TPP-USE1 derived through stakeholder-need link | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-009 | SN-18, SN-19 explicit source trace | KPP-E1, TPP-USE1 derived through stakeholder-need link | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-010 | SN-20 explicit source trace | KPP-TRUST1 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025, VR-028 | — | Source-controlled draft |
+| SR-RGT-010 | SN-20 explicit source trace | KPP-TRUST1 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Analysis VR-001, VR-010, VR-011, VR-020, VR-025, VR-028 | - | Source-controlled draft |
 
-| SR-RGT-011 | SN-20 explicit source trace | TPP-12.4 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Inspection VR-001, VR-010, VR-011, VR-020, VR-025 | — | Source-controlled draft |
+| SR-RGT-011 | SN-20 explicit source trace | TPP-12.4 explicit source text/trace | ARCH-NHAC | ARCH-NHASB / Inspection VR-001, VR-010, VR-011, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-RGT-012 | SN-14, SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-NHASB / Inspection VR-001, VR-010, VR-011, VR-020 | — | Source-controlled draft |
+| SR-RGT-012 | SN-14, SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHAC | ARCH-NHASB / Inspection VR-001, VR-010, VR-011, VR-020 | - | Source-controlled draft |
 Equity Requirements
 Table E-16. Equity Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-EQ-001 | SN-18 explicit source trace | KPP-E1 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | — | Source-controlled draft |
+| SR-EQ-001 | SN-18 explicit source trace | KPP-E1 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-EQ-002 | SN-18 explicit source trace | KPP-E2 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | — | Source-controlled draft |
+| SR-EQ-002 | SN-18 explicit source trace | KPP-E2 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-EQ-003 | SN-18 explicit source trace | KPP-E3 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | — | Source-controlled draft |
+| SR-EQ-003 | SN-18 explicit source trace | KPP-E3 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-EQ-004 | SN-18, SN-23 explicit source trace | KPP-E4 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | — | Source-controlled draft |
+| SR-EQ-004 | SN-18, SN-23 explicit source trace | KPP-E4 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Analysis VR-001, VR-004, VR-020, VR-025 | - | Source-controlled draft |
 
-| SR-EQ-005 | SN-17, SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-021 | — | Source-controlled draft |
+| SR-EQ-005 | SN-17, SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-021 | - | Source-controlled draft |
 
-| SR-EQ-006 | SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020 | — | Source-controlled draft |
+| SR-EQ-006 | SN-18 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020 | - | Source-controlled draft |
 
-| SR-EQ-007 | SN-18, SN-20 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020 | — | Source-controlled draft |
+| SR-EQ-007 | SN-18, SN-20 explicit source trace | KPP-E1 derived through stakeholder-need link | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020 | - | Source-controlled draft |
 
-| SR-EQ-008 | SN-24 explicit source trace | TPP-TRIB1 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-025, VR-026 | — | Source-controlled draft |
+| SR-EQ-008 | SN-24 explicit source trace | TPP-TRIB1 explicit source text/trace | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-025, VR-026 | - | Source-controlled draft |
 
-| SR-EQ-009 | SN-24 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-026 | — | Source-controlled draft |
+| SR-EQ-009 | SN-24 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-026 | - | Source-controlled draft |
 
-| SR-EQ-010 | SN-24 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-026 | — | Source-controlled draft |
+| SR-EQ-010 | SN-24 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NOPRSL | ARCH-NHASB / Inspection VR-001, VR-004, VR-020, VR-026 | - | Source-controlled draft |
 Legal Hardening, Continuity, and Anti-Sabotage Requirements
 Table E-17. Legal Hardening, Continuity, and Anti-Sabotage Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-LAW-001 | SN-13 explicit source trace | TPP-12.1 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Analysis VR-001, VR-019, VR-024, VR-025 | — | Source-controlled draft |
+| SR-LAW-001 | SN-13 explicit source trace | TPP-12.1 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Analysis VR-001, VR-019, VR-024, VR-025 | - | Source-controlled draft |
 
-| SR-LAW-002 | SN-09, SN-13 explicit source trace | TPP-12.2 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Analysis VR-001, VR-019, VR-024, VR-025 | — | Source-controlled draft |
+| SR-LAW-002 | SN-09, SN-13 explicit source trace | TPP-12.2 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Analysis VR-001, VR-019, VR-024, VR-025 | - | Source-controlled draft |
 
-| SR-LAW-003 | SN-13 explicit source trace | TPP-12.3 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Demonstration VR-001, VR-019, VR-024, VR-025, VR-030 | — | Source-controlled draft |
+| SR-LAW-003 | SN-13 explicit source trace | TPP-12.3 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Demonstration VR-001, VR-019, VR-024, VR-025, VR-030 | - | Source-controlled draft |
 
-| SR-LAW-004 | SN-13 explicit source trace | TPP-12.5 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024, VR-025 | — | Source-controlled draft |
+| SR-LAW-004 | SN-13 explicit source trace | TPP-12.5 explicit source text/trace | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024, VR-025 | - | Source-controlled draft |
 
-| SR-LAW-005 | SN-09, SN-13 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | — | Source-controlled draft |
+| SR-LAW-005 | SN-09, SN-13 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | - | Source-controlled draft |
 
-| SR-LAW-006 | SN-13 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | — | Source-controlled draft |
+| SR-LAW-006 | SN-13 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | - | Source-controlled draft |
 
-| SR-LAW-007 | SN-13 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | — | Source-controlled draft |
+| SR-LAW-007 | SN-13 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | - | Source-controlled draft |
 
-| SR-LAW-008 | SN-13, SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-021, VR-024 | — | Source-controlled draft |
+| SR-LAW-008 | SN-13, SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-021, VR-024 | - | Source-controlled draft |
 
-| SR-LAW-009 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024, VR-025 | — | Source-controlled draft |
+| SR-LAW-009 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024, VR-025 | - | Source-controlled draft |
 
-| SR-LAW-010 | SN-13, SN-20 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | — | Source-controlled draft |
+| SR-LAW-010 | SN-13, SN-20 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-CONG | ARCH-CHAO / Inspection VR-001, VR-019, VR-024 | - | Source-controlled draft |
 Adaptation, Formula, Sunset, and Repair Requirements
 Table E-18. Adaptation, Formula, Sunset, and Repair Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-ADP-001 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-001 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-002 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-002 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-003 | SN-21 explicit source trace | TPP-FORM1 explicit source text/trace | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-003 | SN-21 explicit source trace | TPP-FORM1 explicit source text/trace | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-004 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-004 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-005 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-005 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-006 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-006 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-007 | SN-14, SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-007 | SN-14, SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-008 | SN-17, SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-008 | SN-17, SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-009 | SN-15, SN-21 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-009 | SN-15, SN-21 explicit source trace | TPP-10.5 derived through stakeholder-need link | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-010 | SN-21, SN-23 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-010 | SN-21, SN-23 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-011 | SN-20, SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025, VR-028 | — | Source-controlled draft |
+| SR-ADP-011 | SN-20, SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025, VR-028 | - | Source-controlled draft |
 
-| SR-ADP-012 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-012 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-013 | SN-11, SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Analysis VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-013 | SN-11, SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Analysis VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-014 | SN-21 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Analysis VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-014 | SN-21 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NHASB | ARCH-CHAO / Analysis VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 
-| SR-ADP-015 | SN-23 explicit source trace | TPP-REG1 explicit source text/trace | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | — | Source-controlled draft |
+| SR-ADP-015 | SN-23 explicit source trace | TPP-REG1 explicit source text/trace | ARCH-NHASB | ARCH-CHAO / Inspection VR-001, VR-020, VR-021, VR-022, VR-023, VR-025 | - | Source-controlled draft |
 Innovation and Biomedical Technology Requirements
 Table E-19. Innovation and Biomedical Technology Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| SR-INN-001 | SN-22 explicit source trace | TPP-13.1 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018, VR-025 | — | Source-controlled draft |
+| SR-INN-001 | SN-22 explicit source trace | TPP-13.1 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-INN-002 | SN-22 explicit source trace | TPP-13.2 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018, VR-025 | — | Source-controlled draft |
+| SR-INN-002 | SN-22 explicit source trace | TPP-13.2 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-INN-003 | SN-22 explicit source trace | TPP-13.3 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Analysis VR-001, VR-003, VR-018, VR-025 | — | Source-controlled draft |
+| SR-INN-003 | SN-22 explicit source trace | TPP-13.3 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Analysis VR-001, VR-003, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-INN-004 | SN-22 explicit source trace | TPP-13.4 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Analysis VR-001, VR-003, VR-018, VR-025 | — | Source-controlled draft |
+| SR-INN-004 | SN-22 explicit source trace | TPP-13.4 explicit source text/trace | ARCH-NBIA | ARCH-CHAO / Analysis VR-001, VR-003, VR-018, VR-025 | - | Source-controlled draft |
 
-| SR-INN-005 | SN-21, SN-22 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | — | Source-controlled draft |
+| SR-INN-005 | SN-21, SN-22 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | - | Source-controlled draft |
 
-| SR-INN-006 | SN-22 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | — | Source-controlled draft |
+| SR-INN-006 | SN-22 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | - | Source-controlled draft |
 
-| SR-INN-007 | SN-11, SN-22 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | — | Source-controlled draft |
+| SR-INN-007 | SN-11, SN-22 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | - | Source-controlled draft |
 
-| SR-INN-008 | SN-20, SN-22 explicit source trace | — no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | — | Source-controlled draft |
+| SR-INN-008 | SN-20, SN-22 explicit source trace | - no metric allocated; requirement/verification evidence governs | ARCH-NBIA | ARCH-CHAO / Inspection VR-001, VR-003, VR-018 | - | Source-controlled draft |
 Interface and Function-Dependence Requirements
 Table E-20. Interface and Function-Dependence Requirements allocation
 
@@ -11283,9 +11283,9 @@ Table E-20. Interface and Function-Dependence Requirements allocation
 
 | SR-IF-011 | SN-15, SN-20 derived through parent requirement trace Parent: SR-DATA-012, SR-RGT-011 | TPP-12.4 derived through parent requirement trace | ARCH-DNHA-SEC | ARCH-NHASB / Inspection VR-001, VR-008, VR-020, VR-025 | IF-026 | Source-controlled draft |
 
-| SR-IF-012 | SN-21 derived through parent requirement trace Parent: SR-ADP-002 | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Analysis VR-001, VR-008, VR-025 | IF-027 | Source-controlled draft |
+| SR-IF-012 | SN-21 derived through parent requirement trace Parent: SR-ADP-002 | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Analysis VR-001, VR-008, VR-025 | IF-027 | Source-controlled draft |
 
-| SR-IF-013 | SN-05, SN-06 derived through parent requirement trace Parent: SR-PAY-006 | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Test VR-001, VR-008, VR-025 | IF-029, IF-030 | Source-controlled draft |
+| SR-IF-013 | SN-05, SN-06 derived through parent requirement trace Parent: SR-PAY-006 | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Test VR-001, VR-008, VR-025 | IF-029, IF-030 | Source-controlled draft |
 
 | SR-IF-014 | SN-05, SN-08 derived through parent requirement trace Parent: PR-TRN-003, PR-TRN-004 | KPP-T1, KPP-T2 derived through parent requirement trace | ARCH-DNHA-SEC | ARCH-NHASB / Demonstration VR-001, VR-008, VR-025, VR-030 | IF-026 | Source-controlled draft |
 
@@ -11295,67 +11295,67 @@ Table E-21. Verification Requirements allocation
 
 | Requirement | Upstream SN / basis | KPP/TPP / basis | Owner | Verifier / method / VR | IF | Status |
 
-| VR-001 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-001 | — | Source-controlled draft |
+| VR-001 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-001 | - | Source-controlled draft |
 
-| VR-002 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-002 | — | Source-controlled draft |
+| VR-002 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-002 | - | Source-controlled draft |
 
-| VR-003 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-003 | — | Source-controlled draft |
+| VR-003 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-003 | - | Source-controlled draft |
 
-| VR-004 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-004 | — | Source-controlled draft |
+| VR-004 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-004 | - | Source-controlled draft |
 
-| VR-005 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-005 | — | Source-controlled draft |
+| VR-005 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-005 | - | Source-controlled draft |
 
-| VR-006 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-006 | — | Source-controlled draft |
+| VR-006 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-006 | - | Source-controlled draft |
 
-| VR-007 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-007 | — | Source-controlled draft |
+| VR-007 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-007 | - | Source-controlled draft |
 
-| VR-008 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-008 | — | Source-controlled draft |
+| VR-008 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-008 | - | Source-controlled draft |
 
-| VR-009 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-009 | — | Source-controlled draft |
+| VR-009 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-009 | - | Source-controlled draft |
 
-| VR-010 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-010 | — | Source-controlled draft |
+| VR-010 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-010 | - | Source-controlled draft |
 
-| VR-011 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-011 | — | Source-controlled draft |
+| VR-011 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-011 | - | Source-controlled draft |
 
-| VR-012 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-012 | — | Source-controlled draft |
+| VR-012 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-012 | - | Source-controlled draft |
 
-| VR-013 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-013 | — | Source-controlled draft |
+| VR-013 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-013 | - | Source-controlled draft |
 
-| VR-014 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-014 | — | Source-controlled draft |
+| VR-014 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-014 | - | Source-controlled draft |
 
-| VR-015 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-015 | — | Source-controlled draft |
+| VR-015 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-015 | - | Source-controlled draft |
 
-| VR-016 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-016 | — | Source-controlled draft |
+| VR-016 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-016 | - | Source-controlled draft |
 
-| VR-017 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-017 | — | Source-controlled draft |
+| VR-017 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-017 | - | Source-controlled draft |
 
-| VR-018 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-018 | — | Source-controlled draft |
+| VR-018 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-018 | - | Source-controlled draft |
 
-| VR-019 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-019 | — | Source-controlled draft |
+| VR-019 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-019 | - | Source-controlled draft |
 
-| VR-020 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-020 | — | Source-controlled draft |
+| VR-020 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-020 | - | Source-controlled draft |
 
-| VR-021 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-021 | — | Source-controlled draft |
+| VR-021 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-021 | - | Source-controlled draft |
 
-| VR-022 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-022 | — | Source-controlled draft |
+| VR-022 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-022 | - | Source-controlled draft |
 
-| VR-023 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-023 | — | Source-controlled draft |
+| VR-023 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-023 | - | Source-controlled draft |
 
-| VR-024 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-024 | — | Source-controlled draft |
+| VR-024 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-024 | - | Source-controlled draft |
 
-| VR-025 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-025 | — | Source-controlled draft |
+| VR-025 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-025 | - | Source-controlled draft |
 
-| VR-026 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-026 | — | Source-controlled draft |
+| VR-026 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-026 | - | Source-controlled draft |
 
-| VR-027 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-027 | — | Source-controlled draft |
+| VR-027 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-027 | - | Source-controlled draft |
 
-| VR-028 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-028 | — | Source-controlled draft |
+| VR-028 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-028 | - | Source-controlled draft |
 
-| VR-029 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-029 | — | Source-controlled draft |
+| VR-029 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-029 | - | Source-controlled draft |
 
-| VR-030 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | — no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-030 | — | Source-controlled draft |
+| VR-030 | Cross-cutting / verified-object trace cross-cutting verification control; upstream need belongs to verified object | - no metric allocated; requirement/verification evidence governs | ARCH-DNHA-SEC | ARCH-NHASB / Requirement-defined evidence VR-030 | - | Source-controlled draft |
 ALLOCATION ACCEPTANCE RULE  A derived allocation may support model construction and review, but it may not alter a source-controlled requirement or close OI-121 until an independent traceability review accepts it.
-Appendix F — KPP/TPP Dictionary
+Appendix F - KPP/TPP Dictionary
 Section control record
 
 | Control field | Controlled content |
@@ -11494,7 +11494,7 @@ KPP-CULT dictionary
 
 | KPP-CULT1 | Clinician safety-culture score Target: baseline +25 percentage points | safety/workforce | weighted clinician safety-culture score - controlled baseline score | workforce.safety_culture | SN-09/SN-16 Owner: NHAC/NHWB | Source target; baseline/acceptance evidence required |
 F.2 Technical Performance Parameters
-TPP family 1 — Identity and eligibility
+TPP family 1 - Identity and eligibility
 TPP-1 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11506,7 +11506,7 @@ TPP-1 dictionary
 | TPP-1.3 | Erroneous coverage termination rate Target: <=2 per 100,000/year | eligible events / eligible exposure x 100,000 Unit: events/100,000/year | registry.person; coverage.eligibility_event | Owner: NEEA/NHRA Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
 
 | TPP-1.4 | Provisional coverage activation rate Target: >=99.5% within 24 hours | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | registry.person; coverage.eligibility_event | Owner: NEEA/NHRA Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family 2 — Claims and payment
+TPP family 2 - Claims and payment
 TPP-2 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11520,7 +11520,7 @@ TPP-2 dictionary
 | TPP-2.4 | Provider cash-flow disruption rate Target: <=0.5% delayed >30 days | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | claims.medical; payment.* | Owner: NCCA/THDO Verifier: HFASB/CHAO | Source target; baseline/acceptance evidence required |
 
 | TPP-2.5 | OMB/apportionment bypass success Target: >=99.8% mandatory disbursements | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | claims.medical; payment.* | Owner: NCCA/THDO Verifier: HFASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family 3 — Pharmacy
+TPP family 3 - Pharmacy
 TPP-3 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11536,7 +11536,7 @@ TPP-3 dictionary
 | TPP-3.5 | Critical drug shortage exposure Target: <=3% critical list | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | claims.pharmacy; supply.formulary/drug_inventory | Owner: PCU/NDPA Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
 
 | TPP-3.6 | Therapeutic substitution success Target: >=75% eligible nonpreferred prescriptions | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | claims.pharmacy; supply.formulary/drug_inventory | Owner: PCU/NDPA Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family 4 — Public manufacturing
+TPP family 4 - Public manufacturing
 TPP-4 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11550,7 +11550,7 @@ TPP-4 dictionary
 | TPP-4.4 | API domestic/friendly-source coverage Target: >=80% critical products | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | supply.manufacturing | Owner: PMC Verifier: NBIA/CHAO | Source target; baseline/acceptance evidence required |
 
 | TPP-4.5 | Inventory visibility rate Target: >=98% critical SKUs | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | supply.manufacturing | Owner: PMC Verifier: NBIA/CHAO | Source target; baseline/acceptance evidence required |
-TPP family 5 — Hospitals
+TPP family 5 - Hospitals
 TPP-5 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11566,7 +11566,7 @@ TPP-5 dictionary
 | TPP-5.5 | Hospital staffing safety compliance Target: >=97% | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | care.hospital_budget/service_line | Owner: NHSA/HFASB Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
 
 | TPP-5.6 | Related-party extraction ratio Target: <=0.5% hospital budget | registered numerator / registered denominator or absolute variance per metric protocol Unit: ratio/percent | care.hospital_budget/service_line | Owner: NHSA/HFASB Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family 6 — Diagnostic-treatment units
+TPP family 6 - Diagnostic-treatment units
 TPP-6 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11582,7 +11582,7 @@ TPP-6 dictionary
 | TPP-6.5 | Unit bounce-back rate Target: <=3.5% | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | care.unit_encounter; clinical.result | Owner: OCDTI Verifier: NPSMIB/NHASB | Source target; baseline/acceptance evidence required |
 
 | TPP-6.6 | AI-assisted clinician productivity Target: >=125% improvement in safely closed encounters per clinician-hour | (controlled baseline - observed adverse measure) / baseline; reverse sign for beneficial measure Unit: percent change | care.unit_encounter; clinical.result | Owner: OCDTI Verifier: NPSMIB/NHASB | OI-008; branch 1.25x and 2.25x |
-TPP family 7 — Specialty routing
+TPP family 7 - Specialty routing
 TPP-7 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11596,7 +11596,7 @@ TPP-7 dictionary
 | TPP-7.4 | Specialist urgent/e-consult capacity reservation Target: >=30% public specialist capacity | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | care.referral_packet/specialty_capacity/specialty_event | Owner: NSAA/RHA Verifier: NHASB/NHAC | Source target; baseline/acceptance evidence required |
 
 | TPP-7.5 | Regional queue participation Target: >=95% publicly paid specialists | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | care.referral_packet/specialty_capacity/specialty_event | Owner: NSAA/RHA Verifier: NHASB/NHAC | Source target; baseline/acceptance evidence required |
-TPP family 8 — Workforce
+TPP family 8 - Workforce
 TPP-8 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11612,7 +11612,7 @@ TPP-8 dictionary
 | TPP-8.5 | Scope-rule implementation Target: >=98% regions | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | workforce.* | Owner: NHWB/NHWECA Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
 
 | TPP-8.6 | Clinician burnout risk index Target: >=30% reduction | (controlled baseline - observed adverse measure) / baseline; reverse sign for beneficial measure Unit: percent change | workforce.* | Owner: NHWB/NHWECA Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family 9 — Expanded benefits
+TPP family 9 - Expanded benefits
 TPP-9 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11630,7 +11630,7 @@ TPP-9 dictionary
 | TPP-9.6 | Hearing/vision standard device fulfillment Target: >=95% within target | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | benefit.*; care.ems_transport | Owner: ACDRH/NEMTA Verifier: NHASB/NHAC | Target value depends on controlled service/legal standard |
 
 | TPP-9.7 | EMS readiness compliance Target: >=95% regions | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | benefit.*; care.ems_transport | Owner: ACDRH/NEMTA Verifier: NHASB/NHAC | Source target; baseline/acceptance evidence required |
-TPP family 10 — Records and interoperability
+TPP family 10 - Records and interoperability
 TPP-10 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11646,7 +11646,7 @@ TPP-10 dictionary
 | TPP-10.5 | Record correction closure Target: >=97% within statutory timeframe | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | registry.*; clinical.*; rights.correction_case | Owner: NHRA/NCDSO Verifier: HCCA/NHAC | Target value depends on controlled service/legal standard |
 
 | TPP-10.6 | API conformance rate Target: >=98% | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | registry.*; clinical.*; rights.correction_case | Owner: NHRA/NCDSO Verifier: HCCA/NHAC | Source target; baseline/acceptance evidence required |
-TPP family 11 — Cybersecurity and AI
+TPP family 11 - Cybersecurity and AI
 TPP-11 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11662,7 +11662,7 @@ TPP-11 dictionary
 | TPP-11.5 | AI override/audit capture Target: >=99% high-stakes decisions | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | cyber.continuity_event; ai.model_decision | Owner: HCCA/AICIO Verifier: NHAC/NHASB | Source target; baseline/acceptance evidence required |
 
 | TPP-11.6 | AI equity drift Target: <=3% maximum protected-group deviation | registered numerator / registered denominator or absolute variance per metric protocol Unit: ratio/percent | cyber.continuity_event; ai.model_decision | Owner: HCCA/AICIO Verifier: NHAC/NHASB | Source target; baseline/acceptance evidence required |
-TPP family 12 — Legal and continuity
+TPP family 12 - Legal and continuity
 TPP-12 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11678,7 +11678,7 @@ TPP-12 dictionary
 | TPP-12.5 | Anti-impoundment response time Target: <=24 hours | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | payment.*; rights.appeal_case; governance.requirement_result | Owner: NHTCA/DNHA Verifier: NHAC/CHAO/A1-HCAC | Source target; baseline/acceptance evidence required |
 
 | TPP-12.6 | Appeals resolution timeliness Target: >=97% by urgency class | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | payment.*; rights.appeal_case; governance.requirement_result | Owner: NHTCA/DNHA Verifier: NHAC/CHAO/A1-HCAC | Target value depends on controlled service/legal standard |
-TPP family 13 — Innovation
+TPP family 13 - Innovation
 TPP-13 dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11690,19 +11690,19 @@ TPP-13 dictionary
 | TPP-13.3 | Comparative effectiveness cycle time Target: median <=6 months | median(eligible completed event time - valid start time) Unit: time | innovation.program_license | Owner: NBIA/PILO Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
 
 | TPP-13.4 | Innovation reward value alignment Target: >=90% post-market reconciliation | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | innovation.program_license | Owner: NBIA/PILO Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family EMP — Employer transition
+TPP family EMP - Employer transition
 TPP-EMP dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
 
 | TPP-EMP1 | Employer wage-pass-through compliance Target: >=95% | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | workforce.transition; comparator.observation | Owner: EPTO Verifier: CHAO | Source target; baseline/acceptance evidence required |
-TPP family LEG — Decision rights
+TPP family LEG - Decision rights
 TPP-LEG dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
 
 | TPP-LEG1 | Denial/routing explanation completeness Target: >=98% | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | rights.appeal_case; governance.requirement_result | Owner: NHAC/PROO Verifier: A1-HCAC | Source target; baseline/acceptance evidence required |
-TPP family USE — Usability
+TPP family USE - Usability
 TPP-USE dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
@@ -11710,26 +11710,26 @@ TPP-USE dictionary
 | TPP-USE1 | Patient rights notice comprehension Target: >=90% | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | survey.experience_trust; rights.appeal_case | Owner: PROO/NHAC Verifier: NHASB | Source target; baseline/acceptance evidence required |
 
 | TPP-USE2 | Appeal filing completion without assistance Target: >=85% | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | survey.experience_trust; rights.appeal_case | Owner: PROO/NHAC Verifier: NHASB | Source target; baseline/acceptance evidence required |
-TPP family TRIB — Tribal compacts
+TPP family TRIB - Tribal compacts
 TPP-TRIB dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
 
 | TPP-TRIB1 | Tribal compact compliance Target: >=98% | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | governance.compact_waiver | Owner: TRTO Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family REG — Regional adaptation
+TPP family REG - Regional adaptation
 TPP-REG dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
 
 | TPP-REG1 | Regional adaptation waiver evaluation completion Target: >=95% | registered statistic over eligible population; denominator protocol required Unit: protocol-defined | governance.compact_waiver | Owner: SRCO/RHA Verifier: NHASB/CHAO | Source target; baseline/acceptance evidence required |
-TPP family FORM — Formula governance
+TPP family FORM - Formula governance
 TPP-FORM dictionary
 
 | ID | Measure / target | Calculation / unit | Data | Owner / verifier | Status |
 
 | TPP-FORM1 | Formula registry completeness Target: >=99% | eligible conforming events or objects / eligible events or objects Unit: fraction/percent | governance.formula_version | Owner: NHASB Verifier: CHAO/NHAC | Source target; baseline/acceptance evidence required |
 METRIC STATUS GUARD  KPP-C1/C2 remain unbaselined under OI-001; KPP-D4/D6/T-ED-004 require denominator approval; TPP-6.6 retains two interpretation branches. No simulation or dashboard may conceal these statuses.
-Appendix G — Cost Parameter Dictionary
+Appendix G - Cost Parameter Dictionary
 Section control record
 
 | Control field | Controlled content |
@@ -11791,7 +11791,7 @@ Table G-1. Cost-parameter family control
 | FIN | Financing and reserves | CP-FIN-001–CP-FIN-020 | 20 | HFASB/THDO/NHETF |
 
 | OFF | Offsets | CP-OFF-001–CP-OFF-020 | 20 | NHASB/HFASB |
-CP-TOT — Total system
+CP-TOT - Total system
 Table G-2. CP-TOT parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -11815,7 +11815,7 @@ Table G-2. CP-TOT parameter records
 | CP-TOT-009 | Gross added framework spending. New spending added by expanded benefits, units, workforce, safety, transition, and governance. | USD_2024/year Source explicit; price-year normalized | input or derived ledger / flow | HFASB/NHASB | Source-defined parameter; value/calibration required |
 
 | CP-TOT-010 | Gross framework savings. Savings from administrative simplification, purchasing, hospital reform, ED diversion, and other offsets. | USD_2024/year Source explicit; price-year normalized | derived output / flow | HFASB/NHASB | Source-defined parameter; value/calibration required |
-CP-POP — Population and macro
+CP-POP - Population and macro
 Table G-3. CP-POP parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -11828,7 +11828,7 @@ Table G-3. CP-POP parameter records
 
 | CP-POP-004 | Chronic disease prevalence vector. Prevalence of priority chronic diseases by region and population group. | fraction, ratio, or index (protocol-specific) Inferred class; exact denominator/unit required | state/input / stock/state | NEEA/NHASB | Source-defined parameter; unit and value/calibration required |
 
-| CP-POP-005 | Unmet demand release factor. Increase in utilization caused by newly affordable access. | multiplier Source explicit; price-year normalized | input/derived—resolve / parameter or event | NEEA/NHASB | Source-defined parameter; value/calibration required |
+| CP-POP-005 | Unmet demand release factor. Increase in utilization caused by newly affordable access. | multiplier Source explicit; price-year normalized | input/derived - resolve / parameter or event | NEEA/NHASB | Source-defined parameter; value/calibration required |
 
 | CP-POP-006 | Zero-cost utilization elasticity. Change in service utilization caused by reduced point-of-care price. | elasticity Source explicit; price-year normalized | input parameter / parameter | NEEA/NHASB | Source-defined parameter; value/calibration required |
 
@@ -11839,7 +11839,7 @@ Table G-3. CP-POP parameter records
 | CP-POP-009 | Disability support intensity index. Relative service intensity for disabled beneficiaries. | index Source explicit; price-year normalized | input parameter / parameter | NEEA/NHASB | Source-defined parameter; value/calibration required |
 
 | CP-POP-010 | Aging pressure factor. Annual utilization or cost increase due to population aging. | percent/year Source explicit; price-year normalized | state/input / stock/state | NEEA/NHASB | Source-defined parameter; value/calibration required |
-CP-CLM — Claims and payment
+CP-CLM - Claims and payment
 Table G-4. CP-CLM parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -11848,9 +11848,9 @@ Table G-4. CP-CLM parameter records
 
 | CP-CLM-002 | Eligibility transaction cost | USD_2024/transaction Source explicit; price-year normalized | input or derived ledger / flow | NCCA/THDO | Source-defined parameter; value/calibration required |
 
-| CP-CLM-003 | Medical claim volume | claims/year Source explicit; price-year normalized | input/derived—resolve / parameter or event | NCCA/THDO | Source-defined parameter; value/calibration required |
+| CP-CLM-003 | Medical claim volume | claims/year Source explicit; price-year normalized | input/derived - resolve / parameter or event | NCCA/THDO | Source-defined parameter; value/calibration required |
 
-| CP-CLM-004 | Pharmacy claim volume | claims/year Source explicit; price-year normalized | input/derived—resolve / parameter or event | NCCA/THDO | Source-defined parameter; value/calibration required |
+| CP-CLM-004 | Pharmacy claim volume | claims/year Source explicit; price-year normalized | input/derived - resolve / parameter or event | NCCA/THDO | Source-defined parameter; value/calibration required |
 
 | CP-CLM-005 | Clean claim processing cost | USD_2024/claim Source explicit; price-year normalized | input or derived ledger / flow | NCCA/THDO | Source-defined parameter; value/calibration required |
 
@@ -11873,7 +11873,7 @@ Table G-4. CP-CLM parameter records
 | CP-CLM-014 | Claims platform fixed operating cost | USD_2024/year Source explicit; price-year normalized | input or derived ledger / flow | NCCA/THDO | Source-defined parameter; value/calibration required |
 
 | CP-CLM-015 | Treasury disbursement transaction cost | USD_2024/payment Source explicit; price-year normalized | input or derived ledger / flow | NCCA/THDO | Source-defined parameter; value/calibration required |
-CP-HOSP — Hospitals
+CP-HOSP - Hospitals
 Table G-5. CP-HOSP parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -11900,14 +11900,14 @@ Table G-5. CP-HOSP parameter records
 
 | CP-HOSP-011 | Related-party extraction savings. Spending reduction from limiting related-party payments and extraction. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | NHSA/HFASB | Source-defined parameter; unit and value/calibration required |
 
-| CP-HOSP-012 | Avoidable admission volume. Number of admissions avoided through improved care. | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | NHSA/HFASB | Source-defined parameter; unit and value/calibration required |
+| CP-HOSP-012 | Avoidable admission volume. Number of admissions avoided through improved care. | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | NHSA/HFASB | Source-defined parameter; unit and value/calibration required |
 
 | CP-HOSP-013 | Avoided admission unit savings. Average cost avoided per preventable admission. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | NHSA/HFASB | Source-defined parameter; unit and value/calibration required |
 
 | CP-HOSP-014 | Readmission reduction savings. Savings from reduced unplanned 30-day readmissions. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | NHSA/HFASB | Source-defined parameter; unit and value/calibration required |
 
 | CP-HOSP-015 | Hospital service-line closure replacement cost. Cost to replace an essential service line. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHSA/HFASB | Source-defined parameter; unit and value/calibration required |
-CP-CLIN — Clinical workforce/services
+CP-CLIN - Clinical workforce/services
 Table G-6. CP-CLIN parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -11932,16 +11932,16 @@ Table G-6. CP-CLIN parameter records
 
 | CP-CLIN-010 | Specialist avoidable-visit savings. Savings from e-consult and first-line workups replacing in-person visits. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-011 | Clinical productivity factor. Encounters safely closed per clinician-hour relative to baseline. | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived—resolve / parameter or event | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-011 | Clinical productivity factor. Encounters safely closed per clinician-hour relative to baseline. | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived - resolve / parameter or event | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-CLIN-012 | Specialty bottleneck cost premium. Incremental cost caused by specialty shortages. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
 
-| CP-CLIN-013 | Rural clinician premium. Incremental compensation required to staff rural areas. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
+| CP-CLIN-013 | Rural clinician premium. Incremental compensation required to staff rural areas. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-CLIN-014 | Clinician burnout turnover cost. Replacement, vacancy, productivity, and training cost from burnout. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-CLIN-015 | Malpractice/injury compensation cost. Cost of patient injury compensation or system liability program. | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHWB/NCCA | Source-defined parameter; unit and value/calibration required |
-CP-UNIT — Diagnostic-treatment units
+CP-UNIT - Diagnostic-treatment units
 Table G-7. CP-UNIT parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -11970,7 +11970,7 @@ Table G-7. CP-UNIT parameter records
 
 | CP-UNIT-012 | Type D capital cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | OCDTI/RHA | Source-defined parameter; unit and value/calibration required |
 
-| CP-UNIT-013 | Unit visit volume by type | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | OCDTI/RHA | Source-defined parameter; unit and value/calibration required |
+| CP-UNIT-013 | Unit visit volume by type | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | OCDTI/RHA | Source-defined parameter; unit and value/calibration required |
 
 | CP-UNIT-014 | Unit variable cost per visit | USD_2024 / named denominator Inferred; denominator required | input or derived ledger / flow | OCDTI/RHA | Source-defined parameter; unit and value/calibration required |
 
@@ -11993,7 +11993,7 @@ Table G-7. CP-UNIT parameter records
 | CP-UNIT-023 | Unit bounce-back cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | OCDTI/RHA | Source-defined parameter; unit and value/calibration required |
 
 | CP-UNIT-024 | Unit public-health surge cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | OCDTI/RHA | Source-defined parameter; unit and value/calibration required |
-CP-LTC — Long-term care
+CP-LTC - Long-term care
 Table G-8. CP-LTC parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12002,7 +12002,7 @@ Table G-8. CP-LTC parameter records
 
 | CP-LTC-002 | LTC assessment cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-LTC-003 | Home-care hours authorized | TBD canonical unit Open unit resolution | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-LTC-003 | Home-care hours authorized | TBD canonical unit Open unit resolution | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-004 | Home-care cost per hour | USD_2024 / named denominator Inferred; denominator required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
@@ -12014,19 +12014,19 @@ Table G-8. CP-LTC parameter records
 
 | CP-LTC-008 | DME and home modification cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-LTC-009 | LTC workforce premium | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-LTC-009 | LTC workforce premium | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-010 | LTC appeal adjustment cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-011 | Avoided institutionalization savings | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-LTC-012 | LTC safety failure cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
-CP-RX — Drugs/pharmacy
+CP-RX - Drugs/pharmacy
 Table G-9. CP-RX parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
 
-| CP-RX-001 | Prescription fill volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
+| CP-RX-001 | Prescription fill volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
 
 | CP-RX-002 | Weighted average net drug unit cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
 
@@ -12038,7 +12038,7 @@ Table G-9. CP-RX parameter records
 
 | CP-RX-006 | Public manufacturing variable cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
 
-| CP-RX-007 | Public manufacturing capital amortization | TBD canonical unit Open unit resolution | input/derived—resolve / parameter or event | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
+| CP-RX-007 | Public manufacturing capital amortization | TBD canonical unit Open unit resolution | input/derived - resolve / parameter or event | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
 
 | CP-RX-008 | Strategic stockpile carrying cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
 
@@ -12055,20 +12055,20 @@ Table G-9. CP-RX parameter records
 | CP-RX-014 | Formulary exception cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
 
 | CP-RX-015 | Drug quality failure cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | PCU/NDPA/PMC | Source-defined parameter; unit and value/calibration required |
-CP-DX — Devices, labs and diagnostics
+CP-DX - Devices, labs and diagnostics
 Table G-10. CP-DX parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
 
-| CP-DX-001 | Lab test volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
+| CP-DX-001 | Lab test volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-002 | Average lab test cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
 
-| CP-DX-003 | Point-of-care test volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
+| CP-DX-003 | Point-of-care test volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-004 | Point-of-care test cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
 
-| CP-DX-005 | Imaging volume by modality | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
+| CP-DX-005 | Imaging volume by modality | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-006 | Imaging cost by modality | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
 
@@ -12089,16 +12089,16 @@ Table G-10. CP-DX parameter records
 | CP-DX-014 | Missed-diagnosis cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-DX-015 | Diagnostic workforce cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | AMDDT/NCCA | Source-defined parameter; unit and value/calibration required |
-CP-BH — Behavioral health
+CP-BH - Behavioral health
 Table G-11. CP-BH parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
 
-| CP-BH-001 | Behavioral health eligible demand | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-BH-001 | Behavioral health eligible demand | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-002 | First-contact cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-003 | Therapy session volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-BH-003 | Therapy session volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-004 | Therapy session cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
@@ -12106,7 +12106,7 @@ Table G-11. CP-BH parameter records
 
 | CP-BH-006 | Psychiatry visit cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-007 | Crisis response event volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-BH-007 | Crisis response event volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-008 | Crisis response cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
@@ -12114,35 +12114,35 @@ Table G-11. CP-BH parameter records
 
 | CP-BH-010 | Medication-assisted treatment cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-011 | Behavioral health unmet-demand release factor | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-BH-011 | Behavioral health unmet-demand release factor | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-012 | Behavioral health avoided ED/hospital savings | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-BH-013 | Behavioral health workforce premium | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-BH-013 | Behavioral health workforce premium | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-014 | Privacy segmentation operating cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-BH-015 | Behavioral health safety failure cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
-CP-DVH — Dental, vision and hearing
+CP-DVH - Dental, vision and hearing
 Table G-12. CP-DVH parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
 
-| CP-DVH-001 | Basic dental visit volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-001 | Basic dental visit volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-002 | Basic dental visit cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-003 | Advanced dental procedure volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-003 | Advanced dental procedure volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-004 | Advanced dental procedure cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-005 | Vision exam volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-005 | Vision exam volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-006 | Vision exam cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-007 | Standard eyewear/device cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-008 | Hearing exam volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-008 | Hearing exam volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-009 | Hearing exam cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
@@ -12150,29 +12150,29 @@ Table G-12. CP-DVH parameter records
 
 | CP-DVH-011 | DVH workforce cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
-| CP-DVH-012 | DVH unmet-demand release factor | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived—resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
+| CP-DVH-012 | DVH unmet-demand release factor | capacity/activity unit (protocol-specific) Inferred; service denominator required | input/derived - resolve / parameter or event | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-013 | Preventable medical savings from DVH care | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-014 | DVH device procurement savings | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
 
 | CP-DVH-015 | DVH access expansion capital cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | ACDRH | Source-defined parameter; unit and value/calibration required |
-CP-EMS — Emergency medical services
+CP-EMS - Emergency medical services
 Table G-13. CP-EMS parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
 
 | CP-EMS-001 | EMS readiness cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NEMTA | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-002 | EMS response volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-002 | EMS response volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-003 | EMS response cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NEMTA | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-004 | Medical transport trip volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-004 | Medical transport trip volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-005 | Medical transport trip cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NEMTA | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-006 | Air ambulance event volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-006 | Air ambulance event volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-007 | Air ambulance event cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NEMTA | Source-defined parameter; unit and value/calibration required |
 
@@ -12180,12 +12180,12 @@ Table G-13. CP-EMS parameter records
 
 | CP-EMS-009 | Avoided transport savings | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | NEMTA | Source-defined parameter; unit and value/calibration required |
 
-| CP-EMS-010 | Rural escalation premium | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
+| CP-EMS-010 | Rural escalation premium | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | NEMTA | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-011 | Disaster/surge EMS cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NEMTA | Source-defined parameter; unit and value/calibration required |
 
 | CP-EMS-012 | EMS-unit interface cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NEMTA | Source-defined parameter; unit and value/calibration required |
-CP-PH — Public health
+CP-PH - Public health
 Table G-14. CP-PH parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12213,7 +12213,7 @@ Table G-14. CP-PH parameter records
 | CP-PH-011 | Public health emergency response cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | Public-health authority | Source-defined parameter; unit and value/calibration required |
 
 | CP-PH-012 | Public health data integration cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | Public-health authority | Source-defined parameter; unit and value/calibration required |
-CP-IT — Information, cyber and AI
+CP-IT - Information, cyber and AI
 Table G-15. CP-IT parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12253,7 +12253,7 @@ Table G-15. CP-IT parameter records
 | CP-IT-017 | Technical debt remediation cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHRA/HCCA/AICIO | Source-defined parameter; unit and value/calibration required |
 
 | CP-IT-018 | Public dashboard operating cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHRA/HCCA/AICIO | Source-defined parameter; unit and value/calibration required |
-CP-GOV — Governance and oversight
+CP-GOV - Governance and oversight
 Table G-16. CP-GOV parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12266,11 +12266,11 @@ Table G-16. CP-GOV parameter records
 
 | CP-GOV-004 | CHAO operating cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
-| CP-GOV-005 | Ombudsman case volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
+| CP-GOV-005 | Ombudsman case volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-006 | Ombudsman cost per case | USD_2024 / named denominator Inferred; denominator required | input or derived ledger / flow | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
-| CP-GOV-007 | Appeal volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
+| CP-GOV-007 | Appeal volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-008 | Appeal cost per case | USD_2024 / named denominator Inferred; denominator required | input or derived ledger / flow | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
@@ -12288,7 +12288,7 @@ Table G-16. CP-GOV parameter records
 
 | CP-GOV-015 | Fraud investigation cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
-| CP-GOV-016 | Fraud recovery amount | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
+| CP-GOV-016 | Fraud recovery amount | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-017 | Rule review cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
@@ -12297,7 +12297,7 @@ Table G-16. CP-GOV parameter records
 | CP-GOV-019 | Public trust survey cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
 
 | CP-GOV-020 | Legal defense and contingency cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | DNHA/NHAC/NHASB/CHAO | Source-defined parameter; unit and value/calibration required |
-CP-RD — Biomedical R&D
+CP-RD - Biomedical R&D
 Table G-17. CP-RD parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12324,8 +12324,8 @@ Table G-17. CP-RD parameter records
 
 | CP-RD-011 | Innovation avoided-care savings | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | NBIA | Source-defined parameter; unit and value/calibration required |
 
-| CP-RD-012 | Licensing noncompliance recovery | TBD canonical unit Open unit resolution | input/derived—resolve / parameter or event | NBIA | Source-defined parameter; unit and value/calibration required |
-CP-EDU — Education and workforce
+| CP-RD-012 | Licensing noncompliance recovery | TBD canonical unit Open unit resolution | input/derived - resolve / parameter or event | NBIA | Source-defined parameter; unit and value/calibration required |
+CP-EDU - Education and workforce
 Table G-18. CP-EDU parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12359,20 +12359,20 @@ Table G-18. CP-EDU parameter records
 | CP-EDU-014 | Specialist bottleneck premium cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHWB/NHWECA | Source-defined parameter; unit and value/calibration required |
 
 | CP-EDU-015 | Displaced worker retraining cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHWB/NHWECA | Source-defined parameter; unit and value/calibration required |
-CP-TRN — Transition
+CP-TRN - Transition
 Table G-19. CP-TRN parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
 
 | CP-TRN-001 | Transition authority operating cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHTCA | Source-defined parameter; unit and value/calibration required |
 
-| CP-TRN-002 | Patient continuity case volume | count or count/year Inferred; stock/flow grain required | input/derived—resolve / parameter or event | NHTCA | Source-defined parameter; unit and value/calibration required |
+| CP-TRN-002 | Patient continuity case volume | count or count/year Inferred; stock/flow grain required | input/derived - resolve / parameter or event | NHTCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-003 | Patient continuity cost per case | USD_2024 / named denominator Inferred; denominator required | input or derived ledger / flow | NHTCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-004 | Critical medication continuity cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHTCA | Source-defined parameter; unit and value/calibration required |
 
-| CP-TRN-005 | Provider liquidity reserve authority | TBD canonical unit Open unit resolution | input/derived—resolve / parameter or event | NHTCA | Source-defined parameter; unit and value/calibration required |
+| CP-TRN-005 | Provider liquidity reserve authority | TBD canonical unit Open unit resolution | input/derived - resolve / parameter or event | NHTCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-006 | Net provider liquidity outlay | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHTCA | Source-defined parameter; unit and value/calibration required |
 
@@ -12403,7 +12403,7 @@ Table G-19. CP-TRN parameter records
 | CP-TRN-019 | Transition legal safe-harbor administration cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHTCA | Source-defined parameter; unit and value/calibration required |
 
 | CP-TRN-020 | Transition complaint remediation cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | NHTCA | Source-defined parameter; unit and value/calibration required |
-CP-FIN — Financing and reserves
+CP-FIN - Financing and reserves
 Table G-20. CP-FIN parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12412,7 +12412,7 @@ Table G-20. CP-FIN parameter records
 
 | CP-FIN-002 | Existing federal spending redirect | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-003 | State/local maintenance contribution | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-003 | State/local maintenance contribution | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-004 | Employer contribution receipts | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
@@ -12426,7 +12426,7 @@ Table G-20. CP-FIN parameter records
 
 | CP-FIN-009 | Wealth collection efficiency | fraction, ratio, or index (protocol-specific) Inferred class; exact denominator/unit required | input parameter / parameter | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-010 | Wealth tax avoidance leakage | TBD canonical unit Open unit resolution | input/derived—resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-010 | Wealth tax avoidance leakage | TBD canonical unit Open unit resolution | input/derived - resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-011 | Trust fund operating reserve balance | TBD canonical unit Open unit resolution | state/input / stock/state | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
@@ -12434,20 +12434,20 @@ Table G-20. CP-FIN parameter records
 
 | CP-FIN-013 | Permanent endowment balance | TBD canonical unit Open unit resolution | state/input / stock/state | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-014 | Trust fund transfer | TBD canonical unit Open unit resolution | input/derived—resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-014 | Trust fund transfer | TBD canonical unit Open unit resolution | input/derived - resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-015 | Reserve drawdown | TBD canonical unit Open unit resolution | input/derived—resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-015 | Reserve drawdown | TBD canonical unit Open unit resolution | input/derived - resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-016 | Reserve contribution | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-016 | Reserve contribution | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-017 | Ordinary taxpayer burden share | fraction, ratio, or index (protocol-specific) Inferred class; exact denominator/unit required | input parameter / parameter | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-018 | Employer net savings | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
-| CP-FIN-019 | Worker wage pass-through amount | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived—resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
+| CP-FIN-019 | Worker wage pass-through amount | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input/derived - resolve / parameter or event | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
 
 | CP-FIN-020 | Tax stabilizer activation cost | USD_2024/year or USD_2024/event Inferred; aggregation grain required | input or derived ledger / flow | HFASB/THDO/NHETF | Source-defined parameter; unit and value/calibration required |
-CP-OFF — Offsets
+CP-OFF - Offsets
 Table G-21. CP-OFF parameter records
 
 | ID | Name / description | Unit / status | Role / time | Owner | Value / calibration status |
@@ -12492,7 +12492,7 @@ Table G-21. CP-OFF parameter records
 
 | CP-OFF-020 | Employer administrative savings | USD_2024/year or USD_2024/event Inferred; aggregation grain required | derived output / flow | NHASB/HFASB | Source-defined parameter; unit and value/calibration required |
 PARAMETER GUARD  Only CP-TOT-001 and other expressly controlled records carry a framework value. All remaining CP values, bounds, distributions and correlations require versioned calibration or scenario assignment.
-Appendix H — Cost Equations
+Appendix H - Cost Equations
 Section control record
 
 | Control field | Controlled content |
@@ -12662,7 +12662,7 @@ Table H-5. Financing layers
 | FL-06 | Health-sector rent taxes | CP-FIN-007 | Targeted receipts from economic rents/extraction consistent with sector reform | Avoid taxing necessary clinical capacity or counting eliminated rent as both receipt and saving | Payment/charter/anti-extraction and general progressive layers |
 
 | FL-07 | Residual broad backstop | CP-FIN-008/017/020 | Last-resort broad contribution activated only by registered stabilizer conditions | Ordinary-household incremental burden share <=5%; caps/relief/refund and expiry | Reserve draw, progressive-layer adjustment and statutory alternatives before broad burden |
-Appendix I — Interface Catalog
+Appendix I - Interface Catalog
 Section control record
 
 | Control field | Controlled content |
@@ -12685,69 +12685,69 @@ Table I-1. IF-001–IF-032 business interface register
 
 | ID | Source | Destination | Payload | Form | Requirements | Access / failure control | Verification / status |
 
-| IF-001 | ARCH-NEEA | ARCH-NHIS / ARCH-NMPI | identity proof, person key, eligibility event | request/event | SR-IF-001 | R3/R4 — protected person/health; segmentation as applicable Provisional coverage or controlled hold; identity correction; manual reconciliation; preserve audit lineage. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-001 | ARCH-NEEA | ARCH-NHIS / ARCH-NMPI | identity proof, person key, eligibility event | request/event | SR-IF-001 | R3/R4 - protected person/health; segmentation as applicable Provisional coverage or controlled hold; identity correction; manual reconciliation; preserve audit lineage. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-002 | ARCH-NEEA | ARCH-NCCA | coverage class, effective dates, exceptions | event | SR-IF-001 | R3/R4 — protected person/health; segmentation as applicable Provisional coverage or controlled hold; identity correction; manual reconciliation; preserve audit lineage. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-002 | ARCH-NEEA | ARCH-NCCA | coverage class, effective dates, exceptions | event | SR-IF-001 | R3/R4 - protected person/health; segmentation as applicable Provisional coverage or controlled hold; identity correction; manual reconciliation; preserve audit lineage. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-003 | ARCH-NCCA | ARCH-THDO | adjudicated obligation, payee, amount, authority | batch/event | SR-IF-001 | R2 — confidential operational/financial Provisional/manual mandatory payment, retry and reconciliation; provider liquidity protection; dispute/remedy path. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-003 | ARCH-NCCA | ARCH-THDO | adjudicated obligation, payee, amount, authority | batch/event | SR-IF-001 | R2 - confidential operational/financial Provisional/manual mandatory payment, retry and reconciliation; provider liquidity protection; dispute/remedy path. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-004 | ARCH-THDO | provider / pharmacy / hospital | settlement, remittance, rejection, remedy flag | event | SR-IF-001 | R2 — confidential operational/financial Provisional/manual mandatory payment, retry and reconciliation; provider liquidity protection; dispute/remedy path. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-004 | ARCH-THDO | provider / pharmacy / hospital | settlement, remittance, rejection, remedy flag | event | SR-IF-001 | R2 - confidential operational/financial Provisional/manual mandatory payment, retry and reconciliation; provider liquidity protection; dispute/remedy path. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-005 | ARCH-PCU | ARCH-NFTSB / ARCH-MARB | formulary rule, access class, exception decision | request/event | SR-IF-002 | R3/R4 — protected person/health; segmentation as applicable Medication bridge, formulary exception, substitution/shortage workflow and manual pharmacy claim where authorized. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-005 | ARCH-PCU | ARCH-NFTSB / ARCH-MARB | formulary rule, access class, exception decision | request/event | SR-IF-002 | R3/R4 - protected person/health; segmentation as applicable Medication bridge, formulary exception, substitution/shortage workflow and manual pharmacy claim where authorized. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-006 | ARCH-PCU / ARCH-PMC | ARCH-DUSO / ARCH-NDPA | utilization, price, inventory, shortage, substitution | event | SR-IF-002 | R2 — confidential operational/financial Medication bridge, formulary exception, substitution/shortage workflow and manual pharmacy claim where authorized. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-006 | ARCH-PCU / ARCH-PMC | ARCH-DUSO / ARCH-NDPA | utilization, price, inventory, shortage, substitution | event | SR-IF-002 | R2 - confidential operational/financial Medication bridge, formulary exception, substitution/shortage workflow and manual pharmacy claim where authorized. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-007 | ARCH-NCDTN | ARCH-NHRA / ARCH-NLLHR | encounter, test, medication, follow-up owner | event | SR-IF-003 | R3/R4 — protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Demonstration OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-007 | ARCH-NCDTN | ARCH-NHRA / ARCH-NLLHR | encounter, test, medication, follow-up owner | event | SR-IF-003 | R3/R4 - protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Demonstration OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-008 | ARCH-NCDTN / primary care | ARCH-NSAA | structured referral packet and urgency class | request | SR-IF-004 | R3/R4 — protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-008 | ARCH-NCDTN / primary care | ARCH-NSAA | structured referral packet and urgency class | request | SR-IF-004 | R3/R4 - protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-009 | ARCH-RHA / specialists | ARCH-NSAA | capacity ledger, protected slots, queue state | event | SR-IF-004 | R3/R4 — protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-009 | ARCH-RHA / specialists | ARCH-NSAA | capacity ledger, protected slots, queue state | event | SR-IF-004 | R3/R4 - protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-010 | ARCH-NSAA | referrer / ARCH-NHRA | e-consult response, route, appointment, closure | event | SR-IF-004 | R3/R4 — protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-010 | ARCH-NSAA | referrer / ARCH-NHRA | e-consult response, route, appointment, closure | event | SR-IF-004 | R3/R4 - protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-011 | ARCH-NCDTN | ARCH-NEMTA | red flags, acuity, location, stabilization performed | request | SR-IF-003 | R3/R4 — protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Demonstration OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-011 | ARCH-NCDTN | ARCH-NEMTA | red flags, acuity, location, stabilization performed | request | SR-IF-003 | R3/R4 - protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Demonstration OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-012 | ARCH-NEMTA | hospital / ARCH-RHA | ETA, acuity, capacity request, handoff | event |  | R3/R4 — protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Requirement-defined OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-012 | ARCH-NEMTA | hospital / ARCH-RHA | ETA, acuity, capacity request, handoff | event |  | R3/R4 - protected person/health; segmentation as applicable Human/manual handoff, urgency escalation, direct contact and emergency route; preserve responsible follow-up owner. | Requirement-defined OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-013 | ARCH-NHSA / ARCH-HFASB | ARCH-THDO / hospital | certified global budget and payment schedule | batch/event | SR-IF-005 | R2 — confidential operational/financial Certified manual schedule and stabilization corridor; protect essential services, staffing and regional readiness. | Analysis OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-013 | ARCH-NHSA / ARCH-HFASB | ARCH-THDO / hospital | certified global budget and payment schedule | batch/event | SR-IF-005 | R2 - confidential operational/financial Certified manual schedule and stabilization corridor; protect essential services, staffing and regional readiness. | Analysis OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-014 | hospital | ARCH-NHSA / ARCH-HAAO / ARCH-RHA | service line, staffing, readiness, capital, variance | event | SR-IF-005 | R2 — confidential operational/financial Certified manual schedule and stabilization corridor; protect essential services, staffing and regional readiness. | Analysis OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-014 | hospital | ARCH-NHSA / ARCH-HAAO / ARCH-RHA | service line, staffing, readiness, capital, variance | event | SR-IF-005 | R2 - confidential operational/financial Certified manual schedule and stabilization corridor; protect essential services, staffing and regional readiness. | Analysis OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-015 | providers / training programs | ARCH-NHWB / ARCH-NHWECA | credentials, vacancies, slots, obligations, placement | event |  | R2 — confidential operational/financial Manual credential/source validation, scoped access and placement continuity until registry reconciliation. | Requirement-defined OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-015 | providers / training programs | ARCH-NHWB / ARCH-NHWECA | credentials, vacancies, slots, obligations, placement | event |  | R2 - confidential operational/financial Manual credential/source validation, scoped access and placement continuity until registry reconciliation. | Requirement-defined OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-016 | ARCH-PACP / ARCH-CIRBAS | ARCH-NRLS / ARCH-NLLHR | authorized record query and record locator response | request | SR-IF-006 | R3/R4 — protected person/health; segmentation as applicable Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Demonstration OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-016 | ARCH-PACP / ARCH-CIRBAS | ARCH-NRLS / ARCH-NLLHR | authorized record query and record locator response | request | SR-IF-006 | R3/R4 - protected person/health; segmentation as applicable Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Demonstration OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-017 | ARCH-PACP / ARCH-HRPO | federated data nodes | consent, segmentation, correction, access-audit event | request/event | SR-IF-006 | R3/R4 — protected person/health; segmentation as applicable Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Demonstration OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-017 | ARCH-PACP / ARCH-HRPO | federated data nodes | consent, segmentation, correction, access-audit event | request/event | SR-IF-006 | R3/R4 - protected person/health; segmentation as applicable Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Demonstration OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-018 | ARCH-NCDSO / ARCH-NAIG | all conforming nodes | schema, code set, API profile, conformance result | publish/test | SR-IF-006 | R3/R4 — protected person/health; segmentation as applicable Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Demonstration OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-018 | ARCH-NCDSO / ARCH-NAIG | all conforming nodes | schema, code set, API profile, conformance result | publish/test | SR-IF-006 | R3/R4 - protected person/health; segmentation as applicable Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Demonstration OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-019 | ARCH-HCCA | all critical nodes | threat, vulnerability, failover, recovery status | event |  | R5 — restricted security/continuity Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Requirement-defined OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-019 | ARCH-HCCA | all critical nodes | threat, vulnerability, failover, recovery status | event |  | R5 - restricted security/continuity Federated/legacy/manual path, local downtime cache, minimum necessary access, correction and failover/recovery log. | Requirement-defined OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-020 | ARCH-AICIO | operating systems / ARCH-NHAC | model version, use class, decision log, review, suspension | event | SR-IF-007 | R3/R4 — protected person/health; segmentation as applicable Suspend or restrict affected model/version; use accountable human/manual path; review affected decisions. | Analysis OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-020 | ARCH-AICIO | operating systems / ARCH-NHAC | model version, use class, decision log, review, suspension | event | SR-IF-007 | R3/R4 - protected person/health; segmentation as applicable Suspend or restrict affected model/version; use accountable human/manual path; review affected decisions. | Analysis OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-021 | operating authority | ARCH-NHAC / ARCH-PROO / ARCH-A1-HCAC | complete decision record, evidence, urgency, appeal | case | SR-IF-008 | R3/R4 — protected person/health; segmentation as applicable Accept manual/assisted case; grant provisional relief where indicated; preserve court and payment remedy. | Analysis OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-021 | operating authority | ARCH-NHAC / ARCH-PROO / ARCH-A1-HCAC | complete decision record, evidence, urgency, appeal | case | SR-IF-008 | R3/R4 - protected person/health; segmentation as applicable Accept manual/assisted case; grant provisional relief where indicated; preserve court and payment remedy. | Analysis OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-022 | ARCH-NHAC / ARCH-A1-HCAC | ARCH-DNHA / ARCH-NCCA / ARCH-THDO | stay, provisional relief, reversal, payment order | order/event | SR-IF-008 | R3/R4 — protected person/health; segmentation as applicable Accept manual/assisted case; grant provisional relief where indicated; preserve court and payment remedy. | Analysis OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-022 | ARCH-NHAC / ARCH-A1-HCAC | ARCH-DNHA / ARCH-NCCA / ARCH-THDO | stay, provisional relief, reversal, payment order | order/event | SR-IF-008 | R3/R4 - protected person/health; segmentation as applicable Accept manual/assisted case; grant provisional relief where indicated; preserve court and payment remedy. | Analysis OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-023 | operating and oversight bodies | ARCH-PRTO | approved metric, denominator, equity strata, publication status | publish |  | R0/R2 — public result plus controlled evidence Label delayed/provisional/superseded release; retain prior version and publish correction/provenance. | Requirement-defined OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-023 | operating and oversight bodies | ARCH-PRTO | approved metric, denominator, equity strata, publication status | publish |  | R0/R2 - public result plus controlled evidence Label delayed/provisional/superseded release; retain prior version and publish correction/provenance. | Requirement-defined OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-024 | ARCH-HFASB | ARCH-NHASB / ARCH-CHAO | obligation, receipt, reserve, sufficiency certification | certification | SR-IF-009 | R2 — confidential operational/financial Mandatory bridge, lawful reserve/stabilizer or legal fallback; preserve certified obligation and court enforcement. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-024 | ARCH-HFASB | ARCH-NHASB / ARCH-CHAO | obligation, receipt, reserve, sufficiency certification | certification | SR-IF-009 | R2 - confidential operational/financial Mandatory bridge, lawful reserve/stabilizer or legal fallback; preserve certified obligation and court enforcement. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-025 | ARCH-TREAS / ARCH-IRS | ARCH-NHA-TRUST / ARCH-NHETF | receipt, transfer, reserve contribution or draw | event | SR-IF-009 | R2 — confidential operational/financial Mandatory bridge, lawful reserve/stabilizer or legal fallback; preserve certified obligation and court enforcement. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-025 | ARCH-TREAS / ARCH-IRS | ARCH-NHA-TRUST / ARCH-NHETF | receipt, transfer, reserve contribution or draw | event | SR-IF-009 | R2 - confidential operational/financial Mandatory bridge, lawful reserve/stabilizer or legal fallback; preserve certified obligation and court enforcement. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-026 | legacy payer / ARCH-LPWO | ARCH-NHTCA / NEEA / NCCA / NHRA | enrollment, claims, authorization, medication, appeal, record | migration | SR-IF-011, SR-IF-014 | R3/R4 — protected person/health; segmentation as applicable Dual run or legacy bridge; do not sunset affected function; protect care/payment and recertify migration. | Inspection OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-026 | legacy payer / ARCH-LPWO | ARCH-NHTCA / NEEA / NCCA / NHRA | enrollment, claims, authorization, medication, appeal, record | migration | SR-IF-011, SR-IF-014 | R3/R4 - protected person/health; segmentation as applicable Dual run or legacy bridge; do not sunset affected function; protect care/payment and recertify migration. | Inspection OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-027 | state / tribal partner / ARCH-RHA | ARCH-SRCO / ARCH-TRTO / ARCH-NHASB | compact, waiver, sovereignty, hypothesis, endpoints, sunset | case | SR-IF-012 | R2 — confidential operational/financial Use preauthorized direct-federal fallback; preserve tribal direct pathway and national entitlement floor. | Analysis OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-027 | state / tribal partner / ARCH-RHA | ARCH-SRCO / ARCH-TRTO / ARCH-NHASB | compact, waiver, sovereignty, hypothesis, endpoints, sunset | case | SR-IF-012 | R2 - confidential operational/financial Use preauthorized direct-federal fallback; preserve tribal direct pathway and national entitlement floor. | Analysis OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-028 | implementing authority | ARCH-NHASB | phase-gate evidence package, risk, exception, verifier result | certification | SR-IF-010 | R0/R2 — public result plus controlled evidence Hold, bounded condition or rollback; protect predecessor state and execute corrective/re-entry plan. | Demonstration OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-028 | implementing authority | ARCH-NHASB | phase-gate evidence package, risk, exception, verifier result | certification | SR-IF-010 | R0/R2 - public result plus controlled evidence Hold, bounded condition or rollback; protect predecessor state and execute corrective/re-entry plan. | Demonstration OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-029 | ARCH-NBIA / ARCH-PILO | ARCH-PMC / ARCH-NDPA / licensee | milestone, license terms, price/access covenant | contract/event | SR-IF-013 | R2 — confidential operational/financial Hold release/contract action; apply privacy, license, conflict and disclosure review before resumption. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-029 | ARCH-NBIA / ARCH-PILO | ARCH-PMC / ARCH-NDPA / licensee | milestone, license terms, price/access covenant | contract/event | SR-IF-013 | R2 - confidential operational/financial Hold release/contract action; apply privacy, license, conflict and disclosure review before resumption. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-030 | ARCH-NHRA | ARCH-SRAE / approved researcher | deidentified or governed dataset, query, disclosure review | request/result | SR-IF-013 | R2 — confidential operational/financial Hold release/contract action; apply privacy, license, conflict and disclosure review before resumption. | Test OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-030 | ARCH-NHRA | ARCH-SRAE / approved researcher | deidentified or governed dataset, query, disclosure review | request/result | SR-IF-013 | R2 - confidential operational/financial Hold release/contract action; apply privacy, license, conflict and disclosure review before resumption. | Test OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-031 | provider / patient / ARCH-NPSMIB | ARCH-NHAC / learning network | safety event, injury, root cause, correction | case/event |  | R3/R4 — protected person/health; segmentation as applicable Manual safety reporting and containment; provisional patient protection; root cause, remedy and learning review. | Requirement-defined OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-031 | provider / patient / ARCH-NPSMIB | ARCH-NHAC / learning network | safety event, injury, root cause, correction | case/event |  | R3/R4 - protected person/health; segmentation as applicable Manual safety reporting and containment; provisional patient protection; root cause, remedy and learning review. | Requirement-defined OI-020 - schema/code set/event/API/latency/conformance profile open |
 
-| IF-032 | ARCH-NOPRSL / ARCH-NHASB | ARCH-RHA / operating authority | stratified gap, correction plan, milestone, outcome | order/event | SR-IF-015 | R3/R4 — protected person/health; segmentation as applicable Open corrective action and independent review; preserve rights and affected service while remediation proceeds. | Analysis OI-020 — schema/code set/event/API/latency/conformance profile open |
+| IF-032 | ARCH-NOPRSL / ARCH-NHASB | ARCH-RHA / operating authority | stratified gap, correction plan, milestone, outcome | order/event | SR-IF-015 | R3/R4 - protected person/health; segmentation as applicable Open corrective action and independent review; preserve rights and affected service while remediation proceeds. | Analysis OI-020 - schema/code set/event/API/latency/conformance profile open |
 Table I-2. SR-IF requirement coverage
 
 | Requirement | Allocated interfaces | Coverage |
@@ -12781,7 +12781,7 @@ Table I-2. SR-IF requirement coverage
 | SR-IF-014 | IF-026 | Mapped |
 
 | SR-IF-015 | IF-032 | Mapped |
-Appendix J — Phase Roadmap and Phase Gates
+Appendix J - Phase Roadmap and Phase Gates
 Section control record
 
 | Control field | Controlled content |
@@ -12958,7 +12958,7 @@ Table J-8. Readiness and retrospective reviews
 | Post-implementation review | After sufficient operating exposure | Benefits/harms, access, cost, safety, equity, rights, workforce, trust, continuity, defects and displacement effects are measured |
 
 | Maturity/sunset review | At P8 or statutory review date | Mature targets, fiscal durability, institutional performance, legal resilience, repair portfolio, function transfer, reauthorization or sunset are independently assessed |
-Appendix K — Governing Agency Catalog
+Appendix K - Governing Agency Catalog
 Section control record
 
 | Control field | Controlled content |
@@ -12982,7 +12982,7 @@ Table K-1. Constitutional, Fiscal, and Oversight Layer
 
 | ID | Canonical element | Primary role | Requirement allocation | IF | Lifecycle / separation control | Status |
 
-| ARCH-CONG | Congress / statutory design authority | Enacts entitlement, governing bodies, taxes, trusts, preemption, anti-impoundment, fallback provisions, and statutory duties. | SR-LAW / PR-CST / fiscal authorities | — | Existing constitutional/executive institution with conforming duties Statutory authority, obligation, reserve and disbursement roles remain distinct; legislative audit is separate from execution. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-CONG | Congress / statutory design authority | Enacts entitlement, governing bodies, taxes, trusts, preemption, anti-impoundment, fallback provisions, and statutory duties. | SR-LAW / PR-CST / fiscal authorities | - | Existing constitutional/executive institution with conforming duties Statutory authority, obligation, reserve and disbursement roles remain distinct; legislative audit is separate from execution. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-TREAS | Treasury Department | Hosts trust and disbursement structures and coordinates public financing. | SR-LAW / PR-CST / fiscal authorities | IF-025 | Existing constitutional/executive institution with conforming duties Statutory authority, obligation, reserve and disbursement roles remain distinct; legislative audit is separate from execution. | Source-controlled architecture element; statutory detail may remain open |
 
@@ -13004,7 +13004,7 @@ Table K-2. Department of National Health Assurance
 
 | ARCH-DNHA | Department of National Health Assurance | Core operating department for coverage, claims, drugs, care delivery, workforce, records, and regional operations. | SR-COV / SR-PAY / SR-ARCH | IF-022 | Baseline enduring element; statutory review applies Operating bodies cannot independently certify their own performance or extinguish NHAC/court remedies. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-DNHA-SEC | DNHA Office of the Secretary | Executive coordination, shared administration, cross-administration governance. | SR-ARCH-001 | — | Baseline enduring element; statutory review applies Operating bodies cannot independently certify their own performance or extinguish NHAC/court remedies. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-DNHA-SEC | DNHA Office of the Secretary | Executive coordination, shared administration, cross-administration governance. | SR-ARCH-001 | - | Baseline enduring element; statutory review applies Operating bodies cannot independently certify their own performance or extinguish NHAC/court remedies. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NEEA | National Enrollment and Eligibility Authority | Person enrollment, eligibility, provisional coverage, and continuous coverage functions. | SR-COV / SR-PAY / SR-ARCH | IF-001, IF-002 | Baseline enduring element; statutory review applies Operating bodies cannot independently certify their own performance or extinguish NHAC/court remedies. | Source-controlled architecture element; statutory detail may remain open |
 
@@ -13012,13 +13012,13 @@ Table K-2. Department of National Health Assurance
 
 | ARCH-PCU | National Pharmacy Claims Utility | Real-time public pharmacy claims rail replacing PBMs for the core benefit. | SR-COV / SR-PAY / SR-ARCH | IF-005, IF-006 | Baseline enduring element; statutory review applies Operating bodies cannot independently certify their own performance or extinguish NHAC/court remedies. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-PPCO | Private Plan Certification Office | Certification and oversight of supplemental, substitute, and fixed-fee administrative private plan roles. | SR-COV / SR-PAY / SR-ARCH | — | Baseline enduring element; statutory review applies Operating bodies cannot independently certify their own performance or extinguish NHAC/court remedies. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-PPCO | Private Plan Certification Office | Certification and oversight of supplemental, substitute, and fixed-fee administrative private plan roles. | SR-COV / SR-PAY / SR-ARCH | - | Baseline enduring element; statutory review applies Operating bodies cannot independently certify their own performance or extinguish NHAC/court remedies. | Source-controlled architecture element; statutory detail may remain open |
 Medicines, Devices, Diagnostics, and Therapeutics
 Table K-3. Medicines, Devices, Diagnostics, and Therapeutics
 
 | ID | Canonical element | Primary role | Requirement allocation | IF | Lifecycle / separation control | Status |
 
-| ARCH-AMDDT | Administration for Medicines, Devices, Diagnostics, and Therapeutics | Parent administration for drug purchasing, formulary, public manufacturing, devices, supplies, labs, and diagnostics. | SR-DRUG / SR-IF | — | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-AMDDT | Administration for Medicines, Devices, Diagnostics, and Therapeutics | Parent administration for drug purchasing, formulary, public manufacturing, devices, supplies, labs, and diagnostics. | SR-DRUG / SR-IF | - | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NDPA | National Drug Purchasing Authority | National drug negotiation/purchasing and purchasing contracts. | SR-DRUG / SR-IF | IF-006, IF-029 | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
 
@@ -13030,53 +13030,53 @@ Table K-3. Medicines, Devices, Diagnostics, and Therapeutics
 
 | ARCH-DUSO | Drug Utilization and Safety Office | Drug use, therapeutic substitution, safety, adherence, and utilization review. | SR-DRUG / SR-IF | IF-006 | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-MDSA | Medical Device and Supply Authority | Device, DME, supply procurement, pricing, inventory, and standards. | SR-DRUG / SR-IF | — | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-MDSA | Medical Device and Supply Authority | Device, DME, supply procurement, pricing, inventory, and standards. | SR-DRUG / SR-IF | - | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-LDA | Laboratory and Diagnostics Authority | Lab and diagnostic capability, standards, interoperability, and diagnostic stewardship. | SR-DRUG / SR-IF | — | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-LDA | Laboratory and Diagnostics Authority | Lab and diagnostic capability, standards, interoperability, and diagnostic stewardship. | SR-DRUG / SR-IF | - | Baseline enduring element; statutory review applies Purchasing, formulary, access review, safety and manufacturing preserve separate accountable decisions and shortage fallback. | Source-controlled architecture element; statutory detail may remain open |
 Care Delivery and Regional Health
 Table K-4. Care Delivery and Regional Health
 
 | ID | Canonical element | Primary role | Requirement allocation | IF | Lifecycle / separation control | Status |
 
-| ARCH-ACDRH | Administration for Care Delivery and Regional Health | Parent administration for regional care delivery, hospitals, units, specialists, LTC, BH, DVH, EMS, public health. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | — | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-ACDRH | Administration for Care Delivery and Regional Health | Parent administration for regional care delivery, hospitals, units, specialists, LTC, BH, DVH, EMS, public health. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | - | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-RHA | Regional Health Administrators | Regional capacity planning, execution, units, hospitals, specialist queues, EMS, public health, and local adaptation. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | IF-009, IF-012, IF-014, IF-027, IF-032 | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NHSA | National Hospital Stewardship Authority | Hospital global budgets, essential services, capital, facility governance, and service-line continuity. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | IF-013, IF-014 | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-PSHCO | Public Service Hospital Charter Office | Public-service hospital charter certification and service-line obligations. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | — | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-PSHCO | Public Service Hospital Charter Office | Public-service hospital charter certification and service-line obligations. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | - | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-OCDTI | Office of Community Diagnostic and Treatment Infrastructure | Governs four-unit diagnostic-treatment network infrastructure. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | — | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-OCDTI | Office of Community Diagnostic and Treatment Infrastructure | Governs four-unit diagnostic-treatment network infrastructure. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | - | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NCDTN | National Community Diagnostic and Treatment Network | Operational Type A/B/C/D unit network. | SR-ARCH-010 | IF-007, IF-008, IF-011 | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NSAA | National Specialty Access Authority | Specialty routing protocols, e-consults, capacity ledgers, protected slots, referral quality. | SR-ARCH-011 | IF-008, IF-009, IF-010 | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NLTCA | National Long-Term Care Authority | Long-term care benefit, home-first model, assessments, caregiver support, institutional care. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | — | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NLTCA | National Long-Term Care Authority | Long-term care benefit, home-first model, assessments, caregiver support, institutional care. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | - | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NBHA | National Behavioral Health Authority | Behavioral health and SUD access, crisis response, psychiatric pathways. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | — | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NBHA | National Behavioral Health Authority | Behavioral health and SUD access, crisis response, psychiatric pathways. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | - | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NDVHO | National Dental, Vision, and Hearing Benefit Office | Dental, vision, hearing benefits, devices, and access standards. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | — | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NDVHO | National Dental, Vision, and Hearing Benefit Office | Dental, vision, hearing benefits, devices, and access standards. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | - | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NEMTA | National EMS and Medical Transport Authority | EMS readiness, ambulance, air ambulance, non-emergency transport, unit/hospital escalation. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | IF-011, IF-012 | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NPHPA | National Public Health and Prevention Authority | Prevention, public health, surveillance, screening, vaccination, public-health surge. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | — | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NPHPA | National Public Health and Prevention Authority | Prevention, public health, surveillance, screening, vaccination, public-health surge. | SR-ACC / SR-SPEC / SR-HOSP / SR-LTC/BH/DVH/EMS | - | Baseline enduring element; statutory review applies National rights/floors bind regional execution; capacity decisions preserve urgent, rural, tribal and essential-service continuity. | Source-controlled architecture element; statutory detail may remain open |
 Workforce
 Table K-5. Workforce
 
 | ID | Canonical element | Primary role | Requirement allocation | IF | Lifecycle / separation control | Status |
 
-| ARCH-AHWCS | Administration for Health Workforce, Compensation, and Scope | Parent workforce administration. | PR-WF / workforce-linked SR | — | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-AHWCS | Administration for Health Workforce, Compensation, and Scope | Parent workforce administration. | PR-WF / workforce-linked SR | - | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NPCB | National Physician Compensation Board | Physician compensation bands, specialist backplane compensation, rural premiums. | PR-WF / workforce-linked SR | — | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NPCB | National Physician Compensation Board | Physician compensation bands, specialist backplane compensation, rural premiums. | PR-WF / workforce-linked SR | - | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NHWB | National Health Workforce Board | Workforce planning, vacancy management, retention, staffing standards. | PR-WF / workforce-linked SR | IF-015 | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NCSWB | National Clinical Scope and Workforce Board | National scope floors and team-based care boundaries. | PR-WF / workforce-linked SR | — | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NCSWB | National Clinical Scope and Workforce Board | National scope floors and team-based care boundaries. | PR-WF / workforce-linked SR | - | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NHWECA | National Health Workforce Education and Capacity Authority | Training slots, scholarships, fellowships, training hubs, specialist bottleneck program. | PR-WF / workforce-linked SR | IF-015 | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-RS-CORPS | Rural Service Corps | Rural placements, housing/bonus support, rural workforce stabilization. | PR-WF / workforce-linked SR | — | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-RS-CORPS | Rural Service Corps | Rural placements, housing/bonus support, rural workforce stabilization. | PR-WF / workforce-linked SR | - | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-AICIO | AI Clinical Integration Office | AI model registry, validation, monitoring, use classes, audit logs, suspension. | SR-ARCH-014 | IF-020 | Baseline enduring element; statutory review applies Compensation, scope, training, staffing and AI use remain human-accountable and subject to rights/safety review. | Source-controlled architecture element; statutory detail may remain open |
 Information, Records, and Cybersecurity
@@ -13084,7 +13084,7 @@ Table K-6. Information, Records, and Cybersecurity
 
 | ID | Canonical element | Primary role | Requirement allocation | IF | Lifecycle / separation control | Status |
 
-| ARCH-AHIRC | Administration for Health Information, Records, and Cybersecurity | Parent information/cyber administration. | SR-DATA / SR-AI / SR-IF | — | Baseline enduring element; statutory review applies Federated authority, minimum necessary access, correction, segmentation, audit, failover and vendor escape are mandatory. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-AHIRC | Administration for Health Information, Records, and Cybersecurity | Parent information/cyber administration. | SR-DATA / SR-AI / SR-IF | - | Baseline enduring element; statutory review applies Federated authority, minimum necessary access, correction, segmentation, audit, failover and vendor escape are mandatory. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NHRA | National Health Records Authority | Longitudinal record, record locator, patient access/correction, data standards. | SR-ARCH-013 | IF-007, IF-010, IF-030 | Baseline enduring element; statutory review applies Federated authority, minimum necessary access, correction, segmentation, audit, failover and vendor escape are mandatory. | Source-controlled architecture element; statutory detail may remain open |
 
@@ -13114,13 +13114,13 @@ Table K-7. Oversight, Rights, Safety, and Courts
 
 | ARCH-NOPRSL | National Office of Patient Rights, Safety, and Legitimacy | No silent rationing, patient rights, safety, AI accountability, service design, equity, trust. | SR-ARCH-012 | IF-032 | Baseline enduring element; statutory review applies Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-OIG-AF | Office of Inspector General and Anti-Fraud | Fraud, abuse, extraction, improper payment, enforcement. | SR-RGT / SR-EQ / SR-LAW | — | Baseline enduring element; statutory review applies Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-OIG-AF | Office of Inspector General and Anti-Fraud | Fraud, abuse, extraction, improper payment, enforcement. | SR-RGT / SR-EQ / SR-LAW | - | Baseline enduring element; statutory review applies Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-HRPO | Health Rights and Privacy Office | Privacy, data rights, access audits, segmentation, consent, breach oversight. | SR-RGT / SR-EQ / SR-LAW | IF-017 | Baseline enduring element; statutory review applies Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-PROO | Patient Rights and Ombudsman Office | Patient/provider ombudsman, issue resolution, provisional relief triggers. | SR-RGT / SR-EQ / SR-LAW | IF-021 | Baseline enduring element; statutory review applies Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NAT | National Appeals Tribunal | Administrative appeals if retained before Article I review. | SR-RGT / SR-EQ / SR-LAW | — | Optional; not required for baseline appeal path Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NAT | National Appeals Tribunal | Administrative appeals if retained before Article I review. | SR-RGT / SR-EQ / SR-LAW | - | Optional; not required for baseline appeal path Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-A1-HCAC | Article I Health Claims and Appeals Court | Enforceable expedited patient/provider/payment/anti-impoundment remedies. | SR-ARCH-007 | IF-021, IF-022 | Baseline enduring element; statutory review applies Institutional independence from DNHA operations is required; appeal and judicial remedies cannot be displaced by a gate or score. | Source-controlled architecture element; statutory detail may remain open |
 
@@ -13136,29 +13136,29 @@ Table K-8. Transition and Adaptation
 
 | ARCH-NHTCA | National Health Transition and Continuity Authority | Transition command through stabilization. | SR-ARCH-006 | IF-026 | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-PCO | Patient Continuity Office | Active treatment, medication, referral, appeal, and care-plan continuity. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-PCO | Patient Continuity Office | Active treatment, medication, referral, appeal, and care-plan continuity. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-PLCCO | Provider Liquidity and Claims Continuity Office | Provider liquidity, provisional payments, transition payment complaints. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-PLCCO | Provider Liquidity and Claims Continuity Office | Provider liquidity, provisional payments, transition payment complaints. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-HESSO | Hospital and Essential Service Stabilization Office | Hospital stabilization corridor and essential service transition. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-HESSO | Hospital and Essential Service Stabilization Office | Hospital stabilization corridor and essential service transition. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-PDCO | Pharmacy and Drug Continuity Office | Transition medication access and pharmacy onboarding. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-PDCO | Pharmacy and Drug Continuity Office | Transition medication access and pharmacy onboarding. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-HATC | Health Administration Transition Corps | Retraining/redeploying displaced insurance/PBM/billing/revenue-cycle workers. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-HATC | Health Administration Transition Corps | Retraining/redeploying displaced insurance/PBM/billing/revenue-cycle workers. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-SRCO | State and Regional Compact Office | State and regional transition compacts. | SR-ARCH-008 | IF-027 | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-EPTO | Employer and Payroll Transition Office | Employer contribution transition and wage pass-through compliance. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-EPTO | Employer and Payroll Transition Office | Employer contribution transition and wage pass-through compliance. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-LPWO | Legacy Payer Wind-Down Office | Legacy insurer/PBM/TPA runout, data transfer, appeal and liability wind-down. | PR-TRN / PR-SCH / SR-ADP / SR-IF | IF-026 | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-DMRCO | Data Migration and Records Continuity Office | Legacy data transfer, cleaning, and transition record continuity. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-DMRCO | Data Migration and Records Continuity Office | Legacy data transfer, cleaning, and transition record continuity. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-TRTO | Tribal and Rural Transition Office | Tribal and rural transition protections. | PR-TRN / PR-SCH / SR-ADP / SR-IF | IF-027 | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-TLSHO | Transition Legal Safe Harbor Office | Transition safe harbors and disputes. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-TLSHO | Transition Legal Safe Harbor Office | Transition safe harbors and disputes. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-TRPGO | Transition Risk and Phase-Gate Office | Transition risk and phase-gate management. | PR-TRN / PR-SCH / SR-ADP / SR-IF | — | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-TRPGO | Transition Risk and Phase-Gate Office | Transition risk and phase-gate management. | PR-TRN / PR-SCH / SR-ADP / SR-IF | - | Transition-bound; transfer/sunset review required Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-NHASB | National Health Adaptation and Scorekeeping Board | Independent scorekeeping, formula registry, reviews, red team, legal contingencies, repair. | SR-ARCH-009, SR-ARCH-015 | IF-024, IF-027, IF-028, IF-032 | Baseline enduring element; statutory review applies Transition command cannot self-certify phase exit; temporary bodies/functions require transfer or sunset review. | Source-controlled architecture element; statutory detail may remain open |
 Innovation
@@ -13168,17 +13168,17 @@ Table K-9. Innovation
 
 | ARCH-NBIA | National Biomedical Innovation Agency | Public R&D, public-interest licensing, comparative effectiveness, innovation delinkage. | SR-ARCH-003 | IF-029 | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-NDIF | National Drug Innovation Fund | Public drug innovation funding. | SR-INN / SR-DRUG / research interfaces | — | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-NDIF | National Drug Innovation Fund | Public drug innovation funding. | SR-INN / SR-DRUG / research interfaces | - | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-TMTFO | Translational Medicine and Trial Funding Office | Translational medicine and clinical trial funding. | SR-INN / SR-DRUG / research interfaces | — | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-TMTFO | Translational Medicine and Trial Funding Office | Translational medicine and clinical trial funding. | SR-INN / SR-DRUG / research interfaces | - | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-PILO | Public-Interest Licensing Office | Licensing terms for publicly funded technologies. | SR-INN / SR-DRUG / research interfaces | IF-029 | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
 
-| ARCH-CEVI | Comparative Effectiveness and Value Institute | Comparative effectiveness, benefit boundary evidence, value reconciliation. | SR-INN / SR-DRUG / research interfaces | — | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
+| ARCH-CEVI | Comparative Effectiveness and Value Institute | Comparative effectiveness, benefit boundary evidence, value reconciliation. | SR-INN / SR-DRUG / research interfaces | - | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
 
 | ARCH-SRAE | Secure Research and Analytics Enclave | Privacy-preserving research/analytics infrastructure. | SR-INN / SR-DRUG / research interfaces | IF-030 | Baseline enduring element; statutory review applies Public funding, evidence, licensing and access conditions remain transparent, conflict-controlled and independently evaluated. | Source-controlled architecture element; statutory detail may remain open |
 BASELINE APPEAL PATH  ARCH-NAT remains cataloged because it appears in the source architecture, but the controlled baseline does not require it between NHAC review and expedited Article I court relief. A retained tribunal may not delay enforceable relief.
-Appendix L — Legal Conforming Changes
+Appendix L - Legal Conforming Changes
 Section control record
 
 | Control field | Controlled content |
@@ -13199,7 +13199,7 @@ Section control record
 COUNSEL CONTROL  This appendix supplies drafting instructions and reconciliation fields. It does not provide bill text, a constitutional opinion or legal certification; OI-061–OI-070 remain controlling.
 L.1 Enabling-act title architecture
 The nineteen-title structure keeps entitlement, financing, operations, rights, transition, anti-sabotage and repair functions separable. Conforming amendments must point each legacy function to one disposition and one accountable custodian.
-Table L-1. National Health Assurance and Health System Transition Act — title catalog
+Table L-1. National Health Assurance and Health System Transition Act - title catalog
 
 | Title | Name | Function | Assurance control |
 
@@ -13461,7 +13461,7 @@ Table L-9. Legal requirement and verification allocation
 | VR-026 | Every tribal compact requirement shall be verified through tribal-approved documentation and shall not rely solely on state certification. | Verification Requirements |
 Simulation must preserve at least: primary authority state, challenged scope, order/effective time, fallback trigger, activation lag, owner readiness, funding/data/capacity continuity, affected populations and obligations, rights/remedies, distributional delta, restoration condition and reconciliation status. Legal modules may explore consequences; they may not certify legality.
 
-Appendix M — Transition Playbook
+Appendix M - Transition Playbook
 Section control record
 
 | Control field | Controlled content |
@@ -13666,7 +13666,7 @@ Table M-8. Transition requirement allocation
 
 | VR-030 | Every requirement marked for demonstration shall include an operational scenario, entry criteria, exit criteria, observed outputs, and pass/fail criteria before verification event execution. | Verification Requirements |
 
-Appendix N — Legitimacy and Safety Playbook
+Appendix N - Legitimacy and Safety Playbook
 Section control record
 
 | Control field | Controlled content |
@@ -13875,7 +13875,7 @@ Table N-7. Rights, equity and verification allocation
 
 | VR-029 | Every safety-culture parameter shall be verified using validated workforce safety-culture survey instruments and turnover/workload corroboration data. | Verification Requirements |
 
-Appendix O — Adaptation and Repair Playbook
+Appendix O - Adaptation and Repair Playbook
 Section control record
 
 | Control field | Controlled content |
@@ -14072,7 +14072,7 @@ Table O-8. Adaptation and verification allocation
 
 | VR-030 | Every requirement marked for demonstration shall include an operational scenario, entry criteria, exit criteria, observed outputs, and pass/fail criteria before verification event execution. | Verification Requirements |
 
-Appendix P — Risk Register and Failure-Mode and Effects Analysis
+Appendix P - Risk Register and Failure-Mode and Effects Analysis
 Section control record
 
 | Control field | Controlled content |
@@ -14274,7 +14274,7 @@ Table P-7. Compound red-team scenarios
 | SCN-RT-10 | Pandemic transition collision | Public-health surge during coverage conversion and workforce shortage | RISK-WF/CLAIMS/UNIT/HOSP | transition pause; surge funding; flexible capacity; continuity defaults | mortality proxy; access; staffing; cost; phase delay |
 Scenario results update evidence and priors; they do not automatically change risk acceptance, authorize progression or claim external validity. Red-team independence, safe testing, disclosure, remediation clocks and retest remain open under OI-074.
 
-Appendix Q — Simulation Input Schema
+Appendix Q - Simulation Input Schema
 Section control record
 
 | Control field | Controlled content |
@@ -14358,7 +14358,7 @@ Every run freezes schema, model, data, formula, scenario and code versions; resu
 Unknown fields are rejected by default. A controlled migration must explicitly map, test and sign each transformed object; silent coercion is prohibited.
 Catalog scope carried forward: 19 modules, 33 state variables, 310 cost parameters, 20 controlled scenarios and 29 outputs.
 
-Appendix R — Public Dashboard Specification
+Appendix R - Public Dashboard Specification
 Section control record
 
 | Control field | Controlled content |
@@ -14424,7 +14424,7 @@ Table R-03. Release pipeline and accountability
 | Monitor/correct | Detect stale/error conditions; publish correction/supersession and affected scope | Correction notice; replay; root-cause closure |
 R.1 Controlled metric catalog
 All 120 controlled performance measures are allocated below. A view is a presentation allocation, not a change to the metric's global ID, owner, verifier, target text or calculation contract. Full dataset and release-control fields are in the machine specification.
-R-VIEW-01 — Coverage and affordability (8)
+R-VIEW-01 - Coverage and affordability (8)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14443,7 +14443,7 @@ R-VIEW-01 — Coverage and affordability (8)
 | KPP-E1 | Coverage equity gap | as defined by calculation contract Target: <=0.5 percentage points | public_aggregate R2 | NOPRSL ['NHASB', 'CHAO'] |
 
 | KPP-E3 | Specialist wait equity ratio | as defined by calculation contract Target: <=1.10 | public_aggregate R2 | NOPRSL ['NHASB', 'CHAO'] |
-R-VIEW-02 — Access and capacity (26)
+R-VIEW-02 - Access and capacity (26)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14498,7 +14498,7 @@ R-VIEW-02 — Access and capacity (26)
 | TPP-9.6 | Hearing/vision standard device fulfillment | fraction/percent Target: >=95% within target | public_summary_delayed R5 | ACDRH/NEMTA NHASB/NHAC |
 
 | TPP-9.7 | EMS readiness compliance | fraction/percent Target: >=95% regions | public_summary_delayed R5 | ACDRH/NEMTA NHASB/NHAC |
-R-VIEW-03 — Quality, safety and rights (11)
+R-VIEW-03 - Quality, safety and rights (11)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14523,7 +14523,7 @@ R-VIEW-03 — Quality, safety and rights (11)
 | TPP-USE1 | Patient rights notice comprehension | protocol-defined Target: >=90% | public_summary_delayed R5 | PROO/NHAC NHASB |
 
 | TPP-USE2 | Appeal filing completion without assistance | protocol-defined Target: >=85% | public_summary_delayed R5 | PROO/NHAC NHASB |
-R-VIEW-04 — Workforce and transition (11)
+R-VIEW-04 - Workforce and transition (11)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14548,7 +14548,7 @@ R-VIEW-04 — Workforce and transition (11)
 | TPP-8.6 | Clinician burnout risk index | percent change Target: >=30% reduction | public_aggregate R2 | NHWB/NHWECA NHASB/CHAO |
 
 | TPP-12.3 | Vacancy-proof operating continuity | fraction/percent Target: >=99% critical functions | public_summary_delayed R5 | NHTCA/DNHA NHAC/CHAO/A1-HCAC |
-R-VIEW-05 — Finance and cost (14)
+R-VIEW-05 - Finance and cost (14)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14579,7 +14579,7 @@ R-VIEW-05 — Finance and cost (14)
 | TPP-2.5 | OMB/apportionment bypass success | fraction/percent Target: >=99.8% mandatory disbursements | public_aggregate_with_suppression R3 | NCCA/THDO HFASB/CHAO |
 
 | TPP-EMP1 | Employer wage-pass-through compliance | fraction/percent Target: >=95% | public_aggregate_with_suppression R3 | EPTO CHAO |
-R-VIEW-06 — Governance, legality and trust (10)
+R-VIEW-06 - Governance, legality and trust (10)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14602,7 +14602,7 @@ R-VIEW-06 — Governance, legality and trust (10)
 | TPP-REG1 | Regional adaptation waiver evaluation completion | protocol-defined Target: >=95% | public_aggregate_with_suppression R4 | SRCO/RHA NHASB/CHAO |
 
 | TPP-FORM1 | Formula registry completeness | fraction/percent Target: >=99% | public_aggregate R2 | NHASB CHAO/NHAC |
-R-VIEW-07 — Medicines, supply, public health and innovation (23)
+R-VIEW-07 - Medicines, supply, public health and innovation (23)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14651,7 +14651,7 @@ R-VIEW-07 — Medicines, supply, public health and innovation (23)
 | TPP-13.3 | Comparative effectiveness cycle time | time Target: median <=6 months | public_aggregate R2 | NBIA/PILO NHASB/CHAO |
 
 | TPP-13.4 | Innovation reward value alignment | protocol-defined Target: >=90% post-market reconciliation | public_aggregate R2 | NBIA/PILO NHASB/CHAO |
-R-VIEW-08 — Data, AI and cybersecurity (17)
+R-VIEW-08 - Data, AI and cybersecurity (17)
 
 | ID | Metric | Unit / target | Release / source class | Owner / verifier |
 
@@ -14694,7 +14694,7 @@ Users can compare NHA and existing-system pathways only where definitions and pe
 A correction never overwrites history. It publishes the original release ID, affected metrics/cohorts/periods, reason, corrected value, method change, certifier and downstream replay scope.
 The public interface provides downloadable machine payloads and accessible tables, language/disability support, feedback and complaint routes, and an archive of delayed/suppressed releases.
 
-Appendix S — Open Issues and Research Agenda
+Appendix S - Open Issues and Research Agenda
 Section control record
 
 | Control field | Controlled content |
@@ -14711,7 +14711,7 @@ Section control record
 
 | Principal risks | False closure; duplicate/conflicting variants; ownerless research; unresolved blockers hidden in polished prose; renumbering that breaks traceability. |
 
-| Simulation implication | Open issues become explicit model uncertainty, alternative scenarios, validation dependencies or prohibited claims—not invented point estimates. |
+| Simulation implication | Open issues become explicit model uncertainty, alternative scenarios, validation dependencies or prohibited claims - not invented point estimates. |
 Table S-01. Status summary
 
 | Status | Count | Interpretation |
@@ -15020,7 +15020,7 @@ Pre-register the question, method, evidence standard, uncertainty, alternatives,
 Publish the decision record and verification evidence; update every affected document, machine schema, test, scenario and dashboard definition in one configuration release.
 Retain residual risk, monitoring trigger and reopen condition. Closed issues are never deleted or recycled.
 
-Appendix T — PMC Essential Product Family Register
+Appendix T - PMC Essential Product Family Register
 NORMATIVE REGISTER  PF-001 through PF-200 are the complete controlled product-family baseline for SR-DRUG-006 and TPP-4.1. Each family requires routine PMC-controlled public production by PH-P8. Clinical experts and FDA must still approve exact strengths, presentations, specifications, and labeling; those subordinate decisions may not delete a family without formal framework change control.
 Table T-1. Product-family definition and production rule
 
@@ -15458,7 +15458,7 @@ Table T-3. External portfolio evidence anchors
 | T-ED-023 | Centers for Medicare & Medicaid Services | 2024 Part D utilization and spending calibration source. |
 
 | T-ED-024 | Agency for Healthcare Research and Quality | National outpatient prescribed-medicine use and expenditure calibration source. |
-Appendix U — Bibliography and Evidence Base
+Appendix U - Bibliography and Evidence Base
 Section control record
 
 | Control field | Controlled content |

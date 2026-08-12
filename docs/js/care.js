@@ -1,12 +1,12 @@
 /* =========================================================================
  * Point-of-care comparison: what a person pays for real care episodes
  * today (typical insured / uninsured) versus under National Health
- * Assurance ($0 at the point of care for covered medically necessary care —
+ * Assurance ($0 at the point of care for covered medically necessary care -
  * framework ASM-006 / KPP-A3, which caps covered-care patient billing at
  * ≤0.5% of encounters).
  *
  * "Today" figures are national averages or typical ranges with the source
- * noted per card. Insured out-of-pocket is inherently plan-dependent —
+ * noted per card. Insured out-of-pocket is inherently plan-dependent -
  * ranges span common copay/deductible/coinsurance situations and are
  * labeled as such. NHA availability year comes from the framework's phase
  * roadmap (drugs: Phase 2, Year 3 ≈ 2029; cost-sharing elimination:

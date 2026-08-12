@@ -1,8 +1,8 @@
-# NHA Astro Migration — P3 (slice 11a): Overview care-cost cards + outcomes tiles Implementation Plan
+# NHA Astro Migration - P3 (slice 11a): Overview care-cost cards + outcomes tiles Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Port the two pure-static Overview personal-impact sections — "What you'd pay for care" (10 point-of-care cost cards) and "Beyond dollars: what the model does not price" (outcome-stat tiles) — as build-time HTML with zero client JS.
+**Goal:** Port the two pure-static Overview personal-impact sections - "What you'd pay for care" (10 point-of-care cost cards) and "Beyond dollars: what the model does not price" (outcome-stat tiles) - as build-time HTML with zero client JS.
 
 **Architecture:** A new `src/lib/care.ts` holds the verbatim `CARE_SCENARIOS` data (ported from `docs/js/care.js`) plus a `moneyRange` formatter. `src/pages/index.astro` renders the care cards from `CARE_SCENARIOS` and the outcome tiles from the already-ported `OUTCOME_STATS` (in `src/lib/params.ts`), both at build time, inserted after the benchmark card and before the chapter-nav footer. All required CSS (`.care-*`, `.tiles`, `.conf`) already exists in `src/styles/global.css`.
 
@@ -14,7 +14,7 @@
 - TypeScript `strict`; avoid gratuitous `any`.
 - **Fidelity:** `CARE_SCENARIOS` copied verbatim (every number, note, source, confidence) from `docs/js/care.js:20-111`. The card markup reproduces `NHA.renderCareCards` (`docs/js/care.js:167-199`) structure exactly. The outcomes tiles reproduce `renderOutcomeTiles` (`docs/js/app.js:493-509`). The section prose is verbatim from `docs/index.html:707-730`. Do not re-derive any value.
 - `moneyRange(lo, hi)` ports `docs/js/care.js:162-165` exactly: `lo === hi` renders `$N`; else `$lo – $hi`. The separator is space + EN DASH (U+2013) + space, and integers use `toLocaleString('en-US')`. The en dash is allowed; it is NOT U+2014.
-- No em dashes (—, U+2014) in reader-visible output. Grep after the markup task; must be 0.
+- No em dashes ( - , U+2014) in reader-visible output. Grep after the markup task; must be 0.
 - Zero client JS added. Both sections render fully at build time. Do NOT touch `src/scripts/overview-client.ts`.
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY create `src/lib/care.ts`, and edit `src/pages/index.astro`, `tests/*`.
 - Base path `/US-National-Health-Assurance-System/`.
@@ -39,7 +39,7 @@ tests/pages/
 
 ---
 
-### Task 1: `src/lib/care.ts` — CARE_SCENARIOS + moneyRange
+### Task 1: `src/lib/care.ts` - CARE_SCENARIOS + moneyRange
 
 **Files:**
 - Create: `src/lib/care.ts`
@@ -77,7 +77,7 @@ test('CARE_SCENARIOS: ten scenarios, first is the premium card', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/care.test.ts`
-Expected: FAIL — `src/lib/care.ts` does not exist.
+Expected: FAIL - `src/lib/care.ts` does not exist.
 
 - [ ] **Step 3: Create `src/lib/care.ts`**
 
@@ -162,7 +162,7 @@ test('overview includes build-time care cards and outcome tiles', async () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — care/outcomes absent.
+Expected: FAIL - care/outcomes absent.
 
 - [ ] **Step 3: Import the data in the frontmatter**
 
@@ -257,7 +257,7 @@ git commit -m "Add Overview care-cost cards + outcome tiles (build-time, zero JS
 
 - [ ] **Step 1: Serve + inspect**
 
-Confirm, on the Overview page after the benchmark card: a `#care-card-section` with `#care-cards` containing exactly 10 `.care-card`s, each showing a `.care-title`, two `Today` rows with `.care-row-val` money ranges, a `.care-nha` block with `$0` and a `.care-year-chip`, and a `.care-src` with a `.conf` badge. Confirm the "Beyond dollars" card's `#outcome-tiles` has 4 `.tile`s (e.g. one showing `20,000–68,000`) each ending with a `.conf` badge. Confirm the chapter-nav footer still follows. `read_console_messages` — zero errors.
+Confirm, on the Overview page after the benchmark card: a `#care-card-section` with `#care-cards` containing exactly 10 `.care-card`s, each showing a `.care-title`, two `Today` rows with `.care-row-val` money ranges, a `.care-nha` block with `$0` and a `.care-year-chip`, and a `.care-src` with a `.conf` badge. Confirm the "Beyond dollars" card's `#outcome-tiles` has 4 `.tile`s (e.g. one showing `20,000–68,000`) each ending with a `.conf` badge. Confirm the chapter-nav footer still follows. `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Static-render check**
 
@@ -280,5 +280,5 @@ Navigate to `/health` and back to Overview; confirm the care cards and outcome t
 - **Spec coverage:** implements the two static personal-impact Overview sections (care cards + outcomes tiles). Household calc, `#flow-takeaway`, and Methodology are explicitly deferred to 11b/11c.
 - **No placeholders:** `moneyRange` and the card/tile markup are fully specified; `CARE_SCENARIOS` cites an exact verbatim source range (the executor pastes the ten objects, which are literal data, not logic).
 - **Type/name consistency:** `CareScenario`/`CARE_SCENARIOS`/`moneyRange` are new in `care.ts` and consumed only by `index.astro`; `OUTCOME_STATS` matches the existing `src/lib/params.ts` export (shape `{value,label,note,confidence}`); class names (`care-grid`, `care-card`, `care-title`, `care-rows`, `care-row`, `care-row-label`, `care-row-val`, `care-row-note`, `care-nha`, `care-nha-line`, `care-nha-label`, `care-nha-val`, `care-year-chip`, `care-nha-note`, `care-src`, `tiles`, `tile`, `conf`) all exist in `src/styles/global.css`.
-- **No em dash / no NaN risk:** static data + prose only; `moneyRange` uses U+2013; em-dash greps in both tasks; the pre-existing `!html.includes('—')` overview test guards the rendered output.
+- **No em dash / no NaN risk:** static data + prose only; `moneyRange` uses U+2013; em-dash greps in both tasks; the pre-existing `!html.includes(' - ')` overview test guards the rendered output.
 - **Order rationale:** care + outcomes land after the model/benchmark section (personal-impact coda) and before the chapter-nav footer; 11b (household) and 11c (methodology) insert into the same gap, so no reordering is required later.

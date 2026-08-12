@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 7): Overview benchmarks card Implementation Plan
+# NHA Astro Migration - P3 (slice 7): Overview benchmarks card Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -16,7 +16,7 @@
 - **NaN guard (project rule):** preserve `Math.max(2, ...)` bar-width floor and `(hi-lo)*0.08 || 1` padding; browser-verify no `NaN` in path `d` (Task 5).
 - **Palette:** row colors `var(--series-1)`/`var(--baseline-series)`; class names `chart-svg`, `gridline`, `axis-text`, `baseline-axis`, `row-label`, `row-note`, `bench-row`, `marker` preserved so `global.css` styles them.
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
-- No em dashes (—, U+2014) in reader-visible output. The card prose and readout text use en dashes `–` (U+2013), the minus `−` (U+2212), and `&apos;`; copy verbatim — none are U+2014.
+- No em dashes ( - , U+2014) in reader-visible output. The card prose and readout text use en dashes `–` (U+2013), the minus `−` (U+2212), and `&apos;`; copy verbatim - none are U+2014.
 - Client render on `astro:page-load` (chart + text set inside the existing `render()`).
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY add `src/lib/benchmark-chart.ts`, `src/lib/benchmarks.ts`, and edit `src/scripts/overview-client.ts` + `src/pages/index.astro`.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -48,9 +48,9 @@ tests/lib/
 **Interfaces:**
 - Consumes: `el`, `niceTicks`, `barPath`, `div`, `tipRow`, `showTip`, `hideTip` from `./chart-util`; `money`, `moneyShort`, `axis` from `./format`.
 - Produces:
-  - `interface BenchmarkRow { label: string; lo: number; hi: number; mid?: number; color: string; note?: string }`
-  - `interface BenchmarkOpts { aria?: string }`
-  - `function renderBenchmarkChart(container: HTMLElement, rows: BenchmarkRow[], opts?: BenchmarkOpts): void` (from `docs/js/charts.js:390-440`).
+- `interface BenchmarkRow { label: string; lo: number; hi: number; mid?: number; color: string; note?: string }`
+- `interface BenchmarkOpts { aria?: string }`
+- `function renderBenchmarkChart(container: HTMLElement, rows: BenchmarkRow[], opts?: BenchmarkOpts): void` (from `docs/js/charts.js:390-440`).
 
 - [ ] **Step 1: Implement `src/lib/benchmark-chart.ts`**
 
@@ -78,9 +78,9 @@ git commit -m "Port renderBenchmarkChart to src/lib/benchmark-chart.ts"
 **Interfaces:**
 - Consumes: `BENCHMARKS` from `./params`; `money`, `moneyShort` from `./format`; `MonteCarloResult` from `./model-types`; `BenchmarkRow` from `./benchmark-chart`.
 - Produces:
-  - `function benchmarkChartRows(mc: MonteCarloResult, DEF: number): BenchmarkRow[]` — the two rows from `app.js:368-373`: the model row (`lo/mid/hi = mc.steady.matureToday.p10/p50/p90 * DEF`, `color 'var(--series-1)'`, `note 'real 2024$; 10th–90th percentile'`, label "Dashboard model: mature system at 2024 scale") and the observed row (`lo:5250, hi:5350, mid:5300, color 'var(--baseline-series)'`, note "CMS preliminary estimate", label "Observed U.S. health spending, 2024").
-  - `interface BenchmarkText { nheResult: string; fedModel: string; fedModelRange: string; fedResult: string; delta2030Result: string; verdict: string }`
-  - `function benchmarkText(mc: MonteCarloResult, DEF: number): BenchmarkText` — all six strings from `app.js:376-427` verbatim: `nheResult` (384-389), `fedModel` (`money(mc.steady.fedIncrease.p50 * DEF) + '/yr'`), `fedModelRange` (394-396), `fedResult` (398-404, constant text), `delta2030Result` (406-413 using `mc.nhe2030delta`), and `verdict` (415-427 using `nhePlausible = |nheDiffPct| <= 15`, `cboNheOverlap` against `BENCHMARKS.cboNheChange.low/high`, `mc.nhe2030delta`).
+- `function benchmarkChartRows(mc: MonteCarloResult, DEF: number): BenchmarkRow[]` - the two rows from `app.js:368-373`: the model row (`lo/mid/hi = mc.steady.matureToday.p10/p50/p90 * DEF`, `color 'var(--series-1)'`, `note 'real 2024$; 10th–90th percentile'`, label "Dashboard model: mature system at 2024 scale") and the observed row (`lo:5250, hi:5350, mid:5300, color 'var(--baseline-series)'`, note "CMS preliminary estimate", label "Observed U.S. health spending, 2024").
+- `interface BenchmarkText { nheResult: string; fedModel: string; fedModelRange: string; fedResult: string; delta2030Result: string; verdict: string }`
+- `function benchmarkText(mc: MonteCarloResult, DEF: number): BenchmarkText` - all six strings from `app.js:376-427` verbatim: `nheResult` (384-389), `fedModel` (`money(mc.steady.fedIncrease.p50 * DEF) + '/yr'`), `fedModelRange` (394-396), `fedResult` (398-404, constant text), `delta2030Result` (406-413 using `mc.nhe2030delta`), and `verdict` (415-427 using `nhePlausible = |nheDiffPct| <= 15`, `cboNheOverlap` against `BENCHMARKS.cboNheChange.low/high`, `mc.nhe2030delta`).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -108,7 +108,7 @@ test('benchmarkText: all six fields present, verdict non-trivial, em-dash-free',
   const t = benchmarkText(mc, DEF);
   for (const v of [t.nheResult, t.fedModel, t.fedModelRange, t.fedResult, t.delta2030Result, t.verdict]) {
     expect(v.length).toBeGreaterThan(0);
-    expect(v.includes('—')).toBe(false); // U+2014
+    expect(v.includes(' - ')).toBe(false); // U+2014
   }
   expect(t.fedModel).toMatch(/\/yr$/);
   expect(t.verdict).toContain('plausibility'); // last sentence of the verdict
@@ -118,7 +118,7 @@ test('benchmarkText: all six fields present, verdict non-trivial, em-dash-free',
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/benchmarks.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/benchmarks`.
+Expected: FAIL - cannot resolve `../../src/lib/benchmarks`.
 
 - [ ] **Step 3: Implement `src/lib/benchmarks.ts`**
 
@@ -165,11 +165,11 @@ test('overview includes the benchmarks card containers', async () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — benchmark containers absent.
+Expected: FAIL - benchmark containers absent.
 
 - [ ] **Step 3: Add the card to `src/pages/index.astro`**
 
-Reproduce the benchmarks card from `docs/index.html:881-989` VERBATIM — the `<section class="card benchmark-section">` through its closing `</section>`, including the intro `.benchmark-purpose-grid`, the `.benchmark-distinction`, both `.benchmark-panel` articles (Check 1 with the `.benchmark-key` + `#benchmark-nhe` + `#benchmark-nhe-result`; Check 2 with the `.benchmark-figure-grid` + `#benchmark-fed-model`/`#benchmark-fed-model-range` + `#benchmark-fed-result`), the `.benchmark-supporting` (`#benchmark-2030-result`), the `.benchmark-verdict` (`#benchmark-verdict`), and the `.benchmark-source` footer link. Place it after the bridge card, before `</main>`. Keep the `&apos;` entities and the static strong figures (`$1.5T–$3.0T/yr`, `$3.2T–$3.4T/yr`) exactly. After adding, grep the file for U+2014 and confirm zero.
+Reproduce the benchmarks card from `docs/index.html:881-989` VERBATIM - the `<section class="card benchmark-section">` through its closing `</section>`, including the intro `.benchmark-purpose-grid`, the `.benchmark-distinction`, both `.benchmark-panel` articles (Check 1 with the `.benchmark-key` + `#benchmark-nhe` + `#benchmark-nhe-result`; Check 2 with the `.benchmark-figure-grid` + `#benchmark-fed-model`/`#benchmark-fed-model-range` + `#benchmark-fed-result`), the `.benchmark-supporting` (`#benchmark-2030-result`), the `.benchmark-verdict` (`#benchmark-verdict`), and the `.benchmark-source` footer link. Place it after the bridge card, before `</main>`. Keep the `&apos;` entities and the static strong figures (`$1.5T–$3.0T/yr`, `$3.2T–$3.4T/yr`) exactly. After adding, grep the file for U+2014 and confirm zero.
 
 - [ ] **Step 4: Run to verify PASS + build**
 
@@ -237,7 +237,7 @@ git commit -m "Render the Overview benchmarks chart + readout from the shared Mo
 
 - [ ] **Step 1: Serve + inspect**
 
-`pnpm preview`; open the Overview. Confirm `#benchmark-nhe` contains an `<svg class="chart-svg">` with 2 `.bench-row` groups (each an interval bar; the model row has a `.marker` circle), gridlines, and axis labels. Grep the SVG `d`/attrs for `NaN` (must be none). Confirm `#benchmark-nhe-result`, `#benchmark-fed-model` (ends "/yr"), `#benchmark-2030-result`, and `#benchmark-verdict` all have text. `read_console_messages` — zero errors.
+`pnpm preview`; open the Overview. Confirm `#benchmark-nhe` contains an `<svg class="chart-svg">` with 2 `.bench-row` groups (each an interval bar; the model row has a `.marker` circle), gridlines, and axis labels. Grep the SVG `d`/attrs for `NaN` (must be none). Confirm `#benchmark-nhe-result`, `#benchmark-fed-model` (ends "/yr"), `#benchmark-2030-result`, and `#benchmark-verdict` all have text. `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Interactivity**
 

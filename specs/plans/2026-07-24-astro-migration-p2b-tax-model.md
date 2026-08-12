@@ -1,4 +1,4 @@
-# NHA Astro Migration — P2b: Tax Model Implementation Plan
+# NHA Astro Migration - P2b: Tax Model Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,7 +6,7 @@
 
 **Architecture:** `taxparams.js` (pure parameter data on `NHA.TAX.*`) becomes `src/lib/taxparams.ts` with named exports; `taxmodel.js` (an IIFE of pure functions over `NHA.TAX.*`, aliased `T`) becomes `src/lib/taxmodel.ts` importing from `taxparams.ts`. The tax model is independent of the healthcare model (verified: no `runPath`/`BASE2023`/`sampleParams` references) so this plan touches nothing from P2. Behavior and numbers are preserved exactly.
 
-**Tech Stack:** TypeScript (strict), Vitest 3.2.7, Astro 5 (installed). Pure computation only — no DOM.
+**Tech Stack:** TypeScript (strict), Vitest 3.2.7, Astro 5 (installed). Pure computation only - no DOM.
 
 ## Global Constraints
 
@@ -15,7 +15,7 @@
 - **Preserve behavior and numbers exactly.** Source of truth: `docs/js/taxparams.js` (413 lines) and `docs/js/taxmodel.js` (262 lines). Do not re-derive, re-tune, or "improve" any value or formula.
 - **Do NOT modify anything under `docs/`.** Read-only source and parity truth.
 - Modules are pure: no `window`, no `document`, no top-level side effects beyond building constant tables. Must import cleanly under Node (Vitest).
-- No em dashes (—) in reader-visible ported strings (code comments may keep them). If a ported data string (e.g. an instrument `label`/`note`, scenario `desc`, president name) contains an em dash, PRESERVE IT verbatim for fidelity and note it for the P3 content pass — do NOT edit ported content in this plan.
+- No em dashes ( - ) in reader-visible ported strings (code comments may keep them). If a ported data string (e.g. an instrument `label`/`note`, scenario `desc`, president name) contains an em dash, PRESERVE IT verbatim for fidelity and note it for the P3 content pass - do NOT edit ported content in this plan.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 - Scope: tax model only. Tax CHARTS (`taxcharts.js`) and the tax view UI (`taxapp.js`) are OUT of scope (P3).
 
@@ -55,10 +55,10 @@ Public tax API (from `docs/js/taxmodel.js`), signatures to preserve exactly:
 **Interfaces:**
 - Consumes: nothing (leaf module).
 - Produces:
-  - `TaxGroup` — read `NHA.TAX.GROUPS` entries; must include `id: string` and the share columns `wageShare, capShare, consumpShare, healthRelief` (numbers) plus every other field present (label, incomeShare, households, etc.).
-  - `TaxInstrument` — read `NHA.TAX.INSTRUMENTS`; must include `id: string`, `incidence: Record<string, number>` (keyed by group id), `growth?: string`, `rev1x: number`, `scaleMax?: number`, plus every other field.
-  - `TaxProgram`, `TaxScenario` (has optional `balancer`), and the exported constants.
-  - `const GROUPS: TaxGroup[]`, `ECON` (includes `growthRates: Record<string, number>`, `realGrowth: number`, `baseYear: number`), `INSTRUMENTS: TaxInstrument[]`, `PROGRAMS: TaxProgram[]`, `TOP_RATE_HISTORY`, `PRESIDENTS`, `WEALTH_DIST`, `SCENARIOS: TaxScenario[]`.
+- `TaxGroup` - read `NHA.TAX.GROUPS` entries; must include `id: string` and the share columns `wageShare, capShare, consumpShare, healthRelief` (numbers) plus every other field present (label, incomeShare, households, etc.).
+- `TaxInstrument` - read `NHA.TAX.INSTRUMENTS`; must include `id: string`, `incidence: Record<string, number>` (keyed by group id), `growth?: string`, `rev1x: number`, `scaleMax?: number`, plus every other field.
+- `TaxProgram`, `TaxScenario` (has optional `balancer`), and the exported constants.
+- `const GROUPS: TaxGroup[]`, `ECON` (includes `growthRates: Record<string, number>`, `realGrowth: number`, `baseYear: number`), `INSTRUMENTS: TaxInstrument[]`, `PROGRAMS: TaxProgram[]`, `TOP_RATE_HISTORY`, `PRESIDENTS`, `WEALTH_DIST`, `SCENARIOS: TaxScenario[]`.
 
 - [ ] **Step 1: Write the failing params tests**
 
@@ -95,7 +95,7 @@ test('every instrument has a valid growth class', () => {
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm exec vitest run tests/lib/taxparams.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/taxparams`.
+Expected: FAIL - cannot resolve `../../src/lib/taxparams`.
 
 - [ ] **Step 3: Port `docs/js/taxparams.js` to `src/lib/taxparams.ts`**
 
@@ -104,7 +104,7 @@ Read the full source. Drop the `window.NHA`/`NHA.TAX = {}` prologue. `export con
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm exec vitest run tests/lib/taxparams.test.ts`
-Expected: PASS (3/3). If incidence sums fail, an instrument's incidence map lost a group key — recheck against the source.
+Expected: PASS (3/3). If incidence sums fail, an instrument's incidence map lost a group key - recheck against the source.
 
 - [ ] **Step 5: Type-check**
 
@@ -130,8 +130,8 @@ git commit -m "Port taxparams.js to typed src/lib/taxparams.ts with data invaria
 **Interfaces:**
 - Consumes: `GROUPS`, `ECON`, `INSTRUMENTS`, `PROGRAMS`, `SCENARIOS` from `./taxparams`; interfaces from `./tax-types`.
 - Produces (exact signatures from the Public tax API above):
-  - `defaultSettings`, `instrumentRevenue`, `compute`, `distribution`, `solveScenario`
-  - `TAX_SELFTESTS: { name: string; run: () => boolean }[]` — the same seven checks the source registers on `NHA.SELFTESTS`, exported as an array so a future build-time badge can aggregate them alongside the healthcare `selfTest()`.
+- `defaultSettings`, `instrumentRevenue`, `compute`, `distribution`, `solveScenario`
+- `TAX_SELFTESTS: { name: string; run: () => boolean }[]` - the same seven checks the source registers on `NHA.SELFTESTS`, exported as an array so a future build-time badge can aggregate them alongside the healthcare `selfTest()`.
 
 - [ ] **Step 1: Add the remaining interfaces to `src/lib/tax-types.ts`**
 
@@ -208,7 +208,7 @@ test('all seven tax self-test invariants pass', () => {
 - [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `pnpm exec vitest run tests/lib/taxmodel.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/taxmodel`.
+Expected: FAIL - cannot resolve `../../src/lib/taxmodel`.
 
 - [ ] **Step 4: Port `docs/js/taxmodel.js` to `src/lib/taxmodel.ts`**
 
@@ -217,7 +217,7 @@ Read the full source. Port the IIFE body: private helpers `growth`, `classGrowth
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `pnpm exec vitest run tests/lib/taxmodel.test.ts`
-Expected: PASS (5/5), including the aggregate reporting zero failing invariants. If the reconciliation test fails, a `distribution` or `compute` term diverged — compare against the source.
+Expected: PASS (5/5), including the aggregate reporting zero failing invariants. If the reconciliation test fails, a `distribution` or `compute` term diverged - compare against the source.
 
 - [ ] **Step 6: Run the full suite + type-check + build**
 
@@ -235,9 +235,9 @@ git commit -m "Port taxmodel.js to src/lib/taxmodel.ts with seven tax invariants
 
 ## Follow-on plans (out of scope here)
 
-- **P3 — Tabs:** port each view to `.astro` + islands (this is where `care.js`, `charts.js`, `taxcharts.js`, `taxapp.js`, and the other render modules land), each DOM-diffed against the live original, plus the em-dash/content pass over ported `desc`/`label` strings.
-- **P4 — Content collections:** move sourced catalogs into Zod-validated Astro content collections.
-- **P5 — Cutover:** flip the deploy workflow to `on: push`, switch Pages source to GitHub Actions, retire the old `docs/` files.
+- **P3 - Tabs:** port each view to `.astro` + islands (this is where `care.js`, `charts.js`, `taxcharts.js`, `taxapp.js`, and the other render modules land), each DOM-diffed against the live original, plus the em-dash/content pass over ported `desc`/`label` strings.
+- **P4 - Content collections:** move sourced catalogs into Zod-validated Astro content collections.
+- **P5 - Cutover:** flip the deploy workflow to `on: push`, switch Pages source to GitHub Actions, retire the old `docs/` files.
 
 ## Self-review notes
 

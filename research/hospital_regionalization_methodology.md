@@ -59,8 +59,8 @@ The framework's hospital design is summarized on pages 152-154 and 295 of
    and conduct evidence-based service-reduction or closure proceedings.
 3. Each participating hospital becomes a mission-locked public-service
    nonprofit corporation. Its local board includes community and patient,
-   clinical, workforce, public-health, tribal/local-government, and—where
-   applicable—university representation, with public conflicts and protected
+   clinical, workforce, public-health, tribal/local-government, and - where
+   applicable - university representation, with public conflicts and protected
    clinical-safety escalation.
 
 The certified annual global budget is the sum of:

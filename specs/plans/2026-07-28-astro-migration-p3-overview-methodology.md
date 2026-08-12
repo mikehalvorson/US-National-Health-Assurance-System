@@ -1,10 +1,10 @@
-# NHA Astro Migration — P3 (slice 11c): Overview Methodology card (finishes the Overview) Implementation Plan
+# NHA Astro Migration - P3 (slice 11c): Overview Methodology card (finishes the Overview) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Port the Overview "Methodology and limits" card — three static note blocks, the weakest-assumptions warnbox with a build-time `#gaps-list`, the full `#param-table` (every `PARAM_DEFS` row with confidence badge + source link), and the `#selftest` badge that aggregates the model self-tests and the tax invariants — all rendered at build time (zero client JS). This is the last Overview slice.
+**Goal:** Port the Overview "Methodology and limits" card - three static note blocks, the weakest-assumptions warnbox with a build-time `#gaps-list`, the full `#param-table` (every `PARAM_DEFS` row with confidence badge + source link), and the `#selftest` badge that aggregates the model self-tests and the tax invariants - all rendered at build time (zero client JS). This is the last Overview slice.
 
-**Architecture:** A new pure `src/lib/selftests.ts` exposes `selfTestSummary()`, which reconciles the two self-test shapes — `selfTest()` (`{name, ok, note}`) from `model.ts`, the bridge-identity check from `bridgeSteps()`, and `TAX_SELFTESTS` (`{name, run()}`) from `taxmodel.ts` — into one `{rows, passed, total}` result. `src/pages/index.astro` renders the whole Methodology card at build time: the gaps list from `PARAM_DEFS` (low-confidence labels), the parameter table from `PARAM_DEFS`, and the self-test badge/list from `selfTestSummary()`. Inserted between the household card and the chapter-nav footer.
+**Architecture:** A new pure `src/lib/selftests.ts` exposes `selfTestSummary()`, which reconciles the two self-test shapes - `selfTest()` (`{name, ok, note}`) from `model.ts`, the bridge-identity check from `bridgeSteps()`, and `TAX_SELFTESTS` (`{name, run()}`) from `taxmodel.ts` - into one `{rows, passed, total}` result. `src/pages/index.astro` renders the whole Methodology card at build time: the gaps list from `PARAM_DEFS` (low-confidence labels), the parameter table from `PARAM_DEFS`, and the self-test badge/list from `selfTestSummary()`. Inserted between the household card and the chapter-nav footer.
 
 **Tech Stack:** Astro 5 (build-time template), TypeScript strict, Vitest 3.2.7. Consumes `PARAM_DEFS` from `src/lib/params.ts`, `selfTest` from `src/lib/model.ts`, `bridgeSteps` from `src/lib/bridge.ts`, `runOverviewMc` from `src/lib/overview.ts`, `TAX_SELFTESTS` from `src/lib/taxmodel.ts`.
 
@@ -13,7 +13,7 @@
 - Platform: Windows. Bash tool or PowerShell. node 22.23.1 / pnpm 11.17.0 (Volta). Working dir: `C:\Users\micha\OneDrive\Desktop\Healthcare Framework\ChatGPT Work Outputs\Claude Outputs`.
 - TypeScript `strict`; avoid gratuitous `any`.
 - **Fidelity:** the card prose is verbatim from `docs/index.html:991-1040`. The parameter table reproduces `renderParamTable` (`docs/js/app.js:570-606`): head `['Parameter','Low','Central','High','Unit','Confidence','Source']` with columns 1-3 (`Low/Central/High`) carrying `class="num"`; each numeric cell is `(+v.toFixed(2)).toLocaleString('en-US')`; the Source cell is `p.source + ' '` then, if `p.url`, an `<a href target="_blank" rel="noopener">[link]</a>`. The gaps list reproduces `docs/js/app.js:604-605`: low-confidence `PARAM_DEFS` labels joined with `' · '`, with a single leading space. The self-test badge reproduces `renderSelfTests` (`docs/js/app.js:608-641`): status text `All N model self-tests pass.` when all pass, else `M of N self-tests FAILING.`, then a `<ul>` of `✓ name` / `✗ name: note`.
-- No em dashes (—, U+2014) in reader-visible output. En dash `–` (U+2013) allowed. Grep after each markup task; must be 0. (Note `docs:993` uses `Phase 0–8` and `2040–2042` en dashes; keep them.)
+- No em dashes ( - , U+2014) in reader-visible output. En dash `–` (U+2013) allowed. Grep after each markup task; must be 0. (Note `docs:993` uses `Phase 0–8` and `2040–2042` en dashes; keep them.)
 - Build-time only: `#gaps-list`, `#param-table`, and `#selftest` are rendered from data at build time (zero client JS). Do NOT touch `src/scripts/overview-client.ts`. (This differs from the docs, which filled them client-side; build-time is correct here because they are static.)
 - Do NOT modify `docs/` or the engine modules (params/model/scenarios/bridge/taxmodel). You MAY create `src/lib/selftests.ts` and edit `src/pages/index.astro`, plus tests.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -36,7 +36,7 @@ tests/pages/
 
 ---
 
-### Task 1: `src/lib/selftests.ts` — build-time self-test aggregator
+### Task 1: `src/lib/selftests.ts` - build-time self-test aggregator
 
 **Files:**
 - Create: `src/lib/selftests.ts`
@@ -66,7 +66,7 @@ test('selfTestSummary: every model + bridge + tax self-test passes', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/selftests.test.ts`
-Expected: FAIL — module missing.
+Expected: FAIL - module missing.
 
 - [ ] **Step 3: Create `src/lib/selftests.ts`**
 
@@ -107,7 +107,7 @@ export function selfTestSummary(): { rows: SelfTestRow[]; passed: number; total:
   return { rows: rows, passed: passed, total: rows.length };
 }
 ```
-NOTE the import line is a placeholder pending Step 3a: use the real module paths — `selfTest` is exported from `./model`, and `runOverviewMc` from `./overview`. Replace the first import with:
+NOTE the import line is a placeholder pending Step 3a: use the real module paths - `selfTest` is exported from `./model`, and `runOverviewMc` from `./overview`. Replace the first import with:
 ```ts
 import { selfTest } from './model';
 import { runOverviewMc } from './overview';
@@ -159,7 +159,7 @@ test('overview includes the build-time Methodology card', async () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — Methodology card absent.
+Expected: FAIL - Methodology card absent.
 
 - [ ] **Step 3: Import data in the frontmatter**
 
@@ -278,7 +278,7 @@ git commit -m "Add Overview Methodology card (build-time param table + gaps + se
 
 - [ ] **Step 1: Serve + inspect**
 
-Confirm, after the household card and before the chapter-nav footer, the "Methodology and limits" card with: three `.note` blocks, a `#gaps-box` warnbox whose `#gaps-list` lists the low-confidence parameter labels (dot-separated), a collapsed `<details>` whose `#param-table` has a 7-column head (Low/Central/High are `.num`) and one row per `PARAM_DEFS` entry with a `.conf` badge and (where present) a `[link]`, and a `#selftest` block whose status reads `All N model self-tests pass.` with a `.pass` class and a `<ul>` of `✓` rows (no `✗`). `read_console_messages` — zero errors.
+Confirm, after the household card and before the chapter-nav footer, the "Methodology and limits" card with: three `.note` blocks, a `#gaps-box` warnbox whose `#gaps-list` lists the low-confidence parameter labels (dot-separated), a collapsed `<details>` whose `#param-table` has a 7-column head (Low/Central/High are `.num`) and one row per `PARAM_DEFS` entry with a `.conf` badge and (where present) a `[link]`, and a `#selftest` block whose status reads `All N model self-tests pass.` with a `.pass` class and a `<ul>` of `✓` rows (no `✗`). `read_console_messages` - zero errors.
 
 - [ ] **Step 2: Static-render check**
 
@@ -301,8 +301,8 @@ With the Methodology card, `src/pages/index.astro` reproduces the entire docs Ov
 
 ## Self-review notes
 
-- **Spec coverage:** implements the Methodology card in full — prose, gaps list, parameter table, and the reconciled self-test badge. Finishes the Overview.
+- **Spec coverage:** implements the Methodology card in full - prose, gaps list, parameter table, and the reconciled self-test badge. Finishes the Overview.
 - **No placeholders:** `selfTestSummary` and the card markup are fully specified; the only note is the corrected import path in Task 1 Step 3 (spelled out explicitly).
 - **Type/name consistency:** `SelfTestRow`/`selfTestSummary` are new; they consume `selfTest(): SelfTestResult[]` (`{name,ok,note}`), `bridgeSteps(mc): {steps, identityError}`, and `TAX_SELFTESTS: {name, run()}[]` as they exist today; `PARAM_DEFS` fields used (`label`, `low`, `mode`, `high`, `unit`, `confidence`, `source`, `url`) match `ParamDef`; ids `#param-table`/`#gaps-list`/`#gaps-box`/`#selftest` and classes `note`/`warnbox`/`selftest`/`pass`/`fail`/`conf`/`data`/`num` match `docs` + `global.css`.
-- **No em dash / no NaN:** prose uses U+2013; numeric cells use `toFixed(2)` on finite `PARAM_DEFS` numbers; the self-test badge is boolean-driven. Em-dash greps in both tasks; the pre-existing `!html.includes('—')` overview test guards the page.
+- **No em dash / no NaN:** prose uses U+2013; numeric cells use `toFixed(2)` on finite `PARAM_DEFS` numbers; the self-test badge is boolean-driven. Em-dash greps in both tasks; the pre-existing `!html.includes(' - ')` overview test guards the page.
 - **Build-time correctness:** `selfTestSummary()` runs the same pure functions the Vitest suite already exercises, so a green build badge is guaranteed to match the test suite; rendering it at build time (not client) is safe because all inputs are static.

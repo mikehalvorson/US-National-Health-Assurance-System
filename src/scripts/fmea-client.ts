@@ -435,9 +435,9 @@ function renderTable(records: FmeaRecord[]): void {
       tr.appendChild(el('td', 'fmea-cell-name', r.paramName));
       tr.appendChild(el('td', 'text-nowrap', r.phase === 'calibration' ? 'calibration' : r.phase));
       tr.appendChild(el('td', '', r.effectClassLabel));
-      tr.appendChild(el('td', 'fmea-num', r.probability ? String(r.probability) : '—'));
+      tr.appendChild(el('td', 'fmea-num', r.probability ? String(r.probability) : ' - '));
       tr.appendChild(el('td', 'fmea-num', String(r.consequence)));
-      tr.appendChild(el('td', 'fmea-num', r.risk ? String(r.risk) : '—'));
+      tr.appendChild(el('td', 'fmea-num', r.risk ? String(r.risk) : ' - '));
       const bandCell = el('td');
       bandCell.appendChild(el('span', 'fmea-band-chip fmea-cell-' + r.band, BAND_META[r.band].label));
       tr.appendChild(bandCell);

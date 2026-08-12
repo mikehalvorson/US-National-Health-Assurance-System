@@ -1,4 +1,4 @@
-# NHA Astro Migration — P3 (slice 2): Overview interactivity Implementation Plan
+# NHA Astro Migration - P3 (slice 2): Overview interactivity Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -15,7 +15,7 @@
 - Base path `/US-National-Health-Assurance-System/`; assets via `import.meta.env.BASE_URL`.
 - **Fidelity:** all math and formatting come verbatim from `docs/js/app.js` (`buildControls` lines 17-90, `recompute`/`renderHero`/`renderTiles` lines 106-211). Model = P2 `src/lib/model`. Constants: scenario default `"SCN-BASE"`, `N_RUNS = 600`, `SEED = 42`, `DEF = DEFLATOR_2023_TO_2024`. Slider debounce = 160ms. Fixed seed means default output equals slice-1 and the live site.
 - **Parity:** reproduce the live controls DOM (`#controls`, `#scenario-select`, `.control` wrappers, `#scenario-desc`, `#reset-btn`, `#runs-note`) and classes exactly. Do not redesign.
-- **No em dashes (—, U+2014)** in reader-visible output. EN dash `–` (U+2013) and MINUS `−` (U+2212) allowed. The family-burden note prose is copied VERBATIM from `docs/js/app.js` (it contains a doubled-word typo "the the" at app.js:176-177 — preserve it for fidelity; flag for the P3 content pass, do NOT fix here).
+- **No em dashes ( - , U+2014)** in reader-visible output. EN dash `–` (U+2013) and MINUS `−` (U+2212) allowed. The family-burden note prose is copied VERBATIM from `docs/js/app.js` (it contains a doubled-word typo "the the" at app.js:176-177 - preserve it for fidelity; flag for the P3 content pass, do NOT fix here).
 - Client script must re-run on `astro:page-load` (View Transitions), not only `DOMContentLoaded`.
 - Do NOT modify anything under `docs/` or the `src/lib/*` engine modules (params/model/scenarios/tax*). You MAY add `src/lib/overview.ts` and a client script.
 - Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
@@ -35,7 +35,7 @@ tests/lib/
   overview.test.ts
 ```
 
-Reference — adjustable params: `docs/js/params.js` has 12 `adjustable: true` PARAM_DEFS, each with `sliderMin`, `sliderMax`, `unit`, `confidence`, `source`, `label`. Control ids in `docs/index.html`: `#controls` (829), `#scenario-desc` (829), `#reset-btn` (831), `#runs-note` (832).
+Reference - adjustable params: `docs/js/params.js` has 12 `adjustable: true` PARAM_DEFS, each with `sliderMin`, `sliderMax`, `unit`, `confidence`, `source`, `label`. Control ids in `docs/index.html`: `#controls` (829), `#scenario-desc` (829), `#reset-btn` (831), `#runs-note` (832).
 
 ---
 
@@ -48,11 +48,11 @@ Reference — adjustable params: `docs/js/params.js` has 12 `adjustable: true` P
 **Interfaces:**
 - Consumes: `runMonteCarlo` from `./model`; `DEFLATOR_2023_TO_2024` from `./params`; `money`, `moneyShort`, `pct`, `perCap` from `./format`.
 - Produces:
-  - `interface OverviewTile { label: string; value: string; range: string }`
-  - `interface OverviewView { heroValue: string; heroRange: string; nha2041: string; base2041: string; hero2041Range: string; tiles: OverviewTile[]; familyNote: string }`
-  - `function computeOverview(scenario: string, sliders: Record<string, number> | null): OverviewView`
-    - `mc = runMonteCarlo(scenario, sliders, 600, 42)`, `DEF = DEFLATOR_2023_TO_2024`.
-    - Reproduce `renderHero` (app.js:142-181) and `renderTiles` (app.js:183-210) EXACTLY: heroValue `money(mc.steady.matureToday.p50*DEF)+"/yr"`; heroRange `money(p10*DEF)+" – "+money(p90*DEF)+" (10th–90th pct)"`; the 2041 pair + `hero2041Range` (the p10–p90 band `+ " · " + sign + moneyShort(|delta|) + " (" + sign + pct%) vs status quo"`); the 4 tiles; and `familyNote` — the full prose string from app.js:168-180 with its interpolated values (famNow=0.27*5300, fam2041=0.27*baseMature, hhNow=132.2, hh2041=141, kppPerHH=0.05*d41.newRevenue*DEF*1e9/(hh2041*1e6)). Copy the prose text verbatim including the "the the" typo.
+- `interface OverviewTile { label: string; value: string; range: string }`
+- `interface OverviewView { heroValue: string; heroRange: string; nha2041: string; base2041: string; hero2041Range: string; tiles: OverviewTile[]; familyNote: string }`
+- `function computeOverview(scenario: string, sliders: Record<string, number> | null): OverviewView`
+- `mc = runMonteCarlo(scenario, sliders, 600, 42)`, `DEF = DEFLATOR_2023_TO_2024`.
+- Reproduce `renderHero` (app.js:142-181) and `renderTiles` (app.js:183-210) EXACTLY: heroValue `money(mc.steady.matureToday.p50*DEF)+"/yr"`; heroRange `money(p10*DEF)+" – "+money(p90*DEF)+" (10th–90th pct)"`; the 2041 pair + `hero2041Range` (the p10–p90 band `+ " · " + sign + moneyShort(|delta|) + " (" + sign + pct%) vs status quo"`); the 4 tiles; and `familyNote` - the full prose string from app.js:168-180 with its interpolated values (famNow=0.27*5300, fam2041=0.27*baseMature, hhNow=132.2, hh2041=141, kppPerHH=0.05*d41.newRevenue*DEF*1e9/(hh2041*1e6)). Copy the prose text verbatim including the "the the" typo.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -74,7 +74,7 @@ test('SCN-BASE default matches the known headline figures', () => {
 test('family note is non-empty prose without an em dash', () => {
   const v = computeOverview('SCN-BASE', null);
   expect(v.familyNote.length).toBeGreaterThan(100);
-  expect(v.familyNote.includes('—')).toBe(false); // U+2014
+  expect(v.familyNote.includes(' - ')).toBe(false); // U+2014
 });
 
 test('a stress scenario changes the hero value', () => {
@@ -87,11 +87,11 @@ test('a stress scenario changes the hero value', () => {
 - [ ] **Step 2: Run to verify FAIL**
 
 Run: `pnpm exec vitest run tests/lib/overview.test.ts`
-Expected: FAIL — cannot resolve `../../src/lib/overview`.
+Expected: FAIL - cannot resolve `../../src/lib/overview`.
 
 - [ ] **Step 3: Implement `src/lib/overview.ts`**
 
-Port `renderHero` + `renderTiles` math into `computeOverview`, returning the `OverviewView`. Import model/params/format. The `familyNote` reproduces app.js:168-180 verbatim (the doubled "the the" stays). No DOM, no `window` — pure string computation. If a `mc.steady.*` field is missing from the ported `runMonteCarlo`, STOP and report BLOCKED.
+Port `renderHero` + `renderTiles` math into `computeOverview`, returning the `OverviewView`. Import model/params/format. The `familyNote` reproduces app.js:168-180 verbatim (the doubled "the the" stays). No DOM, no `window` - pure string computation. If a `mc.steady.*` field is missing from the ported `runMonteCarlo`, STOP and report BLOCKED.
 
 - [ ] **Step 4: Run to verify PASS**
 
@@ -142,7 +142,7 @@ test('overview fills the family-burden note and controls markup at build time', 
 - [ ] **Step 2: Run to verify the new assertion FAILS**
 
 Run: `pnpm exec vitest run tests/pages/overview.test.ts`
-Expected: FAIL — family note empty / controls markup absent.
+Expected: FAIL - family note empty / controls markup absent.
 
 - [ ] **Step 3: Update `src/pages/index.astro`**
 
@@ -178,7 +178,7 @@ git commit -m "Render Overview via computeOverview and add controls markup at bu
 
 - [ ] **Step 1: Implement `src/scripts/overview-client.ts`**
 
-Port `buildControls` (app.js:17-90) and the recompute/render wiring (app.js:92-113, hero/tiles/note portions only — NOT the chart/table/financing calls, which are slice 3). Structure:
+Port `buildControls` (app.js:17-90) and the recompute/render wiring (app.js:92-113, hero/tiles/note portions only - NOT the chart/table/financing calls, which are slice 3). Structure:
 ```ts
 import { computeOverview } from '../lib/overview';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
@@ -282,11 +282,11 @@ function initOverview(): void {
 
 document.addEventListener('astro:page-load', initOverview);
 ```
-Notes: `PARAM_DEFS` must expose `adjustable`, `sliderMin`, `sliderMax`, `unit`, `confidence`, `source`, `label` (they do — from P2 `ParamDef`). Cast `sliderMin/Max` to `number` if typed optional. `astro:page-load` fires on initial load AND after each View Transition, so no separate `DOMContentLoaded` is needed. The `data-wired` guard makes re-init idempotent.
+Notes: `PARAM_DEFS` must expose `adjustable`, `sliderMin`, `sliderMax`, `unit`, `confidence`, `source`, `label` (they do - from P2 `ParamDef`). Cast `sliderMin/Max` to `number` if typed optional. `astro:page-load` fires on initial load AND after each View Transition, so no separate `DOMContentLoaded` is needed. The `data-wired` guard makes re-init idempotent.
 
 - [ ] **Step 2: Type-check + build**
 
-Run: `pnpm check` (0 errors — the script is type-checked by `astro check`), then `pnpm build` (exit 0).
+Run: `pnpm check` (0 errors - the script is type-checked by `astro check`), then `pnpm build` (exit 0).
 
 - [ ] **Step 3: Commit**
 
@@ -305,11 +305,11 @@ git commit -m "Add Overview client interactivity: scenario picker, sliders, reco
 
 `pnpm preview`; open `http://localhost:4321/US-National-Health-Assurance-System/` in the browser pane. Read `#hero-value` and confirm it equals `$5.34T/yr` (default). Confirm `#controls` now contains a `<select id="scenario-select">` and 12 `input[type=range]` sliders, and `#family-burden-note` has prose. Check `read_console_messages` for errors.
 
-- [ ] **Step 2: Interact — scenario**
+- [ ] **Step 2: Interact - scenario**
 
 Set the scenario `<select>` to `SCN-OPT` (via `form_input` or `computer`). Confirm `#hero-value` changes to a different value and `#scenario-desc` updates. Set it back to `SCN-BASE`; confirm `#hero-value` returns to `$5.34T/yr`.
 
-- [ ] **Step 3: Interact — slider + reset**
+- [ ] **Step 3: Interact - slider + reset**
 
 Move one slider (dispatch an `input` event or drag); after ~200ms confirm the hero/tiles updated. Click `#reset-btn`; confirm values return to the `SCN-BASE` default.
 
@@ -321,7 +321,7 @@ Navigate to `/health` then back to overview (browser nav or nav links). Confirm 
 
 ## Follow-on slices (out of scope here)
 
-- **P3 slice 3:** charts — port `charts.js` primitives (`NHA._chartUtil`, `renderFlowDiagram`, path chart, benchmarks) as the money-flow / path / benchmark visuals on the Overview, then the health tab.
+- **P3 slice 3:** charts - port `charts.js` primitives (`NHA._chartUtil`, `renderFlowDiagram`, path chart, benchmarks) as the money-flow / path / benchmark visuals on the Overview, then the health tab.
 - **P3 slice 4+:** remaining tabs (tax + `taxcharts.js`/`taxapp.js`, then prose tabs), each replacing its stub, DOM-diffed vs live, with the em-dash/content pass over ported `desc`/`label`/prose (incl. the "the the" typo in the family note).
 - **P4/P5:** content collections; cutover.
 
