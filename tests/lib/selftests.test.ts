@@ -1,5 +1,10 @@
 import { expect, test } from 'vitest';
-import { assertSelfTestsPass, runGuarded, selfTestSummary } from '../../src/lib/selftests';
+import {
+  assertSelfTestsPass,
+  equationTargetDiagnostics,
+  runGuarded,
+  selfTestSummary
+} from '../../src/lib/selftests';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
   const s = selfTestSummary();
@@ -97,4 +102,33 @@ test('R273: fmeaSelfTests is registered', () => {
   const row = s.rows.find((r) => /failure.mode/i.test(r.name));
   expect(row).toBeDefined();
   expect(row!.ok).toBe(true);
+});
+
+/* R248 [§S0] — two detectors, not one. The row's own instrument counts rollout
+   entries still carrying kind === 'derived interim target' after import, and
+   that count is genuinely 0. But a zero there does NOT mean every equation
+   evaluated: a metric/phase pair with no rollout row is computed and dropped,
+   so applyEquationTargets never sees it and the kind survives nowhere. */
+test('R248: no rollout entry survives applyEquationTargets as a derived interim target', () => {
+  expect(equationTargetDiagnostics().kindSurvivors).toEqual([]);
+});
+
+test('R248: every non-finite equation result is reported by ID and phase', () => {
+  const found = equationTargetDiagnostics().nonFinite
+    .map((c) => c.metric + '@' + c.phase)
+    .sort();
+  // Known and documented, not tolerated silently: these eleven evaluate NaN at
+  // early phases. All eleven are dropped rather than published, because no
+  // rollout row exists at that phase. §S3 owns the equations themselves.
+  expect(found).toEqual([
+    'KPP-B1@P0',
+    'KPP-D7@P0',
+    'KPP-TRUST1@P0',
+    'TPP-9.3@P0', 'TPP-9.3@P1', 'TPP-9.3@P2', 'TPP-9.3@P3',
+    'TPP-9.5@P0', 'TPP-9.5@P1', 'TPP-9.5@P2', 'TPP-9.5@P3'
+  ]);
+});
+
+test('R248: no non-finite cell reaches a published rollout row', () => {
+  expect(equationTargetDiagnostics().nonFinitePublished).toEqual([]);
 });
