@@ -15,6 +15,9 @@ import {
   manifestDrift, readmeAdvertisedTestCount, routeDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { AGE_STRUCTURE } from './params';
+import {
+  gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
+} from './gate-floors';
 import { DATA_PHASE_COUNTS } from './data-phases';
 import {
   dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
@@ -231,6 +234,32 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: p.length === 0,
           note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+        };
+      })
+    ]
+  },
+  {
+    /* R149 [§S0]: gate floors were exempt from the no-regression test with
+       nothing checking them. Now checked against the gate they cite. */
+    surface: 'gate-floors.ts',
+    rows: () => [
+      runGuarded('Every gate floor matches the gate requirement it cites', () => {
+        const drift = gateFloorDrift();
+        return {
+          ok: !drift.length,
+          note: drift.map((d) => d.paramId + '@' + d.phase + ' cites ' + d.gate +
+            ': ' + d.value).join('; ') || gateFloorChecks().length + ' floors verified'
+        };
+      }),
+      runGuarded('Progression floors without a gate are the three known ones', () => {
+        const found = unexplainedExemptions()
+          .map((e) => e.paramId + '@' + e.phase).sort().join(', ');
+        const known = [...KNOWN_UNANCHORED_FLOORS].sort().join(', ');
+        return {
+          ok: found === known,
+          note: found === known
+            ? found + ' (exempt from the no-regression test, nothing anchors them)'
+            : 'changed: ' + found
         };
       })
     ]

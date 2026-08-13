@@ -53,6 +53,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/flow-diagram.ts',
   'src/lib/fmea.ts',
   'src/lib/format.ts',
+  'src/lib/gate-floors.ts',
   'src/lib/gov.ts',
   'src/lib/growth-decomp.ts',
   'src/lib/hardening.ts',
