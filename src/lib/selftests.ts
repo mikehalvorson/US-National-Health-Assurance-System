@@ -12,6 +12,11 @@ import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
 import { manifestDrift, routeDrift } from './manifest-check';
+import { DATA_PHASE_COUNTS } from './data-phases';
+import {
+  dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
+  dataPhaseTargetCount, frameworkBasisEntries
+} from './data-phases-checks';
 
 /* R248 [§S0]: two detectors, because the row's own instrument only sees one of
    the two ways an equation can fail to produce a number.
@@ -202,6 +207,41 @@ function buildSummary(): SelfTestReport {
         ? parts.join(' | ') + ' -- run: node tools/build_file_manifest.mjs'
         : 'in sync'
     };
+  }));
+
+  /* R54 [§S0]: data-phases.ts declared two counts and asserted nothing, while
+     the Quality tab reuses the same data verbatim. Each count is now compared
+     against the collection it describes. */
+  rows.push(runGuarded('Data-tab metric count equals its distinct metric IDs', function () {
+    const n = dataPhaseMetricIds().length;
+    return {
+      ok: n === DATA_PHASE_COUNTS.metricCount,
+      note: 'declared ' + DATA_PHASE_COUNTS.metricCount + ', derived ' + n
+    };
+  }));
+  rows.push(runGuarded('Data-tab target count equals its per-phase rows', function () {
+    const n = dataPhaseTargetCount();
+    return {
+      ok: n === DATA_PHASE_COUNTS.targetCount,
+      note: 'declared ' + DATA_PHASE_COUNTS.targetCount + ', derived ' + n
+    };
+  }));
+  rows.push(runGuarded('Data-tab metric IDs conform to the KPP/TPP pattern', function () {
+    const bad = dataPhaseIdFormat().nonConforming;
+    return { ok: !bad.length, note: bad.join(', ') || 'all conform' };
+  }));
+  rows.push(runGuarded('Data-tab phase targets never regress from their mature target', function () {
+    const r = dataPhaseMonotonicity().regressions;
+    return {
+      ok: !r.length,
+      note: r.map(function (x) {
+        return x.id + ' ' + x.from + '->' + x.to + ' (' + x.fromValue + '->' + x.toValue + ')';
+      }).join(', ') || 'monotone'
+    };
+  }));
+  rows.push(runGuarded('Data-tab framework-basis entries number seventeen', function () {
+    const n = frameworkBasisEntries().length;
+    return { ok: n === 17, note: n + ' entries carry basis: framework' };
   }));
 
   /* R267 [§S0]: an unregistered route loses its chapter navigation silently. */
