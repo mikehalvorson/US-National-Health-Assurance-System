@@ -1,6 +1,10 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import { assertSelfTestsPass, selfTestSummary } from './src/lib/selftests.ts';
+import {
+  assertReadmeCountCurrent,
+  assertSelfTestsPass,
+  selfTestSummary
+} from './src/lib/selftests.ts';
 
 /* R152 [§S0]: make a failing self-test fail the build.
    The gate lives here rather than on a page because it must not depend on which
@@ -17,6 +21,7 @@ function selfTestGate() {
         const logger = ctx.logger;
         const summary = selfTestSummary();
         assertSelfTestsPass(summary);
+        assertReadmeCountCurrent(summary);
         logger.info(`self-tests: ${summary.passed} of ${summary.total} pass`);
       }
     }

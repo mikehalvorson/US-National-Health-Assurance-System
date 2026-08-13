@@ -1,11 +1,13 @@
 import { expect, test } from 'vitest';
 import {
+  assertReadmeCountCurrent,
   assertSelfTestsPass,
   equationTargetDiagnostics,
   runGuarded,
   SELF_TEST_SOURCES,
   selfTestSummary
 } from '../../src/lib/selftests';
+import { readmeAdvertisedTestCount } from '../../src/lib/manifest-check';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
   const s = selfTestSummary();
@@ -27,7 +29,6 @@ test('assertSelfTestsPass: throws, and names every failing row', () => {
         { name: 'a broken invariant', ok: false, note: 'err=1.2' },
         { name: 'another broken one', ok: false, note: '' }
       ],
-      passed: 1,
       total: 3
     })
   ).toThrow(/a broken invariant[\s\S]*another broken one/);
@@ -37,7 +38,6 @@ test('assertSelfTestsPass: reports the count so a build log states the damage', 
   expect(() =>
     assertSelfTestsPass({
       rows: [{ name: 'x', ok: false, note: '' }],
-      passed: 0,
       total: 1
     })
   ).toThrow(/1 of 1/);
@@ -143,11 +143,16 @@ test('R24: every self-test source is declared in one registry', () => {
   const sources = SELF_TEST_SOURCES;
   expect(sources.length).toBeGreaterThan(0);
   expect(sources.every((s) => typeof s.surface === 'string' && s.surface.length > 0)).toBe(true);
+  expect(new Set(sources.map((s) => s.surface)).size).toBe(sources.length);
 });
 
 test('R24: the registered count equals the advertised count', () => {
-  const fromRegistry = SELF_TEST_SOURCES.reduce((n, s) => n + s.rows().length, 0);
-  expect(selfTestSummary().total).toBe(fromRegistry);
+  const s = selfTestSummary();
+  const fromSurfaces = Object.values(s.bySurface).reduce((n, v) => n + v, 0);
+  expect(s.total).toBe(fromSurfaces);
+  expect(s.rows.length).toBe(s.total);
+  // every declared surface actually contributed
+  expect(Object.keys(s.bySurface).sort()).toEqual(SELF_TEST_SOURCES.map((x) => x.surface).sort());
 });
 
 test('R24: no two self-tests share a name, so a failure names one test', () => {
@@ -171,4 +176,23 @@ test('R206: no exported self-test surface is missing from the registry', () => {
   ]) {
     expect(surfaces.has(s)).toBe(true);
   }
+});
+
+
+/* R155 [§S0] — the README advertised 27 integrity tests against a real 19.
+   Checked in the gate, which holds the finished total; a row cannot know the
+   total it is part of. */
+test('R155: the gate rejects a README count that has drifted', () => {
+  const real = selfTestSummary().total;
+  expect(() =>
+    assertReadmeCountCurrent({ total: real + 1 })
+  ).toThrow(/README advertises/);
+});
+
+test('R155: the gate is silent when the README is current', () => {
+  expect(() => assertReadmeCountCurrent(selfTestSummary())).not.toThrow();
+});
+
+test('R155: the README states the count the registry produces', () => {
+  expect(readmeAdvertisedTestCount()).toBe(selfTestSummary().total);
 });

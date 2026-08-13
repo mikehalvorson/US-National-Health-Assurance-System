@@ -23,10 +23,19 @@ const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 export const MANIFEST_ROOTS = ['src', 'tools', 'research'];
 
+/* Memoised per root. These run inside self-tests, which vitest re-imports once
+   per test file; without the cache the suite spends minutes re-walking the tree
+   and re-reading a 119 KB catalog. */
+const fileCache = new Map<string, string[]>();
+
 export function enumerateSourceFiles(root = REPO_ROOT): string[] {
+  const hit = fileCache.get(root);
+  if (hit) return hit;
   const out: string[] = [];
   for (const dir of MANIFEST_ROOTS) walk(join(root, dir), root, out);
-  return out.sort();
+  out.sort();
+  fileCache.set(root, out);
+  return out;
 }
 
 function walk(dir: string, root: string, out: string[]): void {
@@ -71,7 +80,11 @@ const SELF_TEST_EXPORT = /export function (selfTest\w*|\w*SelfTests)\s*\(/g;
    register themselves. */
 const REGISTRY_MODULE = 'selftests.ts';
 
+const surfaceCache = new Map<string, Array<{ module: string; fn: string }>>();
+
 export function exportedSelfTestSurfaces(root = REPO_ROOT): Array<{ module: string; fn: string }> {
+  const hit = surfaceCache.get(root);
+  if (hit) return hit;
   const out: Array<{ module: string; fn: string }> = [];
   for (const rel of enumerateSourceFiles(root)) {
     if (!rel.startsWith('src/lib/') || !rel.endsWith('.ts')) continue;
@@ -81,6 +94,7 @@ export function exportedSelfTestSurfaces(root = REPO_ROOT): Array<{ module: stri
       out.push({ module: rel.slice('src/lib/'.length), fn: m[1] });
     }
   }
+  surfaceCache.set(root, out);
   return out;
 }
 
@@ -90,6 +104,23 @@ export function unregisteredSelfTestSurfaces(
 ): Array<{ module: string; fn: string }> {
   const registered = new Set(registeredModules);
   return exportedSelfTestSurfaces(root).filter((s) => !registered.has(s.module));
+}
+
+/* R155 [§S0]: the README's advertised self-test count, read from the file.
+ *
+ * It said 27. The real figure was 19 (11 model + 1 bridge + 7 tax), and the
+ * two orphans R153 wired took it to 21. Fifth instance of a hardcoded count
+ * drifting (AB2, AC8, AJ2, AO4). Comparing it against selfTestSummary().total
+ * is what stops it being hand-maintained. */
+const readmeCache = new Map<string, number | null>();
+
+export function readmeAdvertisedTestCount(root = REPO_ROOT): number | null {
+  if (readmeCache.has(root)) return readmeCache.get(root)!;
+  const text = readFileSync(join(root, 'README.md'), 'utf8');
+  const m = text.match(/(\d+) built-in integrity tests/);
+  const n = m ? Number(m[1]) : null;
+  readmeCache.set(root, n);
+  return n;
 }
 
 /* R267 [§S0]: route registration.

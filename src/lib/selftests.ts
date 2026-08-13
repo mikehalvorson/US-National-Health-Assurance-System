@@ -11,7 +11,9 @@ import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-target
 import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
-import { manifestDrift, routeDrift, unregisteredSelfTestSurfaces } from './manifest-check';
+import {
+  manifestDrift, readmeAdvertisedTestCount, routeDrift, unregisteredSelfTestSurfaces
+} from './manifest-check';
 import { DATA_PHASE_COUNTS } from './data-phases';
 import {
   dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
@@ -39,7 +41,17 @@ export interface EquationDiagnostics {
   nonFinitePublished: EquationCell[];
 }
 
+const diagCache = new Map<string, EquationDiagnostics>();
+
 export function equationTargetDiagnostics(scenarioId = 'SCN-BASE'): EquationDiagnostics {
+  const hit = diagCache.get(scenarioId);
+  if (hit) return hit;
+  const result = computeDiagnostics(scenarioId);
+  diagCache.set(scenarioId, result);
+  return result;
+}
+
+function computeDiagnostics(scenarioId: string): EquationDiagnostics {
   const kindSurvivors: Array<{ paramId: string; phase: string }> = [];
   const publishedPhases = new Map<string, Set<string>>();
   for (const p of QUALITY_DATA.parameters) {
@@ -79,13 +91,20 @@ const KNOWN_NON_FINITE = [
 ].join(', ');
 
 export interface SelfTestRow { name: string; ok: boolean; note: string }
-export interface SelfTestReport { rows: SelfTestRow[]; passed: number; total: number }
+export interface SelfTestReport {
+  rows: SelfTestRow[];
+  passed: number;
+  total: number;
+  /* rows contributed by each registered surface (R24: the count is derived
+     from the registry, never maintained by hand) */
+  bySurface: Record<string, number>;
+}
 
 /* R152 [§S0]: the build gate. selfTestSummary reports; this one refuses.
    Called from astro.config.mjs's astro:build:start hook, so a broken invariant
    stops the build before any page is emitted rather than rendering as a red row
    in the footer of a site that ships anyway. */
-export function assertSelfTestsPass(summary: SelfTestReport): void {
+export function assertSelfTestsPass(summary: Pick<SelfTestReport, 'rows' | 'total'>): void {
   const failed = summary.rows.filter(function (r) { return !r.ok; });
   if (!failed.length) return;
   throw new Error(
@@ -93,6 +112,19 @@ export function assertSelfTestsPass(summary: SelfTestReport): void {
     failed.map(function (r) {
       return '  - ' + r.name + (r.note ? '  (' + r.note + ')' : '');
     }).join('\n')
+  );
+}
+
+/* R155 [§S0]: the README advertised 27 integrity tests against a real 19.
+   A registered row cannot check this, because a row cannot know the total it is
+   part of; the gate can, because it holds the finished summary. Separate from
+   assertSelfTestsPass so each failure mode is testable on its own. */
+export function assertReadmeCountCurrent(summary: Pick<SelfTestReport, 'total'>): void {
+  const advertised = readmeAdvertisedTestCount();
+  if (advertised === null || advertised === summary.total) return;
+  throw new Error(
+    'README advertises ' + advertised + ' integrity tests; the registry has ' +
+    summary.total + '. Update the figure in README.md.'
   );
 }
 
@@ -284,10 +316,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
 ];
 
 function buildSummary(): SelfTestReport {
-  const rows: SelfTestRow[] = SELF_TEST_SOURCES.flatMap((s) => s.rows());
+  const rows: SelfTestRow[] = [];
+  const bySurface: Record<string, number> = {};
+  for (const source of SELF_TEST_SOURCES) {
+    const produced = source.rows();
+    bySurface[source.surface] = produced.length;
+    rows.push(...produced);
+  }
 
   const passed = rows.filter(function (r) { return r.ok; }).length;
-  return { rows: rows, passed: passed, total: rows.length };
+  return { rows: rows, passed: passed, total: rows.length, bySurface: bySurface };
 }
 
 /* A surface that yields many rows at once. If it throws before producing them,
