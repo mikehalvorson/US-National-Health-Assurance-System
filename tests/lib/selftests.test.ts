@@ -88,3 +88,13 @@ test('R230: equationSelfTests is registered and its messages reach the row note'
   expect(row).toBeDefined();
   expect(row!.ok).toBe(true);
 });
+
+/* R273 [§S0] — fmea.ts states three times that its self-tests gate the build
+   and then called console.error. Seven invariants over 1,037 derived failure
+   modes, none able to stop a deploy. */
+test('R273: fmeaSelfTests is registered', () => {
+  const s = selfTestSummary();
+  const row = s.rows.find((r) => /failure.mode/i.test(r.name));
+  expect(row).toBeDefined();
+  expect(row!.ok).toBe(true);
+});

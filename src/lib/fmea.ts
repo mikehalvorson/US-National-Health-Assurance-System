@@ -25,7 +25,9 @@
  *   - Scores are derived from catalog signals (target stringency, required
  *     phase-to-phase improvement, calibration status, gate linkage, domain
  *     criticality), not asserted.
- *   - Self-tests must pass at build time.
+ *   - Self-tests must pass at build time. fmeaSelfTests() is registered in
+ *     selftests.ts and enforced by the astro:build:start gate in
+ *     astro.config.mjs: a failure stops the build (R152, R273).
  * ========================================================================= */
 import { QUALITY_DATA } from './quality';
 import type { QualityParameter, RolloutEntry } from './quality-data';
@@ -597,7 +599,8 @@ export const FMEA_DATA = {
 };
 
 /* ---- Self-tests -------------------------------------------------------
- * These run at import time; a thrown error fails the build. */
+ * Registered in selftests.ts; a failure fails the build via the
+ * astro:build:start gate in astro.config.mjs (R152, R273). */
 export function fmeaSelfTests(): { ok: boolean; messages: string[] } {
   const msgs: string[] = [];
   let ok = true;
@@ -644,10 +647,12 @@ export function fmeaSelfTests(): { ok: boolean; messages: string[] } {
   return { ok: ok, messages: msgs };
 }
 
-const _selfTest = fmeaSelfTests();
-if (!_selfTest.ok) {
-  /* surface in console during dev/build without hard-crashing the page */
-  if (typeof console !== 'undefined') {
-    console.error('[FMEA self-tests failed]\n' + _selfTest.messages.join('\n'));
-  }
-}
+/* R273 [§S0]: this used to run here and call console.error, which is why the
+   header's "self-tests must pass at build time" was not true. The call now
+   belongs to selftests.ts, which registers it as a named row and lets the
+   build gate in astro.config.mjs refuse the build (R152).
+
+   It is registered rather than thrown at import time deliberately: a
+   module-level throw fails before the row can be reported, which is the
+   "no self-test section at all" failure mode R154 exists to prevent. The gate
+   names the broken invariant instead. */

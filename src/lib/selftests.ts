@@ -10,6 +10,7 @@ import { TAX_SELFTESTS } from './taxmodel';
 import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-targets';
 import { QUALITY_DATA } from './quality';
 import { equationSelfTests } from './equations';
+import { fmeaSelfTests } from './fmea';
 
 export interface SelfTestRow { name: string; ok: boolean; note: string }
 export interface SelfTestReport { rows: SelfTestRow[]; passed: number; total: number }
@@ -94,6 +95,14 @@ function buildSummary(): SelfTestReport {
      failing IDs, so they belong in the row note. */
   rows.push(runGuarded('Equation layer: coverage, acyclicity and P8 closure', function () {
     const r = equationSelfTests(QUALITY_DATA);
+    return { ok: r.ok, note: r.messages.join('; ') };
+  }));
+
+  /* R273 [§S0]: the FMEA's seven invariants over every derived failure mode.
+     fmea.ts stated three times that these gate the build and then called
+     console.error. Registered here so the gate enforces the claim. */
+  rows.push(runGuarded('Failure-mode records: counts, score ranges and bands', function () {
+    const r = fmeaSelfTests();
     return { ok: r.ok, note: r.messages.join('; ') };
   }));
 
