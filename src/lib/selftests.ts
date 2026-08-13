@@ -9,8 +9,34 @@ import { bridgeSteps } from './bridge';
 import { TAX_SELFTESTS } from './taxmodel';
 
 export interface SelfTestRow { name: string; ok: boolean; note: string }
+export interface SelfTestReport { rows: SelfTestRow[]; passed: number; total: number }
 
-export function selfTestSummary(): { rows: SelfTestRow[]; passed: number; total: number } {
+/* R152 [§S0]: the build gate. selfTestSummary reports; this one refuses.
+   Called from astro.config.mjs's astro:build:start hook, so a broken invariant
+   stops the build before any page is emitted rather than rendering as a red row
+   in the footer of a site that ships anyway. */
+export function assertSelfTestsPass(summary: SelfTestReport): void {
+  const failed = summary.rows.filter(function (r) { return !r.ok; });
+  if (!failed.length) return;
+  throw new Error(
+    'Self-tests failed: ' + failed.length + ' of ' + summary.total + '.\n' +
+    failed.map(function (r) {
+      return '  - ' + r.name + (r.note ? '  (' + r.note + ')' : '');
+    }).join('\n')
+  );
+}
+
+/* Pure and deterministic (the Monte Carlo is seeded), so the result is cached:
+   the build gate and the footer panel would otherwise each pay for a 600-draw run. */
+let cached: SelfTestReport | null = null;
+
+export function selfTestSummary(): SelfTestReport {
+  if (cached) return cached;
+  cached = buildSummary();
+  return cached;
+}
+
+function buildSummary(): SelfTestReport {
   const rows: SelfTestRow[] = selfTest().map(function (r) {
     return { name: r.name, ok: r.ok, note: r.note || '' };
   });
