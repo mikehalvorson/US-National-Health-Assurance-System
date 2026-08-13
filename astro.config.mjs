@@ -12,7 +12,9 @@ function selfTestGate() {
   return {
     name: 'nha-self-test-gate',
     hooks: {
-      'astro:build:start': ({ logger }) => {
+      /** @param {{ logger: { info: (msg: string) => void } }} ctx */
+      'astro:build:start': (ctx) => {
+        const logger = ctx.logger;
         const summary = selfTestSummary();
         assertSelfTestsPass(summary);
         logger.info(`self-tests: ${summary.passed} of ${summary.total} pass`);

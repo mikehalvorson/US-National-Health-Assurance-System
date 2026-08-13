@@ -122,144 +122,159 @@ export function runGuarded(
   }
 }
 
-function buildSummary(): SelfTestReport {
-  const rows: SelfTestRow[] = [];
+/* R24 + R206 [§S0]: one registry, one runner, one count.
+   The repo ran three incompatible registration mechanisms and none knew about
+   the others, so nobody could state the true test count or confirm every test
+   executed: model.ts's selfTest() returns an array; taxmodel.ts's TAX_SELFTESTS
+   pushes {name, run} objects; phase-targets.ts exports bare predicates taking
+   the catalog. selftests.ts aggregated only the first two.
 
-  /* model.ts — selfTest() returns its own array of {name, ok, note}. Guard the
-     call itself, so a throw before the array is built is still a reported row. */
-  const modelRows = runGuardedList('model self-tests', function () {
-    return selfTest().map(function (r) {
-      return { name: r.name, ok: r.ok, note: r.note || '' };
-    });
-  });
-  rows.push(...modelRows);
+   Every surface now declares itself here, whatever its shape. Adding one is a
+   single entry, and `total` is the length of what this produces rather than a
+   number anyone maintains by hand. */
+export interface SelfTestSource {
+  surface: string;
+  rows: () => SelfTestRow[];
+}
 
-  rows.push(runGuarded('Bridge decomposition matches engine total exactly', function () {
-    const identityError = bridgeSteps(runOverviewMc('SCN-BASE', null)).identityError;
-    return { ok: identityError < 0.01, note: 'err=' + identityError.toExponential(1) };
-  }));
-
-  for (const t of TAX_SELFTESTS) {
-    rows.push(runGuarded(t.name, function () { return { ok: !!t.run() }; }));
+export const SELF_TEST_SOURCES: SelfTestSource[] = [
+  {
+    /* shape 1: a function returning its own {name, ok, note} array. Guard the
+       call itself, so a throw before the array is built is still a row. */
+    surface: 'model.ts',
+    rows: () => runGuardedList('model self-tests', () =>
+      selfTest().map((r) => ({ name: r.name, ok: r.ok, note: r.note || '' })))
+  },
+  {
+    surface: 'bridge.ts',
+    rows: () => [runGuarded('Bridge decomposition matches engine total exactly', () => {
+      const identityError = bridgeSteps(runOverviewMc('SCN-BASE', null)).identityError;
+      return { ok: identityError < 0.01, note: 'err=' + identityError.toExponential(1) };
+    })]
+  },
+  {
+    /* shape 2: {name, run}[] pushed onto a shared array */
+    surface: 'taxmodel.ts',
+    rows: () => TAX_SELFTESTS.map((t) => runGuarded(t.name, () => ({ ok: !!t.run() })))
+  },
+  {
+    /* shape 3: bare predicates taking the catalog (R153, R206) */
+    surface: 'phase-targets.ts',
+    rows: () => [
+      runGuarded('Every relevant phase carries a target', () =>
+        ({ ok: selfTestEveryRelevantPhase(QUALITY_DATA) })),
+      runGuarded('Phase targets show no regression toward maturity', () =>
+        ({ ok: selfTestNoRegression(QUALITY_DATA) }))
+    ]
+  },
+  {
+    /* R230 */
+    surface: 'equations.ts',
+    rows: () => [
+      runGuarded('Equation layer: coverage, acyclicity and P8 closure', () => {
+        const r = equationSelfTests(QUALITY_DATA);
+        return { ok: r.ok, note: r.messages.join('; ') };
+      }),
+      /* R248: both detectors */
+      runGuarded('No rollout entry survives import as a derived interim target', () => {
+        const s = equationTargetDiagnostics().kindSurvivors;
+        return {
+          ok: s.length === 0,
+          note: s.length ? s.map((x) => x.paramId + '@' + x.phase).join(', ') : 'all converted'
+        };
+      }),
+      runGuarded('Non-finite equation results are the eleven known ones', () => {
+        const d = equationTargetDiagnostics();
+        const found = d.nonFinite.map((c) => c.metric + '@' + c.phase).sort().join(', ');
+        return {
+          ok: found === KNOWN_NON_FINITE,
+          note: found === KNOWN_NON_FINITE
+            ? d.nonFinite.length + ' known, none published'
+            : 'changed: ' + found
+        };
+      }),
+      runGuarded('No non-finite equation result reaches a published row', () => {
+        const p = equationTargetDiagnostics().nonFinitePublished;
+        return {
+          ok: p.length === 0,
+          note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+        };
+      })
+    ]
+  },
+  {
+    /* R273 */
+    surface: 'fmea.ts',
+    rows: () => [runGuarded('Failure-mode records: counts, score ranges and bands', () => {
+      const r = fmeaSelfTests();
+      return { ok: r.ok, note: r.messages.join('; ') };
+    })]
+  },
+  {
+    /* R54 */
+    surface: 'data-phases.ts',
+    rows: () => [
+      runGuarded('Data-tab metric count equals its distinct metric IDs', () => {
+        const n = dataPhaseMetricIds().length;
+        return {
+          ok: n === DATA_PHASE_COUNTS.metricCount,
+          note: 'declared ' + DATA_PHASE_COUNTS.metricCount + ', derived ' + n
+        };
+      }),
+      runGuarded('Data-tab target count equals its per-phase rows', () => {
+        const n = dataPhaseTargetCount();
+        return {
+          ok: n === DATA_PHASE_COUNTS.targetCount,
+          note: 'declared ' + DATA_PHASE_COUNTS.targetCount + ', derived ' + n
+        };
+      }),
+      runGuarded('Data-tab metric IDs conform to the KPP/TPP pattern', () => {
+        const bad = dataPhaseIdFormat().nonConforming;
+        return { ok: !bad.length, note: bad.join(', ') || 'all conform' };
+      }),
+      runGuarded('Data-tab phase targets never regress from their mature target', () => {
+        const r = dataPhaseMonotonicity().regressions;
+        return {
+          ok: !r.length,
+          note: r.map((x) => x.id + ' ' + x.from + '->' + x.to +
+            ' (' + x.fromValue + '->' + x.toValue + ')').join(', ') || 'monotone'
+        };
+      }),
+      runGuarded('Data-tab framework-basis entries number seventeen', () => {
+        const n = frameworkBasisEntries().length;
+        return { ok: n === 17, note: n + ' entries carry basis: framework' };
+      })
+    ]
+  },
+  {
+    /* R271 + R267: the inventory and the route registry stop being guesses */
+    surface: 'manifest-check.ts',
+    rows: () => [
+      runGuarded('File manifest matches the working tree', () => {
+        const d = manifestDrift();
+        const parts: string[] = [];
+        if (d.unlisted.length) parts.push('unlisted: ' + d.unlisted.join(', '));
+        if (d.missing.length) parts.push('missing: ' + d.missing.join(', '));
+        return {
+          ok: !parts.length,
+          note: parts.length
+            ? parts.join(' | ') + ' -- run: node tools/build_file_manifest.mjs'
+            : 'in sync'
+        };
+      }),
+      runGuarded('Every page is registered in the route registry', () => {
+        const d = routeDrift();
+        const parts: string[] = [];
+        if (d.unregistered.length) parts.push('no TABS entry: ' + d.unregistered.join(', '));
+        if (d.unrouted.length) parts.push('no page: ' + d.unrouted.join(', '));
+        return { ok: !parts.length, note: parts.join(' | ') || 'all routes registered' };
+      })
+    ]
   }
+];
 
-  /* R153 [§S0]: phase-targets.ts's two tests. Third harness shape — a bare
-     predicate taking the catalog — which is why selftests.ts never picked them
-     up. They are the only coverage of the module that generates the published
-     phase trajectories. */
-  rows.push(runGuarded('Every relevant phase carries a target', function () {
-    return { ok: selfTestEveryRelevantPhase(QUALITY_DATA) };
-  }));
-  rows.push(runGuarded('Phase targets show no regression toward maturity', function () {
-    return { ok: selfTestNoRegression(QUALITY_DATA) };
-  }));
-
-  /* R230 [§S0]: the equation layer's only test surface. Asserts coverage (every
-     catalog parameter has an EQUATIONS entry), acyclicity and finiteness from
-     each metric's _phaseStart, and maturity closure at P8. It ran under vitest
-     and nowhere else, so it could not stop a deploy. Its messages carry the
-     failing IDs, so they belong in the row note. */
-  rows.push(runGuarded('Equation layer: coverage, acyclicity and P8 closure', function () {
-    const r = equationSelfTests(QUALITY_DATA);
-    return { ok: r.ok, note: r.messages.join('; ') };
-  }));
-
-  /* R273 [§S0]: the FMEA's seven invariants over every derived failure mode.
-     fmea.ts stated three times that these gate the build and then called
-     console.error. Registered here so the gate enforces the claim. */
-  rows.push(runGuarded('Failure-mode records: counts, score ranges and bands', function () {
-    const r = fmeaSelfTests();
-    return { ok: r.ok, note: r.messages.join('; ') };
-  }));
-
-  /* R248 [§S0]: both detectors. */
-  rows.push(runGuarded('No rollout entry survives import as a derived interim target', function () {
-    const s = equationTargetDiagnostics().kindSurvivors;
-    return {
-      ok: s.length === 0,
-      note: s.length
-        ? s.map(function (x) { return x.paramId + '@' + x.phase; }).join(', ')
-        : 'all converted'
-    };
-  }));
-  rows.push(runGuarded('Non-finite equation results are the eleven known ones', function () {
-    const d = equationTargetDiagnostics();
-    const found = d.nonFinite
-      .map(function (c) { return c.metric + '@' + c.phase; })
-      .sort()
-      .join(', ');
-    return {
-      ok: found === KNOWN_NON_FINITE,
-      note: found === KNOWN_NON_FINITE
-        ? d.nonFinite.length + ' known, none published'
-        : 'changed: ' + found
-    };
-  }));
-  /* R271 [§S0]: the inventory stops being a guess. */
-  rows.push(runGuarded('File manifest matches the working tree', function () {
-    const d = manifestDrift();
-    const parts: string[] = [];
-    if (d.unlisted.length) parts.push('unlisted: ' + d.unlisted.join(', '));
-    if (d.missing.length) parts.push('missing: ' + d.missing.join(', '));
-    return {
-      ok: !parts.length,
-      note: parts.length
-        ? parts.join(' | ') + ' -- run: node tools/build_file_manifest.mjs'
-        : 'in sync'
-    };
-  }));
-
-  /* R54 [§S0]: data-phases.ts declared two counts and asserted nothing, while
-     the Quality tab reuses the same data verbatim. Each count is now compared
-     against the collection it describes. */
-  rows.push(runGuarded('Data-tab metric count equals its distinct metric IDs', function () {
-    const n = dataPhaseMetricIds().length;
-    return {
-      ok: n === DATA_PHASE_COUNTS.metricCount,
-      note: 'declared ' + DATA_PHASE_COUNTS.metricCount + ', derived ' + n
-    };
-  }));
-  rows.push(runGuarded('Data-tab target count equals its per-phase rows', function () {
-    const n = dataPhaseTargetCount();
-    return {
-      ok: n === DATA_PHASE_COUNTS.targetCount,
-      note: 'declared ' + DATA_PHASE_COUNTS.targetCount + ', derived ' + n
-    };
-  }));
-  rows.push(runGuarded('Data-tab metric IDs conform to the KPP/TPP pattern', function () {
-    const bad = dataPhaseIdFormat().nonConforming;
-    return { ok: !bad.length, note: bad.join(', ') || 'all conform' };
-  }));
-  rows.push(runGuarded('Data-tab phase targets never regress from their mature target', function () {
-    const r = dataPhaseMonotonicity().regressions;
-    return {
-      ok: !r.length,
-      note: r.map(function (x) {
-        return x.id + ' ' + x.from + '->' + x.to + ' (' + x.fromValue + '->' + x.toValue + ')';
-      }).join(', ') || 'monotone'
-    };
-  }));
-  rows.push(runGuarded('Data-tab framework-basis entries number seventeen', function () {
-    const n = frameworkBasisEntries().length;
-    return { ok: n === 17, note: n + ' entries carry basis: framework' };
-  }));
-
-  /* R267 [§S0]: an unregistered route loses its chapter navigation silently. */
-  rows.push(runGuarded('Every page is registered in the route registry', function () {
-    const d = routeDrift();
-    const parts: string[] = [];
-    if (d.unregistered.length) parts.push('no TABS entry: ' + d.unregistered.join(', '));
-    if (d.unrouted.length) parts.push('no page: ' + d.unrouted.join(', '));
-    return { ok: !parts.length, note: parts.join(' | ') || 'all routes registered' };
-  }));
-
-  rows.push(runGuarded('No non-finite equation result reaches a published row', function () {
-    const p = equationTargetDiagnostics().nonFinitePublished;
-    return {
-      ok: p.length === 0,
-      note: p.map(function (c) { return c.metric + '@' + c.phase + ' = ' + c.text; }).join(', ')
-    };
-  }));
+function buildSummary(): SelfTestReport {
+  const rows: SelfTestRow[] = SELF_TEST_SOURCES.flatMap((s) => s.rows());
 
   const passed = rows.filter(function (r) { return r.ok; }).length;
   return { rows: rows, passed: passed, total: rows.length };

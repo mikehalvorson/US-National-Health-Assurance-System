@@ -3,6 +3,7 @@ import {
   assertSelfTestsPass,
   equationTargetDiagnostics,
   runGuarded,
+  SELF_TEST_SOURCES,
   selfTestSummary
 } from '../../src/lib/selftests';
 
@@ -131,4 +132,43 @@ test('R248: every non-finite equation result is reported by ID and phase', () =>
 
 test('R248: no non-finite cell reaches a published rollout row', () => {
   expect(equationTargetDiagnostics().nonFinitePublished).toEqual([]);
+});
+
+/* R24 + R206 [§S0] — the repo ran three incompatible registration mechanisms:
+   model.ts's selfTest() returning an array, taxmodel.ts's TAX_SELFTESTS pushing
+   {name, run} objects, and phase-targets.ts's bare predicates taking the
+   catalog. None knew about the others, so nobody could state the true test
+   count or confirm every test executed. */
+test('R24: every self-test source is declared in one registry', () => {
+  const sources = SELF_TEST_SOURCES;
+  expect(sources.length).toBeGreaterThan(0);
+  expect(sources.every((s) => typeof s.surface === 'string' && s.surface.length > 0)).toBe(true);
+});
+
+test('R24: the registered count equals the advertised count', () => {
+  const fromRegistry = SELF_TEST_SOURCES.reduce((n, s) => n + s.rows().length, 0);
+  expect(selfTestSummary().total).toBe(fromRegistry);
+});
+
+test('R24: no two self-tests share a name, so a failure names one test', () => {
+  const names = selfTestSummary().rows.map((r) => r.name);
+  expect(new Set(names).size).toBe(names.length);
+});
+
+test('R206: all three harness shapes are represented in the registry', () => {
+  const surfaces = SELF_TEST_SOURCES.map((s) => s.surface);
+  expect(surfaces).toContain('model.ts');       // selfTest(): SelfTestResult[]
+  expect(surfaces).toContain('taxmodel.ts');    // TAX_SELFTESTS: {name, run}[]
+  expect(surfaces).toContain('phase-targets.ts'); // bare predicate taking Q
+});
+
+test('R206: no exported self-test surface is missing from the registry', () => {
+  // the six surfaces R153, R230 and R273 enumerate, plus the two added here
+  const surfaces = new Set(SELF_TEST_SOURCES.map((s) => s.surface));
+  for (const s of [
+    'model.ts', 'bridge.ts', 'taxmodel.ts', 'phase-targets.ts',
+    'equations.ts', 'fmea.ts', 'data-phases.ts', 'manifest-check.ts'
+  ]) {
+    expect(surfaces.has(s)).toBe(true);
+  }
 });
