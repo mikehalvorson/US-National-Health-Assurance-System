@@ -9,6 +9,7 @@ import { bridgeSteps } from './bridge';
 import { TAX_SELFTESTS } from './taxmodel';
 import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-targets';
 import { QUALITY_DATA } from './quality';
+import { equationSelfTests } from './equations';
 
 export interface SelfTestRow { name: string; ok: boolean; note: string }
 export interface SelfTestReport { rows: SelfTestRow[]; passed: number; total: number }
@@ -84,6 +85,16 @@ function buildSummary(): SelfTestReport {
   }));
   rows.push(runGuarded('Phase targets show no regression toward maturity', function () {
     return { ok: selfTestNoRegression(QUALITY_DATA) };
+  }));
+
+  /* R230 [§S0]: the equation layer's only test surface. Asserts coverage (every
+     catalog parameter has an EQUATIONS entry), acyclicity and finiteness from
+     each metric's _phaseStart, and maturity closure at P8. It ran under vitest
+     and nowhere else, so it could not stop a deploy. Its messages carry the
+     failing IDs, so they belong in the row note. */
+  rows.push(runGuarded('Equation layer: coverage, acyclicity and P8 closure', function () {
+    const r = equationSelfTests(QUALITY_DATA);
+    return { ok: r.ok, note: r.messages.join('; ') };
   }));
 
   const passed = rows.filter(function (r) { return r.ok; }).length;

@@ -78,3 +78,13 @@ test('R153: the two phase-target self-tests are registered', () => {
   expect(s.rows.some((r) => /relevant phase/i.test(r.name))).toBe(true);
   expect(s.rows.some((r) => /regression/i.test(r.name))).toBe(true);
 });
+
+/* R230 [§S0] — equationSelfTests asserts coverage, acyclicity and P8 maturity
+   closure over the equation layer, and selftests.ts never imported it. It ran
+   under vitest only, so it could not stop a deploy. */
+test('R230: equationSelfTests is registered and its messages reach the row note', () => {
+  const s = selfTestSummary();
+  const row = s.rows.find((r) => /equation/i.test(r.name));
+  expect(row).toBeDefined();
+  expect(row!.ok).toBe(true);
+});
