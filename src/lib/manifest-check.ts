@@ -11,7 +11,7 @@
  * `astro build` and under vitest; nothing in src/scripts/ imports it, so
  * node:fs never reaches a client bundle.
  */
-import { readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -55,6 +55,41 @@ export function manifestDrift(actual: string[] = enumerateSourceFiles()): Manife
     unlisted: actual.filter((p) => !listed.has(p)),
     missing: FILE_MANIFEST.filter((p) => !onDisk.has(p))
   };
+}
+
+/* R206 [§S0]: no self-test surface outside the registry.
+ *
+ * R24 unified the three shapes that existed. This stops a fourth appearing:
+ * it scans src/lib for exported self-test functions and reports any whose
+ * module is not declared in SELF_TEST_SOURCES. Every orphaned surface in this
+ * backlog - R153's two, R230's, R273's - was written, exported and then simply
+ * never called, and nothing reported that. */
+const SELF_TEST_EXPORT = /export function (selfTest\w*|\w*SelfTests)\s*\(/g;
+
+/* selftests.ts is the registry, not a surface: its own exports (selfTestSummary,
+   assertSelfTestsPass) aggregate the others and must not be required to
+   register themselves. */
+const REGISTRY_MODULE = 'selftests.ts';
+
+export function exportedSelfTestSurfaces(root = REPO_ROOT): Array<{ module: string; fn: string }> {
+  const out: Array<{ module: string; fn: string }> = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/lib/') || !rel.endsWith('.ts')) continue;
+    if (rel.endsWith('/' + REGISTRY_MODULE)) continue;
+    const text = readFileSync(join(root, rel), 'utf8');
+    for (const m of text.matchAll(SELF_TEST_EXPORT)) {
+      out.push({ module: rel.slice('src/lib/'.length), fn: m[1] });
+    }
+  }
+  return out;
+}
+
+export function unregisteredSelfTestSurfaces(
+  registeredModules: string[],
+  root = REPO_ROOT
+): Array<{ module: string; fn: string }> {
+  const registered = new Set(registeredModules);
+  return exportedSelfTestSurfaces(root).filter((s) => !registered.has(s.module));
 }
 
 /* R267 [§S0]: route registration.

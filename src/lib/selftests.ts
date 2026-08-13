@@ -11,7 +11,7 @@ import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-target
 import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
-import { manifestDrift, routeDrift } from './manifest-check';
+import { manifestDrift, routeDrift, unregisteredSelfTestSurfaces } from './manifest-check';
 import { DATA_PHASE_COUNTS } from './data-phases';
 import {
   dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
@@ -260,6 +260,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: parts.length
             ? parts.join(' | ') + ' -- run: node tools/build_file_manifest.mjs'
             : 'in sync'
+        };
+      }),
+      /* R206 [§S0]: a fourth harness shape cannot appear unnoticed. */
+      runGuarded('Every exported self-test surface is in the registry', () => {
+        const modules = SELF_TEST_SOURCES.map((x) => x.surface);
+        const orphans = unregisteredSelfTestSurfaces(modules);
+        return {
+          ok: !orphans.length,
+          note: orphans.map((o) => o.module + ':' + o.fn).join(', ') ||
+            modules.length + ' surfaces registered'
         };
       }),
       runGuarded('Every page is registered in the route registry', () => {
