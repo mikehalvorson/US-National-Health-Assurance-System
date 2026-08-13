@@ -21,7 +21,6 @@ export interface TaxGroup {
 export interface TaxEcon {
   wagesB: number;
   aboveCapShare: number;
-  realGrowth: number;
   baseYear: number;
   growthRates: Record<string, number>;
 }

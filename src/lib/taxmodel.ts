@@ -49,15 +49,18 @@ export function defaultSettings(): TaxSettings {
   return s;
 }
 
-function growth(year: number): number {
-  return Math.pow(1 + ECON.realGrowth, year - ECON.baseYear);
-}
 /* Per-class base growth: broad income/GDP 1.9%, wages 1.2%, top capital
  * 4.0% real (see ECON.growthRates). Wealth-side instruments compound
- * faster than the economy because their base does. */
-function classGrowth(cls: string | undefined, year: number): number {
-  let r = ECON.growthRates && ECON.growthRates[cls || 'gdp'];
-  if (r == null) r = ECON.realGrowth;
+ * faster than the economy because their base does.
+ *
+ * R46 [§S0]: the `?? ECON.realGrowth` fallback is gone, and so is realGrowth
+ * itself. It was labelled "legacy... kept for compatibility" and its only live
+ * effect was to let an unknown growth class resolve silently to the GDP rate.
+ * An unknown class is a typo in a controlled field, so it throws. */
+export function classGrowth(cls: string | undefined, year: number): number {
+  const key = cls || 'gdp';
+  const r = ECON.growthRates && ECON.growthRates[key];
+  if (r == null) throw new Error('Unknown growth class: ' + key);
   return Math.pow(1 + r, year - ECON.baseYear);
 }
 function ramp(year: number, start: number | undefined, years: number | undefined): number {
@@ -268,8 +271,7 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
       const st: InstrumentSetting = { value: 1, enabled: true, phaseStart: 2029, phaseYears: 4 };
       const before = instrumentRevenue(ins, st, 2028);
       const mid = instrumentRevenue(ins, st, 2030);
-      const full = instrumentRevenue(ins, st, 2035) /
-                 Math.pow(1 + ECON.realGrowth, 2035 - ECON.baseYear);
+      const full = instrumentRevenue(ins, st, 2035) / classGrowth(ins.growth, 2035);
       return before === 0 && mid > 0 && mid < full * 0.75 &&
              Math.abs(full - ins.rev1x) < 1;
     }

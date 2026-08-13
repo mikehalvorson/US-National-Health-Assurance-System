@@ -95,7 +95,6 @@ export const ECON: TaxEcon = {
   wagesB: 13700,        // Medicare (HI) taxable earnings 2024 ≈ $13.7T - the
                         // uncapped payroll base (SSA contributions ÷ 2.9%)
   aboveCapShare: 0.17,  // share of covered earnings above the SS cap (SSA: 83% below)
-  realGrowth: 0.019,    // legacy default (GDP class); kept for compatibility
   baseYear: 2024,
   /* Real growth by base class. Top capital compounds faster than the
    * economy; that is the concentration story in the charts above, and the

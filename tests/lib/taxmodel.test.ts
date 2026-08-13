@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import {
   compute, distribution, solveScenario, defaultSettings,
   instrumentRevenue, TAX_SELFTESTS,
+  classGrowth,
 } from '../../src/lib/taxmodel';
 import { PROGRAMS, INSTRUMENTS, SCENARIOS, ECON } from '../../src/lib/taxparams';
 
@@ -43,8 +44,7 @@ test('phase-in ramps from 0 to full', () => {
   const st = { value: 1, enabled: true, phaseStart: 2029, phaseYears: 4 };
   const before = instrumentRevenue(ins, st, 2028);
   const mid = instrumentRevenue(ins, st, 2030);
-  const full = instrumentRevenue(ins, st, 2035) /
-    Math.pow(1 + ECON.realGrowth, 2035 - ECON.baseYear);
+  const full = instrumentRevenue(ins, st, 2035) / classGrowth(ins.growth, 2035);
   expect(before).toBe(0);
   expect(mid).toBeGreaterThan(0);
   expect(mid).toBeLessThan(full * 0.75);
@@ -55,4 +55,32 @@ test('all seven tax self-test invariants pass', () => {
   expect(TAX_SELFTESTS.length).toBe(7);
   const failing = TAX_SELFTESTS.filter((t) => !t.run()).map((t) => t.name);
   expect(failing).toEqual([]);
+});
+
+/* R46 [§S0] — the phase-in self-test divided by ECON.realGrowth while the
+   instrument it tests compounds at ECON.growthRates[ins.growth]. It passed only
+   because surtax is growth: "gdp" and both constants happened to be 0.019, two
+   independently-settable values. realGrowth was labelled "legacy... kept for
+   compatibility"; the growth() helper that used it had no callers at all. */
+test('R46: no legacy realGrowth constant survives to be coupled to', () => {
+  expect('realGrowth' in (ECON as unknown as Record<string, unknown>)).toBe(false);
+});
+
+test('R46: the phase-in test strips growth with the same function the instrument uses', () => {
+  const ins = INSTRUMENTS.filter((i) => i.id === 'surtax')[0];
+  const st = { value: 1, enabled: true, phaseStart: 2029, phaseYears: 4 };
+  const full = instrumentRevenue(ins, st, 2035) / classGrowth(ins.growth, 2035);
+  // rev1x is an independent literal from taxparams.ts, so this is not tautological
+  expect(Math.abs(full - ins.rev1x)).toBeLessThan(1);
+});
+
+test('R46: an unknown growth class throws rather than silently falling back', () => {
+  expect(() => classGrowth('not-a-class', 2035)).toThrow(/growth class/i);
+});
+
+test('R46: each declared growth class compounds at its own rate', () => {
+  // gdp 1.9%, wages 1.2%, top 4.0% - distinct, so a coupling would show up here
+  const y = 2040;
+  expect(classGrowth('gdp', y)).not.toBeCloseTo(classGrowth('wages', y), 6);
+  expect(classGrowth('top', y)).toBeGreaterThan(classGrowth('gdp', y));
 });
