@@ -7,6 +7,8 @@ import { selfTest } from './model';
 import { runOverviewMc } from './overview';
 import { bridgeSteps } from './bridge';
 import { TAX_SELFTESTS } from './taxmodel';
+import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-targets';
+import { QUALITY_DATA } from './quality';
 
 export interface SelfTestRow { name: string; ok: boolean; note: string }
 export interface SelfTestReport { rows: SelfTestRow[]; passed: number; total: number }
@@ -72,6 +74,17 @@ function buildSummary(): SelfTestReport {
   for (const t of TAX_SELFTESTS) {
     rows.push(runGuarded(t.name, function () { return { ok: !!t.run() }; }));
   }
+
+  /* R153 [§S0]: phase-targets.ts's two tests. Third harness shape — a bare
+     predicate taking the catalog — which is why selftests.ts never picked them
+     up. They are the only coverage of the module that generates the published
+     phase trajectories. */
+  rows.push(runGuarded('Every relevant phase carries a target', function () {
+    return { ok: selfTestEveryRelevantPhase(QUALITY_DATA) };
+  }));
+  rows.push(runGuarded('Phase targets show no regression toward maturity', function () {
+    return { ok: selfTestNoRegression(QUALITY_DATA) };
+  }));
 
   const passed = rows.filter(function (r) { return r.ok; }).length;
   return { rows: rows, passed: passed, total: rows.length };

@@ -69,3 +69,12 @@ test('selfTestSummary: no row is missing when a surface throws', () => {
   expect(s.rows.length).toBe(s.total);
   expect(s.rows.every((r) => r.name.length > 0)).toBe(true);
 });
+
+/* R153 [§S0] — phase-targets.ts exports selfTestEveryRelevantPhase and
+   selfTestNoRegression and nothing called them. They are the only tests
+   covering the module that generates the published phase trajectories. */
+test('R153: the two phase-target self-tests are registered', () => {
+  const s = selfTestSummary();
+  expect(s.rows.some((r) => /relevant phase/i.test(r.name))).toBe(true);
+  expect(s.rows.some((r) => /regression/i.test(r.name))).toBe(true);
+});
