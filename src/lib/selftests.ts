@@ -11,6 +11,7 @@ import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-target
 import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
+import { manifestDrift } from './manifest-check';
 
 /* R248 [§S0]: two detectors, because the row's own instrument only sees one of
    the two ways an equation can fail to produce a number.
@@ -189,6 +190,20 @@ function buildSummary(): SelfTestReport {
         : 'changed: ' + found
     };
   }));
+  /* R271 [§S0]: the inventory stops being a guess. */
+  rows.push(runGuarded('File manifest matches the working tree', function () {
+    const d = manifestDrift();
+    const parts: string[] = [];
+    if (d.unlisted.length) parts.push('unlisted: ' + d.unlisted.join(', '));
+    if (d.missing.length) parts.push('missing: ' + d.missing.join(', '));
+    return {
+      ok: !parts.length,
+      note: parts.length
+        ? parts.join(' | ') + ' -- run: node tools/build_file_manifest.mjs'
+        : 'in sync'
+    };
+  }));
+
   rows.push(runGuarded('No non-finite equation result reaches a published row', function () {
     const p = equationTargetDiagnostics().nonFinitePublished;
     return {
