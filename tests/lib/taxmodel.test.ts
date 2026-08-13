@@ -4,9 +4,13 @@ import {
   instrumentRevenue, TAX_SELFTESTS,
   classGrowth,
 } from '../../src/lib/taxmodel';
-import { PROGRAMS, INSTRUMENTS, SCENARIOS, ECON } from '../../src/lib/taxparams';
+import { PROGRAMS, INSTRUMENTS, SCENARIOS, ECON, GROUPS } from '../../src/lib/taxparams';
 
-test('distribution burden reconciles with total revenue within 0.5%', () => {
+/* R43 [§S0]: kept as a smoke check, and labelled for what it is. Both sides
+   are sums over the same instrumentRevenue calls, so this identity holds by
+   construction and CANNOT detect a fault in that shared computation. The test
+   that can is the worked example below, anchored on the published literals. */
+test('distribution burden reconciles with total revenue within 0.5% (identity, not a fault detector)', () => {
   const s = defaultSettings();
   const year = 2040;
   const rows = distribution(s, year, 0);
@@ -52,7 +56,7 @@ test('phase-in ramps from 0 to full', () => {
 });
 
 test('all seven tax self-test invariants pass', () => {
-  expect(TAX_SELFTESTS.length).toBe(7);
+  expect(TAX_SELFTESTS.length).toBe(7); // R43 replaced one; count unchanged
   const failing = TAX_SELFTESTS.filter((t) => !t.run()).map((t) => t.name);
   expect(failing).toEqual([]);
 });
@@ -83,4 +87,55 @@ test('R46: each declared growth class compounds at its own rate', () => {
   const y = 2040;
   expect(classGrowth('gdp', y)).not.toBeCloseTo(classGrowth('wages', y), 6);
   expect(classGrowth('top', y)).toBeGreaterThan(classGrowth('gdp', y));
+});
+
+/* R43 [§S0] — the old reconciliation compared two sums over the same
+   instrumentRevenue calls, so it collapsed to sum(incidence) === 1, which a
+   different self-test already asserts. It could not detect a fault in the sum
+   it was reconciling. */
+test('R43: a worked example anchors the distribution against published literals', () => {
+  // External anchor, not a recomputation: payroll alone, at a year where its
+  // ramp is complete, against the published rev1x of 512 and the wages class.
+  // CBO Option 61 (1% ~ $128B/yr) x 4pp = $512B at scale 1.0, taxparams.ts:141.
+  const s = defaultSettings();
+  for (const id of Object.keys(s.instruments)) s.instruments[id].enabled = false;
+  s.instruments.payroll.enabled = true;
+  s.instruments.payroll.value = 1;
+  s.instruments.payroll.phaseStart = 2024; // base year, ramp complete, growth 1.0
+  s.instruments.payroll.phaseYears = 1;
+
+  const total = distribution(s, 2024, 0).reduce((a, r) => a + r.taxB, 0);
+  expect(total).toBeCloseTo(512, 6); // the literal, not a recomputation
+});
+
+test('R43: the worked example moves when the published literal moves', () => {
+  const ins = INSTRUMENTS.filter((i) => i.id === 'payroll')[0];
+  const original = ins.rev1x;
+  try {
+    ins.rev1x = 600;
+    const s = defaultSettings();
+    for (const id of Object.keys(s.instruments)) s.instruments[id].enabled = false;
+    s.instruments.payroll.enabled = true;
+    s.instruments.payroll.value = 1;
+    s.instruments.payroll.phaseStart = 2024;
+    s.instruments.payroll.phaseYears = 1;
+    const total = distribution(s, 2024, 0).reduce((a, r) => a + r.taxB, 0);
+    expect(total).not.toBeCloseTo(512, 6); // the anchor is external, so this fails loudly
+    expect(total).toBeCloseTo(600, 6);
+  } finally {
+    ins.rev1x = original;
+  }
+});
+
+test('R43: an incidence key naming no income group is caught', () => {
+  const ins = INSTRUMENTS.filter((i) => i.id === 'payroll')[0];
+  const t = TAX_SELFTESTS.find((x) => /incidence key names a real income group/.test(x.name));
+  expect(t).toBeDefined();
+  expect(t!.run()).toBe(true);
+  try {
+    (ins.incidence as Record<string, number>).q9 = 0; // no such group
+    expect(t!.run()).toBe(false);
+  } finally {
+    delete (ins.incidence as Record<string, number>).q9;
+  }
 });

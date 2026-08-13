@@ -217,15 +217,33 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
   },
 
   {
-    name: "Tax: distribution burden reconciles with total revenue",
+    /* R43 [§S0]: REPLACED. The old row here was
+       "Tax: distribution burden reconciles with total revenue", which compared
+       the distributional total against compute()'s totalRev. Both are sums over
+       the SAME instrumentRevenue calls, so the identity collapses to
+       `sum_instruments rev x sum_groups incidence` - and sum_groups incidence
+       is 1 by the incidence self-test above. It could never detect a fault in
+       the sum it was reconciling, and perturbing a sourced literal moved both
+       sides together.
+
+       Test convention this establishes: a reconciliation between two quantities
+       computed the same way cannot detect a fault in the shared computation.
+       The replacement below checks the one thing the identity assumed and never
+       verified - that every incidence key resolves to a real group. The
+       externally-anchored worked example lives in tests/lib/taxmodel.test.ts,
+       against the published rev1x literals at the base year.
+
+       And the fault the old reconciliation could not reach. Incidence is Incidence is
+       read as `ins.incidence[grp.id] || 0`, so a key that names no group is
+       silently dropped from every distributional total - while the
+       shares-sum-to-1 test still passes, because it sums the object's own
+       values. */
+    name: "Tax: every incidence key names a real income group",
     run: function () {
-      const s = defaultSettings();
-      const year = 2040;
-      const rows = distribution(s, year, 0);
-      const sumTax = rows.reduce(function (a, r) { return a + r.taxB; }, 0);
-      const c = compute(s, PROGRAMS);
-      const total = c.totalRev[c.years.indexOf(year)];
-      return Math.abs(sumTax - total) / total < 0.005;
+      const ids = new Set(GROUPS.map(function (g) { return g.id; }));
+      return INSTRUMENTS.every(function (ins) {
+        return Object.keys(ins.incidence).every(function (k) { return ids.has(k); });
+      });
     }
   },
 
