@@ -11,7 +11,7 @@ import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-target
 import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
-import { manifestDrift } from './manifest-check';
+import { manifestDrift, routeDrift } from './manifest-check';
 
 /* R248 [§S0]: two detectors, because the row's own instrument only sees one of
    the two ways an equation can fail to produce a number.
@@ -202,6 +202,15 @@ function buildSummary(): SelfTestReport {
         ? parts.join(' | ') + ' -- run: node tools/build_file_manifest.mjs'
         : 'in sync'
     };
+  }));
+
+  /* R267 [§S0]: an unregistered route loses its chapter navigation silently. */
+  rows.push(runGuarded('Every page is registered in the route registry', function () {
+    const d = routeDrift();
+    const parts: string[] = [];
+    if (d.unregistered.length) parts.push('no TABS entry: ' + d.unregistered.join(', '));
+    if (d.unrouted.length) parts.push('no page: ' + d.unrouted.join(', '));
+    return { ok: !parts.length, note: parts.join(' | ') || 'all routes registered' };
   }));
 
   rows.push(runGuarded('No non-finite equation result reaches a published row', function () {
