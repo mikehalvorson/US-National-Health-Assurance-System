@@ -502,8 +502,22 @@ export const PARAM_CORR: Record<string, number> = {
 
 /* ---- Age structure and cost weights (demographic growth decomposition) --
  * Shares: Census projections (2024 vs ~2041). Cost weights: relative
- * per-capita personal health spending by age (CMS/MEPS age curves),
- * normalized so the 2024-weighted average is ~1. Medium confidence.       */
+ * per-capita personal health spending by age (CMS/MEPS age curves).
+ * Medium confidence.
+ *
+ * R137 [§S0]: the previous line here claimed the weights are "normalized so
+ * the 2024-weighted average is ~1". They are not - the 2024-weighted average
+ * is 1.1195 (2041: 1.2061). The claim was false and is removed rather than
+ * fixed, because normalising would change nothing: the only consumer,
+ * growthDecompNote, uses the RATIO idx2041/idx24, in which any common scaling
+ * of costw cancels exactly.
+ *
+ * What AGE_STRUCTURE is for: the demographic growth-decomposition note, which
+ * explains what share of an already-set baselineRealGrowth is attributable to
+ * ageing. It is deliberately NOT an engine input. runPath uses a flat
+ * popGrowth and folds ageing into baselineRealGrowth, whose own note says
+ * "Includes aging effect" - so wiring costw into the engine would apply the
+ * same cost driver twice. selftests.ts asserts both halves of that. */
 export const AGE_STRUCTURE = {
   bands: [
     { id: "0–18",  share2024: 0.217, share2041: 0.197, costw: 0.45 },

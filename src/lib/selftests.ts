@@ -14,6 +14,7 @@ import { fmeaSelfTests } from './fmea';
 import {
   manifestDrift, readmeAdvertisedTestCount, routeDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
+import { AGE_STRUCTURE } from './params';
 import { DATA_PHASE_COUNTS } from './data-phases';
 import {
   dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
@@ -230,6 +231,23 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: p.length === 0,
           note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+        };
+      })
+    ]
+  },
+  {
+    /* R137 [§S0]: AGE_STRUCTURE's purpose, asserted. Its cost weights feed the
+       growth-decomposition note and nothing else; wiring them into the engine
+       would double-count ageing, which baselineRealGrowth already carries. */
+    surface: 'growth-decomp.ts',
+    rows: () => [
+      runGuarded('Age cost-weight index matches its measured value', () => {
+        let idx24 = 0;
+        for (const b of AGE_STRUCTURE.bands) idx24 += b.share2024 * b.costw;
+        return {
+          ok: Math.abs(idx24 - 1.1195) < 1e-4,
+          note: '2024-weighted average = ' + idx24.toFixed(4) + ' (not 1.0; the ' +
+            'decomposition uses a ratio, so this does not need normalising)'
         };
       })
     ]
