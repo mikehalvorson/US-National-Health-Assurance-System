@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { assertSelfTestsPass, selfTestSummary } from '../../src/lib/selftests';
+import { assertSelfTestsPass, runGuarded, selfTestSummary } from '../../src/lib/selftests';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
   const s = selfTestSummary();
@@ -39,4 +39,33 @@ test('assertSelfTestsPass: reports the count so a build log states the damage', 
 
 test('assertSelfTestsPass: silent when every row passes', () => {
   expect(() => assertSelfTestsPass(selfTestSummary())).not.toThrow();
+});
+
+/* R154 [§S0] — the model and bridge calls were bare while the tax loop was
+   wrapped, so a throw in either took down selfTestSummary entirely and the
+   build rendered no self-test section at all: the failure mode most easily
+   mistaken for success. */
+test('runGuarded: a throwing self-test is reported as a failure, not an absence', () => {
+  const row = runGuarded('exploding invariant', () => {
+    throw new Error('boom');
+  });
+  expect(row.name).toBe('exploding invariant');
+  expect(row.ok).toBe(false);
+  expect(row.note).toContain('boom');
+});
+
+test('runGuarded: a passing self-test keeps its own note', () => {
+  const row = runGuarded('fine', () => ({ ok: true, note: 'err=1.8e-12' }));
+  expect(row).toEqual({ name: 'fine', ok: true, note: 'err=1.8e-12' });
+});
+
+test('runGuarded: a runner returning false is a failure', () => {
+  expect(runGuarded('nope', () => ({ ok: false, note: '' })).ok).toBe(false);
+});
+
+test('selfTestSummary: no row is missing when a surface throws', () => {
+  // every registered surface appears as a row, pass or fail
+  const s = selfTestSummary();
+  expect(s.rows.length).toBe(s.total);
+  expect(s.rows.every((r) => r.name.length > 0)).toBe(true);
 });

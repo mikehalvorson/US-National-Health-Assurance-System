@@ -36,26 +36,54 @@ export function selfTestSummary(): SelfTestReport {
   return cached;
 }
 
-function buildSummary(): SelfTestReport {
-  const rows: SelfTestRow[] = selfTest().map(function (r) {
-    return { name: r.name, ok: r.ok, note: r.note || '' };
-  });
+/* R154 [§S0]: the one runner. Every registered surface goes through this, so a
+   throw becomes a named failed row instead of taking down the whole summary.
+   Before this, only the tax loop was wrapped: a throw in selfTest() or
+   bridgeSteps() rendered NO self-test section at all, which reads as success. */
+export function runGuarded(
+  name: string,
+  run: () => { ok: boolean; note?: string }
+): SelfTestRow {
+  try {
+    const r = run();
+    return { name: name, ok: !!r.ok, note: r.note || '' };
+  } catch (e) {
+    return { name: name, ok: false, note: 'threw: ' + String(e) };
+  }
+}
 
-  const mc = runOverviewMc('SCN-BASE', null);
-  const identityError = bridgeSteps(mc).identityError;
-  rows.push({
-    name: 'Bridge decomposition matches engine total exactly',
-    ok: identityError < 0.01,
-    note: 'err=' + identityError.toExponential(1)
+function buildSummary(): SelfTestReport {
+  const rows: SelfTestRow[] = [];
+
+  /* model.ts — selfTest() returns its own array of {name, ok, note}. Guard the
+     call itself, so a throw before the array is built is still a reported row. */
+  const modelRows = runGuardedList('model self-tests', function () {
+    return selfTest().map(function (r) {
+      return { name: r.name, ok: r.ok, note: r.note || '' };
+    });
   });
+  rows.push(...modelRows);
+
+  rows.push(runGuarded('Bridge decomposition matches engine total exactly', function () {
+    const identityError = bridgeSteps(runOverviewMc('SCN-BASE', null)).identityError;
+    return { ok: identityError < 0.01, note: 'err=' + identityError.toExponential(1) };
+  }));
 
   for (const t of TAX_SELFTESTS) {
-    let ok = false;
-    let note = '';
-    try { ok = !!t.run(); } catch (e) { note = String(e); }
-    rows.push({ name: t.name, ok: ok, note: note });
+    rows.push(runGuarded(t.name, function () { return { ok: !!t.run() }; }));
   }
 
   const passed = rows.filter(function (r) { return r.ok; }).length;
   return { rows: rows, passed: passed, total: rows.length };
+}
+
+/* A surface that yields many rows at once. If it throws before producing them,
+   report one failed row naming the surface rather than losing all of them
+   silently — losing them would shrink `total`, which nothing would notice. */
+function runGuardedList(name: string, run: () => SelfTestRow[]): SelfTestRow[] {
+  try {
+    return run();
+  } catch (e) {
+    return [{ name: name, ok: false, note: 'threw: ' + String(e) }];
+  }
 }
