@@ -124,9 +124,24 @@ export function assertSelfTestsPass(summary: Pick<SelfTestReport, 'rows' | 'tota
    A registered row cannot check this, because a row cannot know the total it is
    part of; the gate can, because it holds the finished summary. Separate from
    assertSelfTestsPass so each failure mode is testable on its own. */
-export function assertReadmeCountCurrent(summary: Pick<SelfTestReport, 'total'>): void {
-  const advertised = readmeAdvertisedTestCount();
-  if (advertised === null || advertised === summary.total) return;
+export function assertReadmeCountCurrent(
+  summary: Pick<SelfTestReport, 'total'>,
+  root?: string
+): void {
+  const advertised = readmeAdvertisedTestCount(root);
+  if (advertised === summary.total) return;
+  /* A missing figure used to return silently. R113 reached that state by
+     accident - rewrapping the sentence put "integrity" and "tests" on separate
+     lines, the single-line regex stopped matching, and the build passed with
+     the check disabled. Deleting the sentence would do the same thing on
+     purpose. Absence is drift. */
+  if (advertised === null) {
+    throw new Error(
+      'README.md states no integrity-test count; the registry has ' + summary.total +
+      '. The gate reads the phrase "N built-in integrity tests" from a single ' +
+      'line, so restore it rather than removing it.'
+    );
+  }
   throw new Error(
     'README advertises ' + advertised + ' integrity tests; the registry has ' +
     summary.total + '. Update the figure in README.md.'

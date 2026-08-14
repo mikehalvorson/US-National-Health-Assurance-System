@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { expect, test } from 'vitest';
 import {
   assertReadmeCountCurrent,
@@ -195,4 +198,33 @@ test('R155: the gate is silent when the README is current', () => {
 
 test('R155: the README states the count the registry produces', () => {
   expect(readmeAdvertisedTestCount()).toBe(selfTestSummary().total);
+});
+
+/* R155 reopened at §S1 — a README with no figure at all returned silently, so
+   the gate switched itself off. R113 reached that state by accident: rewrapping
+   the sentence split "integrity" from "tests" and the single-line regex stopped
+   matching, while astro build went on passing. Deleting the sentence does the
+   same thing on purpose. */
+test('R155: a README that states no count is drift, not silence', () => {
+  const root = mkdtempSync(join(tmpdir(), 'nha-count-'));
+  try {
+    writeFileSync(join(root, 'README.md'), 'A dashboard. No figure here.\n', 'utf8');
+    expect(() => assertReadmeCountCurrent({ total: 38 }, root)).toThrow(/states no integrity-test count/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('R155: the wrapped-sentence regression is caught', () => {
+  const root = mkdtempSync(join(tmpdir(), 'nha-count-'));
+  try {
+    writeFileSync(
+      join(root, 'README.md'),
+      'validates itself with 38 built-in integrity\ntests, shown in the footer.\n',
+      'utf8'
+    );
+    expect(() => assertReadmeCountCurrent({ total: 38 }, root)).toThrow(/states no integrity-test count/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
