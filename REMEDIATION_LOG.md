@@ -208,3 +208,73 @@ NOTES:
   - HANDOFF-nha-remediation.md was not on disk at session start and was supplied mid-session.
     Its "Where things are" table is the authoritative path map; D1 above records it because
     the prompts themselves say "repo root".
+
+---
+
+## P1 — §S0 Harness & enumeration · 2026-08-14 · branch `nha-remediation`
+STATUS: complete — all 16 recommendations landed, one commit each
+
+DISCREPANCY:
+  - `R230`/`R273` "written, correct, and **never executed**" is wrong on both counts.
+    `fmeaSelfTests` IS called at import (`fmea.ts:647`) and only `console.error`s;
+    `equationSelfTests` IS called by `tests/lib/equations.test.ts:15`. Neither could
+    stop a deploy, which is the real defect. Code won; rows implemented against it.
+  - `R248` "zero closes `R147`/`R148` outright" is unsafe. Zero is correct for the
+    detector as specified, but the detector cannot see the other failure mode:
+    **11 equation cells evaluate non-finite** and are dropped rather than published,
+    because no rollout row exists at that metric and phase. Shipped both detectors.
+  - `R137` "costw is never read by the engine" is true of `runPath` but false of the
+    repo: `growth-decomp.ts` reads it and publishes the result. Its stated test
+    ("2024-weighted average equals 1") asserts the claim that is false — the index is
+    **1.1195**. Implemented as its honest form: assert the measured value.
+  - `R149` "every progression floor matches its cited **PR-SCH-*** requirement" — the
+    rows cite **gates (G1–G8), not PR-SCH ids**. PR-SCH-* exists only in `research/`
+    with no join to the catalog. Checked against the gate's own floor statement in
+    `rollout.ts` instead, which is the requirement the rows actually cite.
+  - `R43`'s "reconcile against an independently computed figure" has no such figure
+    inside the module: perturbing a sourced `rev1x` literal moves both sides together,
+    because `distribution()` reads the same object. The external anchor is a worked
+    example in vitest.
+  - `R155`: README said **27**; the real figure was **19**, now **37**.
+  - `tsc --noEmit` was green on `main` and my `node:` imports broke it. Fixed by adding
+    `@types/node` (types-only devDependency) — recorded because it is a dependency add.
+
+LANDED (one recommendation per commit):
+  fff1c1b P0 log · 305f7cd R152 · 1e01d56 R154 · c03b6ec R153 · 806f124 R230
+  723886e R273 · 7c726cd R248 · d75eb66 R271 · 7d16123 R267 · e575f03 R54
+  bca3000 R24 · 2c79657 R206 · 64c6531 R155 · b4dd94d R46 · 6b31cfe R43
+  1498f81 R137 · 96bff80 R149
+SKIPPED: none
+
+PROVEN (each broken deliberately, build failed, restored):
+  - broke `RAMPS.transitionShape` → exit 1, "Self-tests failed: 1 of 19.
+    - Transition outlay shape sums to 100%"
+  - deleted one FMEA record → exit 1, "record count 1036 matches phase-target + CP rows 1037"
+  - added an unlisted file to `src/` → exit 1, "unlisted: src/lib/__unlisted_probe.ts"
+  - added a page with no TABS entry → exit 1, "no TABS entry: orphan-chapter"
+  - set the README count back to 27 → exit 1, "README advertises 27 … registry has 37"
+
+SELFTESTS: total=**37** (P0 measured 19; README.md:57 claimed 27 and now derives)
+  19 baseline → +2 R153 → +1 R230 → +1 R273 → +3 R248 → +1 R271 → +1 R267
+  → +5 R54 → +1 R206 → +2 R149 → +1 R137. Gate: `astro:build:start` in `astro.config.mjs`.
+R248 SURVIVORS: **0** — every `'derived interim target'` row converts (538 of them)
+R248 NON-FINITE CELLS: **11** — KPP-B1@P0, KPP-D7@P0, KPP-TRUST1@P0,
+  TPP-9.3@P0–P3, TPP-9.5@P0–P3. All dropped, none published. §S3 owns the equations.
+MANIFEST: **113 files** (src 82, tools 8, research 21); **23 previously unlisted**
+  — 7 research files, `src/env.d.ts`, `src/pages/[chapter].astro`,
+  `src/scripts/{health,tax}-client.ts`, and 12 `src/lib` modules including
+  `hardening.ts` and `legislation.ts`, both of which export their own `ACRONYMS` map.
+
+NEW FINDINGS (raised here, owned elsewhere):
+  - **3 progression floors carry no gate** — KPP-C5@P7, KPP-C6@P7, TPP-11.5@P5.
+    Exempt from `selfTestNoRegression` with nothing anchoring the exemption. Pinned.
+  - `quality-client.ts:166` and `:232` test for `kind === 'derived interim target'`,
+    a value no row carries after import. Two dead branches. §S16.
+  - `ECON.realGrowth` and the `growth()` helper are gone; an unknown growth class
+    now throws instead of silently resolving to the GDP rate.
+
+MUST STILL PASS: `V19` twelve workforce invariants ✅ · `V24` both enrichers
+  re-entry-guarded ✅ · `documentedGap` untouched (`equations.ts` unchanged) ✅
+HARNESS: `python check_audit_docs.py` → 35 passed, 0 failed, exit 0
+BUILD: `astro build` passes, 37 of 37 · `pnpm test` 191 tests, 46 files, green
+  · `tsc --noEmit` clean · `astro check` 0 errors, 0 warnings
