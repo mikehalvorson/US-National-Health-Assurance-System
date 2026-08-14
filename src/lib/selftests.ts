@@ -12,8 +12,9 @@ import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
 import {
-  manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeTargets,
-  routeDrift, statedChapterCountDrift, unregisteredSelfTestSurfaces
+  manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift,
+  retiredTreeCodeReferences, retiredTreeTargets, routeDrift,
+  statedChapterCountDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
 import { AGE_STRUCTURE } from './params';
@@ -431,6 +432,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !drift.length,
           note: drift.map((d) => d.file + ':' + d.line + ' says ' + d.stated).join(' | ') ||
             TABS.length + ' chapters, agreed everywhere it is stated'
+        };
+      }),
+      /* R112 [§S1]: a re-targeted address cannot drift back into the retired
+         tree. Provenance comments are kept; executable references are not. */
+      runGuarded('No live code in src/ references the retired tree', () => {
+        const refs = retiredTreeCodeReferences();
+        return {
+          ok: !refs.length,
+          note: refs.map((r) => r.file + ':' + r.line + ': ' + r.text).join(' | ') ||
+            'every remaining docs/ mention in src/ is a provenance comment'
         };
       }),
       /* R114 [§S1]: no generator writes to a path nothing deploys. */

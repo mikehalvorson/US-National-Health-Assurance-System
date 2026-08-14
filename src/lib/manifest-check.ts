@@ -269,6 +269,89 @@ export function retiredTreeTargets(root = REPO_ROOT): ToolTarget[] {
   return out;
 }
 
+/* R112 [§S1]: nothing live may point into the retired tree.
+ *
+ * R1-R111 all name paths under docs/. The defects they describe are real -
+ * §V25 established both engines are faithful ports - but the addresses are
+ * wrong, so applying them as written changes nothing a reader sees. Re-targeting
+ * the backlog is a document job; the code half of it is this: keep src/ free of
+ * any live reference to the retired tree, so a re-targeted address cannot
+ * silently drift back.
+ *
+ * Provenance comments are the point, not the problem. Nearly every module in
+ * src/lib says which docs/js file it was ported from, and that history is worth
+ * keeping. What must not exist is a docs/ path in executable position: an
+ * import specifier, a fetch URL, a string literal. So comments are masked out
+ * before the search rather than the whole line being skipped.
+ *
+ * Masking preserves offsets, so reported line numbers stay true. `//` is only
+ * a line comment when it is not preceded by ':', because an .astro template is
+ * HTML and a `https://` href would otherwise mask the rest of its own line -
+ * which would hide exactly the kind of reference this is looking for.
+ *
+ * Deliberately not string-aware. Tracking quotes made the scanner wrong on
+ * this very file: a regex literal like ["'/\\] reads as an unterminated string,
+ * everything after it stays "inside a string", and the comment blocks below
+ * stop being recognised. The `:` guard is what string-awareness was for, and
+ * `/*` inside a string literal does not occur here. */
+const RETIRED_TREE_REFERENCE = /docs\/[A-Za-z0-9_.-]/g;
+
+export interface CodeReference { file: string; line: number; text: string }
+
+export function maskComments(text: string): string {
+  const out = text.split('');
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (c === '/' && next === '*') {
+      while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) {
+        if (text[i] !== '\n') out[i] = ' ';
+        i += 1;
+      }
+      out[i] = ' '; out[i + 1] = ' ';
+      i += 2;
+      continue;
+    }
+    if (c === '/' && next === '/' && text[i - 1] !== ':') {
+      while (i < text.length && text[i] !== '\n') { out[i] = ' '; i += 1; }
+      continue;
+    }
+    if (c === '<' && text.startsWith('<!--', i)) {
+      while (i < text.length && !text.startsWith('-->', i)) {
+        if (text[i] !== '\n') out[i] = ' ';
+        i += 1;
+      }
+      for (let k = 0; k < 3 && i + k < text.length; k += 1) out[i + k] = ' ';
+      i += 3;
+      continue;
+    }
+    i += 1;
+  }
+  return out.join('');
+}
+
+const codeRefCache = new Map<string, CodeReference[]>();
+
+export function retiredTreeCodeReferences(root = REPO_ROOT): CodeReference[] {
+  const hit = codeRefCache.get(root);
+  if (hit) return hit;
+  const out: CodeReference[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/')) continue;
+    const raw = readFileSync(join(root, rel), 'utf8');
+    if (!raw.includes('docs/')) continue; /* most files, cheaply skipped */
+    const masked = maskComments(raw);
+    const lines = raw.split('\n');
+    for (const m of masked.matchAll(RETIRED_TREE_REFERENCE)) {
+      const line = masked.slice(0, m.index).split('\n').length;
+      out.push({ file: rel, line: line, text: lines[line - 1].trim().slice(0, 100) });
+    }
+  }
+  codeRefCache.set(root, out);
+  return out;
+}
+
 /* R267 [§S0]: route registration.
  *
  * ChapterNav does `TABS.findIndex(...)` and renders nothing on -1, so a page
