@@ -48,13 +48,14 @@ the methodology as superseded by the model's computed projections):
   sections follow, unchanged in substance.
 
 
-`docs/` contains the **interactive public dashboard**: a fully client-side
-static web app (plain HTML/JS/SVG, no build step, no dependencies, no
-server) implementing the national-aggregate simulation specified in
-BUILD-BRIEF.md. It runs 600 Monte Carlo draws over 27 sourced parameter
-distributions in ~15ms in the browser, covers the framework's Phase 0–8
-rollout (2027–2042) and all 19 stress scenarios, and validates itself with
-37 built-in integrity tests shown in the page footer.
+`src/` contains the **interactive public dashboard**: an Astro static site
+that builds to plain HTML/JS/SVG with no runtime dependencies and no server,
+implementing the national-aggregate simulation specified in BUILD-BRIEF.md.
+It runs 600 Monte Carlo draws over 27 sourced parameter distributions in
+~15ms in the browser, covers the framework's Phase 0–8 rollout (2027–2042)
+and all 19 stress scenarios. It validates itself with
+38 built-in integrity tests, shown in the page footer and enforced by the
+build gate.
 
 <!-- R155: the count above is checked against selfTestSummary().total by a
      build-time self-test, so it cannot drift again. Regenerate the figure by
@@ -62,41 +63,53 @@ rollout (2027–2042) and all 19 stress scenarios, and validates itself with
 
 
 ```
-docs/index.html        page structure
-docs/style.css         theme (light + dark), validated chart palette
-docs/js/params.js      the parameter base: 27 distributions, each with
+src/pages/*.astro      the 14 chapters, one route each; index.astro is the
+                        Overview. src/lib/tabs.ts is the route registry and
+                        the single source of navigation order and labels
+src/layouts/           BaseLayout.astro: the shell every page renders into
+src/components/        SiteHeader, SiteFooter, TabNav, ChapterNav
+src/styles/global.css  theme (light + dark), validated chart palette
+src/lib/params.ts      the parameter base: 27 distributions, each with
                         source citation + confidence grade, plus CMS 2023
                         calibration constants and phase-ramp schedules
-docs/js/scenarios.js   the 19-scenario catalog as parameter overrides
-docs/js/model.js       the engine: baseline world + NHA world computed
+src/lib/scenarios.ts   the 19-scenario catalog as parameter overrides
+src/lib/model.ts       the engine: baseline world + NHA world computed
                         directly per category (offsets derived as
                         differences so double-counting is structurally
                         impossible), Monte Carlo, self-tests
-docs/js/charts.js      dependency-free SVG charts (path + band, waterfall
-                        bridge, financing stack, benchmark intervals)
-docs/js/care.js        point-of-care scenario cards + household calculator
+src/lib/chart-util.ts  dependency-free SVG charts, with one module per
+ + *-chart.ts           chart family (path + band, waterfall bridge,
+                        financing stack, benchmark intervals)
+src/lib/care.ts        point-of-care scenario cards + household calculator
                         (v2): sourced today-vs-NHA costs for real episodes
-docs/js/app.js         controls, rendering, tables
-docs/js/taxparams.js   tax model (v3): income groups (CBO format), ten tax
+src/lib/taxparams.ts   tax model (v3): income groups (CBO format), ten tax
                         instruments with sourced revenue + incidence vectors,
                         pluggable funding programs
-docs/js/taxmodel.js    tax engine: revenue over time with phase-in schedules,
+src/lib/taxmodel.ts    tax engine: revenue over time with phase-in schedules,
                         distributional burden by income group, net-of-health-
                         savings impact; self-tests
-docs/js/taxcharts.js   revenue-vs-need stacked area, net household impact
-                        diverging bars, effective-rate dumbbell
-docs/js/taxapp.js      tax view UI + tab navigation; healthcare model's
-                        financing path flows in live
-docs/js/medications.js complete 200-family PMC portfolio, filters, savings
+src/lib/medications.ts complete 200-family PMC portfolio, filters, savings
                         attribution calculator, and portfolio self-tests
-tools/serve.ps1        local preview server (PowerShell, no Node needed)
+src/lib/selftests.ts   the self-test registry: every integrity check the
+                        build gate runs, and the only place a new one is added
+src/scripts/*-client.ts one client island per chapter; each re-initialises on
+                        astro:page-load and is idempotent
+public/data/*.json     county, state and hospital-region geometry, fetched
+                        by the Physical Care map at runtime
 ```
 
-**To deploy publicly:** GitHub → repo Settings → Pages → Source: "Deploy
-from a branch" → Branch: `main`, folder `/docs` → Save. The dashboard will
-be live at `https://mikehalvorson.github.io/US-National-Health-Assurance-System/`
-within a couple of minutes. To preview locally:
-`powershell -File tools/serve.ps1` then open http://localhost:8517.
+**To deploy publicly:** nothing to configure by hand. Pages is served by
+GitHub Actions: `.github/workflows/deploy.yml` builds `src/` on every push to
+`main` and uploads the result, publishing to
+`https://mikehalvorson.github.io/US-National-Health-Assurance-System/`.
+
+> Do **not** set Settings → Pages → Source to "Deploy from a branch." That
+> switches Pages off the workflow above. The `docs/` directory in this repo is
+> a retired predecessor of the dashboard, kept for provenance only; pointing
+> Pages at it would publish the retired app over the live one at the same URL.
+
+To develop locally: `pnpm install`, then `pnpm dev` for the dev server or
+`pnpm build` for the static build the workflow produces.
 
 **Headline v1 finding (base case, seed 42):** the mature system at 2024
 scale computes to ~$5.3T/yr (10th–90th pct ≈ $5.2–5.5T) versus the

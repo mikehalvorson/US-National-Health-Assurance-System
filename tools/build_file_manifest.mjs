@@ -15,13 +15,17 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const ROOTS = ['src', 'tools', 'research'];
+/* Must match IGNORED_DIRS in src/lib/manifest-check.ts, or the two walks
+   disagree and the gate fails on a directory neither side wants listed. */
+const IGNORED_DIRS = new Set(['__pycache__']);
 const OUT = join(ROOT, 'src', 'lib', 'file-manifest.ts');
 
 function walk(dir, out) {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
-    if (statSync(full).isDirectory()) walk(full, out);
-    else out.push(relative(ROOT, full).split(sep).join('/'));
+    if (statSync(full).isDirectory()) {
+      if (!IGNORED_DIRS.has(name)) walk(full, out);
+    } else out.push(relative(ROOT, full).split(sep).join('/'));
   }
 }
 

@@ -12,7 +12,8 @@ import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
 import {
-  manifestDrift, readmeAdvertisedTestCount, routeDrift, unregisteredSelfTestSurfaces
+  manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift, routeDrift,
+  unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { AGE_STRUCTURE } from './params';
 import {
@@ -350,6 +351,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: orphans.map((o) => o.module + ':' + o.fn).join(', ') ||
             modules.length + ' surfaces registered'
         };
+      }),
+      /* R113 [§S1]: the README cannot document the retired tree as the product,
+         which is what made its deploy instruction harmful. */
+      runGuarded('README documents the deployed tree, not the retired one', () => {
+        const d = readmeDeployDrift();
+        const parts: string[] = [];
+        if (d.retiredPaths.length) parts.push(d.retiredPaths.join(' | '));
+        if (d.missingWorkflowReference) {
+          parts.push('README never names .github/workflows/deploy.yml, which is what deploys the site');
+        }
+        return { ok: !parts.length, note: parts.join(' | ') || 'no retired path, workflow named' };
       }),
       runGuarded('Every page is registered in the route registry', () => {
         const d = routeDrift();

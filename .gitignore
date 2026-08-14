@@ -13,3 +13,6 @@ AGENTS.md
 node_modules/
 dist/
 .astro/
+
+# Python bytecode from tools/
+__pycache__/
