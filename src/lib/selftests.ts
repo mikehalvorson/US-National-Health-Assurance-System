@@ -22,6 +22,9 @@ import {
 import { DATA_PHASE_COUNTS, DATA_PHASES } from './data-phases';
 import { methodologyCountsAgree, methodologyDrift } from './methodology-check';
 import {
+  declaredDispositions, legislationStyleDrift, styledDispositions, STYLED_BY_BASE_RULE
+} from './style-check';
+import {
   dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
   dataPhaseTargetCount, frameworkBasisEntries
 } from './data-phases-checks';
@@ -339,6 +342,28 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('Data-tab framework-basis entries number seventeen', () => {
         const n = frameworkBasisEntries().length;
         return { ok: n === 17, note: n + ' entries carry basis: framework' };
+      })
+    ]
+  },
+  {
+    /* R103 [§S1]: a disposition whose badge class nothing styles. */
+    surface: 'style-check.ts',
+    rows: () => [
+      runGuarded('Every legislation disposition reaches a stylesheet rule', () => {
+        const d = legislationStyleDrift();
+        const parts: string[] = [];
+        if (d.baseRuleMissing) parts.push('.legislation-action base rule is gone');
+        if (d.unstyled.length) parts.push('no rule: ' + d.unstyled.join(', '));
+        if (d.deadRules.length) parts.push('rule with no disposition: ' + d.deadRules.join(', '));
+        if (d.exemptionsChanged.length) {
+          parts.push('base-rule set changed: ' + d.exemptionsChanged.join(', '));
+        }
+        return {
+          ok: !parts.length,
+          note: parts.join(' | ') || declaredDispositions().length + ' dispositions, ' +
+            styledDispositions().length + ' with their own rule, ' +
+            STYLED_BY_BASE_RULE.join(' and ') + ' painted by the shared rule'
+        };
       })
     ]
   },

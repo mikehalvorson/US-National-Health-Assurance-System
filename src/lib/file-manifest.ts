@@ -76,6 +76,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/rollout.ts',
   'src/lib/scenarios.ts',
   'src/lib/selftests.ts',
+  'src/lib/style-check.ts',
   'src/lib/tabs.ts',
   'src/lib/tax-charts.ts',
   'src/lib/tax-types.ts',
