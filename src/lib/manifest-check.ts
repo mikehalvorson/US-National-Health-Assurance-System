@@ -186,6 +186,47 @@ export function readmeDeployDrift(root = REPO_ROOT): ReadmeDeployDrift {
   return result;
 }
 
+/* R114 [§S1]: no tool may target the retired tree.
+ *
+ * extract_quality_catalog.py wrote docs/js/qualitydata.js and
+ * build_data_phase_targets.py read it and wrote docs/js/dataphases.js, while
+ * the live catalog was a hand port marked "do not re-derive". Regenerating
+ * updated the retired artifacts and left the deployed site stale, so the
+ * reproducibility guarantee the extractor exists to provide never reached the
+ * live app. The row's test is "no generator writes to a non-deployed path";
+ * this is the checkable form of it, widened to every file under tools/ because
+ * a preview server pointed at the retired tree sets the same trap.
+ *
+ * Path-shaped only: `docs` bounded by a separator or a quote. All four forms
+ * are in this repo's history and a narrower pattern misses the one that
+ * matters - Python builds the path as ROOT / "docs" / "js", where the
+ * separators are operators outside the string and the only boundary is the
+ * quote. Prose may still name the retired tree; only pointing at a path in it
+ * is the defect. */
+const RETIRED_TREE_TARGET =
+  /(^|[^A-Za-z0-9_])docs(["'/\\]|$)|["'/\\]docs([^A-Za-z0-9_]|$)/;
+
+export interface ToolTarget { file: string; line: number; text: string }
+
+const toolCache = new Map<string, ToolTarget[]>();
+
+export function retiredTreeTargets(root = REPO_ROOT): ToolTarget[] {
+  const hit = toolCache.get(root);
+  if (hit) return hit;
+  const out: ToolTarget[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('tools/')) continue;
+    const lines = readFileSync(join(root, rel), 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      if (RETIRED_TREE_TARGET.test(line)) {
+        out.push({ file: rel, line: i + 1, text: line.trim().slice(0, 100) });
+      }
+    });
+  }
+  toolCache.set(root, out);
+  return out;
+}
+
 /* R267 [§S0]: route registration.
  *
  * ChapterNav does `TABS.findIndex(...)` and renders nothing on -1, so a page

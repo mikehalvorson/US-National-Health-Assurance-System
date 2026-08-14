@@ -2,7 +2,7 @@
 """Select a planning partition for nonprofit regional hospital administration.
 
 Inputs:
-  docs/data/counties.json
+  public/data/counties.json
 
 The model aggregates county population, rural population, and coordinates to
 states, then scores seven transparent candidate partitions containing 10
@@ -33,7 +33,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-COUNTIES = ROOT / "docs" / "data" / "counties.json"
+COUNTIES = ROOT / "public" / "data" / "counties.json"
 
 STATE_NAMES = {
     "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas",
@@ -388,7 +388,7 @@ def main() -> None:
                 "A moved state must be within 425 miles of the destination region centroid",
                 "A boundary move cannot raise destination mean state-centroid distance above 300 miles",
             ],
-            "source": "Census 2024 county population estimates and 2020 rural shares in docs/data/counties.json",
+            "source": "Census 2024 county population estimates and 2020 rural shares in public/data/counties.json",
         },
         "regions": output_regions,
     }

@@ -1,0 +1,276 @@
+{
+  "note": "Records that are NOT in National_Health_Assurance_Framework_v2.0.0_FINAL.docx. The DOCX yields 430 (41 KPP + 79 TPP + 310 CP); the live catalog declares 440. These ten merit health-talent immigration KPP/TPP were added by hand in 2026-08 and are appended, in this order, after the extracted records. They are carried here so src/lib/quality-data.ts regenerates rather than being maintained by hand. Sourcing or quarantining them is R115.",
+  "addedInPass": "2026-08",
+  "records": [
+    {
+      "id": "KPP-W2",
+      "type": "KPP",
+      "name": "Health workforce sufficiency ratio",
+      "concept": "Workforce & care delivery",
+      "where": "workforce sufficiency; SN-10",
+      "target": ">=98%",
+      "calculation": "filled safe-FTE / required safe-FTE across role-region cells, with no cell below its staffing floor",
+      "datasets": "workforce.supply; workforce.demand; workforce.vacancy",
+      "ownerVerifier": "NHWB / NHASB+CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "performance outcome",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": ">=98%",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "KPP-W3",
+      "type": "KPP",
+      "name": "Shortage-area staffing sufficiency",
+      "concept": "Workforce & care delivery",
+      "where": "rural and underserved staffing; SN-10",
+      "target": ">=95% of designated HPSA and MUA positions filled",
+      "calculation": "filled safe-FTE in designated shortage areas / required safe-FTE in those areas",
+      "datasets": "workforce.supply; hrsa.shortage_designation",
+      "ownerVerifier": "NHWB/RS-CORPS / NHASB+CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "performance outcome",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": ">=95% of designated HPSA and MUA positions filled",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "KPP-W4",
+      "type": "KPP",
+      "name": "Merit immigration shortage-role fill rate",
+      "concept": "Workforce & care delivery",
+      "where": "health-talent immigration; SN-10",
+      "target": ">=90%",
+      "calculation": "health-talent admissions placed into designated shortage occupations or regions / total health-talent admissions",
+      "datasets": "immigration.admission; workforce.placement",
+      "ownerVerifier": "NHTIB / NHASB+CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "performance outcome",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": ">=90%",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "KPP-W5",
+      "type": "KPP",
+      "name": "Internationally recruited clinician retention",
+      "concept": "Workforce & care delivery",
+      "where": "immigration retention; SN-10",
+      "target": ">=85% at three years",
+      "calculation": "internationally recruited clinicians in covered practice at 36 months / admitted cohort",
+      "datasets": "immigration.admission; workforce.retention",
+      "ownerVerifier": "NHTIB/HCRB / NHASB+CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "performance outcome",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": ">=85% at three years",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "TPP-W1",
+      "type": "TPP",
+      "name": "Role-region vacancy rate ceiling",
+      "concept": "Workforce & care delivery",
+      "where": "Workforce & care delivery",
+      "target": "<=8%",
+      "calculation": "vacant safe-FTE / authorized safe-FTE per role-region cell [fraction/percent]",
+      "datasets": "workforce.vacancy; workforce.demand",
+      "ownerVerifier": "NHWB / NHASB/CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "technical performance",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": "<=8%",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "TPP-W2",
+      "type": "TPP",
+      "name": "Training-slot to completed-hire conversion",
+      "concept": "Workforce & care delivery",
+      "where": "Workforce & care delivery",
+      "target": ">=80%",
+      "calculation": "publicly funded trainees credentialed and hired into covered roles / funded slots [fraction/percent]",
+      "datasets": "workforce.training; workforce.placement",
+      "ownerVerifier": "NHWECA / NHASB/CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "technical performance",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": ">=80%",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "TPP-IMM1",
+      "type": "TPP",
+      "name": "Merit selection shortage-occupation targeting",
+      "concept": "Workforce & care delivery",
+      "where": "Workforce & care delivery",
+      "target": ">=90%",
+      "calculation": "admissions in designated shortage occupations or regions / total health-talent admissions [fraction/percent]",
+      "datasets": "immigration.admission; workforce.demand",
+      "ownerVerifier": "NHTIB / CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "technical performance",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": ">=90%",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "TPP-IMM2",
+      "type": "TPP",
+      "name": "Health-talent petition processing time",
+      "concept": "Workforce & care delivery",
+      "where": "Workforce & care delivery",
+      "target": "median <=2 weeks for shortage-role petitions",
+      "calculation": "median(decision time - complete filing time), met >=80% of the time [time]",
+      "datasets": "immigration.petition",
+      "ownerVerifier": "NHTIB / CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "technical performance",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": "median <=2 weeks for shortage-role petitions",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "TPP-IMM3",
+      "type": "TPP",
+      "name": "Credential recognition and licensing-bridge time",
+      "concept": "Workforce & care delivery",
+      "where": "Workforce & care delivery",
+      "target": "median <=6 months from arrival to full license",
+      "calculation": "median(full-license date - arrival date) for admitted clinicians [time]",
+      "datasets": "immigration.admission; licensure.event",
+      "ownerVerifier": "HCRB / CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "technical performance",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": "median <=6 months from arrival to full license",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    },
+    {
+      "id": "TPP-IMM4",
+      "type": "TPP",
+      "name": "Ethical recruitment safeguards compliance",
+      "concept": "Workforce & care delivery",
+      "where": "Workforce & care delivery",
+      "target": "100% outside WHO-safeguarded source countries",
+      "calculation": "compliant recruitment events / total recruitment events [fraction/percent]",
+      "datasets": "immigration.recruitment; who.safeguards_list",
+      "ownerVerifier": "NHTIB / CHAO",
+      "status": "Plan-defined target; baseline and acceptance evidence required",
+      "unit": "",
+      "modelRole": "technical performance",
+      "temporal": "maturity target",
+      "unitStatus": "",
+      "family": "",
+      "rollout": [
+        {
+          "phase": "P8",
+          "gate": "",
+          "value": "100% outside WHO-safeguarded source countries",
+          "kind": "maturity target",
+          "interpretation": "Controlled plan target assessed at maturity."
+        }
+      ],
+      "phaseNote": "No numeric interim target is specified unless an earlier phase milestone or gate floor appears below."
+    }
+  ]
+}

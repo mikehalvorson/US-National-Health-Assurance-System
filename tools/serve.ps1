@@ -1,7 +1,10 @@
-# Minimal static file server for local preview of docs/ (no Node/Python needed)
+# Minimal static file server for local preview of the built site, dist/
+# (no Node/Python needed). Run `pnpm build` first; this serves the output, not
+# the sources. R114 [S1]: it used to serve the retired tree, which meant a
+# local preview showed a different application from the deployed one.
 param([int]$Port = 8517)
 
-$root = (Join-Path $PSScriptRoot "..\docs" | Resolve-Path).Path
+$root = (Join-Path $PSScriptRoot "..\dist" | Resolve-Path).Path
 $rootPrefix = $root.TrimEnd("\") + "\"
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $Port)
 $listener.Start()

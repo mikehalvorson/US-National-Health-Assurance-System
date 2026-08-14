@@ -119,5 +119,6 @@ export const FILE_MANIFEST: string[] = [
   'tools/extract_docx.py',
   'tools/extract_quality_catalog.py',
   'tools/model_hospital_regions.py',
+  'tools/quality_catalog_addendum.json',
   'tools/serve.ps1'
 ];

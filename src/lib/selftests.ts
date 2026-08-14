@@ -12,8 +12,8 @@ import { QUALITY_DATA } from './quality';
 import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
 import {
-  manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift, routeDrift,
-  unregisteredSelfTestSurfaces
+  manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeTargets,
+  routeDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { AGE_STRUCTURE } from './params';
 import {
@@ -365,6 +365,15 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !orphans.length,
           note: orphans.map((o) => o.module + ':' + o.fn).join(', ') ||
             modules.length + ' surfaces registered'
+        };
+      }),
+      /* R114 [§S1]: no generator writes to a path nothing deploys. */
+      runGuarded('No tool under tools/ targets the retired tree', () => {
+        const hits = retiredTreeTargets();
+        return {
+          ok: !hits.length,
+          note: hits.map((h) => h.file + ':' + h.line + ': ' + h.text).join(' | ') ||
+            'every tool reads and writes the deployed tree'
         };
       }),
       /* R113 [§S1]: the README cannot document the retired tree as the product,
