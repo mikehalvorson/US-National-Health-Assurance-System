@@ -278,3 +278,146 @@ MUST STILL PASS: `V19` twelve workforce invariants ✅ · `V24` both enrichers
 HARNESS: `python check_audit_docs.py` → 35 passed, 0 failed, exit 0
 BUILD: `astro build` passes, 37 of 37 · `pnpm test` 191 tests, 46 files, green
   · `tsc --noEmit` clean · `astro check` 0 errors, 0 warnings
+
+---
+
+## P2 — §S1 Retarget off the retired tree · 2026-08-14 · branch `nha-remediation`
+STATUS: complete — all 7 recommendations landed, one commit each, plus one reopened row
+
+ENTRY GATE: `## P1` complete ✅ · harness proven by deleting the `tab-risk` TABS entry
+  → `astro build` exit 1, "Self-tests failed: 1 of 37. - Every page is registered in
+  the route registry (no TABS entry: risk)", restored ✅ · `check_audit_docs.py` 35/35
+  exit 0 ✅ · `git status` clean ✅
+
+DISCREPANCY:
+  - D11. `R266` "no consumer reads `ported`" is WRONG. It is read twice:
+    `src/pages/[chapter].astro`'s `getStaticPaths`, and `routeDrift`'s `unrouted`
+    half in `manifest-check.ts`. Code won. It is also not provenance — the migration
+    plans in `specs/` show "set `Tab.ported = true`" was the step that moved a
+    chapter off the stub route, i.e. a migration checkbox whose job is finished.
+    Deleted, with the stub. That closed a real hole: `unrouted` filtered on
+    `t.ported`, so a tab added WITHOUT the flag was exempt and fell through to a
+    "This chapter is being migrated" stub that shipped.
+  - D12. `R266`'s "`ported: true` asserts `ltc` and `risk` have `docs/` originals" —
+    the assertion is FALSE. `docs/index.html` carries **12** tab buttons and neither
+    `tab-ltc` nor `tab-risk` is among them. The flag was wrong on two of its 13 rows.
+  - D13. `R261` "`R135`, `R220`, `R245` and `R170` were all scoped against twelve and
+    are incomplete" holds for **one of the four**, not four of four. Measured:
+    `R245` widens by **7** (`risk.astro` has 8 `aria-label`s, 7 on role-less `<div>`s;
+    the eighth, `.fmea-controls`, has `role="group"` and is correct). `R135` does not
+    widen — it is parameter-scoped and its figure is exact (`params.ts` has 16 empty
+    `url`s, **nine** at `confidence: "medium"`, the seven others `"low"` and outside
+    its own test). `R170` does not widen — `fromYear` exists only in `care.ts` and
+    `health.astro`. `R220` does not widen — neither new chapter hardcodes a count.
+  - D14. `R112` reads as 111 rows to re-target. It is **30**. Three already carried a
+    Pass-62 stamp (`R80`, `R103`, `R107`); 27 were stamped here. **Exactly one row
+    named a full `docs/` path as its target** — `R90`, `docs/data/counties.json`.
+  - D15. `R103` expects seven `.legislation-action-*` rules. There are **five**, for
+    seven declared dispositions. `amend` and `preserve` have no rule of their own and
+    are painted by the shared `.legislation-action` rule, so the badge is styled and
+    legible, not invisible. The audit's escalation of `R95` ("unstyled becomes
+    invisible") does not follow. Pinned rather than given invented colours.
+  - D16. `R114`'s "the live catalog is a hand port that cannot be re-derived" is
+    narrower than stated. The extraction reproduces 430 of the 440 records with
+    **92 field differences of exactly 3 kinds** — 50 `calculation` em dashes, 40
+    `modelRole` em dashes, and 2 CP-TOT records saying "system" where the DOCX says
+    "framework". All three are deterministic and are now declared in the script. The
+    catalog regenerates.
+  - D17. `R107`'s test ("the methodology document regenerates byte-identically") was
+    FALSE on measurement: regenerating rewrote 156 of 166 lines, because every em
+    dash in the generator's markdown literals had been hand-replaced by a hyphen in
+    the committed document. Fixed in the generator.
+  - D18. `AN9`/`R116`'s "there is no Python on the maintainer's machine" is stale in
+    a second way. `P0` established `python` runs; measured here, **`python-docx` is
+    installed and the controlled DOCX is present**, so `extract_quality_catalog.py`
+    runs end to end. `R116` is `§RET` and was not otherwise touched.
+  - D19. Two tools nobody had flagged also targeted the retired tree.
+    `model_hospital_regions.py` read `docs/data/counties.json` and stamped that path
+    into its published `source` string; `serve.ps1` served `docs/`, so a local
+    preview showed a different application from the deployed one. Both re-pointed.
+
+LANDED (one recommendation per commit):
+  84e567d R113 · d8e4071 R155 (§S0, reopened) · 5829edb R114 · 782f518 R107
+  7e5d7a2 R103 · 241762f R266 · fe28dcc R261 · 1f88063 R112
+SKIPPED: none
+
+RETARGETED (old `docs/` path → new live path):
+  docs/js/qualitydata.js   → src/lib/quality-data.ts      (R114, now generated)
+  docs/js/dataphases.js    → src/lib/data-phases.ts       (R114, now generated)
+  docs/data/counties.json  → public/data/counties.json    (R114 tools, R112 R90;
+                             byte-identical by SHA256)
+  docs/ (preview server)   → dist/                        (R114, tools/serve.ps1)
+  docs/style.css           → src/styles/global.css        (R103)
+  docs/index.html nav      → src/lib/tabs.ts              (R266; the authority, not
+                             a thing to be matched against)
+  docs/js/* (27 audit rows)→ per §8.0.2, stamped in place (R112)
+  Traps called out on every row that uses them: `hospitalregions.js` is
+  `src/scripts/units-client.ts`, NOT `src/pages/units.astro` (`src/lib/
+  hospital-regions.ts` does not exist); `dataphases.js` is a GENERATED file, so a
+  fix to it belongs in `tools/build_data_phase_targets.py`.
+
+UNRESOLVED: none. Every row's live address was determinable, so nothing was guessed
+  and there is nothing to ask about.
+
+PROVEN (each broken deliberately, build failed, restored):
+  - deleted the `tab-risk` TABS entry → exit 1, "no TABS entry: risk" (entry gate)
+  - set README's phrase to "integrity checks" → exit 1, "README.md states no
+    integrity-test count; the registry has 38" (R155 reopened)
+  - restored `model_hospital_regions.py:36` to the retired path → exit 1,
+    'tools/model_hospital_regions.py:36: COUNTIES = ROOT / "docs" / "data" /
+    "counties.json"' (R114)
+  - changed "A 70% foundation threshold" to 71% in the methodology document →
+    exit 1, "1 rows absent", naming the TPP-FORM1 row (R107)
+  - renamed `.legislation-action-sunset` to `-sunsett` → exit 1, "no rule: sunset |
+    rule with no disposition: sunsett" (R103)
+  - added a TABS entry with no page → exit 1, "no page: probe" (R266)
+  - the stale "12 pages" in `specs/HANDOFF.md` → exit 1, five lines named with their
+    numbers (R261; found by the check, not by reading)
+  - added `export const NAV_SOURCE = 'docs/index.html';` to `tabs.ts` → exit 1,
+    "src/lib/tabs.ts:14" (R112)
+
+SELFTESTS: total=**44** (P1 left 37)
+  37 → +1 R113 → +1 R114 → +2 R107 → +1 R103 → +1 R261 → +1 R112
+CATALOG: `src/lib/quality-data.ts` regenerates from the controlled DOCX with a
+  **329,243-byte payload identical to the committed one**. Only the header comment
+  changed. The 10 uncontrolled records now live in
+  `tools/quality_catalog_addendum.json`, which makes the 430/10 boundary machine-
+  readable for the first time — relevant to `R115` (§S11b) and `R220` (§S12).
+MANIFEST: **115 files** (114 after R114 added the addendum, 115 after R107 added
+  `methodology-check.ts` and R103 added `style-check.ts`, minus `[chapter].astro`).
+  `__pycache__/` is now ignored by `.gitignore` and by both manifest walks.
+PAGES: 14, unchanged. Deleting the stub route changed no output.
+
+NEW FINDINGS (raised here, owned elsewhere):
+  - **`risk.astro` has 7 role-less `aria-label`led `<div>`s** — `.fmea-scope`,
+    `#fmea-matrix`, `#fmea-headlines`, `#fmea-tiers`, `#fmea-cp`, `#fmea-gaps`,
+    `#fmea-selected`. `#fmea-selected` also carries `aria-live="polite"`, which does
+    not supply a role. **`§S14` (P20) owns `R245`**; its sweep is 7 larger than §BW's
+    figure, on a page no pass had read.
+  - **`params.ts` has 16 parameters with an empty `url`**, not 9. Nine are
+    `confidence: "medium"` — `R135`'s figure is exact for its own test — and seven
+    are `"low"`. **`§S11b` (P17) owns `R135`** and should say whether `low` is in
+    scope.
+  - `astro check` reports **3 hints**, all pre-existing and none from this section:
+    `equations.ts:1158` unreachable `return NaN`, `fmea-client.ts:23` unused
+    `natural`, `tests/lib/taxmodel.test.ts:7` unused `GROUPS` import.
+  - A PowerShell round-trip corrupts `research/data_phase_target_methodology.md`:
+    `Get-Content -Raw` reads a BOM-less UTF-8 file as ANSI, so every `≥` is mangled
+    on write and all 64 rows fail at once. Edit it with a UTF-8 aware tool.
+
+CONTRADICTIONS: D11–D19 above. Six are cases where the row's finding is real but its
+  premise, count, or severity is not; two (`R107`, `R266`) are rows whose stated test
+  was false when measured. None required routing around.
+
+DOCUMENTS EDITED (outside the repo, so this entry is the record):
+  `CLAUDE_CODE_INSTRUCTIONS.md` — 27 rows stamped with their live address (R112);
+  re-scope notes on `R135`, `R170`, `R220`, `R245` (R261); `R112` and `R261` marked
+  done; `§8.0.2` and the `§S1` section brief marked applied.
+  Pre-edit copy: `CLAUDE_CODE_INSTRUCTIONS.md.pre-P2.bak`.
+
+MUST STILL PASS: `V25` both engines are faithful ports — untouched ✅ (no engine
+  file was edited; addresses changed, findings did not)
+HARNESS: `python check_audit_docs.py` → 35 passed, 0 failed, exit 0
+BUILD: `astro build` passes, 44 of 44, 14 pages · `pnpm test` 227 tests, 52 files,
+  green · `tsc --noEmit` clean · `astro check` 0 errors, 0 warnings, 3 pre-existing
+  hints
