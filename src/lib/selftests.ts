@@ -19,7 +19,8 @@ import { AGE_STRUCTURE } from './params';
 import {
   gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
 } from './gate-floors';
-import { DATA_PHASE_COUNTS } from './data-phases';
+import { DATA_PHASE_COUNTS, DATA_PHASES } from './data-phases';
+import { methodologyCountsAgree, methodologyDrift } from './methodology-check';
 import {
   dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
   dataPhaseTargetCount, frameworkBasisEntries
@@ -338,6 +339,36 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('Data-tab framework-basis entries number seventeen', () => {
         const n = frameworkBasisEntries().length;
         return { ok: n === 17, note: n + ' entries carry basis: framework' };
+      })
+    ]
+  },
+  {
+    /* R107 [§S1]: the methodology document and data-phases.ts are two outputs
+       of one generator run. Before R114 one of them was written into the
+       retired tree, so regenerating left the deployed site stale and the
+       document agreeing with a file nothing serves. */
+    surface: 'methodology-check.ts',
+    rows: () => [
+      runGuarded('Methodology document renders the committed phase targets', () => {
+        const d = methodologyDrift();
+        const parts: string[] = [];
+        if (d.missingHeadings.length) parts.push('headings: ' + d.missingHeadings.join(' | '));
+        if (d.missingRows.length) {
+          parts.push(d.missingRows.length + ' rows absent, first: ' + d.missingRows[0].slice(0, 90));
+        }
+        return {
+          ok: !parts.length,
+          note: parts.join(' | ') ||
+            d.dataRowCount + ' rows and ' + DATA_PHASES.length + ' phase headings match'
+        };
+      }),
+      runGuarded('Methodology row count equals the declared target count', () => {
+        const d = methodologyDrift();
+        return {
+          ok: methodologyCountsAgree(),
+          note: 'declared ' + DATA_PHASE_COUNTS.targetCount + ', data ' + d.dataRowCount +
+            ', document ' + d.documentRowCount
+        };
       })
     ]
   },

@@ -62,6 +62,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/ltc.ts',
   'src/lib/manifest-check.ts',
   'src/lib/medications.ts',
+  'src/lib/methodology-check.ts',
   'src/lib/model-types.ts',
   'src/lib/model.ts',
   'src/lib/money-flow.ts',
