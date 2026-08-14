@@ -243,7 +243,7 @@ export function pageRoutes(manifest: string[] = FILE_MANIFEST): string[] {
 
 export interface RouteDrift {
   unregistered: string[]; /* a page with no TABS entry: navigation dead end */
-  unrouted: string[]; /* a TABS entry with no page and no dynamic fallback */
+  unrouted: string[]; /* a TABS entry with no page */
 }
 
 export function routeDrift(routes: string[] = pageRoutes(), tabs = TABS): RouteDrift {
@@ -251,9 +251,12 @@ export function routeDrift(routes: string[] = pageRoutes(), tabs = TABS): RouteD
   const built = new Set(routes);
   return {
     unregistered: routes.filter((r) => !registered.has(r)),
-    /* an unported tab is served by src/pages/[chapter].astro's getStaticPaths */
+    /* R266 [§S1]: every entry, not only the ones a `ported` flag opted in.
+       While that flag existed, a tab added without it was exempt from this
+       half of the check and reached the stub route instead - a chapter that
+       said "This chapter is being migrated" and shipped. */
     unrouted: tabs
-      .filter((t) => t.ported !== false && t.path !== '' && t.ported)
+      .filter((t) => t.path !== '')
       .map((t) => t.path)
       .filter((p) => !built.has(p))
   };

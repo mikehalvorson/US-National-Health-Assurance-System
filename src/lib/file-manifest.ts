@@ -83,7 +83,6 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/taxmodel.ts',
   'src/lib/taxparams.ts',
   'src/lib/workforce.ts',
-  'src/pages/[chapter].astro',
   'src/pages/data.astro',
   'src/pages/gov.astro',
   'src/pages/hardening.astro',

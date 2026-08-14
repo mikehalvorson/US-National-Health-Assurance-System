@@ -18,16 +18,30 @@ test('R267: every page under src/pages has a TABS entry', () => {
   expect(routeDrift().unregistered).toEqual([]);
 });
 
-test('R267: every TABS entry has a page or is served by the dynamic route', () => {
+test('R267: every TABS entry has a page', () => {
   expect(routeDrift().unrouted).toEqual([]);
 });
 
 test('R267: the route list is derived from the manifest, not typed', () => {
-  // index.astro is the '' path; [chapter].astro is the dynamic fallback
+  // index.astro is the '' path
   expect(pageRoutes()).toContain('');
   expect(pageRoutes()).toContain('ltc');
   expect(pageRoutes()).toContain('risk');
-  expect(pageRoutes()).not.toContain('[chapter]');
+});
+
+/* R266 [§S1] — a TABS entry with no page used to be exempt from the unrouted
+   half whenever it lacked `ported: true`, and was served by the stub route
+   instead: a chapter reading "This chapter is being migrated", shipped. */
+test('R266: a TABS entry with no page is reported', () => {
+  const drift = routeDrift(pageRoutes().filter((p) => p !== 'risk'));
+  expect(drift.unrouted).toEqual(['risk']);
+});
+
+test('R266: no tab carries a provenance flag', () => {
+  /* `ported` claimed ltc and risk had docs/ originals. docs/index.html carries
+     twelve buttons and neither is among them, so the flag was wrong on two
+     rows while nothing read it for meaning. */
+  for (const tab of TABS) expect(Object.keys(tab).sort()).toEqual(['id', 'label', 'path']);
 });
 
 test('R267: an unregistered page is detected as drift', () => {
