@@ -186,6 +186,48 @@ export function readmeDeployDrift(root = REPO_ROOT): ReadmeDeployDrift {
   return result;
 }
 
+/* R261 [§S1]: a stated chapter count must be the real one.
+ *
+ * The app has fourteen chapters. The audit's boundary tables said twelve and
+ * omitted Long-Term Care and Risk entirely, so every coverage claim from Pass
+ * 18 on used a wrong denominator and four recommendations were scoped against
+ * a page set that was missing two of its members. The same figure was stale in
+ * three places in specs/HANDOFF.md, which is where a new contributor starts.
+ *
+ * TABS is the authority (R266), so any prose figure is checkable against it.
+ * The number must sit immediately before the noun, which is what keeps
+ * sentences like "the other 11 are standalone pages" out of it. */
+const STATED_COUNT_DOCS = ['README.md', 'specs/HANDOFF.md'];
+const STATED_COUNT = /(\d+)[ -](pages|chapters|tabs)\b/gi;
+
+export interface StatedCountDrift { file: string; line: number; stated: number; text: string }
+
+const statedCache = new Map<string, StatedCountDrift[]>();
+
+export function statedChapterCountDrift(root = REPO_ROOT, tabs = TABS): StatedCountDrift[] {
+  const key = root + '|' + tabs.length;
+  const hit = statedCache.get(key);
+  if (hit) return hit;
+  const out: StatedCountDrift[] = [];
+  for (const doc of STATED_COUNT_DOCS) {
+    let text: string;
+    try {
+      text = readFileSync(join(root, doc), 'utf8');
+    } catch {
+      continue; /* a document that does not exist states nothing */
+    }
+    text.split('\n').forEach((line, i) => {
+      for (const m of line.matchAll(STATED_COUNT)) {
+        const stated = Number(m[1]);
+        if (stated === tabs.length) continue;
+        out.push({ file: doc, line: i + 1, stated: stated, text: line.trim().slice(0, 100) });
+      }
+    });
+  }
+  statedCache.set(key, out);
+  return out;
+}
+
 /* R114 [§S1]: no tool may target the retired tree.
  *
  * extract_quality_catalog.py wrote docs/js/qualitydata.js and

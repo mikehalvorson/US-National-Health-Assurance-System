@@ -13,8 +13,9 @@ import { computeTargets, equationSelfTests } from './equations';
 import { fmeaSelfTests } from './fmea';
 import {
   manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeTargets,
-  routeDrift, unregisteredSelfTestSurfaces
+  routeDrift, statedChapterCountDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
+import { TABS } from './tabs';
 import { AGE_STRUCTURE } from './params';
 import {
   gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
@@ -421,6 +422,15 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !orphans.length,
           note: orphans.map((o) => o.module + ':' + o.fn).join(', ') ||
             modules.length + ' surfaces registered'
+        };
+      }),
+      /* R261 [§S1]: the wrong denominator, stated where a contributor reads it. */
+      runGuarded('Every stated chapter count equals the route registry', () => {
+        const drift = statedChapterCountDrift();
+        return {
+          ok: !drift.length,
+          note: drift.map((d) => d.file + ':' + d.line + ' says ' + d.stated).join(' | ') ||
+            TABS.length + ' chapters, agreed everywhere it is stated'
         };
       }),
       /* R114 [§S1]: no generator writes to a path nothing deploys. */

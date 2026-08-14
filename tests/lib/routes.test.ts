@@ -4,6 +4,7 @@ import {
   exportedSelfTestSurfaces,
   pageRoutes,
   routeDrift,
+  statedChapterCountDrift,
   unregisteredSelfTestSurfaces
 } from '../../src/lib/manifest-check';
 import { SELF_TEST_SOURCES } from '../../src/lib/selftests';
@@ -57,6 +58,29 @@ test('R267: TABS itself is free of duplicate paths and ids', () => {
 /* R206 [§S0] — R24 unified the three shapes that existed; this stops a fourth
    appearing. Every orphaned surface in this backlog (R153's two, R230's,
    R273's) was written, exported, and then simply never called. */
+/* R261 [§S1] — the app has fourteen chapters. The audit's boundary tables said
+   twelve and omitted Long-Term Care and Risk entirely, so every coverage claim
+   from Pass 18 on used a wrong denominator, and the same stale figure sat in
+   three places in specs/HANDOFF.md. */
+test('R261: the route registry has fourteen chapters', () => {
+  expect(TABS.length).toBe(14);
+  expect(TABS.map((t) => t.path)).toContain('ltc');
+  expect(TABS.map((t) => t.path)).toContain('risk');
+});
+
+test('R261: no committed document states a different chapter count', () => {
+  expect(statedChapterCountDrift()).toEqual([]);
+});
+
+test('R261: a stale figure is reported with its location', () => {
+  /* Checked against a registry one shorter, which is what "twelve chapters"
+     was: a real count, taken before two chapters existed. */
+  const drift = statedChapterCountDrift(undefined, TABS.slice(0, 13));
+  expect(drift.length).toBeGreaterThan(0);
+  expect(drift.every((d) => d.stated === 14)).toBe(true);
+  expect(drift.map((d) => d.file)).toContain('specs/HANDOFF.md');
+});
+
 test('R206: no exported self-test surface sits outside the registry', () => {
   expect(unregisteredSelfTestSurfaces(SELF_TEST_SOURCES.map((s) => s.surface))).toEqual([]);
 });
