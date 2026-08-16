@@ -3,8 +3,9 @@
    (bridgeSteps().identityError), and the tax invariants (TAX_SELFTESTS,
    {name,run}) into one flat list. Port of docs/js/app.js renderSelfTests
    (608-641) minus the DOM. Runs at build time; pure. */
-import { selfTest } from './model';
+import { runPath, sampleParams, selfTest } from './model';
 import { runOverviewMc } from './overview';
+import { effectiveParams, scenarioStructural } from './scenarios';
 import { bridgeSteps } from './bridge';
 import { TAX_SELFTESTS } from './taxmodel';
 import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-targets';
@@ -17,7 +18,7 @@ import {
   statedChapterCountDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
-import { AGE_STRUCTURE, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
+import { AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
 import { EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES } from './rollout';
 import {
   benefitStartDrift, calendarAnchorDenials, calendarYearOf, expansionSpanDisagreements,
@@ -414,6 +415,40 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !clashes.length,
           note: clashes.map((c) => c.paramId + '@' + c.phase + ': ' + c.gates.join(' and '))
             .join(' | ') || 'G4 and G5 share P8 but no parameter; every floor keeps its gate'
+        };
+      })
+    ]
+  },
+  {
+    /* R203 [§S2]: an offset's ramp is a claim about what delivers that saving.
+       The row filed offLowValue ramping on infra, the fastest curve in the
+       model; the pairing is kept and declared rather than quietly moved to a
+       slower ramp, and the declaration is now what the engine reads. The
+       offsets are enumerated from a computed detail row, not from a list
+       written next to this check, so a fifth offset cannot be added without
+       either a declaration or a failure. */
+    surface: 'params.ts',
+    rows: () => [
+      runGuarded('Every offset ramps on a declared capability', () => {
+        const row = runPath(sampleParams(effectiveParams('SCN-BASE', null), null),
+          scenarioStructural('SCN-BASE')).detail[0] as unknown as Record<string, unknown>;
+        const produced = Object.keys(row).filter((k) => k.startsWith('off')).sort();
+        const declared = new Map(OFFSET_RAMPS.map((o) => [o.id, o] as const));
+        const problems: string[] = [];
+        for (const id of produced) {
+          const pairing = declared.get(id);
+          if (!pairing) { problems.push(id + ' has no declared ramp'); continue; }
+          if (!(pairing.ramp in RAMPS)) problems.push(id + ' names unknown ramp ' + pairing.ramp);
+          if (pairing.why.trim().length < 60) problems.push(id + ' declares no reason');
+          if (!pairing.delivers.trim()) problems.push(id + ' declares nothing delivered');
+        }
+        for (const o of OFFSET_RAMPS) {
+          if (!produced.includes(o.id)) problems.push(o.id + ' is declared but not produced');
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || produced.length + ' offsets, each paired: ' +
+            OFFSET_RAMPS.map((o) => o.id.replace(/^off/, '') + '->' + o.ramp).join(', ')
         };
       })
     ]

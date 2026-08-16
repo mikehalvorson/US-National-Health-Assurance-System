@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
-import { sampleParams, runPath, matureAtScale, runMonteCarlo, selfTest } from '../../src/lib/model';
+import { buildRamps, matureAtScale, offsetRamp, runMonteCarlo, runPath, sampleParams, selfTest } from '../../src/lib/model';
 import { effectiveParams } from '../../src/lib/scenarios';
-import { START_YEAR } from '../../src/lib/params';
+import { OFFSET_RAMPS, PRE_YEARS, RAMPS, START_YEAR } from '../../src/lib/params';
 
 const effective = effectiveParams('SCN-BASE', null);
 
@@ -75,4 +75,46 @@ test('selfTest() reports all nine invariants passing', () => {
   expect(results.length).toBeGreaterThanOrEqual(9);
   const failing = results.filter((r) => !r.ok).map((r) => r.name);
   expect(failing).toEqual([]);
+});
+
+/* R203 [§S2] — offLowValue ramps on `infra`, which reaches 1.0 at index 8 and
+   is tied with `drugs` as the fastest curve in the model. The pairing is kept
+   and declared; these hold the engine to the declaration and pin that reading
+   the ramp through it computes exactly what naming it inline computed. */
+
+test('R203: every offset equals its declared ramp times its own scope', () => {
+  const p = sampleParams(effective, null);
+  const path = runPath(p, {});
+  const ramps = buildRamps({});
+  const g = p.baselineRealGrowth / 100;
+
+  path.detail.forEach((d, t) => {
+    const G = Math.pow(1 + g, PRE_YEARS + t);
+    expect(d.offProvAdmin).toBeCloseTo(
+      (p.providerAdminSavings / 100) * (d.cHosp + d.cClin) * ramps.coverage[t], 9);
+    expect(d.offCareModel).toBeCloseTo(p.careModelSavings * G * ramps.units[t], 9);
+    expect(d.offLowValue).toBeCloseTo((p.lowValueCapture / 100) * 88 * G * ramps.infra[t], 9);
+    expect(d.offExtraction).toBeCloseTo(p.extractionSavings * G * ramps.hospitals[t], 9);
+  });
+});
+
+test('R203: each offset the engine produces carries a reasoned pairing', () => {
+  const produced = Object.keys(runPath(sampleParams(effective, null), {}).detail[0])
+    .filter((k) => k.startsWith('off')).sort();
+  expect(produced).toEqual(OFFSET_RAMPS.map((o) => o.id).sort());
+  for (const o of OFFSET_RAMPS) {
+    expect(Object.keys(RAMPS)).toContain(o.ramp);
+    expect(o.why.length).toBeGreaterThan(60);
+    expect(o.delivers).not.toBe('');
+  }
+  // The one the row filed, stated rather than found by reading arithmetic.
+  const lowValue = OFFSET_RAMPS.find((o) => o.id === 'offLowValue')!;
+  expect(lowValue.ramp).toBe('infra');
+  expect(lowValue.why).toMatch(/fastest curve in the model/);
+});
+
+test('R203: an offset with no declared pairing cannot reach a ramp', () => {
+  const values = { coverage: 0.5, units: 0.4, drugs: 0.3, hospitals: 0.2, expansions: 0.1, infra: 0.9, costShareElim: 0 };
+  expect(offsetRamp('offLowValue', values)).toBe(values.infra);
+  expect(() => offsetRamp('offSomethingNew', values)).toThrow(/declares no ramp pairing/);
 });

@@ -462,6 +462,64 @@ export const RAMP_MILESTONES: RampMilestone[] = [
   { ramp: 'costShareElim', phase: 'P8', atLeast: 1.00, claim: 'cost sharing fully eliminated' }
 ];
 
+/* ---- Declared offset ramp pairings --------------------------------------
+ * R203 [§S2]: every explicit offset is a savings term that only arrives when
+ * some capability is built, and the ramp it multiplies is the model's claim
+ * about which capability that is. The claim was implicit in the arithmetic,
+ * so it could not be reviewed and could not be wrong out loud. It is data
+ * here, model.ts reads the ramp for each offset from this table rather than
+ * naming one inline, and a self-test requires every offset the engine
+ * produces to have an entry with a reason.
+ *
+ * The row filed offLowValue: it ramps on `infra`, which reaches 1.0 at index
+ * 8 and is tied with `drugs` as the fastest curve in the model, and it is the
+ * most optimistic pairing available to a savings term. That is true, it is
+ * kept, and the reason is stated rather than left to be re-derived. Moving it
+ * to `units` or `hospitals` would change published output on the strength of
+ * no source; `honest` here means declaring the pairing and its optimism, not
+ * silently picking a slower curve because it reads as more conservative.
+ * ------------------------------------------------------------------------ */
+export interface OffsetPairing {
+  id: string;
+  ramp: keyof typeof RAMPS;
+  delivers: string;
+  why: string;
+}
+export const OFFSET_RAMPS: OffsetPairing[] = [
+  {
+    id: 'offProvAdmin', ramp: 'coverage',
+    delivers: 'provider-side billing and collections savings',
+    why: 'A practice stops maintaining multi-payer billing only as its payer mix ' +
+      'consolidates onto the public rail, so the saving tracks coverage share and ' +
+      'nothing else. It is already scoped to hospital and clinical spend.'
+  },
+  {
+    id: 'offCareModel', ramp: 'units',
+    delivers: 'ED diversion and avoidable admissions',
+    why: 'The diversion has to have somewhere to divert to. Both halves of this ' +
+      'term depend on a staffed diagnostic-treatment unit being reachable, which ' +
+      'is exactly what the unit-network ramp measures.'
+  },
+  {
+    id: 'offLowValue', ramp: 'infra',
+    delivers: 'reduction in the low-value-care pool',
+    why: 'Low-value care is captured by measurement and decision support at the ' +
+      'point of order - appropriateness criteria in the shared record, and the ' +
+      'clinician education to apply them - which is the R&D, workforce and IT ' +
+      'operating build this ramp carries, not the physical unit network. Noted ' +
+      'openly: infra is the fastest curve in the model, reaching full scale in ' +
+      'Year 9, so this is the most optimistic ramp any offset uses and this term ' +
+      'matures earlier than every other saving.'
+  },
+  {
+    id: 'offExtraction', ramp: 'hospitals',
+    delivers: 'related-party extraction recovered',
+    why: 'Extraction is recovered by the budget agreement that replaces ' +
+      'fee-for-service billing at a hospital, so it arrives with the ' +
+      'global-budget migration and stops at the share of spend that has migrated.'
+  }
+];
+
 /* Benchmarks for the comparison panel (research/01, CP-FIN-015/016).
  * All are single-year or annualized federal-cost concepts - the UI explains
  * that these are different accounting concepts, not one axis. */

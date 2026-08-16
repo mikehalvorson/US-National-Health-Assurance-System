@@ -18,6 +18,14 @@
  *   Low-value care reduction       explicit offset, capture% x $88B pool
  *   Related-party extraction       explicit offset, $B, narrow scope
  *
+ * R203 [§S2]: each explicit offset also names the capability that delivers
+ * it, because the ramp it multiplies is a modelling claim and was previously
+ * only implied by the arithmetic. The four pairings and their reasons are
+ * OFFSET_RAMPS in params.ts; offsetRamp() below is the only way this file
+ * reaches a ramp for an offset, so the declaration cannot fall out of step
+ * with the engine. offLowValue ramps on infra, the fastest curve here, which
+ * is stated in its entry rather than left to be found.
+ *
  * All internal dollars are REAL 2023 $B. Display conversion to 2024$ happens
  * in the UI layer via DEFLATOR_2023_TO_2024.
  *
@@ -27,6 +35,7 @@
  * ========================================================================= */
 import {
   BASE2023,
+  OFFSET_RAMPS,
   RAMPS,
   PARAM_CORR,
   CORR_WEIGHT,
@@ -47,6 +56,22 @@ import type {
   PercentileBand,
   SelfTestResult,
 } from './model-types';
+
+/* ---- Declared offset pairings (R203 [§S2]) ------------------------------
+ * Which capability delivers each explicit offset is a modelling claim, so it
+ * is declared in params.ts and read here. An offset with no declaration is a
+ * saving with no stated cause, and that throws rather than quietly ramping on
+ * whatever curve was nearest in the source. */
+const OFFSET_RAMP_BY_ID: Record<string, string> = {};
+OFFSET_RAMPS.forEach(function (o) { OFFSET_RAMP_BY_ID[o.id] = o.ramp; });
+
+export function offsetRamp(id: string, values: Record<string, number>): number {
+  const ramp = OFFSET_RAMP_BY_ID[id];
+  if (ramp === undefined) throw new Error('Offset ' + id + ' declares no ramp pairing');
+  const value = values[ramp];
+  if (value === undefined) throw new Error('Offset ' + id + ' names unknown ramp ' + ramp);
+  return value;
+}
 
 /* ---- Triangular distribution sampling ---- */
 function triangular(lo: number, mo: number, hi: number, rand: () => number): number {
@@ -210,11 +235,21 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
       shock = s.shock.amountB * G;
     }
 
-    /* Explicit offsets (each with one narrow scope; see header table) */
-    const offProvAdmin  = (p.providerAdminSavings / 100) * (cHosp + cClin) * covR;
-    const offCareModel  = p.careModelSavings * G * unitR;
-    const offLowValue   = (p.lowValueCapture / 100) * 88 * G * infR;
-    const offExtraction = p.extractionSavings * G * hospR;
+    /* Explicit offsets (each with one narrow scope; see header table).
+       R203 [§S2]: the ramp each one multiplies is the model's claim about
+       which capability delivers that saving, so it comes from OFFSET_RAMPS
+       rather than being named inline. offsetRamp throws on an undeclared id,
+       which is what stops a fifth offset arriving with no stated pairing. */
+    const rampNow: Record<string, number> = {
+      coverage: covR, units: unitR, drugs: drugR, hospitals: hospR,
+      expansions: expR, infra: infR, costShareElim: csR
+    };
+    const offProvAdmin  = (p.providerAdminSavings / 100) * (cHosp + cClin) *
+      offsetRamp('offProvAdmin', rampNow);
+    const offCareModel  = p.careModelSavings * G * offsetRamp('offCareModel', rampNow);
+    const offLowValue   = (p.lowValueCapture / 100) * 88 * G *
+      offsetRamp('offLowValue', rampNow);
+    const offExtraction = p.extractionSavings * G * offsetRamp('offExtraction', rampNow);
     const offsets = offProvAdmin + offCareModel + offLowValue + offExtraction;
 
     const nheNha = cHosp + cClin + cDrugs + cOtherPhc + cExpansions +
@@ -323,10 +358,18 @@ export function matureAtScale(
   const pubBenefit = (cHosp + cClin + cDrugs + cOtherPhc + cExpansions) * pubShare;
   const newAdmin = (p.publicAdminRate / 100) * pubBenefit;
   const govCost = (p.governanceRate / 100) * pubBenefit;
-  const offsets = (p.providerAdminSavings / 100) * (cHosp + cClin) * covR +
-                p.careModelSavings * G * unitR +
-                (p.lowValueCapture / 100) * 88 * G * infR +
-                p.extractionSavings * G * hospR;
+  /* R203 [§S2]: the same declared pairings the year loop uses. This is the
+     second place the offsets are computed, so naming a ramp inline here would
+     put the model's claim about what delivers each saving in two files. */
+  const rampNow: Record<string, number> = {
+    coverage: covR, units: unitR, drugs: drugR, hospitals: hospR,
+    expansions: expR, infra: infR, costShareElim: csR
+  };
+  const offsets = (p.providerAdminSavings / 100) * (cHosp + cClin) *
+                  offsetRamp('offProvAdmin', rampNow) +
+                p.careModelSavings * G * offsetRamp('offCareModel', rampNow) +
+                (p.lowValueCapture / 100) * 88 * G * offsetRamp('offLowValue', rampNow) +
+                p.extractionSavings * G * offsetRamp('offExtraction', rampNow);
 
   const nheNha = cHosp + cClin + cDrugs + cOtherPhc + cExpansions +
                legacyAdmin + newAdmin + govCost +
