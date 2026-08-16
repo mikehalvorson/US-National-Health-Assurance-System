@@ -1,10 +1,13 @@
 import { expect, test } from 'vitest';
 import {
   gateFloorChecks,
+  gateFloorCollisions,
   gateFloorDrift,
+  gatePhaseDrift,
   KNOWN_UNANCHORED_FLOORS,
   unexplainedExemptions
 } from '../../src/lib/gate-floors';
+import { GATES } from '../../src/lib/rollout';
 
 /* R149 [§S0] — selfTestNoRegression skips 'progression floor' and
    'phase milestone', so the framework-anchored entries were excluded from the
@@ -30,6 +33,31 @@ test('R149: a floor drifting from its gate is caught', () => {
   // these are different quantities, and the floor must match the GATE.
   expect(b9.numbers).toContain(5);
   expect(b9.matched).toBe(true);
+});
+
+/* R121 [§S2] — the gate → phase map was an undocumented inline dict giving every
+   gate one phase. Gate 1's decision point names a transition, so one phase drops
+   half of it, and that half was the only R117 claim that could not be confirmed. */
+
+test('R121: every gate floor lands on the phases its decision point names', () => {
+  expect(gatePhaseDrift()).toEqual([]);
+});
+
+test('R121: the Gate 1 claims floor is carried at both ends of its transition', () => {
+  const g1 = GATES.find((g) => g.n === 'G1')!;
+  expect(g1.when).toMatch(/P3.*P4/);
+  const phases = gateFloorChecks()
+    .filter((c) => c.gate === 'G1').map((c) => c.phase).sort();
+  expect(phases).toEqual(['P3', 'P4']);
+});
+
+test('R121: no two gates write one undistinguished floor', () => {
+  // The row's premise, measured: G4 writes KPP-C5 and KPP-C6 at P8 and G5 writes
+  // TPP-11.5 at P8, so the two gates share a phase but never a parameter.
+  expect(gateFloorCollisions()).toEqual([]);
+  const atP8 = gateFloorChecks().filter((c) => c.phase === 'P8');
+  expect(atP8.map((c) => c.gate).sort()).toEqual(['G4', 'G4', 'G5']);
+  expect(new Set(atP8.map((c) => c.paramId)).size).toBe(3);
 });
 
 test('R149: progression floors with no gate are named, not silently exempt', () => {

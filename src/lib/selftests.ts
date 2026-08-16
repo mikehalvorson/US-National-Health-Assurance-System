@@ -26,7 +26,8 @@ import {
   rolloutHeadlineMisses, trainProgAtMaturity, unitBuildoutIssues
 } from './phase-map-check';
 import {
-  gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
+  gateFloorChecks, gateFloorCollisions, gateFloorDrift, gatePhaseDrift,
+  KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
 } from './gate-floors';
 import { DATA_PHASE_COUNTS, DATA_PHASES } from './data-phases';
 import { methodologyCountsAgree, methodologyDrift } from './methodology-check';
@@ -35,7 +36,7 @@ import {
 } from './style-check';
 import {
   dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
-  dataPhaseTargetCount, frameworkBasisEntries
+  dataPhaseTargetCount, frameworkBasisClaims, frameworkBasisDrift, frameworkBasisEntries
 } from './data-phases-checks';
 
 /* R248 [§S0]: two detectors, because the row's own instrument only sees one of
@@ -392,6 +393,27 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? found + ' (exempt from the no-regression test, nothing anchors them)'
             : 'changed: ' + found
         };
+      }),
+      /* R121 [§S2]: the gate -> phase map, checked against the gate's own
+         decision point rather than trusted. Gate 1 names a transition; a
+         mapping that keeps only one end of it is the collapse this row is
+         about, and it is what left R117 with one claim it could not confirm. */
+      runGuarded('Every gate floor lands on the phases its decision point names', () => {
+        const drift = gatePhaseDrift();
+        return {
+          ok: !drift.length,
+          note: drift.map((d) => d.gate + ' "' + d.when + '" names ' +
+            d.named.join('+') + ', writes ' + (d.written.join('+') || 'nothing')).join(' | ') ||
+            'G1 carries its claims floor at both P3 and P4; the rest name an event, not a boundary'
+        };
+      }),
+      runGuarded('No two gates write one undistinguished floor', () => {
+        const clashes = gateFloorCollisions();
+        return {
+          ok: !clashes.length,
+          note: clashes.map((c) => c.paramId + '@' + c.phase + ': ' + c.gates.join(' and '))
+            .join(' | ') || 'G4 and G5 share P8 but no parameter; every floor keeps its gate'
+        };
       })
     ]
   },
@@ -453,6 +475,23 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('Data-tab framework-basis entries number seventeen', () => {
         const n = frameworkBasisEntries().length;
         return { ok: n === 17, note: n + ' entries carry basis: framework' };
+      }),
+      /* R117 [§S2]: the generator checks that `basis` is spelled from its
+         vocabulary and never that the claim is true. A framework basis asserts
+         the framework fixed this number at this phase, and the catalog entry it
+         claims is in the same function the generator already loads. Compared as
+         (comparator, number, unit), because sixteen of the seventeen restate
+         the catalog in the page's own words rather than repeating it. */
+      runGuarded('Every framework-basis target matches the catalog entry it claims', () => {
+        const drift = frameworkBasisDrift();
+        const claims = frameworkBasisClaims();
+        const verbatim = claims.filter((c) => c.declared === c.catalogValue).length;
+        return {
+          ok: !drift.length,
+          note: drift.map((d) => d.id + '@' + d.phase + ' ' + d.problem).join(' | ') ||
+            claims.length + ' claims resolve, ' + (claims.length - verbatim) +
+            ' of them worded differently from the catalog'
+        };
       })
     ]
   },

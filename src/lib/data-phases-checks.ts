@@ -12,6 +12,7 @@
 import { DATA_PHASES } from './data-phases';
 import type { DataMetric } from './data-phases';
 import { parseNum } from './phase-targets';
+import { QUALITY_DATA } from './quality';
 
 /* AN5 retracted AB3: all four of the catalog's IDs are canonical. The document's
    suffix convention is broader than the pattern the audit tested, so this admits
@@ -47,6 +48,88 @@ export function frameworkBasisEntries(): Array<{ phase: string; id: string }> {
   return everyMetric()
     .filter((m) => m.metric.basis === 'framework')
     .map((m) => ({ phase: m.phase, id: m.metric.id }));
+}
+
+/* R117 [§S2]: check what a `basis: "framework"` target CLAIMS, not just that the
+   word is spelled right.
+ *
+ * build_data_phase_targets.py raises on an unknown basis value and stops there,
+ * while the verification data sits in the same function it never reads:
+ * load_quality_parameters() returns each parameter's `rollout`, which the
+ * catalog extractor filled from the framework's own gate and milestone tables.
+ * A `framework` basis asserts that the framework fixed this number at this
+ * phase, so the catalog's entry at that phase is the thing to check it against.
+ *
+ * String equality is the wrong instrument and reports sixteen false failures.
+ * Sixteen of the seventeen are prose restatements of one quantity: the
+ * generator declares '>=98% API conformance' where the catalog says '>=98%',
+ * and '>=65% population within the unit-network coverage milestone' where the
+ * catalog says '>=65% by phase end'. Comparing the parsed (comparator, number,
+ * unit) triple compares the claim; comparing the strings compares the wording.
+ *
+ * Only these three kinds come from the catalog. 'derived interim target',
+ * 'data-plan interim target' and 'equation-derived target' are added or
+ * rewritten downstream by phase-targets.ts and equations.ts, and checking a
+ * framework claim against a data-plan entry would be checking the generator
+ * against itself. */
+const CATALOG_KINDS = new Set(['maturity target', 'phase milestone', 'progression floor']);
+
+export interface FrameworkClaim {
+  id: string;
+  phase: string;
+  declared: string;
+  catalogValue: string | null;
+  kind: string | null;
+  problem: string; /* '' when the claim resolves */
+}
+
+export function frameworkBasisClaims(): FrameworkClaim[] {
+  const byId = new Map(QUALITY_DATA.parameters.map((p) => [p.id, p] as const));
+
+  return everyMetric()
+    .filter((row) => row.metric.basis === 'framework')
+    .map((row) => {
+      const base: FrameworkClaim = {
+        id: row.metric.id,
+        phase: row.phase,
+        declared: row.metric.phaseTarget,
+        catalogValue: null,
+        kind: null,
+        problem: ''
+      };
+      const entries = (byId.get(row.metric.id)?.rollout || [])
+        .filter((e) => e.phase === row.phase && CATALOG_KINDS.has(e.kind));
+      if (!entries.length) {
+        return { ...base, problem: 'no framework entry at this phase' };
+      }
+      const claim = parseNum(row.metric.phaseTarget);
+      if (!claim) return { ...base, problem: 'the declared target states no number' };
+
+      let nearest: FrameworkClaim | null = null;
+      for (const entry of entries) {
+        const source = parseNum(entry.value);
+        const detail = { ...base, catalogValue: entry.value, kind: entry.kind };
+        if (!source) {
+          nearest = nearest || { ...detail, problem: 'the catalog entry states no number' };
+          continue;
+        }
+        const problem = source.num !== claim.num
+          ? 'declares ' + claim.num + ', the catalog carries ' + source.num
+          : source.cmp !== claim.cmp
+            ? 'declares ' + (claim.cmp || 'no comparator') + ', the catalog carries ' +
+              (source.cmp || 'no comparator')
+            : source.unit !== claim.unit
+              ? 'declares ' + claim.unit + ', the catalog carries ' + source.unit
+              : '';
+        if (!problem) return { ...detail, problem: '' };
+        nearest = nearest || { ...detail, problem: problem };
+      }
+      return nearest as FrameworkClaim;
+    });
+}
+
+export function frameworkBasisDrift(): FrameworkClaim[] {
+  return frameworkBasisClaims().filter((c) => c.problem !== '');
 }
 
 export interface Regression {

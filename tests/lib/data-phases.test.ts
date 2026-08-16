@@ -5,6 +5,8 @@ import {
   dataPhaseMetricIds,
   dataPhaseMonotonicity,
   dataPhaseTargetCount,
+  frameworkBasisClaims,
+  frameworkBasisDrift,
   frameworkBasisEntries
 } from '../../src/lib/data-phases-checks';
 
@@ -35,6 +37,32 @@ test('R54: no phase target regresses away from its mature target', () => {
 
 test('R54: framework-basis entries are exactly the seventeen V5 counted', () => {
   expect(frameworkBasisEntries().length).toBe(17); // V5
+});
+
+/* R117 [§S2] — the generator validates the vocabulary of `basis` and never the
+   claim, while the catalog rollout it already loads carries the framework's own
+   entry for every one of them. */
+
+test('R117: every framework-basis target resolves to the catalog entry it claims', () => {
+  expect(frameworkBasisDrift()).toEqual([]);
+});
+
+test('R117: the check reaches all seventeen claims and reads the catalog', () => {
+  const claims = frameworkBasisClaims();
+  expect(claims.length).toBe(17); // V5
+  expect(claims.every((c) => c.catalogValue !== null)).toBe(true);
+  // The P3/P4 Gate 1 floor is the one the phase map used to drop (R121).
+  const g1 = claims.filter((c) => c.id === 'TPP-2.1').map((c) => c.phase).sort();
+  expect(g1).toEqual(['P3', 'P4']);
+});
+
+test('R117: wording differs from the catalog on sixteen of the seventeen', () => {
+  // The reason string equality is the wrong instrument: the claims are prose
+  // restatements of the same quantity, so only the P8 API-conformance style
+  // rows repeat the catalog verbatim.
+  const verbatim = frameworkBasisClaims().filter((c) => c.declared === c.catalogValue);
+  expect(verbatim.length).toBeLessThan(frameworkBasisClaims().length);
+  expect(frameworkBasisDrift()).toEqual([]);
 });
 
 test('R54: every phase carries an id, a year and at least one group', () => {

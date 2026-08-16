@@ -62,6 +62,81 @@ export function gateFloorDrift(): FloorCheck[] {
   return gateFloorChecks().filter((c) => !c.matched);
 }
 
+/* R121 [§S2]: the gate -> phase map was an undocumented inline dict in the
+ * catalog extractor that gave every gate exactly one phase. It is declared
+ * there now (GATE_PHASES), and these two checks are what stop it collapsing
+ * again from this side of the generator.
+ *
+ * The warrant is each gate's own decision point. rollout.ts carries it as
+ * `when`, hand-ported from the framework's gate table and independent of the
+ * generated catalog, so a floor and the phase it is written to are checked
+ * against a statement neither of them produced. Gate 1's reads "Before P3 -> P4"
+ * and is the only one that names phases at all; the other seven name an event
+ * ("Before broad cost-sharing elimination"), and for those the generator's
+ * declared mapping is the only statement there is.
+ */
+const PHASE_TOKEN = /\bP[0-8]\b/g;
+
+export interface GatePhaseDrift {
+  gate: string;
+  when: string;
+  named: string[];
+  written: string[];
+}
+
+function floorPhasesByGate(): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>();
+  for (const p of QUALITY_DATA.parameters) {
+    for (const e of (p.rollout || [])) {
+      if (!e.gate || e.kind !== 'progression floor') continue;
+      const set = out.get(e.gate) || new Set<string>();
+      set.add(e.phase);
+      out.set(e.gate, set);
+    }
+  }
+  return out;
+}
+
+export function gatePhaseDrift(): GatePhaseDrift[] {
+  const written = floorPhasesByGate();
+  const out: GatePhaseDrift[] = [];
+  for (const g of GATES) {
+    const named = [...new Set(g.when.match(PHASE_TOKEN) || [])].sort();
+    if (!named.length) continue; /* names an event, not a boundary */
+    const has = [...(written.get(g.n) || [])].sort();
+    if (named.join() !== has.join()) {
+      out.push({ gate: g.n, when: g.when, named: named, written: has });
+    }
+  }
+  return out;
+}
+
+/* Two DIFFERENT gates writing a floor to one phase for one parameter is the
+ * merge R121 describes: two requirements, one row, no way to tell which gate a
+ * reader is looking at. Measured 2026-08-16 it does not occur - G4 and G5 share
+ * P8 but not a parameter - so the row's "undistinguished" premise does not hold
+ * today, and this keeps it from starting to. */
+export interface FloorCollision { paramId: string; phase: string; gates: string[] }
+
+export function gateFloorCollisions(): FloorCollision[] {
+  const out: FloorCollision[] = [];
+  for (const p of QUALITY_DATA.parameters) {
+    const byPhase = new Map<string, Set<string>>();
+    for (const e of (p.rollout || [])) {
+      if (!e.gate || e.kind !== 'progression floor') continue;
+      const set = byPhase.get(e.phase) || new Set<string>();
+      set.add(e.gate);
+      byPhase.set(e.phase, set);
+    }
+    for (const [phase, gates] of byPhase) {
+      if (gates.size > 1) {
+        out.push({ paramId: p.id, phase: phase, gates: [...gates].sort() });
+      }
+    }
+  }
+  return out;
+}
+
 /* The other half of R149: the entries that REMAIN exempt from the
  * no-regression test must be exactly the gate-anchored ones, not an open
  * licence for any row to opt out.
