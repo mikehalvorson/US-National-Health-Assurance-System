@@ -17,7 +17,12 @@ import {
   statedChapterCountDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
-import { AGE_STRUCTURE } from './params';
+import { AGE_STRUCTURE, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
+import { PHASE_YEAR } from './rollout';
+import {
+  calendarYearOf, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
+  premiumCardYearDrift, rampLegendDisagreements, rampMilestoneMisses, trainProgAtMaturity
+} from './phase-map-check';
 import {
   gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
 } from './gate-floors';
@@ -91,12 +96,23 @@ function computeDiagnostics(scenarioId: string): EquationDiagnostics {
   return { kindSurvivors, nonFinite, nonFinitePublished };
 }
 
-/* The eleven known non-finite cells, by ID and phase. Pinned so a twelfth fails
-   the build rather than joining them unnoticed, and so fixing one in §S3 has to
-   be a deliberate edit here. This is the documentedGap discipline: name the
-   defect, do not tolerate it silently. */
+/* The known non-finite cells, by ID and phase. Pinned so one more fails the
+   build rather than joining them unnoticed, and so fixing one in §S3 has to be
+   a deliberate edit here. This is the documentedGap discipline: name the
+   defect, do not tolerate it silently.
+
+   This list was eleven until §S2 corrected the phase->index conversion
+   (R226). P0 used to resolve ramp index 1, Year 2; it now resolves index 0,
+   Year 1, where every build ramp is still zero - so three more metrics divide
+   by a zero build state at P0 and evaluate non-finite: KPP-B5, KPP-E3 and
+   TPP-7.2. The growth is the correction landing, not a regression, and it is
+   inert: all fourteen sit at a phase EARLIER than the phase their own metric
+   becomes measurable (`_phaseStart`), no rollout row exists at any of them,
+   and the companion check below confirms none reaches a published row. §S3
+   owns making them finite. */
 const KNOWN_NON_FINITE = [
-  'KPP-B1@P0', 'KPP-D7@P0', 'KPP-TRUST1@P0',
+  'KPP-B1@P0', 'KPP-B5@P0', 'KPP-D7@P0', 'KPP-E3@P0', 'KPP-TRUST1@P0',
+  'TPP-7.2@P0',
   'TPP-9.3@P0', 'TPP-9.3@P1', 'TPP-9.3@P2', 'TPP-9.3@P3',
   'TPP-9.5@P0', 'TPP-9.5@P1', 'TPP-9.5@P2', 'TPP-9.5@P3'
 ].join(', ');
@@ -257,6 +273,59 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: p.length === 0,
           note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
         };
+      })
+    ]
+  },
+  {
+    /* R226/R251/R293/R234/R133 [§S2]: one phase map, one conversion, and the
+       ramps held to the phases they claim. */
+    surface: 'phase-map-check.ts',
+    rows: () => [
+      runGuarded('The phase-to-year map has one definition and every copy agrees', () => {
+        const drift = phaseMapDrift();
+        const missing = phasesWithoutYear();
+        return {
+          ok: !drift.length && !missing.length,
+          note: [
+            drift.map((d) => d.source + ' ' + d.phase + ': ' + d.year + ' not ' + d.expected).join('; '),
+            missing.length ? 'no year for ' + missing.join(', ') : ''
+          ].filter(Boolean).join(' | ') ||
+            Object.keys(PHASE_YEAR).length + ' anchors, 3 sources agree'
+        };
+      }),
+      runGuarded('Each phase resolves the calendar year its label states', () => {
+        const bad = phaseYearMismatches();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.phase + ' labelled Year ' + b.label + ' resolves Year ' + b.resolved)
+            .join('; ') || 'P0 = Year 1 = ' + calendarYearOf('P0') +
+            ', P8 = Year ' + PHASE_YEAR.P8 + ' = ' + calendarYearOf('P8')
+        };
+      }),
+      runGuarded('Every ramp reaches its declared milestone at that phase', () => {
+        const miss = rampMilestoneMisses();
+        return {
+          ok: !miss.length,
+          note: miss.map((m) => m.ramp + '@' + m.phase + ' needs ' + m.needed +
+            ', has ' + m.got + ' (' + m.claim + ')').join('; ') ||
+            RAMP_MILESTONES.length + ' milestones land'
+        };
+      }),
+      runGuarded('The premium card starts the year its coverage ramp does', () => {
+        const drift = premiumCardYearDrift();
+        return {
+          ok: drift === null,
+          note: drift ? 'card says ' + drift.fromYear + ', ramp migrates from ' + drift.rampYear
+            : 'both ' + (START_YEAR + RAMPS.coverage.findIndex((v) => v > 0))
+        };
+      }),
+      runGuarded('Training progress is exactly complete at the P8 anchor', () => {
+        const v = trainProgAtMaturity();
+        return { ok: v === 1, note: 'trainProg(P8) = ' + v };
+      }),
+      runGuarded('The ramp legend resolves the same index as the ramp array', () => {
+        const bad = rampLegendDisagreements();
+        return { ok: !bad.length, note: bad.join('; ') || 'all 9 phases agree' };
       })
     ]
   },

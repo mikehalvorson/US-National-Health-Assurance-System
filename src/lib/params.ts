@@ -375,30 +375,64 @@ export const PARAMS_BY_ID: Record<string, ParamDef> = {};
 PARAM_DEFS.forEach(function (p) { PARAMS_BY_ID[p.id] = p; });
 
 /* ---- Phase ramps ---------------------------------------------------------
- * Year index 1..16 (Year 1 = 2027 = Phase 0 enactment). Values are shares
- * of the mature effect realized in that year. Sources: Source Package
- * "Implementation Phases and Phase Gates" (PH-P0..P8, Years 1..12).
+ * ZERO-BASED year index 0..15. Index 0 is Year 1 is 2027, the enactment
+ * year, matching model.ts's `year = START_YEAR + t` and every other reader.
+ * Values are shares of the mature effect realized in that year. Sources:
+ * Source Package "Implementation Phases and Phase Gates" (PH-P0..P8,
+ * Years 1..12).
+ *
+ * The convention above used to read "Year index 1..16", and four of the
+ * seven policy ramps were authored against it while every consumer read
+ * them 0-based - so those four delivered their stated milestone a year
+ * after the phase that claims it. They are realigned here. The milestones
+ * are declared as data in RAMP_MILESTONES below and gated by a self-test,
+ * so a ramp and the year it claims can no longer drift apart in prose.
  * ------------------------------------------------------------------------ */
 export const RAMPS = {
   /* Public coverage share of population (P3 wave I yr 4; P6 national yr 8) */
-  coverage:      [0, 0,    0,    0,    0.20, 0.30, 0.42, 0.55, 0.85, 0.95, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99],
-  /* Cost-sharing elimination (gated on unit coverage; begins P6 yr 8) */
+  coverage:      [0, 0,    0,    0.20, 0.30, 0.42, 0.55, 0.85, 0.95, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99],
+  /* Cost-sharing elimination (gated on unit coverage; first relief yr 7) */
   costShareElim: [0, 0,    0,    0,    0,    0,    0.05, 0.10, 0.50, 0.75, 1.0,  1.0,  1.0,  1.0,  1.0,  1.0 ],
-  /* Unit network build-out (pilots P4 yr 6; 65% pop P5 yr 7; 95% P8) */
-  units:         [0, 0,    0.02, 0.05, 0.10, 0.20, 0.35, 0.55, 0.70, 0.80, 0.85, 0.90, 0.95, 0.95, 0.95, 0.95],
+  /* Unit network build-out (pilots P4 yr 6; scale-up P5 yr 7; 95% P8) */
+  units:         [0, 0.02, 0.05, 0.10, 0.20, 0.35, 0.55, 0.70, 0.80, 0.85, 0.90, 0.95, 0.95, 0.95, 0.95, 0.95],
   /* Drug program (pharmacy utility P2 yr 3; deepens through P6) */
   drugs:         [0, 0,    0.15, 0.35, 0.55, 0.70, 0.80, 0.90, 1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0 ],
   /* Hospital global budgets (pilots P4 yr 6 → 95% of spend by P8) */
-  hospitals:     [0, 0,    0,    0,    0.05, 0.10, 0.20, 0.35, 0.55, 0.70, 0.85, 0.90, 0.95, 0.95, 0.95, 0.95],
+  hospitals:     [0, 0,    0,    0.05, 0.10, 0.20, 0.35, 0.55, 0.70, 0.85, 0.90, 0.95, 0.95, 0.95, 0.95, 0.95],
   /* Expanded benefits: LTC/BH/DVH/EMS (P7 yr 10 → full P8 yr 12) */
-  expansions:    [0, 0,    0,    0,    0,    0.05, 0.10, 0.15, 0.25, 0.40, 0.60, 0.80, 1.0,  1.0,  1.0,  1.0 ],
-  /* R&D, workforce, IT operating build gradually Years 2–8 */
+  expansions:    [0, 0,    0,    0,    0.05, 0.10, 0.15, 0.25, 0.40, 0.60, 0.80, 1.0,  1.0,  1.0,  1.0,  1.0 ],
+  /* R&D, workforce, IT operating build gradually Years 2–9 */
   infra:         [0, 0.10, 0.25, 0.40, 0.55, 0.65, 0.75, 0.85, 1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0 ],
   /* Transition outlay shape (fractions of total; sums to 1.0 over yrs 1–12) */
   transitionShape: [0.03, 0.06, 0.08, 0.11, 0.12, 0.12, 0.12, 0.12, 0.09, 0.07, 0.05, 0.03, 0, 0, 0, 0],
   /* IT capital shape (fractions of total; sums to 1.0 over yrs 1–8) */
   itCapitalShape:  [0.08, 0.12, 0.15, 0.15, 0.14, 0.13, 0.12, 0.11, 0, 0, 0, 0, 0, 0, 0, 0]
 };
+
+/* ---- Declared ramp milestones -------------------------------------------
+ * Each policy ramp claims, in its comment above, to deliver something by a
+ * named phase. Those claims are restated here as data so a self-test can
+ * hold the arrays to them; prose alone drifted for four of the seven.
+ * `atLeast` is the share the ramp must have reached at that phase's anchor
+ * year. transitionShape and itCapitalShape are deliberately absent: they
+ * are shapes over a span, not milestones at a year.
+ * ------------------------------------------------------------------------ */
+export interface RampMilestone { ramp: keyof typeof RAMPS; phase: string; atLeast: number; claim: string }
+export const RAMP_MILESTONES: RampMilestone[] = [
+  { ramp: 'coverage',      phase: 'P3', atLeast: 0.20, claim: 'public coverage wave I opens' },
+  { ramp: 'coverage',      phase: 'P6', atLeast: 0.85, claim: 'national public default coverage' },
+  { ramp: 'drugs',         phase: 'P2', atLeast: 0.15, claim: 'pharmacy utility first operation' },
+  { ramp: 'drugs',         phase: 'P6', atLeast: 0.90, claim: 'drug program deepened through P6' },
+  { ramp: 'drugs',         phase: 'P8', atLeast: 1.00, claim: 'drug program at full depth' },
+  { ramp: 'units',         phase: 'P4', atLeast: 0.20, claim: 'unit-network pilots running' },
+  { ramp: 'units',         phase: 'P8', atLeast: 0.95, claim: 'mature unit-network population share' },
+  { ramp: 'hospitals',     phase: 'P4', atLeast: 0.10, claim: 'hospital global-budget pilots running' },
+  { ramp: 'hospitals',     phase: 'P8', atLeast: 0.95, claim: 'mature hospital budget-migration share' },
+  { ramp: 'expansions',    phase: 'P7', atLeast: 0.60, claim: 'expanded benefits substantially built' },
+  { ramp: 'expansions',    phase: 'P8', atLeast: 1.00, claim: 'expanded benefits complete' },
+  { ramp: 'infra',         phase: 'P1', atLeast: 0.10, claim: 'infrastructure build under way' },
+  { ramp: 'costShareElim', phase: 'P8', atLeast: 1.00, claim: 'cost sharing fully eliminated' }
+];
 
 /* Benchmarks for the comparison panel (research/01, CP-FIN-015/016).
  * All are single-year or annualized federal-cost concepts - the UI explains

@@ -121,13 +121,22 @@ test('R248: every non-finite equation result is reported by ID and phase', () =>
   const found = equationTargetDiagnostics().nonFinite
     .map((c) => c.metric + '@' + c.phase)
     .sort();
-  // Known and documented, not tolerated silently: these eleven evaluate NaN at
-  // early phases. All eleven are dropped rather than published, because no
+  // Known and documented, not tolerated silently: these fourteen evaluate NaN
+  // at early phases. All fourteen are dropped rather than published, because no
   // rollout row exists at that phase. §S3 owns the equations themselves.
+  //
+  // Eleven until §S2 fixed the phase->index conversion (R226). P0 resolved ramp
+  // index 1 (Year 2) and now resolves index 0 (Year 1), where every build ramp
+  // is still zero, so KPP-B5, KPP-E3 and TPP-7.2 divide by a zero build state
+  // there too. Each of the three sits well before its own _phaseStart (P4, P5,
+  // P4), so none was ever going to be published.
   expect(found).toEqual([
     'KPP-B1@P0',
+    'KPP-B5@P0',
     'KPP-D7@P0',
+    'KPP-E3@P0',
     'KPP-TRUST1@P0',
+    'TPP-7.2@P0',
     'TPP-9.3@P0', 'TPP-9.3@P1', 'TPP-9.3@P2', 'TPP-9.3@P3',
     'TPP-9.5@P0', 'TPP-9.5@P1', 'TPP-9.5@P2', 'TPP-9.5@P3'
   ]);

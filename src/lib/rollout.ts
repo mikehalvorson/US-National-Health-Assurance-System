@@ -119,6 +119,18 @@ export const PHASES: Phase[] = [
   }
 ];
 
+/* ---- The phase -> year map ----------------------------------------------
+ * The single definition. Every module that needs a phase's anchor year
+ * imports this one; nothing re-derives it. Derived from PHASES above so a
+ * phase and its year cannot be edited apart.
+ *
+ * These are YEAR NUMBERS, 1-based: P0 is Year 1. Consumers that index a
+ * year-keyed array must convert; see phaseIndex() in equations.ts, which is
+ * the only place that conversion happens.
+ * ------------------------------------------------------------------------ */
+export const PHASE_YEAR: Record<string, number> = {};
+PHASES.forEach(function (p) { PHASE_YEAR[p.id] = p.year; });
+
 export const DOMAINS: string[][] = [
   ["Statute / governance",
     "Enact; constitute bodies",

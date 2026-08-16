@@ -26,7 +26,11 @@ export const CARE_SCENARIOS: CareScenario[] = [
     title: 'Health insurance premiums (family, per year)',
     todayInsured: { lo: 6850, hi: 6850, note: "worker's share of a $26,993 employer family premium" },
     todayUninsured: { lo: 0, hi: 0, note: 'no premium, and no coverage' },
-    nha: { amount: 0, fromYear: 2031, note: 'no premiums once your coverage wave migrates (Years 4–8); employers pay a payroll contribution instead' },
+    /* fromYear tracks the coverage ramp's first migrating year, which the
+       realignment of that ramp moved from 2031 to 2030. The card's own note
+       already said Years 4-8, and Year 4 is 2030, so the number now agrees
+       with the sentence beside it. Pinned by a self-test. */
+    nha: { amount: 0, fromYear: 2030, note: 'no premiums once your coverage wave migrates (Years 4–8); employers pay a payroll contribution instead' },
     source: 'KFF Employer Health Benefits Survey 2025',
     confidence: 'high'
   },

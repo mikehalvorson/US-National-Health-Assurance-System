@@ -70,6 +70,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/overview.ts',
   'src/lib/params.ts',
   'src/lib/path-chart.ts',
+  'src/lib/phase-map-check.ts',
   'src/lib/phase-targets.ts',
   'src/lib/quality-data.ts',
   'src/lib/quality.ts',

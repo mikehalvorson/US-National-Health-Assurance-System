@@ -39,6 +39,7 @@ import type { BuiltRamps } from './model';
 import type { SampledParams, PathResult } from './model-types';
 import type { QualityData, QualityParameter } from './quality-data';
 import { parseNum, withNum } from './phase-targets';
+import { PHASE_YEAR } from './rollout';
 
 /* ---- Expression tree ---------------------------------------------------- */
 export type RampId = 'cov' | 'cs' | 'unit' | 'drug' | 'hosp' | 'exp' | 'inf';
@@ -127,10 +128,18 @@ function covN(): ExprNode { return dv(r('cov'), n(0.99, 'mature public coverage 
 function unitN(): ExprNode { return dv(r('unit'), n(0.95, 'mature unit-network population share')); }
 function hospN(): ExprNode { return dv(r('hosp'), n(0.95, 'mature hospital budget-migration share')); }
 
-/* ---- Phase map: ramp index = the phase's anchor year -------------------- */
-export const PHASE_T: Record<string, number> = {
-  P0: 1, P1: 2, P2: 3, P3: 4, P4: 6, P5: 7, P6: 8, P7: 10, P8: 12
-};
+/* ---- Phase -> ramp index -------------------------------------------------
+ * The map itself lives in rollout.ts and is imported, not re-derived. What
+ * belongs here is the CONVERSION, and this is the only place it happens.
+ *
+ * PHASE_YEAR holds 1-based year NUMBERS (P0 = Year 1). Every array the
+ * evaluator indexes - the policy ramps in params.ts and the fiscal engine's
+ * path.detail rows - is 0-based on the same calendar, so index 0 is Year 1
+ * is 2027. The evaluator's `t` is therefore always an index, never a year.
+ * ------------------------------------------------------------------------ */
+export function phaseIndex(phase: string): number {
+  return PHASE_YEAR[phase] - 1;
+}
 export const EQ_PHASES = ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
 
 /* ---- Leaf metadata for rendering and diagrams --------------------------- */
@@ -1130,18 +1139,25 @@ function rampAt(ctx: ScnCtx, id: RampId, t: number): number {
   return arr[Math.min(t, arr.length - 1)] || 0;
 }
 function modelAt(ctx: ScnCtx, id: ModelId, t: number): number {
-  if (id === 'year') return t;
+  /* `t` is a 0-based index; a rollout year is 1-based. */
+  if (id === 'year') return t + 1;
   if (id === 'util') {
     const cds = ctx.P.coverageDemandShare;
     return 1 + (ctx.P.utilIncrease / 100) *
       (cds * rampAt(ctx, 'cov', t) + (1 - cds) * rampAt(ctx, 'cs', t));
   }
   if (id === 'trainProg') {
+    /* Cumulative share of the infrastructure build completed by index t.
+       The denominator spans the rollout horizon - index 0 (Year 1) through
+       the P8 anchor - so progress reaches exactly 1.0 at maturity. Both
+       bounds are derived, never typed, so they follow if the horizon moves. */
     const inf = ctx.ramps.infra;
+    const last = Math.min(phaseIndex('P8'), inf.length - 1);
     let cum = 0, tot = 0;
-    for (let i = 1; i <= 12; i++) {
-      tot += inf[i] || 0;
-      if (i <= t) cum += inf[i] || 0;
+    for (let i = 0; i <= last; i++) {
+      const v = inf[i] || 0;
+      tot += v;
+      if (i <= t) cum += v;
     }
     return tot > 0 ? cum / tot : 0;
   }
@@ -1177,7 +1193,7 @@ function evalExpr(x: ExprNode, scenarioId: string, t: number, stack: Record<stri
     case 'pow': return Math.pow(evalExpr(x.a, scenarioId, t, stack), evalExpr(x.b, scenarioId, t, stack));
     case 'min': return Math.min.apply(null, x.args.map(function (a) { return evalExpr(a, scenarioId, t, stack); }));
     case 'max': return Math.max.apply(null, x.args.map(function (a) { return evalExpr(a, scenarioId, t, stack); }));
-    case 'base8': return evalExpr(x.of, 'SCN-BASE', 12, stack);
+    case 'base8': return evalExpr(x.of, 'SCN-BASE', phaseIndex('P8'), stack);
     case 'basep': return evalExpr(x.of, 'SCN-BASE', t, stack);
   }
 }
@@ -1199,17 +1215,17 @@ export function evaluateEquation(
   return v;
 }
 export function evaluateAtPhase(id: string, scenarioId: string, phase: string): number {
-  return evaluateEquation(id, scenarioId, PHASE_T[phase]);
+  return evaluateEquation(id, scenarioId, phaseIndex(phase));
 }
 /* Leaf values for the visualizer's input legend */
 export function paramValueAt(scenarioId: string, paramId: string): number {
   return scnCtx(scenarioId).P[paramId];
 }
 export function rampValueAt(scenarioId: string, rampId: RampId, phase: string): number {
-  return rampAt(scnCtx(scenarioId), rampId, PHASE_T[phase]);
+  return rampAt(scnCtx(scenarioId), rampId, phaseIndex(phase));
 }
 export function modelValueAt(scenarioId: string, modelId: ModelId, phase: string): number {
-  return modelAt(scnCtx(scenarioId), modelId, PHASE_T[phase]);
+  return modelAt(scnCtx(scenarioId), modelId, phaseIndex(phase));
 }
 
 /* ---- Formatting --------------------------------------------------------- */
