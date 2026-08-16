@@ -32,6 +32,7 @@ import {
 } from './gate-floors';
 import { DATA_PHASE_COUNTS, DATA_PHASE_GAPS, DATA_PHASES } from './data-phases';
 import { methodologyCountsAgree, methodologyDrift } from './methodology-check';
+import { TOOLCHAINS, toolchainDrift, toolsInManifest } from './toolchain-check';
 import {
   declaredDispositions, legislationStyleDrift, styledDispositions, STYLED_BY_BASE_RULE
 } from './style-check';
@@ -415,6 +416,31 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !clashes.length,
           note: clashes.map((c) => c.paramId + '@' + c.phase + ': ' + c.gates.join(' and '))
             .join(' | ') || 'G4 and G5 share P8 but no parameter; every floor keeps its gate'
+        };
+      })
+    ]
+  },
+  {
+    /* R131 [§S2]: the repo carried two extractors doing one job in two
+       languages because nothing stated which runtime a tool needs. The port was
+       validated against its original and the duplicate is gone; this keeps the
+       statement that replaced it exhaustive, against the manifest rather than
+       against a list kept by hand. */
+    surface: 'toolchain-check.ts',
+    rows: () => [
+      runGuarded('Every tool in tools/ runs on a documented toolchain', () => {
+        const d = toolchainDrift();
+        const parts: string[] = [];
+        if (d.undeclared.length) parts.push('no declared runtime: ' + d.undeclared.join(', '));
+        if (d.stale.length) parts.push('declared but absent: ' + d.stale.join(', '));
+        if (d.unexplained.length) parts.push('entry says nothing: ' + d.unexplained.join(', '));
+        return {
+          ok: !parts.length,
+          note: parts.join(' | ') || toolsInManifest().length + ' files in tools/, ' +
+            TOOLCHAINS.filter((t) => t.runtime === 'node').length + ' node, ' +
+            TOOLCHAINS.filter((t) => t.runtime === 'python').length + ' python, ' +
+            TOOLCHAINS.filter((t) => t.runtime === 'powershell').length + ' powershell, ' +
+            TOOLCHAINS.filter((t) => t.runtime === 'data').length + ' data'
         };
       })
     ]

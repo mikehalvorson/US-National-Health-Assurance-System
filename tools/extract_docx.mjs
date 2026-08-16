@@ -1,10 +1,25 @@
 #!/usr/bin/env node
 /**
- * Node port of tools/extract_docx.py, for machines without a Python interpreter.
- * Same transform, same summary block, same output bytes.
+ * Extract a .docx to greppable, diffable text WITHOUT losing table structure.
  *
  * Usage:  node tools/extract_docx.mjs <input.docx> <output.md>
- * Node stdlib only (zlib + fs). No npm install.
+ * Node stdlib only (zlib + fs). No npm install, no Python.
+ *
+ * R131 [S2]: this began as a port of tools/extract_docx.py, which was committed
+ * having never been run, so nothing had ever checked the port against its
+ * original. Running both on all three .docx files in the repo settled it: the
+ * content is byte for byte identical, and the only divergence is line endings -
+ * Python's text-mode write translates 
+ to 
+ on Windows, this writes 
+.
+ * On the framework document that is 1,614,507 bytes against 1,598,905, equal
+ * after normalising newlines; the identifier, line and table-row counts agree
+ * exactly on every file. The Python original is deleted rather than kept as a
+ * second implementation of one job: package.json pins Node 22 through Volta, so
+ * Node is the runtime the repo can assume. The two generators that need
+ * python-docx remain Python; which runtime each tool needs is declared in
+ * src/lib/toolchain-check.ts and gated by a self-test.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";

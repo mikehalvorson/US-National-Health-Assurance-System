@@ -54,6 +54,17 @@ ZIP central directory reader in place of `zipfile`.
 `tools/build_canonical_registries.mjs` is also committed so the two canonical CSVs
 regenerate from the extract rather than existing as hand transcription.
 
+> **Settled 2026-08-16 (R131).** CPython is installed now, so `extract_docx.py` was run
+> for the first time and compared against the port. On all three `.docx` files the two
+> produce identical content, and the only divergence is line endings: Python's text-mode
+> write translates `
+` to `
+` on Windows, the port writes `
+`. The port is
+> faithful, and `extract_docx.py` is deleted rather than kept as a second implementation
+> of one job. The paragraphs above are left as the record of what was true at Task Zero.
+> Which runtime each remaining tool needs is declared in `src/lib/toolchain-check.ts`.
+
 ## 2. Canonical registry row counts
 
 | File | Rows | Families |
@@ -275,8 +286,8 @@ the document does not claim for itself. It is authoritative for parameter *defin
 
 | Path | Contents |
 |---|---|
-| `tools/extract_docx.py` | Specified stdlib extractor, committed as given, not executed here |
-| `tools/extract_docx.mjs` | Node port that produced both extracts |
+| `tools/extract_docx.py` | Specified stdlib extractor, committed as given, not executed here. Run and validated against the port in 2026-08, then deleted (R131) |
+| `tools/extract_docx.mjs` | Node port that produced both extracts; the surviving extractor |
 | `tools/build_canonical_registries.mjs` | Regenerates both canonical CSVs from the Source Package extract |
 | `research/source_package_extract.md` | Source Package as greppable text |
 | `research/framework_v2_extract.md` | Framework v2.0.0 as greppable text |
