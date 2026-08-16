@@ -1,6 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R262 [§S2]: the benefit's start year is read off the roadmap, not typed.
+   It used to say 2026 - before the model's Year 1 and ten years before the
+   phase that carries long-term care. */
+import { LTC_BENEFIT_PHASE } from '../lib/rollout';
+import { START_YEAR } from '../lib/params';
+const ltcPhase = LTC_BENEFIT_PHASE!;
+const ltcStartYear = START_YEAR + ltcPhase.year - 1;
 ---
 <BaseLayout title="National Health Assurance: Long-Term Care">
   <main>
@@ -164,11 +171,18 @@ import ChapterNav from '../components/ChapterNav.astro';
       needs by 2034 just to keep pace with aging, and how many a universal
       home-first benefit needs once it matures and reaches people now turned
       away. The year 2034 is the end of the latest ten-year federal projection
-      window (2024 to 2034), and it is also about eight years into a benefit that
-      begins in 2026. A separate, larger figure, roughly 9.7 million, counts every
-      hire needed across the whole decade including all the workers who leave and
-      must be replaced; that is a flow of job openings, not a headcount at any one
-      time, so it is described here rather than drawn as a bar.</p>
+      window (2024 to 2034), which is why the middle bar sits there: it is the
+      current system's own need, measured on the federal window, with no
+      universal benefit in it. The universal benefit starts later. The roadmap
+      places long-term care in {ltcPhase.id}, Year {ltcPhase.year}, which on an
+      enactment-in-{START_YEAR} clock is {ltcStartYear} - two years after the
+      projection window closes. So the third bar is not a 2034 quantity at all;
+      it is the level the workforce has to reach once the benefit matures, and
+      nothing here claims the country gets there by 2034. A separate, larger
+      figure, roughly 9.7 million, counts every hire needed across the whole
+      decade including all the workers who leave and must be replaced; that is a
+      flow of job openings, not a headcount at any one time, so it is described
+      here rather than drawn as a bar.</p>
     <div class="ltc-workforce-assess">
       <h3>How this squares with the Workforce and immigration plans</h3>
       <p>The Workforce model sizes the direct-care aide workforce as its

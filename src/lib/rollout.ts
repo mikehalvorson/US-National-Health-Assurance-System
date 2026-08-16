@@ -185,6 +185,28 @@ export const ROLLOUT_HEADLINES: RolloutHeadline[] = [
    Three of them stated it independently and one of the three disagreed. */
 export const EXPANSION_SPAN = yearSpan('P7', 'P8');
 
+/* ---- Benefit start years, derived --------------------------------------
+ * R262 [§S2]: the LTC chapter stated that the long-term-care benefit "begins
+ * in 2026" - before the model's Year 1 and ten years before the roadmap
+ * places it - and used that date to justify its workforce horizon. A page
+ * should not be able to type a benefit's start year at all, so the phase
+ * that carries the benefit is looked up here and the calendar year comes
+ * from the anchor.
+ *
+ * `startYearOfWork` finds the phase whose work list mentions the benefit, so
+ * the answer moves if the roadmap moves.
+ * ------------------------------------------------------------------------ */
+export function phaseCarryingWork(fragment: string): Phase | null {
+  const needle = fragment.toLowerCase();
+  for (const p of PHASES) {
+    if (p.work.some((w) => w.toLowerCase().includes(needle))) return p;
+  }
+  return null;
+}
+
+/* The long-term-care benefit's phase, by the roadmap's own words. */
+export const LTC_BENEFIT_PHASE = phaseCarryingWork('long-term care');
+
 export const DOMAINS: string[][] = [
   ["Statute / governance",
     "Enact; constitute bodies",

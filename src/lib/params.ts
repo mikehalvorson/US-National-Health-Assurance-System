@@ -59,6 +59,34 @@ export const START_YEAR = 2027;
 export const END_YEAR = 2042;
 export const PRE_YEARS = 4; // 2023 -> 2027 growth applied before Year 1
 
+/* ---- The calendar anchor, stated once ------------------------------------
+ * R256 [§S2]: the phase years ARE calendar-anchored, and the repository
+ * behaved as though they were long before it said so. model.ts computes
+ * `year = START_YEAR + t` and runs 2027-2042; the care cards publish calendar
+ * years a reader can plan around; the health chapter's year chips say
+ * "assuming enactment in 2027". Against that, the rollout chapter carried a
+ * note saying year numbers "do not assign a calendar start date" - a single
+ * page denying an anchor that four other modules had already published.
+ *
+ * The anchor wins, because it is what the model computes. What the rollout
+ * note was reaching for is true and is kept: an anchor is an assumption about
+ * enactment, and a failed readiness gate moves the calendar date a phase
+ * lands on. That is a different claim from having no anchor at all.
+ *
+ * Every chapter that needs to say this imports the sentence. Nothing restates
+ * it, and a self-test fails the build if a page denies it.
+ * ------------------------------------------------------------------------ */
+export const CALENDAR_ANCHOR_NOTE =
+  'Year 1 is calendar ' + START_YEAR + ', the assumed enactment year, and every ' +
+  'phase year on this site is counted from it. The anchor is an assumption ' +
+  'about when enactment happens, not a deadline: an independent readiness gate ' +
+  'can hold, resize, or roll back a wave, which moves the calendar date a phase ' +
+  'lands on rather than the order the phases run in.';
+
+/* The claim this replaced. Pinned so it cannot come back on any page while
+   the rest of the site publishes calendar dates. */
+export const CALENDAR_ANCHOR_DENIAL = 'do not assign a calendar start date';
+
 /* Framework's own claim, for comparison display only (never a target).
  * Stated in real 2024 dollars. */
 export const FRAMEWORK_CLAIM = { mode: 4750, low: 4300, high: 5250 };

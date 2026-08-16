@@ -27,13 +27,15 @@
  *
  * These checks read no files, so nothing needs memoising.
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { EXPANSION_SPAN, PHASE_YEAR, PHASES, ROLLOUT_HEADLINES } from './rollout';
+import {
+  EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, PHASES, ROLLOUT_HEADLINES
+} from './rollout';
 import { DATA_PHASES, DATA_PHASE_YEARS_AS_GENERATED } from './data-phases';
-import { RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
+import { CALENDAR_ANCHOR_DENIAL, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
 import { CARE_SCENARIOS } from './care';
 import { phaseIndex, EQ_PHASES, modelValueAt, rampValueAt } from './equations';
 
@@ -181,7 +183,61 @@ export function expansionSpanDisagreements(root = REPO_ROOT): string[] {
   return out;
 }
 
-/* ---- 6. no module re-derives the map (R251) ---------------------------- */
+/* ---- 6. the calendar anchor is stated once, denied nowhere (R256) ------- */
+/* Every .astro page, so a denial cannot reappear on a chapter nobody is
+   looking at. Memoised: fourteen file reads, and vitest re-imports per file. */
+const PAGE_GLOB_DIR = 'src/pages';
+const pageCache = new Map<string, Array<{ page: string; text: string }>>();
+
+function pageTexts(root = REPO_ROOT): Array<{ page: string; text: string }> {
+  const hit = pageCache.get(root);
+  if (hit) return hit;
+  const dir = join(root, PAGE_GLOB_DIR);
+  const out = readdirSync(dir)
+    .filter((f) => f.endsWith('.astro'))
+    .map((f) => ({ page: PAGE_GLOB_DIR + '/' + f, text: readFileSync(join(dir, f), 'utf8') }));
+  pageCache.set(root, out);
+  return out;
+}
+
+export function calendarAnchorDenials(root = REPO_ROOT): string[] {
+  return pageTexts(root)
+    .filter((p) => p.text.includes(CALENDAR_ANCHOR_DENIAL))
+    .map((p) => p.page + ' denies the calendar anchor while the model publishes ' + START_YEAR);
+}
+
+/* ---- 7. no page types a benefit start year (R262) ---------------------- */
+export interface BenefitStartDrift { page: string; stated: number; phase: string; expected: number }
+
+/* The LTC chapter said the benefit "begins in 2026". The year is now derived
+   from the phase whose work list carries long-term care, so this checks the
+   derivation still resolves and that no page has typed a competing year. */
+export function ltcBenefitStartYear(): number {
+  if (!LTC_BENEFIT_PHASE) return NaN;
+  return START_YEAR + LTC_BENEFIT_PHASE.year - 1;
+}
+
+export function benefitStartDrift(root = REPO_ROOT): BenefitStartDrift[] {
+  const out: BenefitStartDrift[] = [];
+  if (!LTC_BENEFIT_PHASE) {
+    out.push({ page: 'rollout.ts', stated: NaN, phase: 'none', expected: NaN });
+    return out;
+  }
+  const expected = ltcBenefitStartYear();
+  /* Any calendar year a page attaches to the phrase "benefit that begins in". */
+  const TYPED = /benefit that begins in (\d{4})/g;
+  for (const p of pageTexts(root)) {
+    for (const m of p.text.matchAll(TYPED)) {
+      const stated = Number(m[1]);
+      if (stated !== expected) {
+        out.push({ page: p.page, stated, phase: LTC_BENEFIT_PHASE.id, expected });
+      }
+    }
+  }
+  return out;
+}
+
+/* ---- 8. no module re-derives the map (R251) ---------------------------- */
 /* A guard against the copies coming back. `rampValueAt` is exported for the
    visualizer's input legend and resolves through `phaseIndex` like everything
    else; if a second map appeared and a caller used it, this would disagree. */

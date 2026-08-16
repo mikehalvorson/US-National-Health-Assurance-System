@@ -18,11 +18,12 @@ import {
 } from './manifest-check';
 import { TABS } from './tabs';
 import { AGE_STRUCTURE, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
-import { EXPANSION_SPAN, PHASE_YEAR, ROLLOUT_HEADLINES } from './rollout';
+import { EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES } from './rollout';
 import {
-  calendarYearOf, expansionSpanDisagreements, phaseMapDrift, phasesWithoutYear,
-  phaseYearMismatches, premiumCardYearDrift, rampLegendDisagreements,
-  rampMilestoneMisses, rolloutHeadlineMisses, trainProgAtMaturity
+  benefitStartDrift, calendarAnchorDenials, calendarYearOf, expansionSpanDisagreements,
+  ltcBenefitStartYear, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
+  premiumCardYearDrift, rampLegendDisagreements, rampMilestoneMisses,
+  rolloutHeadlineMisses, trainProgAtMaturity
 } from './phase-map-check';
 import {
   gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
@@ -341,6 +342,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('One milestone is not described with two different spans', () => {
         const bad = expansionSpanDisagreements();
         return { ok: !bad.length, note: bad.join('; ') || 'expansion stated as ' + EXPANSION_SPAN + ' everywhere' };
+      }),
+      /* R256 */
+      runGuarded('No page denies the calendar anchor the model publishes', () => {
+        const bad = calendarAnchorDenials();
+        return { ok: !bad.length, note: bad.join('; ') || 'Year 1 = ' + START_YEAR + ', stated once' };
+      }),
+      /* R262 */
+      runGuarded('No page states a benefit start year its phase contradicts', () => {
+        const bad = benefitStartDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.page + ' says ' + b.stated + '; ' + b.phase + ' is ' + b.expected)
+            .join('; ') || 'long-term care begins ' + ltcBenefitStartYear() +
+            ' (' + (LTC_BENEFIT_PHASE ? LTC_BENEFIT_PHASE.id : '?') + ')'
+        };
       })
     ]
   },

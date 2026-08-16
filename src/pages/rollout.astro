@@ -5,6 +5,8 @@ import ChapterNav from '../components/ChapterNav.astro';
    against the ramps that deliver them; this page renders them, and does not
    restate any milestone year of its own. */
 import { ROLLOUT_HEADLINES } from '../lib/rollout';
+/* R256 [§S2]: the calendar anchor is stated in params.ts and referenced here. */
+import { CALENDAR_ANCHOR_NOTE } from '../lib/params';
 ---
 <BaseLayout title="National Health Assurance: Phased Rollout">
   <main>
@@ -28,8 +30,7 @@ import { ROLLOUT_HEADLINES } from '../lib/rollout';
     <div id="rollout-timeline" class="rollout-timeline"
       aria-label="Interactive twelve-year phase timeline"></div>
     <div id="rollout-detail" class="rollout-detail" aria-live="polite"></div>
-    <p class="note">Year numbers are relative implementation anchors. They do
-      not assign a calendar start date or override a failed readiness gate.</p>
+    <p class="note">{CALENDAR_ANCHOR_NOTE}</p>
   </section>
 
   <section class="card">
