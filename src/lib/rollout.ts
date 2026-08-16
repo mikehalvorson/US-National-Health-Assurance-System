@@ -207,6 +207,38 @@ export function phaseCarryingWork(fragment: string): Phase | null {
 /* The long-term-care benefit's phase, by the roadmap's own words. */
 export const LTC_BENEFIT_PHASE = phaseCarryingWork('long-term care');
 
+/* ---- Unit-network buildout steps ----------------------------------------
+ * R258 [§S2]: the buildout chart used to carry its five steps inline in
+ * rollout-client.ts, each with a `level` string that set the bar's height.
+ * Three were the readiness floors the page states in prose - 65%, 80%, 95%
+ * population coverage. The other two were "24%" and "34%", which appear
+ * nowhere else: not in the floors, not in the ramps, not in a comment. A
+ * `qual: true` flag restyled their fill, but height is the quantity channel
+ * on a bar chart, so a reader saw a bar at roughly a quarter scale on an
+ * axis where every other bar means population coverage.
+ *
+ * `coverage` is null for those two now. They are plotted off the axis at a
+ * fixed nominal height the stylesheet owns, behind a visible break, so
+ * nothing about them encodes a number. The three real steps keep their
+ * floors, and a self-test holds each to the floor the page states.
+ * ------------------------------------------------------------------------ */
+export interface UnitBuildoutStep {
+  value: string;
+  label: string;
+  phase: string;
+  /* population-coverage floor this step represents, or null when the step is
+     qualitative and belongs off the axis */
+  coverage: number | null;
+}
+
+export const UNIT_BUILDOUT_STEPS: UnitBuildoutStep[] = [
+  { value: 'Plan', label: 'standards, siting, workforce, prototypes', phase: 'P0–P3', coverage: null },
+  { value: 'Pilot', label: 'all four unit types in representative regions', phase: 'P4', coverage: null },
+  { value: '≥65%', label: 'population coverage by phase end', phase: 'P5', coverage: 65 },
+  { value: '≥80%', label: 'Gate 2 floor before broad $0 care', phase: 'P6', coverage: 80 },
+  { value: '≥95%', label: 'within access-time standard', phase: 'P8', coverage: 95 }
+];
+
 export const DOMAINS: string[][] = [
   ["Statute / governance",
     "Enact; constitute bodies",

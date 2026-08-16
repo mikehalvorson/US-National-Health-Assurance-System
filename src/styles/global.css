@@ -1087,9 +1087,20 @@ footer.site a { color: var(--text-muted); }
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px;
 }
 .buildout-panel h3 { font-size: 14px; margin-bottom: 13px; }
+/* R258: two off-axis steps, a break, then three plotted steps. The break is a
+   real column so the axis visibly starts after it. */
 .unit-ramp-chart {
-  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 14px repeat(3, minmax(0, 1fr));
   gap: 8px; align-items: stretch; margin: 4px 0 10px;
+}
+/* Off-axis steps encode no quantity, so their height is fixed here rather
+   than coming from the data. It is the bar's min-height, i.e. the shortest a
+   bar can be, so it cannot read as a point on the coverage scale. Changing
+   this number changes no reading. */
+.unit-ramp-step.off-axis .unit-ramp-bar { height: 40px; }
+.unit-ramp-break {
+  align-self: stretch; margin-bottom: 22px;
+  border-left: 2px dashed var(--gridline-strong);
 }
 .unit-ramp-step {
   display: flex; min-width: 0; flex-direction: column; gap: 5px;

@@ -23,7 +23,7 @@ import {
   benefitStartDrift, calendarAnchorDenials, calendarYearOf, expansionSpanDisagreements,
   ltcBenefitStartYear, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
   premiumCardYearDrift, rampLegendDisagreements, rampMilestoneMisses,
-  rolloutHeadlineMisses, trainProgAtMaturity
+  rolloutHeadlineMisses, trainProgAtMaturity, unitBuildoutIssues
 } from './phase-map-check';
 import {
   gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
@@ -347,6 +347,15 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('No page denies the calendar anchor the model publishes', () => {
         const bad = calendarAnchorDenials();
         return { ok: !bad.length, note: bad.join('; ') || 'Year 1 = ' + START_YEAR + ', stated once' };
+      }),
+      /* R258 */
+      runGuarded('No bar height encodes a number the page never states', () => {
+        const bad = unitBuildoutIssues();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.step + ': ' + b.problem).join('; ') ||
+            'three plotted steps match stated floors, two plotted off the axis'
+        };
       }),
       /* R262 */
       runGuarded('No page states a benefit start year its phase contradicts', () => {

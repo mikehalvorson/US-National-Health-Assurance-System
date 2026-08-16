@@ -32,7 +32,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, PHASES, ROLLOUT_HEADLINES
+  EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, PHASES, ROLLOUT_HEADLINES,
+  UNIT_BUILDOUT_STEPS
 } from './rollout';
 import { DATA_PHASES, DATA_PHASE_YEARS_AS_GENERATED } from './data-phases';
 import { CALENDAR_ANCHOR_DENIAL, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
@@ -237,7 +238,38 @@ export function benefitStartDrift(root = REPO_ROOT): BenefitStartDrift[] {
   return out;
 }
 
-/* ---- 8. no module re-derives the map (R251) ---------------------------- */
+/* ---- 8. no bar height encodes an invented number (R258) ---------------- */
+export interface BuildoutStepIssue { step: string; problem: string }
+
+/* The three plotted steps must each match a floor the rollout page states in
+   prose, and the two off-axis steps must carry no number at all. Both halves
+   matter: the invented 24% and 34% were the defect, and re-adding a number to
+   an off-axis step would put it back. */
+export function unitBuildoutIssues(root = REPO_ROOT): BuildoutStepIssue[] {
+  const out: BuildoutStepIssue[] = [];
+  const page = readFileSync(join(root, 'src/pages/rollout.astro'), 'utf8');
+  for (const step of UNIT_BUILDOUT_STEPS) {
+    const id = step.phase + ' · ' + step.value;
+    if (step.coverage === null) {
+      if (/\d/.test(step.value)) {
+        out.push({ step: id, problem: 'an off-axis step carries a number in its label' });
+      }
+      continue;
+    }
+    if (!page.includes(String(step.coverage) + '%')) {
+      out.push({
+        step: id,
+        problem: 'plots ' + step.coverage + '% and the page states no such floor'
+      });
+    }
+    if (!step.value.includes(String(step.coverage))) {
+      out.push({ step: id, problem: 'its label and its height disagree' });
+    }
+  }
+  return out;
+}
+
+/* ---- 9. no module re-derives the map (R251) ---------------------------- */
 /* A guard against the copies coming back. `rampValueAt` is exported for the
    visualizer's input legend and resolves through `phaseIndex` like everything
    else; if a second map appeared and a caller used it, this would disagree. */

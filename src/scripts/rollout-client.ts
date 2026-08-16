@@ -2,7 +2,9 @@
    matrix, unit-ramp + drug-pipeline buildouts, agency/gate/workstream grids.
    Port of docs/js/rollout.js:278-560. Runs on astro:page-load; idempotent
    via the timeline's dataset.wired guard. */
-import { PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS } from '../lib/rollout';
+import {
+  PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS, UNIT_BUILDOUT_STEPS
+} from '../lib/rollout';
 
 function renderTimeline(): void {
   const host = document.getElementById('rollout-timeline');
@@ -126,29 +128,33 @@ function renderDomainMatrix(): void {
   });
 }
 
-interface UnitStep { value: string; label: string; phase: string; level: string; qual?: boolean }
-
-function renderBuildouts(): void {
+/* R258 [§S2]: a step with `coverage: null` is not on the coverage axis, so it
+   gets no height from data - the stylesheet gives every off-axis step the same
+   nominal height, and a visible break separates them from the plotted ones. */
+function renderUnitRamp(): void {
   const ramp = document.getElementById('unit-ramp');
   if (!ramp) return;
   const chart = document.createElement('div');
   chart.className = 'unit-ramp-chart';
   chart.setAttribute('aria-hidden', 'true');
-  const unitSteps: UnitStep[] = [
-    { value: 'Plan', label: 'standards, siting, workforce, prototypes', phase: 'P0–P3', level: '24%', qual: true },
-    { value: 'Pilot', label: 'all four unit types in representative regions', phase: 'P4', level: '34%', qual: true },
-    { value: '≥65%', label: 'population coverage by phase end', phase: 'P5', level: '65%' },
-    { value: '≥80%', label: 'Gate 2 floor before broad $0 care', phase: 'P6', level: '80%' },
-    { value: '≥95%', label: 'within access-time standard', phase: 'P8', level: '95%' }
-  ];
-  unitSteps.forEach(function (step) {
+  UNIT_BUILDOUT_STEPS.forEach(function (step, i) {
+    const offAxis = step.coverage === null;
+    /* the break sits where the axis starts, between the last off-axis step
+       and the first plotted one */
+    const prev = UNIT_BUILDOUT_STEPS[i - 1];
+    if (!offAxis && prev && prev.coverage === null) {
+      const brk = document.createElement('div');
+      brk.className = 'unit-ramp-break';
+      brk.setAttribute('aria-hidden', 'true');
+      chart.appendChild(brk);
+    }
     const el = document.createElement('div');
-    el.className = 'unit-ramp-step';
+    el.className = 'unit-ramp-step' + (offAxis ? ' off-axis' : '');
     const plot = document.createElement('div');
     plot.className = 'unit-ramp-plot';
     const bar = document.createElement('div');
-    bar.className = 'unit-ramp-bar' + (step.qual ? ' qualitative' : '');
-    bar.style.setProperty('--level', step.level);
+    bar.className = 'unit-ramp-bar' + (offAxis ? ' qualitative' : '');
+    if (!offAxis) bar.style.setProperty('--level', step.coverage + '%');
     const value = document.createElement('div');
     value.className = 'unit-ramp-value';
     value.textContent = step.value;
@@ -165,7 +171,7 @@ function renderBuildouts(): void {
 
   const legend = document.createElement('div');
   legend.className = 'unit-ramp-legend';
-  unitSteps.forEach(function (step) {
+  UNIT_BUILDOUT_STEPS.forEach(function (step) {
     const item = document.createElement('div');
     item.className = 'unit-ramp-legend-item';
     const key = document.createElement('div');
@@ -173,13 +179,20 @@ function renderBuildouts(): void {
     key.textContent = step.phase + ' · ' + step.value;
     const text = document.createElement('div');
     text.className = 'unit-ramp-legend-text';
-    text.textContent = step.label;
+    text.textContent = step.coverage === null
+      ? step.label + ' (a stage of work, not a coverage level: plotted off the scale)'
+      : step.label;
     item.appendChild(key);
     item.appendChild(text);
     legend.appendChild(item);
   });
   ramp.appendChild(legend);
+}
 
+/* R260 [§S2]: its own function and its own guard. These two buildouts shared
+   one, and the `if (!ramp) return;` above sat over both - so a page without
+   #unit-ramp silently lost the medicines pipeline as well. */
+function renderDrugPipeline(): void {
   const pipeline = document.getElementById('drug-pipeline');
   if (!pipeline) return;
   ([
@@ -297,7 +310,8 @@ function initRollout(): void {
   timeline.dataset.wired = '1';
   renderTimeline();
   renderDomainMatrix();
-  renderBuildouts();
+  renderUnitRamp();
+  renderDrugPipeline();
   renderAgencies();
   renderGates();
   renderWorkstreams();
