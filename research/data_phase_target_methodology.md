@@ -158,6 +158,27 @@ Assess the complete mesh against the controlled maturity targets and keep unreso
 | Mature cyber and continuity | `TPP-11.2` - Downtime continuity success | ≥98% of downtime-continuity drills passed | >=98% drills passed | Framework | Controlled maturity target from the complete TPP dictionary. |
 | Mature cyber and continuity | `TPP-11.3` - Critical vulnerability remediation | ≥99% of critical vulnerabilities remediated within 15 days | >=99% within 15 days | Framework | Controlled maturity target from the complete TPP dictionary. |
 
+## Declared coverage gaps
+
+The register does not measure every metric in every phase. A metric appears in the phases where it is the evidence that phase turns on, so a metric can be published, absent for a phase or more, and published again.
+
+Absence is not relief from the target. Derivation rule 2 forbids a later phase relaxing an earlier one, so the last published floor remains the operative floor across the phases that do not restate it.
+
+Every metric whose coverage is interrupted is listed here with the reason. The generator refuses to write this document if a metric skips a phase that is not on this list.
+
+| Parameter | Phases not published | Reason |
+|---|---|---|
+| `KPP-A1` | P7 | P7 extends benefits to the population P6 already converted, so its own evidence is assessment timeliness and the expanded-benefit record measures rather than a restated coverage rate. |
+| `TPP-1.1` | P2 P4 P5 P6 P7 | Match accuracy is published where the matched population changes: the controlled foundation cohort at P1 and Wave I conversion at P3. P6 converts the rest of the population and publishes no identity measure, which is a gap in the register rather than a decision about identity. |
+| `TPP-10.1` | P2 P3 P4 P5 P7 | Registry verification is published when the registry's scope changes: the active pilot provider set at P1 and the national registry at P6. No phase between them republishes it. |
+| `TPP-10.2` | P4 P5 | P4 and P5 are the delivery pilots and their scale-up, and their record evidence is lab interoperability, discharge structuring and encounter completeness rather than the medication view. |
+| `TPP-10.5` | P2 P3 P4 P5 P6 | Correction closure is published at the prototype (P0), in the authoritative registry environment (P1), and again when expanded benefits add settings (P7). The pharmacy, coverage and delivery phases publish no correction measure. |
+| `TPP-10.6` | P3 P4 P5 P7 | Conformance is published where the endpoint population changes: reference endpoints at P1, pharmacy and medication endpoints at P2, and national conformance at P6. Wave I, the delivery pilots and the expanded-benefit phase add endpoints without republishing the figure. |
+| `TPP-11.1` | P4 P5 | The delivery pilots (P4) and delivery scale (P5) are the phases when hospitals, laboratories and units first depend on the rail, and neither publishes an uptime figure. P4's continuity evidence is the delivery-setting downtime exercise instead; P5 publishes no continuity measure at all. Filling the gap would mean proposing two availability numbers with no framework anchor behind them, and the controlled rollout carries a single entry for this parameter, at P8. |
+| `TPP-11.2` | P2 P3 P5 P6 P7 | Exercises are published where a new class of operation is first exercised: tabletop at P0, production-like registries at P1, delivery settings at P4, and the mature drill programme at P8. |
+| `TPP-11.3` | P3 P4 P5 P6 P7 | Remediation timeliness is published at the first live rail (P2) and at maturity (P8), two points a decade apart, with no phase between them republishing it. This is the sparsest trajectory in the register. |
+| `TPP-12.4` | P1 P2 P3 P4 P5 P6 | Public reporting is published for the foundation report set (P0) and again when expanded benefits widen what must be reported (P7). The phases between them publish appeals, correction and availability evidence instead. |
+
 ## Controlled sources
 
 - `National_Health_Assurance_Framework_v2.0.0_FINAL.pdf` - complete KPP and TPP dictionaries; controlled phase and gate tables.

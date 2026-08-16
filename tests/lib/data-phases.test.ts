@@ -1,13 +1,16 @@
 import { expect, test } from 'vitest';
-import { DATA_PHASES, DATA_PHASE_COUNTS } from '../../src/lib/data-phases';
+import { DATA_PHASES, DATA_PHASE_COUNTS, DATA_PHASE_GAPS } from '../../src/lib/data-phases';
 import {
+  coverageGapDrift,
   dataPhaseIdFormat,
   dataPhaseMetricIds,
   dataPhaseMonotonicity,
   dataPhaseTargetCount,
   frameworkBasisClaims,
   frameworkBasisDrift,
-  frameworkBasisEntries
+  frameworkBasisEntries,
+  measuredCoverageGaps,
+  unreasonedCoverageGaps
 } from '../../src/lib/data-phases-checks';
 
 /* R54 [§S0] — data-phases.ts ships metricCount: 26 and targetCount: 64 as
@@ -63,6 +66,33 @@ test('R117: wording differs from the catalog on sixteen of the seventeen', () =>
   const verbatim = frameworkBasisClaims().filter((c) => c.declared === c.catalogValue);
   expect(verbatim.length).toBeLessThan(frameworkBasisClaims().length);
   expect(frameworkBasisDrift()).toEqual([]);
+});
+
+/* R57 [§S2] — TPP-11.1 uptime is tracked at P1–P3 and P6–P8 and absent at P4 and
+   P5, the phases when hospitals, laboratories and units first depend on the
+   rail. Measuring the register found ten metrics with that shape, not one. */
+
+test('R57: every metric that skips a phase declares which phases and why', () => {
+  expect(coverageGapDrift()).toEqual([]);
+  expect(unreasonedCoverageGaps()).toEqual([]);
+});
+
+test('R57: the uptime gap the row filed is one of the declared ten', () => {
+  const uptime = DATA_PHASE_GAPS.find((g) => g.id === 'TPP-11.1')!;
+  expect(uptime.phases).toEqual(['P4', 'P5']);
+  expect(uptime.reason).toMatch(/P5 publishes no continuity measure at all/);
+  expect(measuredCoverageGaps().length).toBe(10);
+});
+
+test('R57: a metric gaining a gap is not silently absorbed', () => {
+  // The declarations are exact, both ways: TPP-10.2's gap is P4 and P5, so a
+  // check that only asked "is it declared at all" would pass a metric that
+  // stopped being published a phase earlier.
+  const gaps = new Map(DATA_PHASE_GAPS.map((g) => [g.id, g.phases.join('+')]));
+  for (const measured of measuredCoverageGaps()) {
+    expect(gaps.get(measured.id)).toBe(measured.phases.join('+'));
+  }
+  expect(gaps.size).toBe(measuredCoverageGaps().length);
 });
 
 test('R54: every phase carries an id, a year and at least one group', () => {

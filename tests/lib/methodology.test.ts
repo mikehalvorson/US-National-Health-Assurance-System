@@ -6,10 +6,11 @@ import { afterEach, expect, test } from 'vitest';
 import {
   methodologyCountsAgree,
   methodologyDrift,
+  renderedGapRows,
   renderedHeadings,
   renderedRows
 } from '../../src/lib/methodology-check';
-import { DATA_PHASE_COUNTS } from '../../src/lib/data-phases';
+import { DATA_PHASE_COUNTS, DATA_PHASE_GAPS } from '../../src/lib/data-phases';
 
 /* R107 [§S1] — research/data_phase_target_methodology.md is a rendering;
    tools/build_data_phase_targets.py is the source of truth. Before R114 the
@@ -20,6 +21,7 @@ import { DATA_PHASE_COUNTS } from '../../src/lib/data-phases';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const METHODOLOGY = join('research', 'data_phase_target_methodology.md');
+const GAPS_HEADING = '## Declared coverage gaps';
 const roots: string[] = [];
 
 function fixture(text: string): string {
@@ -67,6 +69,33 @@ test('R107: a document missing a whole phase is reported', () => {
 
 test('R107: a row count that no longer matches the data is reported', () => {
   const committed = readFileSync(join(REPO_ROOT, METHODOLOGY), 'utf8');
-  const drift = methodologyDrift(fixture(committed + renderedRows()[0] + '\n'));
+  // Inside the register: R57 gave the document a second table, and only the
+  // register describes the collection the declared counts describe.
+  const drifted = committed.replace(GAPS_HEADING, renderedRows()[0] + '\n\n' + GAPS_HEADING);
+  const drift = methodologyDrift(fixture(drifted));
   expect(drift.documentRowCount).toBe(drift.dataRowCount + 1);
+});
+
+/* R57 [§S2] — the declared coverage gaps are part of the same rendering. A
+   reason that exists in the payload and not in the document is drift. */
+
+test('R57: the committed document renders every declared coverage gap', () => {
+  expect(methodologyDrift().missingGapRows).toEqual([]);
+  expect(renderedGapRows()).toHaveLength(DATA_PHASE_GAPS.length);
+});
+
+test('R57: a gap row dropped from the document is reported', () => {
+  const committed = readFileSync(join(REPO_ROOT, METHODOLOGY), 'utf8');
+  const row = renderedGapRows().find((r) => r.includes('TPP-11.1'))!;
+  // Line-based: the generator writes platform line endings, so a raw string
+  // replace carrying '\n' misses the row on a Windows worktree.
+  const without = committed.split(/\r?\n/).filter((l) => l.trimEnd() !== row).join('\n');
+  const drift = methodologyDrift(fixture(without));
+  expect(drift.missingGapRows).toEqual([row]);
+  // The register's own count is untouched by a change to the other table.
+  expect(drift.documentRowCount).toBe(drift.dataRowCount);
+});
+
+test('R57: the gaps table does not inflate the phase target count', () => {
+  expect(methodologyDrift().documentRowCount).toBe(DATA_PHASE_COUNTS.targetCount);
 });

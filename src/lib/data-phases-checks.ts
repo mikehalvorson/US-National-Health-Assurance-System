@@ -9,7 +9,7 @@
  * "Fidelity-critical: do not re-derive"; the data stays untouched and the
  * assertions live next to it.
  */
-import { DATA_PHASES } from './data-phases';
+import { DATA_PHASES, DATA_PHASE_GAPS } from './data-phases';
 import type { DataMetric } from './data-phases';
 import { parseNum } from './phase-targets';
 import { QUALITY_DATA } from './quality';
@@ -130,6 +130,66 @@ export function frameworkBasisClaims(): FrameworkClaim[] {
 
 export function frameworkBasisDrift(): FrameworkClaim[] {
   return frameworkBasisClaims().filter((c) => c.problem !== '');
+}
+
+/* R57 [§S2]: a metric that stops being published and starts again must say why.
+ *
+ * The row filed one case - TPP-11.1 uptime, tracked at P1-P3 and P6-P8, absent
+ * at P4 and P5, which are the phases when hospitals, laboratories and units
+ * first depend on the rail. Measuring the register found nine more metrics with
+ * the same shape, so the remedy is a rule and not a paragraph.
+ *
+ * The generator owns the declarations and refuses to write data-phases.ts if
+ * one is missing or stale. This recomputes the gaps from the shipped payload,
+ * so the two cannot drift apart and a hand edit to the generated file fails the
+ * build rather than publishing an unexplained gap. */
+export interface CoverageGapDrift {
+  id: string;
+  measured: string[];
+  declared: string[] | null;
+}
+
+export function measuredCoverageGaps(): Array<{ id: string; phases: string[] }> {
+  const order = DATA_PHASES.map((p) => p.id);
+  const seen = new Map<string, number[]>();
+  DATA_PHASES.forEach((phase, index) => {
+    for (const group of phase.groups) {
+      for (const metric of group.metrics) {
+        seen.set(metric.id, [...(seen.get(metric.id) || []), index]);
+      }
+    }
+  });
+
+  const out: Array<{ id: string; phases: string[] }> = [];
+  for (const [id, indexes] of seen) {
+    const missing: string[] = [];
+    for (let i = Math.min(...indexes); i <= Math.max(...indexes); i += 1) {
+      if (!indexes.includes(i)) missing.push(order[i]);
+    }
+    if (missing.length) out.push({ id: id, phases: missing });
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function coverageGapDrift(): CoverageGapDrift[] {
+  const declared = new Map(DATA_PHASE_GAPS.map((g) => [g.id, g] as const));
+  const out: CoverageGapDrift[] = [];
+
+  for (const gap of measuredCoverageGaps()) {
+    const match = declared.get(gap.id);
+    if (!match || match.phases.join() !== gap.phases.join()) {
+      out.push({ id: gap.id, measured: gap.phases, declared: match ? match.phases : null });
+    }
+  }
+  const measured = new Set(measuredCoverageGaps().map((g) => g.id));
+  for (const gap of DATA_PHASE_GAPS) {
+    if (!measured.has(gap.id)) out.push({ id: gap.id, measured: [], declared: gap.phases });
+  }
+  return out;
+}
+
+export function unreasonedCoverageGaps(): string[] {
+  return DATA_PHASE_GAPS.filter((g) => g.reason.trim().length < 40).map((g) => g.id);
 }
 
 export interface Regression {

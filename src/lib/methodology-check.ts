@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { DATA_PHASES, DATA_PHASE_COUNTS } from './data-phases';
+import { DATA_PHASES, DATA_PHASE_COUNTS, DATA_PHASE_GAPS } from './data-phases';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const METHODOLOGY = 'research/data_phase_target_methodology.md';
@@ -47,6 +47,14 @@ export function renderedRows(): string[] {
   return out;
 }
 
+/* R57 [§S2]: the declared coverage gaps render as their own table, so the
+   document a reader opens carries the reason a metric stops being published. */
+export function renderedGapRows(): string[] {
+  return DATA_PHASE_GAPS.map(
+    (g) => '| ' + ['`' + g.id + '`', g.phases.join(' '), g.reason].map(cell).join(' | ') + ' |'
+  );
+}
+
 export function renderedHeadings(): string[] {
   return DATA_PHASES.map(
     (p) => '### ' + p.id + ' - Year ' + p.year + ': ' + p.title
@@ -55,9 +63,22 @@ export function renderedHeadings(): string[] {
 
 export interface MethodologyDrift {
   missingRows: string[]; /* rendered from the data, absent from the document */
+  missingGapRows: string[];
   missingHeadings: string[];
   documentRowCount: number;
   dataRowCount: number;
+}
+
+/* The document holds more than one table now, and only the phase target
+   register describes the collection the declared counts describe. Counting
+   every row in the file made the coverage-gap table read as eleven more phase
+   targets, so the count is taken from the register's own section. */
+function sectionLines(lines: string[], heading: string): string[] {
+  const start = lines.indexOf(heading);
+  if (start < 0) return [];
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((l) => l.startsWith('## '));
+  return end < 0 ? rest : rest.slice(0, end);
 }
 
 const cache = new Map<string, MethodologyDrift>();
@@ -70,13 +91,14 @@ export function methodologyDrift(root = REPO_ROOT): MethodologyDrift {
   const present = new Set(lines);
 
   /* Data rows only: the header and the |---| separator are not metrics. */
-  const documentRowCount = lines.filter(
+  const documentRowCount = sectionLines(lines, '## Phase target register').filter(
     (l) => l.startsWith('| ') && !l.startsWith('|---') && !l.startsWith('| Data-tab section ')
   ).length;
 
   const rows = renderedRows();
   const result: MethodologyDrift = {
     missingRows: rows.filter((r) => !present.has(r)),
+    missingGapRows: renderedGapRows().filter((r) => !present.has(r)),
     missingHeadings: renderedHeadings().filter((h) => !present.has(h)),
     documentRowCount: documentRowCount,
     dataRowCount: rows.length

@@ -29,14 +29,15 @@ import {
   gateFloorChecks, gateFloorCollisions, gateFloorDrift, gatePhaseDrift,
   KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
 } from './gate-floors';
-import { DATA_PHASE_COUNTS, DATA_PHASES } from './data-phases';
+import { DATA_PHASE_COUNTS, DATA_PHASE_GAPS, DATA_PHASES } from './data-phases';
 import { methodologyCountsAgree, methodologyDrift } from './methodology-check';
 import {
   declaredDispositions, legislationStyleDrift, styledDispositions, STYLED_BY_BASE_RULE
 } from './style-check';
 import {
-  dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
-  dataPhaseTargetCount, frameworkBasisClaims, frameworkBasisDrift, frameworkBasisEntries
+  coverageGapDrift, dataPhaseIdFormat, dataPhaseMetricIds, dataPhaseMonotonicity,
+  dataPhaseTargetCount, frameworkBasisClaims, frameworkBasisDrift, frameworkBasisEntries,
+  unreasonedCoverageGaps
 } from './data-phases-checks';
 
 /* R248 [§S0]: two detectors, because the row's own instrument only sees one of
@@ -476,6 +477,23 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         const n = frameworkBasisEntries().length;
         return { ok: n === 17, note: n + ' entries carry basis: framework' };
       }),
+      /* R57 [§S2]: TPP-11.1 uptime is tracked at P1-P3 and P6-P8 and absent at
+         P4 and P5 - the phases when hospitals, laboratories and units first
+         depend on the rail. Nine more metrics have the same shape. Each one now
+         carries a declared reason, and this recomputes the gaps from the
+         payload so a new silent gap fails the build. */
+      runGuarded('Every interrupted metric declares the phases it skips', () => {
+        const drift = coverageGapDrift();
+        const thin = unreasonedCoverageGaps();
+        const parts = drift.map((d) => d.id + ' misses ' + (d.measured.join('+') || 'nothing') +
+          ', declares ' + (d.declared ? d.declared.join('+') : 'nothing'));
+        if (thin.length) parts.push('reason too thin to be one: ' + thin.join(', '));
+        return {
+          ok: !parts.length,
+          note: parts.join(' | ') || DATA_PHASE_GAPS.length + ' of ' +
+            DATA_PHASE_COUNTS.metricCount + ' metrics skip a phase, each with its reason'
+        };
+      }),
       /* R117 [§S2]: the generator checks that `basis` is spelled from its
          vocabulary and never that the claim is true. A framework basis asserts
          the framework fixed this number at this phase, and the catalog entry it
@@ -531,10 +549,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         if (d.missingRows.length) {
           parts.push(d.missingRows.length + ' rows absent, first: ' + d.missingRows[0].slice(0, 90));
         }
+        /* R57 [§S2]: the declared gaps are part of the rendering too, so a
+           reason that exists only in the payload fails the same way. */
+        if (d.missingGapRows.length) {
+          parts.push(d.missingGapRows.length + ' coverage-gap rows absent, first: ' +
+            d.missingGapRows[0].slice(0, 90));
+        }
         return {
           ok: !parts.length,
           note: parts.join(' | ') ||
-            d.dataRowCount + ' rows and ' + DATA_PHASES.length + ' phase headings match'
+            d.dataRowCount + ' rows, ' + DATA_PHASE_GAPS.length + ' declared gaps and ' +
+            DATA_PHASES.length + ' phase headings match'
         };
       }),
       runGuarded('Methodology row count equals the declared target count', () => {
