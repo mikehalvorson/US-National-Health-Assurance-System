@@ -421,3 +421,204 @@ HARNESS: `python check_audit_docs.py` → 35 passed, 0 failed, exit 0
 BUILD: `astro build` passes, 44 of 44, 14 pages · `pnpm test` 227 tests, 52 files,
   green · `tsc --noEmit` clean · `astro check` 0 errors, 0 warnings, 3 pre-existing
   hints
+
+---
+
+## P3 — §S2 Phase → year: ramps, anchors, calendar · 2026-08-14 to 2026-08-16 · branch `nha-remediation`
+STATUS: complete — all 16 recommendations landed across 8 commits
+
+ENTRY GATE: `## P1` and `## P2` both `STATUS: complete` ✅ · a broken invariant fails
+  `astro build` (proven eight times in P2, and eight more times here) ✅ · `README.md`
+  no longer instructs a `docs/` deploy ✅ · the `## P0` entry names both dumps and
+  `NHA-Mental-Health/baseline-P0/` holds them ✅ · `check_audit_docs.py` 35/35 exit 0 ✅
+  · `git status` clean ✅
+
+  Pre-section dumps were taken fresh at `NHA-Mental-Health/baseline-P3/`
+  (`preP3-*.json`) and are **byte-identical to the P0 baseline** on both the interim
+  targets and the criticality ranking, which independently confirms P1 and P2 moved
+  no published output.
+
+LANDED:
+  - `c36badd` `R226` + `R251` + `R293` + `R234` + `R133` — one phase map, one
+    conversion, ramps that land on it
+  - `16a5b15` `R255` — rollout headline tiles derived from the ramps
+  - `3d67812` `R256` + `R262` — calendar anchor settled, LTC benefit start derived
+  - `ebacdcb` `R258` + `R260` — off-axis buildout steps, split guards
+  - `edba7d0` `R117` + `R121` — framework-basis claims checked, Gate 1 uncollapsed
+  - `faaa557` `R57` — declared coverage gaps
+  - `0ad6e02` `R203` — declared offset ramp pairings
+  - `7b02f3d` `R123` + `R131` — index convention closed, two-toolchain split settled
+
+INTERIM TARGETS: **716 of the 1,170 computed cells moved.** 653 became **less
+  demanding** and 39 more demanding (21 carry no comparator, 3 moved in text only).
+  Diff harness: `NHA-Mental-Health/baseline-P3/dump.test.ts` run with
+  `DUMP_LABEL=postP3`. Both sides are kept there — `preP3-*.json` and
+  `postP3-*.json` — with `diffdump.py`, which produced every figure below.
+
+PUBLISHED TARGETS: **364 of the 727 published values changed. None was added or
+  removed.** A further 84 rows moved numerically without changing the rendered
+  string, so 448 of 727 computed values moved and 364 were visible to a reader. Of
+  the 448, **404 became less demanding and 29 more demanding** (15 carry no
+  comparator). This is `R226` landing exactly as `§BQ1` described it: every interim
+  target used to be read one year further along a monotone ramp than its own phase,
+  so correcting it lowers the ask nearly everywhere. **Nothing was tuned toward the
+  old values.**
+
+CRITICALITY RANKING: **996 of 1,037 positions changed, but only 74 records moved
+  more than 50 places** — the rest is reshuffling inside tie groups at equal scores.
+  **89 records changed RPN (58 down, 31 up)** and **49 changed band (28 down, 21
+  up)**. Total RPN 25,106 → 24,897 (−0.8%); the `extreme` band 236 → 230, `high`
+  362 → 369, `moderate` 377 → 374, `low` 62 → 64. Largest single move:
+  `FM-KPP-B3-P6`, rank 244 → 559.
+
+  **`R272`/`§BU1`'s prediction holds in both directions.** The Quality tab was
+  systematically optimistic and is now less so; the Risk chart was systematically
+  alarmed and is now slightly calmer. One bug, two chapters, opposite directions.
+
+HEADLINE FIGURES: **all five unchanged**, which `AT4` predicted and this confirms —
+  the bridge and `matureAtScale` read ramp indices that have plateaued by 2041, so a
+  one-slot correction cannot reach them.
+
+| Figure | before | after |
+|---|---|---|
+| mature-at-today's-scale (p50) | 5,245.17 | 5,245.17 |
+| steady-state total (p50) | 9,152.53 | 9,152.53 |
+| new revenue required (p50) | 3,337.62 | 3,337.62 |
+| per capita (p50) | 25,471.11 | 25,471.11 |
+| NHE share of GDP (p50) | 23.600% | 23.600% |
+| federal increase (p50) | 4,589.90 | 4,589.90 |
+| public share 2041 | 0.9306 | 0.9306 |
+
+CALENDAR ANCHOR: **the years ARE calendar-anchored, and the code won.** Four modules
+  already published the anchor (`model.ts` computes `year = START_YEAR + t`, `care.ts`
+  publishes calendar years, `health.astro`'s chips say "assuming enactment in 2027",
+  the README states 2027-2042) while one page denied it. It is now stated **once**, as
+  `CALENDAR_ANCHOR_NOTE` in `params.ts` beside `START_YEAR`, imported by the pages
+  that need it. What the denial was reaching for is kept: an anchor is an assumption
+  about enactment, and a readiness gate that holds a wave moves the calendar date a
+  phase lands on, not the numbering. A check scans all fourteen pages for the denial.
+
+LTC 2026: **resolved by derivation, not by editing the number.** `rollout.ts` gained
+  `phaseCarryingWork()`, which finds the phase whose work list carries a benefit;
+  long-term care resolves to P7 = Year 10 = **2036**. `ltc.astro`'s paragraph is
+  restated against that: 2034 is the end of the federal projection window, the benefit
+  starts two years after that window closes, and the mature bar is therefore not a
+  2034 quantity. `ltc.ts`'s 6.2M and 7.5M needed no re-derivation — it already labels
+  them "2034 baseline" and "at maturity"; only the prose made the false link.
+
+DISCREPANCY: ten, continuing P2's numbering. Seven were written up in the commit
+  bodies as they landed; three are from the closing rows.
+  - D20. `R133`'s "five of six policy ramps" names four. **There are seven ramps and
+    four lag.** `costShareElim`, which the row asks to be checked because `AG1`
+    depends on it, does **not** lag: its first relief lands Year 7 against a comment
+    claiming Year 8, so it is *early* against its own prose, and it reaches 1.00 at
+    slot 10, ahead of the P8 anchor. Not shifted. `drugs` and `infra` are correct as
+    authored.
+  - D21. The known non-finite set moved **11 → 14** (`KPP-B5@P0`, `KPP-E3@P0`,
+    `TPP-7.2@P0`). This is `R226` landing, not a regression: P0 used to resolve index
+    1 and now resolves index 0, where every build ramp is zero. All fourteen sit at a
+    phase earlier than their metric's `_phaseStart`, no rollout row exists at any of
+    them, and `nonFinitePublished` is still 0. Re-pinned in **both** `selftests.ts`
+    and `tests/lib/selftests.test.ts` — the list is duplicated there and they must
+    move together. **`§S3` (P4) still owns making them finite.**
+  - D22. `R255`'s "the tiles are a year ahead of what the ramps deliver" is true only
+    before `R133`. After it the coverage tile is exact; what remained was the
+    two-span split, which the row raises separately.
+  - D23. `R262` offers two readings — ten years early, or a superseded 2026 anchor.
+    **Neither holds.** Nothing in the repository uses a 2026 anchor; `START_YEAR` has
+    been 2027 throughout and the baseline is grown 2023-2026 before the clock starts,
+    so 2026 is the last PRE-rollout year. The sentence was arithmetic built on the
+    wrong end of that boundary.
+  - D24. `R258` groups its finding with `§BI`'s bar inversion and `AE3`'s colour
+    adjacency. **It is narrower than either**: the scale is not inverted and the bars
+    are already hatched in the baseline series colour. The single defect is a
+    qualitative step occupying a position on a quantitative axis.
+  - D25. `R121`'s premise that G4 and G5 "merge two gates' progression floors into one
+    rollout list" **does not hold**. Measured: G4 writes `KPP-C5` and `KPP-C6` at P8,
+    G5 writes `TPP-11.5` at P8 — the two gates share a phase but never a parameter,
+    and every emitted row keeps its `gate` field. The row's own test passed before the
+    commit and passes now. The real defect was the row's second half, the G1 collapse.
+  - D26. `R107`'s document row counter counted **every** table row in the methodology
+    document, so `R57`'s second table read as eleven more phase targets and broke the
+    declared-count check. It now counts within the phase target register's own
+    section. The committed count is unchanged at 64; the check was too broad.
+  - D27. `R117`'s test — *"every `basis:"framework"` target matches an entry in that
+    parameter's extracted rollout"* — **fails sixteen times if "matches" means string
+    equality, and all sixteen are false.** Measured: 17 framework entries, **zero**
+    match the catalog by string. Sixteen are prose restatements of one quantity
+    (`'>=98% API conformance'` against the catalog's `'>=98%'`), agreeing on
+    comparator and number every time. The check compares the parsed
+    (comparator, number, unit) triple. The seventeenth was real and is `R121`.
+  - D28. `R57` files one metric. **Ten of the twenty-six in the register have that
+    shape** — published, absent for a phase or more, published again. The remedy is a
+    rule rather than a paragraph.
+  - D29. `R131`'s test asks that the two extractors *"produce identical output"*. On
+    bytes they do **not**: Python's text-mode write emits CRLF on Windows and the port
+    emits LF, so the framework extract is 1,614,507 bytes against 1,598,905. **The
+    content is identical after normalising newlines, on all three `.docx` files**, and
+    every summary figure agrees exactly. The port is faithful; the row's instrument
+    was one layer too literal.
+
+BUILD GATES PROVEN (this session; the four earlier commits proved eight more the
+  same way, each named in its own message):
+  - recollapsed `PH-G1` to P4 only → exit 1, `G1 "Before P3 → P4" names P3+P4,
+    writes P4` **and** `TPP-2.1@P3 no framework entry at this phase` (R121, R117)
+  - changed a framework claim from ≥98% to ≥97% → exit 1, `TPP-10.6@P8 declares 97,
+    the catalog carries 98` (R117 — proves the number is compared, not just presence)
+  - gave `KPP-C5`'s P8 maturity row a second gate → exit 1, `KPP-C5@P8: G4 and G5`
+    (R121)
+  - deleted the P3 uptime target, widening a declared gap → generator `ValueError`,
+    `TPP-11.1 declares P4 P5, misses P3 P4 P5` (R57)
+  - hand-edited the generated declaration to cover only P4 → exit 1, `TPP-11.1 misses
+    P4+P5, declares P4` (R57 — proves the build gate, not just the generator)
+  - renamed the `offLowValue` declaration → build fails, `Offset offLowValue declares
+    no ramp pairing` (R203, thrown by `offsetRamp` before the row can report)
+  - emptied that pairing's reason → exit 1, `offLowValue declares no reason` (R203)
+  - added `tools/scratch_new_tool.mjs` → exit 1, `no declared runtime:
+    tools/scratch_new_tool.mjs` (R131)
+
+SELFTESTS: total **61** (P2 left 44)
+  44 → +6 R226/R251/R293/R234/R133 → +2 R255 → +2 R256/R262 → +1 R258/R260
+     → +3 R117/R121 → +1 R57 (its second half folded into R107's rendering row)
+     → +1 R203 → +1 R131
+CATALOG: `src/lib/quality-data.ts` regenerates from the controlled DOCX. `R121`
+  changes **exactly one parameter and adds exactly one row**: `TPP-2.1` gains its P3
+  progression floor. No count, gate, phase or other parameter moves.
+MANIFEST: **116 files** (115, +`toolchain-check.ts`, +`phase-map-check.ts`,
+  −`extract_docx.py`).
+PAGES: 14, unchanged.
+
+NEW FINDINGS (raised here, owned elsewhere):
+  - **`§S3` (P4) owns the 14 non-finite cells**, up from 11. See D21. The list is
+    duplicated in `src/lib/selftests.ts` and `tests/lib/selftests.test.ts` and the two
+    must be edited together.
+  - **`R81` (§S8) — `AG1` is now pinned by a test, not just measured.**
+    `costShareElim` reaches 1.00 at index 10 = 2037; the care cards promise `$0` from
+    2034, where a tenth of cost sharing has gone; the gap is exactly three years.
+    `tests/lib/params.test.ts` asserts all three, so closing the gap in §S8 requires a
+    deliberate edit here.
+  - **`units`' ramp comment claimed "65% pop P5 yr 7"** and the array reaches 0.55
+    there under every convention. The 65% figure belongs to the rollout page's
+    buildout steps, not to the model. Nobody owns it yet.
+  - **`R290` (§S12) is wider than it reads.** `TPP-11.3` is published at P2 and P8
+    only — two points a decade apart — against a flat `≥99%` headline tile with no
+    phase. That gap is now declared (`R57`), but the tile is still flat.
+  - `astro check` reports **3 hints**, all pre-existing, none from this section.
+
+CONTRADICTIONS: D20–D29 above. Seven are cases where the row's finding is real but
+  its premise, count or severity is not; two (`R117`, `R131`) are rows whose stated
+  test was wrong as an instrument; one (`R107`) is a check written in an earlier
+  section that this section's data broke. None required routing around.
+
+DOCUMENTS EDITED (outside the repo, so this entry is the record):
+  `CLAUDE_CODE_INSTRUCTIONS.md` — 16 `§S2` rows marked done with their sha; the `§S2`
+  section brief marked applied; `R81`, `R290` and `§S3`'s non-finite scope re-noted.
+  Pre-edit copy: `CLAUDE_CODE_INSTRUCTIONS.md.pre-P3.bak`.
+
+MUST STILL PASS: `V1` index 0 = Year 1 = 2027 ✅ (asserted three ways in
+  `params.test.ts`) · `V2` all three phase maps identical ✅ (now one definition and
+  two importers, with the equality check kept as drift prevention) · `V5` seventeen
+  framework-basis entries ✅
+HARNESS: `python check_audit_docs.py` → 35 passed, 0 failed, exit 0
+BUILD: `astro build` passes, 61 of 61, 14 pages · `pnpm test` 249 tests, 53 files,
+  green · `astro check` 0 errors, 0 warnings, 3 pre-existing hints
