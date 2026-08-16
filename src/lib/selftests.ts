@@ -18,10 +18,11 @@ import {
 } from './manifest-check';
 import { TABS } from './tabs';
 import { AGE_STRUCTURE, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
-import { PHASE_YEAR } from './rollout';
+import { EXPANSION_SPAN, PHASE_YEAR, ROLLOUT_HEADLINES } from './rollout';
 import {
-  calendarYearOf, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
-  premiumCardYearDrift, rampLegendDisagreements, rampMilestoneMisses, trainProgAtMaturity
+  calendarYearOf, expansionSpanDisagreements, phaseMapDrift, phasesWithoutYear,
+  phaseYearMismatches, premiumCardYearDrift, rampLegendDisagreements,
+  rampMilestoneMisses, rolloutHeadlineMisses, trainProgAtMaturity
 } from './phase-map-check';
 import {
   gateFloorChecks, gateFloorDrift, KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
@@ -326,6 +327,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('The ramp legend resolves the same index as the ramp array', () => {
         const bad = rampLegendDisagreements();
         return { ok: !bad.length, note: bad.join('; ') || 'all 9 phases agree' };
+      }),
+      /* R255 */
+      runGuarded('Every published milestone year is the year its ramp delivers', () => {
+        const miss = rolloutHeadlineMisses();
+        return {
+          ok: !miss.length,
+          note: miss.map((m) => m.label + '@' + m.phase + ': ' + m.why +
+            ' (' + m.got + ' vs ' + m.needed + ')').join('; ') ||
+            ROLLOUT_HEADLINES.filter((h) => h.ramp).length + ' ramp-backed tiles land'
+        };
+      }),
+      runGuarded('One milestone is not described with two different spans', () => {
+        const bad = expansionSpanDisagreements();
+        return { ok: !bad.length, note: bad.join('; ') || 'expansion stated as ' + EXPANSION_SPAN + ' everywhere' };
       })
     ]
   },

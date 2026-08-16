@@ -27,7 +27,11 @@
  *
  * These checks read no files, so nothing needs memoising.
  */
-import { PHASE_YEAR, PHASES } from './rollout';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { EXPANSION_SPAN, PHASE_YEAR, PHASES, ROLLOUT_HEADLINES } from './rollout';
 import { DATA_PHASES, DATA_PHASE_YEARS_AS_GENERATED } from './data-phases';
 import { RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
 import { CARE_SCENARIOS } from './care';
@@ -124,7 +128,60 @@ export function trainProgAtMaturity(): number {
   return modelValueAt('SCN-BASE', 'trainProg', 'P8');
 }
 
-/* ---- 5. no module re-derives the map (R251) ---------------------------- */
+/* ---- 5. published milestones equal what the ramp delivers (R255) -------- */
+export interface HeadlineMiss { label: string; phase: string; needed: number; got: number; why: string }
+
+export function rolloutHeadlineMisses(): HeadlineMiss[] {
+  const out: HeadlineMiss[] = [];
+  for (const h of ROLLOUT_HEADLINES) {
+    if (h.ramp === null) continue;
+    const arr = (RAMPS as unknown as Record<string, number[]>)[h.ramp];
+    const at = (ph: string) => arr[Math.min(phaseIndex(ph), arr.length - 1)];
+    const got = at(h.startPhase);
+    if (!(got >= h.atLeast - 1e-9)) {
+      out.push({
+        label: h.label, phase: h.startPhase, needed: h.atLeast, got,
+        why: 'the tile publishes ' + h.value + ' and the ' + h.ramp + ' ramp is not there yet'
+      });
+    }
+    /* a span promises completion at its end */
+    if (h.endPhase !== null) {
+      const end = at(h.endPhase);
+      const mature = arr[arr.length - 1];
+      if (!(end >= mature - 1e-9)) {
+        out.push({
+          label: h.label, phase: h.endPhase, needed: mature, got: end,
+          why: 'the tile publishes ' + h.value + ' and the ' + h.ramp + ' ramp is not complete at the end of it'
+        });
+      }
+    }
+  }
+  return out;
+}
+
+/* One milestone, one span, across every chapter that describes it. The
+   rollout page said "Year 10" while the overview and health chapters said
+   "Years 10-12"; the rollout page now derives its text, and these two still
+   type theirs, so they are checked rather than trusted. */
+const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+const EXPANSION_PAGES = ['src/pages/index.astro', 'src/pages/health.astro'];
+const spanCache = new Map<string, string[]>();
+
+export function expansionSpanDisagreements(root = REPO_ROOT): string[] {
+  const hit = spanCache.get(root);
+  if (hit) return hit;
+  const out: string[] = [];
+  for (const page of EXPANSION_PAGES) {
+    const text = readFileSync(join(root, page), 'utf8');
+    if (!text.includes(EXPANSION_SPAN)) {
+      out.push(page + ' does not state the expansion as "' + EXPANSION_SPAN + '"');
+    }
+  }
+  spanCache.set(root, out);
+  return out;
+}
+
+/* ---- 6. no module re-derives the map (R251) ---------------------------- */
 /* A guard against the copies coming back. `rampValueAt` is exported for the
    visualizer's input legend and resolves through `phaseIndex` like everything
    else; if a second map appeared and a caller used it, this would disagree. */

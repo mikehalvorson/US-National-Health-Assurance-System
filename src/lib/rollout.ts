@@ -131,6 +131,60 @@ export const PHASES: Phase[] = [
 export const PHASE_YEAR: Record<string, number> = {};
 PHASES.forEach(function (p) { PHASE_YEAR[p.id] = p.year; });
 
+/* ---- Headline milestones -------------------------------------------------
+ * R255 [§S2]: the rollout page's four stat tiles used to type their year
+ * beside the roadmap rather than take it from the roadmap, and one of them
+ * disagreed with two other chapters about the same milestone - "Year 10"
+ * here, "Years 10-12" on the overview and the health chapter.
+ *
+ * The years now come from PHASE_YEAR, and each tile that depends on a policy
+ * ramp names the ramp and the share it claims to have reached, so a
+ * self-test can hold the published milestone to what the model delivers.
+ * The page imports these; it does not restate them.
+ * ------------------------------------------------------------------------ */
+export interface RolloutHeadline {
+  label: string;
+  value: string;
+  range: string;
+  /* the ramp that delivers it, and the share reached at startPhase */
+  ramp: 'coverage' | 'expansions' | null;
+  atLeast: number;
+  startPhase: string;
+  /* set when the milestone spans phases; the ramp must be complete by it */
+  endPhase: string | null;
+}
+
+export function yearSpan(startPhase: string, endPhase: string | null): string {
+  const a = PHASE_YEAR[startPhase];
+  const b = endPhase === null ? a : PHASE_YEAR[endPhase];
+  return a === b ? 'Year ' + a : 'Years ' + a + '–' + b;
+}
+
+function headline(
+  label: string, startPhase: string, endPhase: string | null,
+  ramp: RolloutHeadline['ramp'], atLeast: number, range: string
+): RolloutHeadline {
+  return { label, value: yearSpan(startPhase, endPhase), range, ramp, atLeast, startPhase, endPhase };
+}
+
+export const ROLLOUT_HEADLINES: RolloutHeadline[] = [
+  {
+    label: 'Controlled roadmap', value: PHASES[0].id + '–' + PHASES[PHASES.length - 1].id,
+    range: 'foundation plus eight delivery phases',
+    ramp: null, atLeast: 0, startPhase: PHASES[0].id, endPhase: null
+  },
+  headline('Public default coverage', 'P6', null, 'coverage', 0.85,
+    'after claims, capacity, rights, and continuity checks'),
+  headline('Expanded benefits', 'P7', 'P8', 'expansions', 0.60,
+    'LTC, behavioral health, dental, vision, hearing, EMS: substantially built at the start of the span, complete at its end'),
+  headline('Maturity certification', 'P8', null, null, 0,
+    'full integration, manufacturing, records, and payment')
+];
+
+/* The span every chapter must use when it describes the benefit expansion.
+   Three of them stated it independently and one of the three disagreed. */
+export const EXPANSION_SPAN = yearSpan('P7', 'P8');
+
 export const DOMAINS: string[][] = [
   ["Statute / governance",
     "Enact; constitute bodies",

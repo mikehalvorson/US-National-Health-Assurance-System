@@ -1,6 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R255 [§S2]: the headline years are derived from the phase map and gated
+   against the ramps that deliver them; this page renders them, and does not
+   restate any milestone year of its own. */
+import { ROLLOUT_HEADLINES } from '../lib/rollout';
 ---
 <BaseLayout title="National Health Assurance: Phased Rollout">
   <main>
@@ -13,26 +17,13 @@ import ChapterNav from '../components/ChapterNav.astro';
       the next major commitment. Select a milestone to see what is built and
       what evidence permits the program to continue.</p>
     <div class="tiles rollout-summary" aria-label="Rollout headline milestones">
-      <div class="tile">
-        <div class="label">Controlled roadmap</div>
-        <div class="value">P0–P8</div>
-        <div class="range">foundation plus eight delivery phases</div>
-      </div>
-      <div class="tile">
-        <div class="label">Public default coverage</div>
-        <div class="value">Year 8</div>
-        <div class="range">after claims, capacity, rights, and continuity checks</div>
-      </div>
-      <div class="tile">
-        <div class="label">Expanded benefits</div>
-        <div class="value">Year 10</div>
-        <div class="range">LTC, behavioral health, dental, vision, hearing, EMS</div>
-      </div>
-      <div class="tile">
-        <div class="label">Maturity certification</div>
-        <div class="value">Year 12</div>
-        <div class="range">full integration, manufacturing, records, and payment</div>
-      </div>
+      {ROLLOUT_HEADLINES.map((h) => (
+        <div class="tile">
+          <div class="label">{h.label}</div>
+          <div class="value">{h.value}</div>
+          <div class="range">{h.range}</div>
+        </div>
+      ))}
     </div>
     <div id="rollout-timeline" class="rollout-timeline"
       aria-label="Interactive twelve-year phase timeline"></div>
