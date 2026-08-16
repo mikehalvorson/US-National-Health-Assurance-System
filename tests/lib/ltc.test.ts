@@ -1,4 +1,8 @@
 import { expect, test } from 'vitest';
+import { calendarYear, LTC_BENEFIT_PHASE } from '../../src/lib/rollout';
+/* The end of the latest ten-year federal projection window (2024-2034):
+   an external fact the LTC page cites, not a phase-derived year. */
+const PROJECTION_WINDOW_END = 2034;
 import {
   COUNTRY_SYSTEMS, LTC_GDP_2021, US_FAILURE_STATS, PLAN_PILLARS,
   LTC_COST_2024, COST_IN_FRAMEWORK, WORKFORCE_ASSESS
@@ -58,4 +62,18 @@ test('no em dashes anywhere in the LTC data strings', () => {
   push(WORKFORCE_ASSESS);
   push(COST_IN_FRAMEWORK);
   expect(strings.some((s) => s.includes('—'))).toBe(false);
+});
+
+/* R262 [§S2] clause 2 — "the workforce horizon year is derived from the
+   benefit's phase, not typed". The horizon itself (2034) is an external fact,
+   the end of the ten-year federal projection window, so it cannot be derived
+   from a phase. What CAN be pinned is the relationship the page states between
+   the two, which is the sentence that was wrong before: if the roadmap moves
+   long-term care, this fails and the paragraph has to be rewritten. */
+
+test('R262: the benefit starts two years after the projection window closes', () => {
+  const start = calendarYear(LTC_BENEFIT_PHASE!.year);
+  expect(start).toBe(2036);
+  expect(start - PROJECTION_WINDOW_END).toBe(2);
+  expect(LTC_BENEFIT_PHASE!.id).toBe('P7');
 });

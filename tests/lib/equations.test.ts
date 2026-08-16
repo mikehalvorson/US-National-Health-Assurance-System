@@ -3,9 +3,10 @@ import { QUALITY_DATA } from '../../src/lib/quality';
 import { parseNum } from '../../src/lib/phase-targets';
 import {
   EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, evaluateAtPhase, equationSelfTests,
-  computeTargets, collectDeps
+  computeTargets, collectDeps, modelValueAt
 } from '../../src/lib/equations';
-import { SCENARIOS } from '../../src/lib/scenarios';
+import { runPath, sampleParams } from '../../src/lib/model';
+import { effectiveParams, SCENARIOS, scenarioStructural } from '../../src/lib/scenarios';
 import { buildDiagram } from '../../src/lib/equation-diagram';
 
 const KPP_TPP = QUALITY_DATA.parameters.filter(p => p.type !== 'CP');
@@ -147,4 +148,38 @@ describe('equation flow diagrams', () => {
       }
     }
   });
+});
+
+/* R226 [§S2] — the row's third acceptance clause, which the section landed
+   without: "a fixture asserting costRatio at P0 equals the 2027 row, not 2028".
+   The ramps and the fiscal engine's year rows are two different halves of the
+   off-by-one, and only the ramp half was pinned. `costRatio` reads
+   path.detail[t] directly, so it is the one that catches a detail-row shift. */
+
+test('R226: costRatio at P0 is the 2027 row, not 2028', () => {
+  const detail = runPath(
+    sampleParams(effectiveParams('SCN-BASE', null), null),
+    scenarioStructural('SCN-BASE')
+  ).detail;
+  const y2027 = detail[0];
+  const y2028 = detail[1];
+  expect(y2027.year).toBe(2027);
+  expect(y2028.year).toBe(2028);
+
+  const atP0 = modelValueAt('SCN-BASE', 'costRatio', 'P0');
+  expect(atP0).toBeCloseTo(y2027.nheNha / y2027.nheBase, 12);
+  // The failing state R226 describes: P0 reporting 2028's flow under a 2027 label.
+  expect(atP0).not.toBeCloseTo(y2028.nheNha / y2028.nheBase, 12);
+});
+
+test('R226: the same holds for the other detail-row leaves', () => {
+  const detail = runPath(
+    sampleParams(effectiveParams('SCN-BASE', null), null),
+    scenarioStructural('SCN-BASE')
+  ).detail;
+  expect(modelValueAt('SCN-BASE', 'pubCost', 'P0')).toBeCloseTo(detail[0].pubCost, 9);
+  expect(modelValueAt('SCN-BASE', 'newRev', 'P0')).toBeCloseTo(detail[0].newRevenue, 9);
+  // P3 is Year 4 = 2030, index 3 - the phase R226 says used to read Year 5.
+  expect(modelValueAt('SCN-BASE', 'pubCost', 'P3')).toBeCloseTo(detail[3].pubCost, 9);
+  expect(detail[3].year).toBe(2030);
 });

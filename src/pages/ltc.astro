@@ -4,10 +4,10 @@ import ChapterNav from '../components/ChapterNav.astro';
 /* R262 [§S2]: the benefit's start year is read off the roadmap, not typed.
    It used to say 2026 - before the model's Year 1 and ten years before the
    phase that carries long-term care. */
-import { LTC_BENEFIT_PHASE } from '../lib/rollout';
+import { calendarYear, LTC_BENEFIT_PHASE } from '../lib/rollout';
 import { START_YEAR } from '../lib/params';
 const ltcPhase = LTC_BENEFIT_PHASE!;
-const ltcStartYear = START_YEAR + ltcPhase.year - 1;
+const ltcStartYear = calendarYear(ltcPhase.year);
 ---
 <BaseLayout title="National Health Assurance: Long-Term Care">
   <main>

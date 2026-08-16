@@ -32,13 +32,15 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, PHASES, ROLLOUT_HEADLINES,
-  UNIT_BUILDOUT_STEPS
+  calendarYear, calendarYearOfPhase, EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR,
+  PHASES, ROLLOUT_HEADLINES, UNIT_BUILDOUT_STEPS
 } from './rollout';
 import { DATA_PHASES, DATA_PHASE_YEARS_AS_GENERATED } from './data-phases';
 import { CALENDAR_ANCHOR_DENIAL, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
 import { CARE_SCENARIOS } from './care';
 import { phaseIndex, EQ_PHASES, modelValueAt, rampValueAt } from './equations';
+import { runPath, sampleParams } from './model';
+import { effectiveParams } from './scenarios';
 
 /* ---- 1. one map, and every copy agrees with it (V2, R293) -------------- */
 export interface PhaseMapDrift { phase: string; source: string; year: number; expected: number }
@@ -75,22 +77,51 @@ export function phasesWithoutYear(): string[] {
 /* ---- 2. the conversion resolves the calendar year it claims (V1, R226) -- */
 export interface PhaseYearMismatch { phase: string; label: number; resolved: number }
 
-/* The phase selector on quality.astro and risk.astro prints "P0 (Year 1)".
-   `year(t)` is what the equation layer reports for the same phase, and
-   START_YEAR + phaseIndex is the calendar year the fiscal engine's row
-   carries. All three have to be the same phase. */
+/* The phase selector on quality.astro and risk.astro prints "P0 (Year 1)", and
+   the fiscal engine's row for that phase has to be the year the label states.
+
+   This used to compare modelValueAt('year', ph) against PHASE_YEAR[ph], which
+   CANNOT FAIL: modelAt returns `t + 1`, and `t` is phaseIndex(ph), which is
+   PHASE_YEAR[ph] - 1. The two sides were the same expression, so the check
+   restated the bug it was meant to catch - the defect R43 exists to prevent,
+   reintroduced by the section that was fixing the conversion.
+
+   It now compares the calendar year the fiscal engine stamps on its own row
+   (`year = START_YEAR + t` in model.ts, reached through path.detail) against
+   the calendar year the phase map resolves. Those are two independent
+   computations, and R226's off-by-one moved exactly one of them. */
 export function phaseYearMismatches(): PhaseYearMismatch[] {
+  const detail = runPath(sampleParams(effectiveParams('SCN-BASE', null), null), {}).detail;
   const out: PhaseYearMismatch[] = [];
   for (const ph of EQ_PHASES) {
-    const label = PHASE_YEAR[ph];
-    const reported = modelValueAt('SCN-BASE', 'year', ph);
-    if (reported !== label) out.push({ phase: ph, label, resolved: reported });
+    const row = detail[Math.min(phaseIndex(ph), detail.length - 1)];
+    const expected = calendarYearOfPhase(ph);
+    if (row.year !== expected) {
+      out.push({ phase: ph, label: expected, resolved: row.year });
+    }
   }
   return out;
 }
 
+/* Deliberately the long way round: this resolves through the EQUATION layer's
+   phaseIndex(), not through rollout.ts's calendarYear(), because its job is to
+   catch those two disagreeing. A version that called calendarYearOfPhase()
+   would be comparing rollout.ts with itself and could never fail. */
 export function calendarYearOf(phase: string): number {
   return START_YEAR + phaseIndex(phase);
+}
+
+/* ...which is only a check if something holds the two converters together. */
+export interface ConverterSplit { phase: string; viaEquations: number; viaRollout: number }
+
+export function calendarConverterSplit(): ConverterSplit[] {
+  const out: ConverterSplit[] = [];
+  for (const ph of EQ_PHASES) {
+    const viaEquations = calendarYearOf(ph);
+    const viaRollout = calendarYearOfPhase(ph);
+    if (viaEquations !== viaRollout) out.push({ phase: ph, viaEquations, viaRollout });
+  }
+  return out;
 }
 
 /* ---- 3. every ramp reaches its declared milestone at that phase (R133) -- */
@@ -215,7 +246,7 @@ export interface BenefitStartDrift { page: string; stated: number; phase: string
    derivation still resolves and that no page has typed a competing year. */
 export function ltcBenefitStartYear(): number {
   if (!LTC_BENEFIT_PHASE) return NaN;
-  return START_YEAR + LTC_BENEFIT_PHASE.year - 1;
+  return calendarYear(LTC_BENEFIT_PHASE.year);
 }
 
 export function benefitStartDrift(root = REPO_ROOT): BenefitStartDrift[] {
@@ -225,8 +256,11 @@ export function benefitStartDrift(root = REPO_ROOT): BenefitStartDrift[] {
     return out;
   }
   const expected = ltcBenefitStartYear();
-  /* Any calendar year a page attaches to the phrase "benefit that begins in". */
-  const TYPED = /benefit that begins in (\d{4})/g;
+  /* The original sentence read "a benefit that begins in 2026". Matching only
+     that wording made this guard DEAD the moment the sentence was rewritten:
+     no page contained the phrase, so nothing could fail it. The family below
+     catches the ways a contributor would naturally retype the claim. */
+  const TYPED = /benefit(?:\s+\w+){0,3}?\s+(?:begins|began|starts|beginning|starting)\s+in\s+(\d{4})/gi;
   for (const p of pageTexts(root)) {
     for (const m of p.text.matchAll(TYPED)) {
       const stated = Number(m[1]);
@@ -234,6 +268,13 @@ export function benefitStartDrift(root = REPO_ROOT): BenefitStartDrift[] {
         out.push({ page: p.page, stated, phase: LTC_BENEFIT_PHASE.id, expected });
       }
     }
+  }
+  /* The other half, and the half a widened regex still cannot give: the page
+     that publishes the start year must DERIVE it. If the binding disappears,
+     the year has been typed again, whatever words surround it. */
+  const ltc = pageTexts(root).find((p) => p.page.endsWith('ltc.astro'));
+  if (ltc && !/calendarYear\(/.test(ltc.text)) {
+    out.push({ page: 'src/pages/ltc.astro', stated: NaN, phase: LTC_BENEFIT_PHASE.id, expected });
   }
   return out;
 }

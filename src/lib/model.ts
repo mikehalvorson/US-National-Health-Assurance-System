@@ -65,6 +65,22 @@ import type {
 const OFFSET_RAMP_BY_ID: Record<string, string> = {};
 OFFSET_RAMPS.forEach(function (o) { OFFSET_RAMP_BY_ID[o.id] = o.ramp; });
 
+/* The ramp values for one year, keyed the way OFFSET_RAMPS names them. Built
+   here rather than typed at each call site: both runPath and matureAtScale
+   compute the offsets, and a seven-key literal written twice is the same
+   duplication R251 closed for the phase map. */
+export function rampsAt(ramps: BuiltRamps, t: number): Record<string, number> {
+  return {
+    coverage: ramps.coverage[t] || 0,
+    costShareElim: ramps.costShareElim[t] || 0,
+    units: ramps.units[t] || 0,
+    drugs: ramps.drugs[t] || 0,
+    hospitals: ramps.hospitals[t] || 0,
+    expansions: ramps.expansions[t] || 0,
+    infra: ramps.infra[t] || 0
+  };
+}
+
 export function offsetRamp(id: string, values: Record<string, number>): number {
   const ramp = OFFSET_RAMP_BY_ID[id];
   if (ramp === undefined) throw new Error('Offset ' + id + ' declares no ramp pairing');
@@ -240,10 +256,7 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
        which capability delivers that saving, so it comes from OFFSET_RAMPS
        rather than being named inline. offsetRamp throws on an undeclared id,
        which is what stops a fifth offset arriving with no stated pairing. */
-    const rampNow: Record<string, number> = {
-      coverage: covR, units: unitR, drugs: drugR, hospitals: hospR,
-      expansions: expR, infra: infR, costShareElim: csR
-    };
+    const rampNow = rampsAt(ramps, t);
     const offProvAdmin  = (p.providerAdminSavings / 100) * (cHosp + cClin) *
       offsetRamp('offProvAdmin', rampNow);
     const offCareModel  = p.careModelSavings * G * offsetRamp('offCareModel', rampNow);
@@ -361,10 +374,7 @@ export function matureAtScale(
   /* R203 [§S2]: the same declared pairings the year loop uses. This is the
      second place the offsets are computed, so naming a ramp inline here would
      put the model's claim about what delivers each saving in two files. */
-  const rampNow: Record<string, number> = {
-    coverage: covR, units: unitR, drugs: drugR, hospitals: hospR,
-    expansions: expR, infra: infR, costShareElim: csR
-  };
+  const rampNow = rampsAt(ramps, t);
   const offsets = (p.providerAdminSavings / 100) * (cHosp + cClin) *
                   offsetRamp('offProvAdmin', rampNow) +
                 p.careModelSavings * G * offsetRamp('offCareModel', rampNow) +

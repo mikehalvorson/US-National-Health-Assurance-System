@@ -610,15 +610,93 @@ CONTRADICTIONS: D20–D29 above. Seven are cases where the row's finding is real
   test was wrong as an instrument; one (`R107`) is a check written in an earlier
   section that this section's data broke. None required routing around.
 
-DOCUMENTS EDITED (outside the repo, so this entry is the record):
-  `CLAUDE_CODE_INSTRUCTIONS.md` — 16 `§S2` rows marked done with their sha; the `§S2`
-  section brief marked applied; `R81`, `R290` and `§S3`'s non-finite scope re-noted.
-  Pre-edit copy: `CLAUDE_CODE_INSTRUCTIONS.md.pre-P3.bak`.
+DOCUMENTS EDITED: `CLAUDE_CODE_INSTRUCTIONS.md` — 16 `§S2` rows marked done with
+  their sha; the `§S2` section brief marked applied; `R81`, `R290` and `§S3`'s
+  non-finite scope re-noted.
+
+  **The audit documents are now version controlled**, which closes an open question
+  that had been asked in five sessions. They are a **separate local git repository**
+  at `C:\Users\micha\OneDrive\Desktop\Claude\NHA-Mental-Health\`, not part of this
+  one: `AGENTS.md` says *"do not add anything internal to the public repo"*, and this
+  repo is public, so committing them here would have versioned them by publishing
+  them. History back to the P2 session is reconstructed from the two surviving `.bak`
+  files, and the commits that do so say where the seams are; from `05041a3` on, every
+  commit is a real snapshot. **The `.bak` habit is retired** — commit before editing
+  instead. A remote is the one part still open, because creating one is an
+  account-level decision.
+
+  This entry is therefore no longer the only record of a document edit.
 
 MUST STILL PASS: `V1` index 0 = Year 1 = 2027 ✅ (asserted three ways in
   `params.test.ts`) · `V2` all three phase maps identical ✅ (now one definition and
   two importers, with the equality check kept as drift prevention) · `V5` seventeen
   framework-basis entries ✅
 HARNESS: `python check_audit_docs.py` → 35 passed, 0 failed, exit 0
-BUILD: `astro build` passes, 61 of 61, 14 pages · `pnpm test` 249 tests, 53 files,
+BUILD: `astro build` passes, 62 of 62, 14 pages · `pnpm test` 252 tests, 53 files,
   green · `astro check` 0 errors, 0 warnings, 3 pre-existing hints
+
+CODE REVIEW (two axes, against `main`, after the section closed):
+
+  **Two checks this section added could not fail, and both are fixed.**
+  - `phaseYearMismatches()` compared `modelAt('year', ph)` with `PHASE_YEAR[ph]`.
+    `modelAt` returns `t + 1` and `t` is `phaseIndex(ph)`, which is
+    `PHASE_YEAR[ph] - 1` — the same expression on both sides. The only registered
+    guard for `R226`'s *"`modelAt('year', P) === the year number of P`"* restated
+    the bug it was written to catch. It now compares the calendar year the fiscal
+    engine stamps on its own `path.detail` row against the year the phase map
+    resolves: two independent computations, and R226's off-by-one moved one of
+    them. **This is `R43`'s defect, reintroduced by the section fixing the
+    conversion.**
+  - `benefitStartDrift()` matched `/benefit that begins in (\d{4})/`, a phrase
+    that existed only in the sentence `R262` deleted. The guard went dead in the
+    commit that added it. It now matches a family of phrasings **and** requires
+    the LTC page to derive the year rather than type it, so it can fail in both
+    directions.
+
+  **`R226`'s third acceptance clause was never implemented.** The row asks for
+  *"a fixture asserting `costRatio` at P0 equals the 2027 row, not 2028"*; the
+  fiscal-engine half of R226 — six of ten `ModelId` leaves reading
+  `path.detail[t]` — had no pin at all. Added, with the 2028 case asserted false.
+
+  **`R262` reintroduced the duplication `R251` exists to prevent.** The benefit
+  start year was computed as `START_YEAR + phase.year - 1` inline on a page and
+  again in a check module, against `rollout.ts`'s own header claiming one
+  conversion point. There is now one named `calendarYear()` in `rollout.ts`, both
+  call sites use it, and a self-test holds it against the equation layer's
+  `phaseIndex()` — which stays deliberately separate, because a converter that
+  resolved through the same function could not catch the two disagreeing.
+  Registry 61 → 62.
+
+  **`R262` clause 2 is partially met and says so.** The workforce horizon (2034)
+  is the end of the federal projection window, an external fact that cannot be
+  derived from a phase. The *relationship* the page states is now pinned: the
+  benefit starts exactly two years after the window closes, so moving long-term
+  care on the roadmap fails a test and forces the paragraph to be rewritten.
+
+  **`R203` removed a duplicated pairing and left a duplicated dictionary.** The
+  seven-key ramp record was typed at both offset sites in `model.ts`; it is one
+  `rampsAt()` now.
+
+  **Not accepted.** The review reads the rollout chart's `≥65%` at P5 against
+  `RAMPS.units` = 0.55 and calls it a published-number mismatch. They are
+  different quantities: the chart publishes POPULATION within the unit network
+  (the framework's own `KPP-B7` P5 milestone), the ramp is share of the MATURE
+  BUILD. A build 55% complete serving 65% of the population is not a
+  contradiction. Making them agree would have moved a sourced number to satisfy
+  a comparison that means nothing; `rollout.ts` now says so where the steps are
+  declared. Likewise `R114` "tunes to a target" only if a declared, machine-
+  readable departure counts as tuning — the `WORDING` rewrites and the ten
+  addendum records are both disclosed in the generator and in `D16`.
+
+  **Also fixed, from the standards axis:** `.agent-kb/README.md` still described
+  the site as `docs/` and pinned the self-test count at 27, and `AGENTS.md` still
+  said 13 tabs. All three are top-level facts this branch changed, and
+  `AGENTS.md` requires the digest and the KB to move with them. The self-test
+  figure is no longer pinned in the KB at all — pinning it is how it went stale.
+  `.agent-kb/CONVENTIONS.md`'s em-dash sweep claim now states its real scope:
+  the rule is "anywhere a reader can see", and this log is not that.
+
+  **`care.ts`'s premium card moved and is recorded here late:** `fromYear`
+  2031 → 2030 in `c36badd`, following the coverage ramp's realignment. It is a
+  published year on a public chapter, it belongs in the movement report above,
+  and it was only in the commit message.

@@ -2,6 +2,8 @@
    (PHASES 12-103, DOMAINS 105-184, GATES 186-227, AGENCIES 229-260,
    WORKSTREAMS 262-276). Fidelity-critical: do not re-derive. */
 
+import { START_YEAR } from './params';
+
 export interface Phase {
   id: string;
   year: number;
@@ -124,12 +126,36 @@ export const PHASES: Phase[] = [
  * imports this one; nothing re-derives it. Derived from PHASES above so a
  * phase and its year cannot be edited apart.
  *
- * These are YEAR NUMBERS, 1-based: P0 is Year 1. Consumers that index a
- * year-keyed array must convert; see phaseIndex() in equations.ts, which is
- * the only place that conversion happens.
+ * These are YEAR NUMBERS, 1-based: P0 is Year 1. Two conversions exist and
+ * they answer different questions. A consumer that wants to INDEX a year-keyed
+ * array uses phaseIndex() in equations.ts, the only place that conversion
+ * happens. A consumer that wants a calendar DATE uses calendarYear() below.
+ * Neither is open-coded anywhere.
  * ------------------------------------------------------------------------ */
 export const PHASE_YEAR: Record<string, number> = {};
 PHASES.forEach(function (p) { PHASE_YEAR[p.id] = p.year; });
+
+/* Year number -> calendar year, in one place, for the readers that want a date
+ * rather than an array index.
+ *
+ * R262 [§S2] wrote `START_YEAR + phase.year - 1` inline on a PAGE and again in
+ * a check module, which is the same duplication R251 and R293 exist to prevent,
+ * reintroduced in the same section by the row that needed a date. A page should
+ * not be doing calendar arithmetic at all.
+ *
+ * This is deliberately NOT the converter `calendarYearOf` in phase-map-check.ts
+ * uses. That one goes the long way round, through the equation layer's own
+ * phaseIndex(), because its job is to catch the equation layer disagreeing with
+ * this map - a check that resolved through this function would be comparing
+ * rollout.ts against itself. A self-test holds the two to each other. */
+export function calendarYear(yearNumber: number): number {
+  return START_YEAR + yearNumber - 1;
+}
+
+export function calendarYearOfPhase(phaseId: string): number {
+  const year = PHASE_YEAR[phaseId];
+  return year === undefined ? NaN : calendarYear(year);
+}
 
 /* ---- Headline milestones -------------------------------------------------
  * R255 [§S2]: the rollout page's four stat tiles used to type their year
@@ -231,6 +257,14 @@ export interface UnitBuildoutStep {
   coverage: number | null;
 }
 
+/* A note for anyone comparing these to RAMPS.units: they are not the same
+   quantity and must not be made to agree. These levels are POPULATION within
+   the unit network - the framework's own P5 milestone (KPP-B7, ">=65% by phase
+   end") and its Gate 2 floor (">=80%"). RAMPS.units is the share of the MATURE
+   BUILD delivered, which is 0.55 at the P5 anchor. A build that is 55% complete
+   serving 65% of the population is not a contradiction; population concentrates
+   where units are built first. R255 checks each plotted step against the floor
+   the page states, which is the comparison that means something. */
 export const UNIT_BUILDOUT_STEPS: UnitBuildoutStep[] = [
   { value: 'Plan', label: 'standards, siting, workforce, prototypes', phase: 'P0–P3', coverage: null },
   { value: 'Pilot', label: 'all four unit types in representative regions', phase: 'P4', coverage: null },

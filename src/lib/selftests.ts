@@ -21,7 +21,8 @@ import { TABS } from './tabs';
 import { AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
 import { EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES } from './rollout';
 import {
-  benefitStartDrift, calendarAnchorDenials, calendarYearOf, expansionSpanDisagreements,
+  benefitStartDrift, calendarAnchorDenials, calendarConverterSplit, calendarYearOf,
+  expansionSpanDisagreements,
   ltcBenefitStartYear, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
   premiumCardYearDrift, rampLegendDisagreements, rampMilestoneMisses,
   rolloutHeadlineMisses, trainProgAtMaturity, unitBuildoutIssues
@@ -306,6 +307,18 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: bad.map((b) => b.phase + ' labelled Year ' + b.label + ' resolves Year ' + b.resolved)
             .join('; ') || 'P0 = Year 1 = ' + calendarYearOf('P0') +
             ', P8 = Year ' + PHASE_YEAR.P8 + ' = ' + calendarYearOf('P8')
+        };
+      }),
+      /* R262 fallout, found by review: two named converters now exist - one for
+         an array index, one for a calendar date - and each is only a check of
+         the other while something holds them together. */
+      runGuarded('Both year converters resolve the same calendar year', () => {
+        const split = calendarConverterSplit();
+        return {
+          ok: !split.length,
+          note: split.map((s) => s.phase + ': equations ' + s.viaEquations +
+            ' vs rollout ' + s.viaRollout).join('; ') ||
+            'phaseIndex and calendarYear agree on all ' + Object.keys(PHASE_YEAR).length
         };
       }),
       runGuarded('Every ramp reaches its declared milestone at that phase', () => {
