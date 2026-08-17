@@ -7,9 +7,11 @@
    matrix host's dataset.wired guard. */
 import {
   FMEA_DATA as F, cellBand, BAND_META, PROBABILITY_CEILING, PROBABILITY_FLOOR,
-  PROBABILITY_SCALE, type FmeaRecord
+  PROBABILITY_SCALE, PROBABILITY_SOURCE_NOTE, type FmeaRecord
 } from '../lib/fmea';
 
+/* The bands the risk grid produces, in worst-first order. 'unscored' is not
+   here on purpose: it is not a risk level, it is the absence of one (R276). */
 const BANDS = ['extreme', 'high', 'moderate', 'low'] as const;
 type Band = typeof BANDS[number];
 
@@ -169,6 +171,13 @@ const TIER_ORDER: { band: Band; tier: string }[] = [
   { band: 'moderate', tier: 'Moderate' },
   { band: 'low', tier: 'Minor' }
 ];
+/* R276: the table lists every record, so it needs a group for the ones that
+   carry no risk band at all. The criticality tiers above deliberately do not:
+   an unscored record has no tier to sit in, and inventing one for it is the
+   defect this row exists to remove. */
+const TABLE_GROUPS: { band: Band | 'unscored'; tier: string }[] =
+  (TIER_ORDER as { band: Band | 'unscored'; tier: string }[])
+    .concat([{ band: 'unscored', tier: BAND_META.unscored.tier }]);
 function renderTiers(): void {
   const host = byId('fmea-tiers');
   if (!host) return;
@@ -271,15 +280,24 @@ function renderCpChart(): void {
 
   const left = el('div', 'fmea-cp-left');
   left.appendChild(miniMatrix(F.cpMatrix, 'cost-parameter calibration failures'));
+  const unscored = F.counts.cpUnscored;
   const note = el('p', 'fmea-axis-note',
     'Occurrence here is borrowed: cost parameters have no controlled likelihood ' +
-    'attribute, so probability is imported from the confidence grade of the modeled ' +
-    'quantity each family calibrates (low maps to 4, medium 3, high 2). Consequence ' +
-    'is scored from the ledger\'s domain and its model role. Select a cell to filter ' +
-    'the explorer.');
+    'attribute, so probability is read from the weakest confidence grade among the ' +
+    'simulation parameters that calibrate each family (low maps to 4, medium 3, ' +
+    'high 2). Consequence is scored from the ledger\'s domain and its model role. ' +
+    (unscored
+      ? unscored.toLocaleString('en-US') + ' of the ' + F.counts.cp.toLocaleString('en-US') +
+        ' records are not on this chart at all: their family has no sampled parameter ' +
+        'in the simulation either, so there is nothing to borrow. They are listed as ' +
+        'unscored in the table below and in the parameter gaps. '
+      : '') +
+    'Select a cell to filter the explorer.');
   left.appendChild(note);
   const legend = el('div', 'fmea-matrix-legend');
-  BANDS.forEach(function (b) {
+  const cpLegend: (Band | 'unscored')[] = (BANDS as readonly (Band | 'unscored')[])
+    .concat(['unscored']);
+  cpLegend.forEach(function (b) {
     const item = el('span', 'fmea-legend-item');
     item.appendChild(el('i', 'fmea-swatch fmea-cell-' + b));
     const cntKey = ('cp' + b.charAt(0).toUpperCase() + b.slice(1)) as keyof typeof F.counts;
@@ -406,6 +424,13 @@ function scorePill(label: string, value: number, cls: string): HTMLElement {
   pill.appendChild(document.createTextNode(' ' + label));
   return pill;
 }
+/* R276: the disclosure that belongs beside a score of this provenance. A
+   borrowed score is a real score taken from another layer and says so; only a
+   record with no score at all is called unscored. */
+function basisWithSource(r: FmeaRecord): string {
+  const note = PROBABILITY_SOURCE_NOTE[r.probabilitySource];
+  return note ? r.probabilityBasis + ' (' + note + ')' : r.probabilityBasis;
+}
 function detailField(label: string, value: string, wide?: boolean): HTMLElement {
   const f = el('div', 'fmea-detail-field' + (wide ? ' fmea-detail-wide' : ''));
   f.appendChild(el('span', 'fmea-kicker', label));
@@ -432,10 +457,18 @@ function renderSelected(r: FmeaRecord | undefined): void {
   const scoreWrap = el('div', 'fmea-selected-scores');
   scoreWrap.appendChild(el('span', 'fmea-band-chip fmea-cell-' + r.band, BAND_META[r.band].label + ' · ' + r.tier));
   const pills = el('div', 'fmea-pills');
-  pills.appendChild(scorePill('probability', r.probability, 'fmea-pill-p'));
-  pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
-  pills.appendChild(scorePill('risk', r.risk, 'fmea-pill-r'));
-  pills.appendChild(scorePill('RPN', r.rpn, 'fmea-pill-d'));
+  /* R276: a record with no probability has no risk and no RPN either, so the
+     pills that would multiply through it are not drawn. Consequence is still
+     assessed and is still shown, which is what the page says happens. */
+  if (r.probabilitySource === 'unscored') {
+    pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
+    pills.appendChild(el('span', 'fmea-pill fmea-pill-p', 'probability not derived'));
+  } else {
+    pills.appendChild(scorePill('probability', r.probability, 'fmea-pill-p'));
+    pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
+    pills.appendChild(scorePill('risk', r.risk, 'fmea-pill-r'));
+    pills.appendChild(scorePill('RPN', r.rpn, 'fmea-pill-d'));
+  }
   scoreWrap.appendChild(pills);
   head.appendChild(scoreWrap);
   host.appendChild(head);
@@ -448,8 +481,7 @@ function renderSelected(r: FmeaRecord | undefined): void {
   host.appendChild(modeBox);
 
   const grid = el('div', 'fmea-detail-grid');
-  grid.appendChild(detailField('Probability basis',
-    r.probabilityAssessed ? r.probabilityBasis : r.probabilityBasis + ' (unscored: see parameter gaps)', true));
+  grid.appendChild(detailField('Probability basis', basisWithSource(r), true));
   grid.appendChild(detailField('Consequence basis', r.consequenceBasis, true));
   grid.appendChild(detailField('Detectability basis', r.detectBasis, true));
   if (r.needsNewParam) grid.appendChild(detailField('Parameter gap', r.newParamNote, true));
@@ -473,8 +505,8 @@ function renderTable(records: FmeaRecord[]): void {
     return;
   }
 
-  /* group by band so the table reads worst-first */
-  TIER_ORDER.forEach(function (t) {
+  /* group by band so the table reads worst-first, unscored last */
+  TABLE_GROUPS.forEach(function (t) {
     const group = records.filter(function (r) { return r.band === t.band; });
     if (!group.length) return;
     const tb = el('tbody', 'fmea-group');
@@ -482,7 +514,9 @@ function renderTable(records: FmeaRecord[]): void {
     const gc = el('th');
     (gc as HTMLTableCellElement).colSpan = 8;
     gc.appendChild(el('span', 'fmea-group-dot fmea-cell-' + t.band));
-    gc.appendChild(el('span', '', t.tier + ' · ' + BAND_META[t.band].label + ' risk'));
+    gc.appendChild(el('span', '', t.band === 'unscored'
+      ? t.tier + ' · no probability could be derived'
+      : t.tier + ' · ' + BAND_META[t.band].label + ' risk'));
     gc.appendChild(el('small', '', group.length + ' failure modes'));
     grow.appendChild(gc); tb.appendChild(grow);
 

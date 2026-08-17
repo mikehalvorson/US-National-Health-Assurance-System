@@ -4,7 +4,10 @@ import {
   phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SCALE,
   probabilityScaleReach, undeclaredCommittedKinds
 } from '../../src/lib/fmea';
-import { cpConfidenceWiring, cpFamilyConfidence } from '../../src/lib/fmea';
+import {
+  cpConfidenceWiring, cpFamilyConfidence, PROBABILITY_SOURCE_NOTE, PROBABILITY_SOURCES,
+  probabilitySourceConflicts, probabilitySourceCounts
+} from '../../src/lib/fmea';
 import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
 import { PHASE_YEAR } from '../../src/lib/rollout';
 import { PARAMS_BY_ID } from '../../src/lib/params';
@@ -32,18 +35,18 @@ describe('FMEA derivation', () => {
     }
   });
 
-  test('phase-target matrix total equals assessed count and both-critical equals top-right cell', () => {
+  test('phase-target matrix total equals the scored count and both-critical equals top-right cell', () => {
     let total = 0;
     for (let c = 1; c <= 5; c++) for (let p = 1; p <= 5; p++) total += FMEA_DATA.matrix[c][p];
-    expect(total).toBe(FMEA_DATA.counts.assessed);
+    expect(total).toBe(FMEA_DATA.counts.scored);
     expect(FMEA_DATA.both.length).toBe(FMEA_DATA.matrix[5][5]);
   });
 
-  test('the CP calibration matrix is separate and totals the CP records', () => {
+  test('the CP calibration matrix is separate and totals the scored CP records', () => {
     let cptotal = 0;
     for (let c = 1; c <= 5; c++) for (let p = 1; p <= 5; p++) cptotal += FMEA_DATA.cpMatrix[c][p];
-    expect(cptotal).toBe(FMEA_DATA.counts.cpAssessed);
-    expect(FMEA_DATA.counts.assessed).toBe(727);   // phase-target failures only
+    expect(cptotal).toBe(FMEA_DATA.counts.cpScored);
+    expect(FMEA_DATA.counts.cpScored + FMEA_DATA.counts.cpUnscored).toBe(FMEA_DATA.counts.cp);
     expect(FMEA_DATA.cpFamilyRisk.length).toBe(20);
   });
 
@@ -69,6 +72,62 @@ describe('FMEA derivation', () => {
 
   test('the seven deferred qualitative targets surface as parameter gaps', () => {
     expect(FMEA_DATA.gaps.deferredParamIds.length).toBe(7);
+  });
+});
+
+/* R276 [§S4]: one boolean did three jobs. probabilityAssessed was false for a
+   borrowed score, a proxied placeholder and no score at all alike, and the
+   client appended "(unscored)" to every one of them beside a numeric pill. */
+describe('R276 where a probability came from is a four-way fact', () => {
+  test('every record declares one of the four sources, and they sum to the total', () => {
+    const by = probabilitySourceCounts();
+    const sum = PROBABILITY_SOURCES.reduce((n, s) => n + by[s], 0);
+    expect(sum).toBe(FMEA_DATA.counts.total);
+    for (const r of FMEA_DATA.records) {
+      expect(PROBABILITY_SOURCES, r.id).toContain(r.probabilitySource);
+    }
+  });
+
+  test('no record both carries a score and denies having one', () => {
+    expect(probabilitySourceConflicts()).toEqual([]);
+  });
+
+  test('an unscored record carries no number, no band and no risk', () => {
+    const unscored = FMEA_DATA.records.filter((r) => r.probabilitySource === 'unscored');
+    expect(unscored.length).toBeGreaterThan(0);
+    for (const r of unscored) {
+      expect(r.probability, r.id).toBe(0);
+      expect(r.risk, r.id).toBe(0);
+      expect(r.rpn, r.id).toBe(0);
+      expect(r.band, r.id).toBe('unscored');
+      expect(r.tier, r.id).toBe('Unassessed');
+    }
+  });
+
+  test('a borrowed score is a real score and is not called unscored', () => {
+    const borrowed = FMEA_DATA.records.filter((r) => r.probabilitySource === 'borrowed');
+    expect(borrowed.length).toBeGreaterThan(0);
+    for (const r of borrowed) {
+      expect(r.probability, r.id).toBeGreaterThanOrEqual(PROBABILITY_FLOOR);
+      expect(r.band, r.id).not.toBe('unscored');
+    }
+    expect(PROBABILITY_SOURCE_NOTE.borrowed).toContain('borrowed');
+    expect(PROBABILITY_SOURCE_NOTE.borrowed).not.toContain('unscored');
+    expect(PROBABILITY_SOURCE_NOTE.unscored).toContain('unscored');
+  });
+
+  test('probabilitySourceConflicts reports a score published beside "unscored"', () => {
+    /* Constructed failing input: exactly the shipped defect - a record that
+       says it has no probability while carrying one. */
+    const rec = FMEA_DATA.records.filter((r) => r.probabilitySource === 'unscored')[0];
+    const saved = rec.probability;
+    try {
+      rec.probability = 3;
+      expect(probabilitySourceConflicts().join(' ')).toContain(rec.id);
+    } finally {
+      rec.probability = saved;
+    }
+    expect(probabilitySourceConflicts()).toEqual([]);
   });
 });
 

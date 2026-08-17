@@ -3688,6 +3688,9 @@ footer.site a { color: var(--text-muted); }
 .fmea-cell-high     { --band: var(--series-8); }
 .fmea-cell-moderate { --band: var(--series-3); }
 .fmea-cell-low      { --band: var(--series-4); }
+/* R276: not a risk level, the absence of one. Neutral on purpose, so a record
+   whose probability could not be derived does not read as low risk. */
+.fmea-cell-unscored { --band: var(--text-muted); }
 
 .fmea-kicker {
   display: block; color: var(--accent); font-size: 10.5px; font-weight: 650;

@@ -31,7 +31,8 @@ import {
 } from './target-parse-check';
 import {
   committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, fmeaSelfTests, phaseOrderDrift,
-  PROBABILITY_CEILING, PROBABILITY_FLOOR, probabilityScaleReach, undeclaredCommittedKinds
+  PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SOURCES, probabilityScaleReach,
+  probabilitySourceConflicts, probabilitySourceCounts, undeclaredCommittedKinds
 } from './fmea';
 import {
   ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
@@ -735,6 +736,18 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? 'not in AUTHORITATIVE_KINDS: ' + undeclared.join(', ')
             : kinds.reduce((n, k) => n + k.rows, 0) + ' carried forward across ' +
               kinds.map((k) => k.kind + ' ' + k.rows).join(', ')
+        };
+      }),
+      /* R276 [§S4]: a record either carries a score on the published scale or
+         carries none, and it says which. The failure this catches is the one
+         the row names: a numeric pill rendered beside the word "unscored". */
+      runGuarded('No failure mode both carries a score and denies having one', () => {
+        const conflicts = probabilitySourceConflicts();
+        const by = probabilitySourceCounts();
+        return {
+          ok: !conflicts.length,
+          note: conflicts.slice(0, 5).join(' | ') ||
+            PROBABILITY_SOURCES.map((s) => by[s] + ' ' + s).join(', ')
         };
       }),
       /* R275 [§S4]: CP occurrence is borrowed from params.ts, so what is

@@ -275,25 +275,31 @@ function familyInputLabel(family: string): string {
  * Standard risk matrix. Rows are consequence 1..5, columns probability 1..5.
  * Bands map to the dashboard palette: low=green, moderate=yellow,
  * high=orange, extreme=red. */
-type Band = 'low' | 'moderate' | 'high' | 'extreme';
-const RISK_GRID: Record<number, Band[]> = {
+export type Band = 'low' | 'moderate' | 'high' | 'extreme' | 'unscored';
+type ScoredBand = Exclude<Band, 'unscored'>;
+const RISK_GRID: Record<number, ScoredBand[]> = {
   5: ['high', 'high', 'extreme', 'extreme', 'extreme'],
   4: ['moderate', 'high', 'high', 'extreme', 'extreme'],
   3: ['low', 'moderate', 'high', 'high', 'extreme'],
   2: ['low', 'low', 'moderate', 'moderate', 'high'],
   1: ['low', 'low', 'low', 'moderate', 'moderate']
 };
+/* R276 [§S4]: 'unscored' is a band the grid cannot produce, for records that
+   have no place on it. It used to be 'low', so a cost parameter whose
+   occurrence could not be assessed at all published a green "Low risk" chip
+   beside the word Unassessed. */
 export const BAND_META: Record<Band, { label: string; tier: string; color: string; order: number }> = {
   extreme:  { label: 'Extreme', tier: 'Critical', color: 'var(--series-6)', order: 0 },
   high:     { label: 'High',    tier: 'Serious',  color: 'var(--series-8)', order: 1 },
   moderate: { label: 'Moderate', tier: 'Moderate', color: 'var(--series-3)', order: 2 },
-  low:      { label: 'Low',     tier: 'Minor',    color: 'var(--series-4)', order: 3 }
+  low:      { label: 'Low',     tier: 'Minor',    color: 'var(--series-4)', order: 3 },
+  unscored: { label: 'Unscored', tier: 'Unassessed', color: 'var(--text-muted)', order: 4 }
 };
-function bandFor(consequence: number, probability: number): Band {
+function bandFor(consequence: number, probability: number): ScoredBand {
   return RISK_GRID[consequence][probability - 1];
 }
 /* Band for any cell of the chart, including empty ones (for coloring). */
-export function cellBand(consequence: number, probability: number): Band {
+export function cellBand(consequence: number, probability: number): ScoredBand {
   return RISK_GRID[consequence][probability - 1];
 }
 
@@ -321,7 +327,39 @@ export function cellBand(consequence: number, probability: number): Band {
  * "unlikely" to be missed, because every one of them is a target on a system
  * still being built. That is a modelling position, so it is stated, the claim
  * that dressed it up as a result is gone, and the chart is drawn from the
- * reachable range so an unreachable band cannot be rendered again. */
+ * reachable range so an unreachable band cannot be rendered again.
+ *
+ * R276 [§S4]: where a probability came from is a four-way fact and used to be
+ * carried on one boolean, probabilityAssessed, which was false for all three
+ * of the non-native cases at once. The client keyed a single disclosure off it
+ * and appended "(unscored)" to every one of them - so 310 cost parameters
+ * published a probability pill, a risk pill, an RPN, a coloured band chip and
+ * a number in the table's P column beside a sentence saying the score did not
+ * exist. Meanwhile counts.assessed reported 727 of 727 assessed while 317
+ * records carried the flag saying otherwise. Both numbers were defensible and
+ * they described different things, which is what made the ranking unreadable.
+ *
+ *   native   - scored from this parameter's own controlled target value.
+ *   borrowed - a real score, taken from another layer: the confidence grade of
+ *              the simulation parameters calibrating this ledger (R275). Not
+ *              native to the controlled catalog, which is worth disclosing,
+ *              but it is a score and the record belongs on its chart.
+ *   proxied  - a placeholder. The framework deferred the number, so there is
+ *              nothing to score and 3 was put in its place (R279).
+ *   unscored - no score at all. Nothing in either layer supplies one.
+ *
+ * needsNewParam still means "the catalog is missing something here", which is
+ * true of borrowed, proxied and unscored alike, and drives the gap machinery
+ * unchanged. */
+export type ProbabilitySource = 'native' | 'borrowed' | 'proxied' | 'unscored';
+export const PROBABILITY_SOURCES: ProbabilitySource[] = ['native', 'borrowed', 'proxied', 'unscored'];
+/* How each source is disclosed wherever a score of that provenance is shown. */
+export const PROBABILITY_SOURCE_NOTE: Record<ProbabilitySource, string> = {
+  native: '',
+  borrowed: 'borrowed: not native to the controlled catalog, see parameter gaps',
+  proxied: 'proxied: no controlled number exists to score against, see parameter gaps',
+  unscored: 'unscored: no probability could be derived at all, see parameter gaps'
+};
 const PROB_BASELINE = 1.5;
 function clampScore(score: number): number { return Math.max(1, Math.min(5, Math.round(score))); }
 
@@ -380,11 +418,17 @@ function statusUncertain(p: QualityParameter): boolean {
   return /required|inferred|to be|baseline\/acceptance|calibration required/.test(s);
 }
 
-function probabilityForRow(p: QualityParameter, e: RolloutEntry): { score: number; basis: string; assessed: boolean } {
+function probabilityForRow(
+  p: QualityParameter, e: RolloutEntry
+): { score: number; basis: string; source: ProbabilitySource } {
   const meta = parseNum(e.value);
   if (!meta) {
     /* qualitative ladder rung: the number itself was deferred */
-    return { score: 3, basis: 'Deferred numeric target: occurrence proxied at moderate; a controlled number is required to assess it properly.', assessed: false };
+    return {
+      score: 3,
+      basis: 'Deferred numeric target: occurrence proxied at moderate; a controlled number is required to assess it properly.',
+      source: 'proxied'
+    };
   }
   let score = PROB_BASELINE;
   const parts: string[] = ['baseline ' + PROB_BASELINE];
@@ -396,7 +440,7 @@ function probabilityForRow(p: QualityParameter, e: RolloutEntry): { score: numbe
   if (statusUncertain(p)) { score += 0.5; parts.push('not yet calibrated +0.5'); }
   if (e.phase === 'P0' || e.phase === 'P1') { score += 1; parts.push('unproven foundation system +1'); }
   else if (e.phase === 'P2') { score += 0.5; parts.push('first live operation +0.5'); }
-  return { score: clampScore(score), basis: parts.join(', '), assessed: true };
+  return { score: clampScore(score), basis: parts.join(', '), source: 'native' };
 }
 
 /* R274: the reachable ends of the occurrence scale, derived from the two
@@ -563,7 +607,7 @@ export interface FmeaRecord {
   effect: string;
   probability: number;
   probabilityBasis: string;
-  probabilityAssessed: boolean;
+  probabilitySource: ProbabilitySource;  // R276: native | borrowed | proxied | unscored
   consequence: number;
   consequenceBasis: string;
   detect: number;
@@ -601,7 +645,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
         effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, null),
         probability: prob,
         probabilityBasis: 'No native likelihood attribute on the cost parameter; occurrence read from the weakest confidence grade among the simulation parameters that calibrate the ' + p.family + ' ledger: ' + familyInputLabel(p.family) + '. Weakest is ' + conf + ', which maps to ' + prob + '.',
-        probabilityAssessed: false,
+        probabilitySource: 'borrowed',
         consequence: cons.score, consequenceBasis: cons.basis,
         detect: det.score, detectBasis: det.basis,
         risk: prob * cons.score, rpn: cons.score * prob * det.score,
@@ -620,10 +664,10 @@ QUALITY_DATA.parameters.forEach(function (p) {
         effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, null),
         probability: 0,
         probabilityBasis: 'Unassessable: the ' + p.family + ' ledger has no phase target and no sampled parameter of its own in the simulation, so nothing in either layer supplies a likelihood signal to borrow.',
-        probabilityAssessed: false,
+        probabilitySource: 'unscored',
         consequence: cons.score, consequenceBasis: cons.basis,
         detect: det.score, detectBasis: det.basis,
-        risk: 0, rpn: 0, band: 'low', tier: 'Unassessed',
+        risk: 0, rpn: 0, band: 'unscored', tier: BAND_META.unscored.tier,
         needsNewParam: true,
         newParamNote: 'A new controlled calibration-confidence parameter is required before probability can be assessed.'
       });
@@ -647,13 +691,13 @@ QUALITY_DATA.parameters.forEach(function (p) {
       gate: isGateRow ? gate : (gate || null),
       failureMode: 'Phase target not met: ' + e.value + ' at ' + e.phase + '.',
       effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, e),
-      probability: prob.score, probabilityBasis: prob.basis, probabilityAssessed: prob.assessed,
+      probability: prob.score, probabilityBasis: prob.basis, probabilitySource: prob.source,
       consequence: cons.score, consequenceBasis: cons.basis,
       detect: det.score, detectBasis: det.basis,
       risk: prob.score * cons.score, rpn: cons.score * prob.score * det.score,
       band: band, tier: BAND_META[band].tier,
-      needsNewParam: !prob.assessed,
-      newParamNote: !prob.assessed
+      needsNewParam: prob.source !== 'native',
+      newParamNote: prob.source !== 'native'
         ? 'The framework deliberately deferred this numeric target, so its occurrence cannot be assessed from a real number. A calibrated target adopted by the scorekeeping board is the missing parameter.'
         : ''
     });
@@ -669,20 +713,22 @@ RECORDS.sort(function (a, b) {
  * are kept on separate charts: the CP occurrence axis is borrowed from the
  * simulation layer, not native to the controlled catalog, so it should not
  * share a matrix with the phase-target failures. */
-interface MatrixAgg { matrix: number[][]; bands: Record<Band, number>; assessed: number; }
+interface MatrixAgg { matrix: number[][]; bands: Record<Band, number>; scored: number; }
 function buildMatrix(recs: FmeaRecord[]): MatrixAgg {
   const m: number[][] = [];
   for (let c = 1; c <= 5; c++) { m[c] = [0, 0, 0, 0, 0, 0]; }
-  const bands: Record<Band, number> = { extreme: 0, high: 0, moderate: 0, low: 0 };
-  let assessed = 0;
+  const bands: Record<Band, number> = { extreme: 0, high: 0, moderate: 0, low: 0, unscored: 0 };
+  let scored = 0;
   recs.forEach(function (r) {
     if (r.probability >= 1 && r.probability <= 5 && r.risk > 0) {
       m[r.consequence][r.probability] += 1;
       bands[r.band] += 1;
-      assessed += 1;
+      scored += 1;
+    } else {
+      bands.unscored += 1;
     }
   });
-  return { matrix: m, bands: bands, assessed: assessed };
+  return { matrix: m, bands: bands, scored: scored };
 }
 const PRIMARY = RECORDS.filter(function (r) { return r.paramType !== 'CP'; });
 const CP_RECS = RECORDS.filter(function (r) { return r.paramType === 'CP'; });
@@ -813,6 +859,37 @@ export function phaseOrderDrift(): string[] {
   return problems;
 }
 
+/* R276: how many records carry each kind of probability, and whether any of
+   them contradicts its own score. A borrowed or native score has to be on the
+   scale; an unscored one has to carry no number at all. Shipping a numeric
+   pill beside the word "unscored" is the defect the row names, and this is
+   what makes the two disagree loudly rather than silently. */
+export function probabilitySourceCounts(): Record<ProbabilitySource, number> {
+  const out = { native: 0, borrowed: 0, proxied: 0, unscored: 0 };
+  RECORDS.forEach(function (r) { out[r.probabilitySource] += 1; });
+  return out;
+}
+export function probabilitySourceConflicts(): string[] {
+  const bad: string[] = [];
+  RECORDS.forEach(function (r) {
+    const hasScore = r.probability >= PROBABILITY_FLOOR && r.probability <= PROBABILITY_CEILING;
+    if (r.probabilitySource === 'unscored' && (hasScore || r.risk > 0 || r.rpn > 0)) {
+      bad.push(r.id + ' is unscored but carries probability ' + r.probability +
+        ', risk ' + r.risk + ', RPN ' + r.rpn);
+    }
+    if (r.probabilitySource !== 'unscored' && !hasScore) {
+      bad.push(r.id + ' is ' + r.probabilitySource + ' but carries no score on the scale');
+    }
+    if (r.probabilitySource === 'unscored' && r.band !== 'unscored') {
+      bad.push(r.id + ' is unscored but publishes the ' + r.band + ' band');
+    }
+    if (r.probabilitySource !== 'unscored' && r.band === 'unscored') {
+      bad.push(r.id + ' is ' + r.probabilitySource + ' but publishes no band');
+    }
+  });
+  return bad;
+}
+
 /* headline groupings the brief asks for, over the phase-target set */
 const mostProbable = PRIMARY.filter(function (r) { return r.probability === 5 && r.risk > 0; });
 const mostConsequential = PRIMARY.filter(function (r) { return r.consequence === 5 && r.risk > 0; });
@@ -821,8 +898,10 @@ const both = PRIMARY.filter(function (r) { return r.probability === 5 && r.conse
 /* per-family CP calibration-risk summary for the CP panel */
 const cpFamilyRisk = (QUALITY_DATA.cpFamilies || []).map(function (f) {
   const recs = CP_RECS.filter(function (r) { return r.family === f.id; });
-  const bands: Record<Band, number> = { extreme: 0, high: 0, moderate: 0, low: 0 };
-  let worst: Band = 'low';
+  const bands: Record<Band, number> = { extreme: 0, high: 0, moderate: 0, low: 0, unscored: 0 };
+  /* R276: 'unscored' has the highest order, so a family whose records are all
+     unscored reports Unscored rather than borrowing the Low swatch. */
+  let worst: Band = 'unscored';
   recs.forEach(function (r) {
     bands[r.band] += 1;
     if (BAND_META[r.band].order < BAND_META[worst].order) worst = r.band;
@@ -847,16 +926,24 @@ export const FMEA_DATA = {
     total: RECORDS.length,
     kpptpp: PRIMARY.length,
     cp: CP_RECS.length,
-    assessed: P_AGG.assessed,
-    cpAssessed: C_AGG.assessed,
+    /* R276: `scored` counts what is on the chart. It replaces `assessed`,
+       which said 727 of 727 while 317 records carried a flag saying they were
+       not assessed - two defensible numbers describing different things, with
+       one name between them. What each record's probability actually is comes
+       from the by-source counts below. */
+    scored: P_AGG.scored,
+    cpScored: C_AGG.scored,
     extreme: P_AGG.bands.extreme, high: P_AGG.bands.high,
     moderate: P_AGG.bands.moderate, low: P_AGG.bands.low,
     cpExtreme: C_AGG.bands.extreme, cpHigh: C_AGG.bands.high,
     cpModerate: C_AGG.bands.moderate, cpLow: C_AGG.bands.low,
+    cpUnscored: C_AGG.bands.unscored,
     /* R272: how the ranked phase-target set splits by where its value came from */
     equationDerived: EQUATION_ROWS.length,
     committed: COMMITTED_ROWS.length
   },
+  /* R276: every record, by where its probability came from. */
+  bySource: probabilitySourceCounts(),
   committedKinds: committedKindCounts(),
   matrix: P_AGG.matrix,        // KPP/TPP phase-target failures
   cpMatrix: C_AGG.matrix,      // CP calibration failures (borrowed occurrence)
@@ -912,8 +999,8 @@ export function fmeaSelfTests(): { ok: boolean; messages: string[] } {
     mtot += P_AGG.matrix[c][pr];
     cptot += C_AGG.matrix[c][pr];
   }
-  check(mtot === P_AGG.assessed, 'phase-target matrix total ' + mtot + ' equals assessed ' + P_AGG.assessed);
-  check(cptot === C_AGG.assessed, 'CP matrix total ' + cptot + ' equals CP assessed ' + C_AGG.assessed);
+  check(mtot === P_AGG.scored, 'phase-target matrix total ' + mtot + ' equals scored ' + P_AGG.scored);
+  check(cptot === C_AGG.scored, 'CP matrix total ' + cptot + ' equals CP scored ' + C_AGG.scored);
   check(mtot + cptot === RECORDS.filter(function (r) { return r.risk > 0; }).length, 'the two matrices partition the scored records');
 
   /* the both-critical set is exactly the top-right red cell of the phase-target chart */
