@@ -70,8 +70,10 @@ import {
 
    But a metric/phase pair with NO rollout row is never offered to
    applyEquationTargets at all. computeTargets still evaluates it, and if the
-   result is non-finite nothing anywhere reports that. Eleven cells are in that
-   state today. They are dropped rather than published, so no reader sees NaN -
+   result is non-finite nothing anywhere reports that. Fourteen cells are in
+   that state (eleven when this was written; R226 added three by correcting the
+   phase conversion, and KNOWN_NON_FINITE below carries the reasoning).
+   They are dropped rather than published, so no reader sees NaN -
    but they are silently failing equations, which is exactly what this row is
    for. §S3 owns the equations; this reports them. */
 export interface EquationCell { metric: string; phase: string; text: string }
@@ -313,7 +315,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: s.length ? s.map((x) => x.paramId + '@' + x.phase).join(', ') : 'all converted'
         };
       }),
-      runGuarded('Non-finite equation results are the eleven known ones', () => {
+      runGuarded('Non-finite equation results are the known ones', () => {
         const d = equationTargetDiagnostics();
         const found = d.nonFinite.map((c) => c.metric + '@' + c.phase).sort().join(', ');
         return {
