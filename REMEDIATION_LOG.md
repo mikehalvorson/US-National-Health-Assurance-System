@@ -700,3 +700,233 @@ CODE REVIEW (two axes, against `main`, after the section closed):
   2031 → 2030 in `c36badd`, following the coverage ramp's realignment. It is a
   published year on a public chapter, it belongs in the movement report above,
   and it was only in the commit message.
+
+---
+
+## P4 — §S3 Equation layer · 2026-08-16 · branch `nha-remediation`
+STATUS: complete — all 14 implementable rows landed across 14 commits, plus 2 review fixes
+
+**Entry gate:** `## P1`, `## P2`, `## P3` all `STATUS: complete` ✅ · no local
+`PHASE_T` definition ✅ · `evaluateAtPhase('P0')` resolves the 2027 row, pinned
+by `tests/lib/equations.test.ts` ✅ · `check_audit_docs.py` exit 0, tree clean ✅.
+
+⚠️ One gate wording correction: the P4 handoff recorded `grep -rn "PHASE_T" src/`
+as returning **nothing at all**. It returns three lines — `PHASE_TOKEN` in
+`gate-floors.ts` twice, and one provenance comment in `phase-map-check.ts`. The
+gate's actual requirement (no local phase-to-year map in `equations.ts`) is
+satisfied; the handoff overstated the measurement.
+
+### The headline: this section moves no published number
+
+`preP4` and `postP4` dumps over all 727 published rows: **0 values changed, 0
+kinds changed, 0 rows added or removed.** FMEA ranking identical across all
+1,037 records. Non-finite cells still 14. Clamp counts identical.
+
+That is the correct outcome and it is worth stating plainly, because §S2 moved
+almost everything. §S3's defects were **legibility, sourcing and silence**, not
+arithmetic: a constant nobody could weigh, a disclosure written to a dead field,
+a tolerance nine times looser than the model needs, a parser with two
+implementations, and several fallbacks that never announced themselves. The one
+row that could have moved output (`R148`) turned out to correct a scaffold that
+is replaced before publication.
+
+Self-tests **62 → 78**. `astro check`: 0 errors, 0 warnings, 3 hints (the same
+three pre-existing ones; none from this branch).
+
+### LANDED
+
+| R | sha | What |
+|---|---|---|
+| R228 | `a2363b9` | The rollout `kind` vocabulary declared, with each kind's producer and disposition |
+| R147 | `4a7d03d` | The thirteen entry-floor constants measured: they set no published number |
+| R148 | `3d669cb` | Interpolation on the calendar rather than list position |
+| R150 | `b2ced0a` | The relevance table's fallback enumerated by ID |
+| R151+R277 | `690a99e` | One `parseNum`; both silent outcomes declared |
+| R233 | `63d0d1f` | `!matMeta` means take no anchors, and a templated target counts as no parse |
+| R227 | `ff38202` | 🔴 `KAPPA` registered, sourced to `GATES[G5]`, graded, banded |
+| R232 | `fa4099d` | Raw and clamped values in the same view; clamp counts per metric |
+| — | `a71d57a` | Review fix: R232's source assertion could not fail |
+| R231 | `61d9f06` | Maturity tolerance 12% to 2%, and two hidden misses surfaced |
+| R235 | `3f90b1b` | The maturity exemption moved onto the catalog record |
+| R229 | `edc7d00` | The import-time enricher convention, written down and enforced |
+| R225 | `92bf6ae` | Both enrichers' idempotence pinned, including with the guards removed |
+| R221 | `d549317` | The page states where every published target came from |
+| — | `c404c5f` | Review fix: two counts still saying eleven after §S2 made them fourteen |
+
+Non-implementable, as the section brief states: **`R222`** (resolved in §BP1) and
+**`R224`** (discharged in §BQ). Both confirmed still resolved; no action.
+
+### CLAMP COUNTS
+
+**21 of the 127 metrics that publish equation rows are bounded at least once;
+40 rows in total.** The row asked for every metric bounded at three or more
+phases; the full list is short enough to give whole.
+
+| Metric | Bounded / equation rows | Phases |
+|---|---|---|
+| `TPP-USE1` | 5 / 7 | P1 P2 P3 P4 P5 |
+| `KPP-C5` | 4 / 4 | P3 P4 P5 P6 |
+| `KPP-C8` | 4 / 5 | P4 P5 P6 P7 |
+| `TPP-1.1` | 3 / 5 | P2 P4 P5 |
+| `TPP-10.2` | 2 / 2 | P4 P5 |
+| `TPP-10.5` | 2 / 5 | P2 P3 |
+| `TPP-10.6` | 2 / 4 | P3 P4 |
+| `TPP-11.1` | 2 / 2 | P4 P5 |
+| `TPP-11.2` | 2 / 5 | P2 P3 |
+| `TPP-12.6` | 2 / 4 | P4 P5 |
+| `TPP-3.3` | 2 / 6 | P6 P7 |
+| `TPP-11.3` | 1 / 5 | P3 |
+| `TPP-6.2` | 1 / 2 | P6 |
+| `KPP-A1` `KPP-A2` `KPP-A6` `KPP-C1` `KPP-C2` `KPP-C3` `KPP-E1` `TPP-8.1` | 1 each | P7 |
+
+**Four metrics publish nothing but committed floors** — every equation row they
+carry is clamped: `KPP-A1` (1/1), `KPP-C5` (4/4), `TPP-10.2` (2/2), `TPP-11.1`
+(2/2). For those the equation contributes no interim number a reader ever sees.
+They are declared as `FULLY_CLAMPED` in `selftests.ts` so a fifth fails the
+build. **This is not a defect to fix by loosening the clamp** — the clamp is
+correct, it stops the equation contradicting a committed floor. It is a fact
+about where the model is decorative.
+
+The `P7` cluster has one cause: `KPP-C5`'s and `KPP-C6`'s `PR-SCH-*` progression
+floors and the `TPP-11.5` AI floor all bind at P7, and a future committed anchor
+bounds every earlier phase.
+
+### KAPPA SENSITIVITY
+
+Whole catalog recomputed at 4, 8 and 16 through a `withKappa` seam. Interior
+phases only, because maturity is unchanged at every setting by construction —
+which is exactly why the one pre-existing assertion could never have seen it.
+
+| kappa | Metrics moved (of 130) | Median shift | 90th pct | Widest single interim target |
+|---|---|---|---|---|
+| 4 | 102 | 1.5% | 35.7% | `TPP-8.1@P3` `<=43.2%` to `<=22.4%` |
+| **8** (fitted) | 0 | 0.0% | 0.0% | (the base case) |
+| 16 | 102 | 3.1% | 76.2% | `TPP-8.1@P3` `<=43.2%` to `<=84.8%` |
+
+The training-slot vacancy ceiling at P3 is published as `<=43.2%` and is
+`<=22.4%` or `<=84.8%` depending on a scalar fitted to one observation about AI
+oversight capture. **102 of 130 metrics move.** The band is published in
+`research/quality-equation-methodology.md` and checked against the model at
+build time.
+
+`KAPPA`'s grade is **low**, downgraded from the methodology's previous
+**medium**: one calibration point, applied uniformly, with no second
+observation to test it against.
+
+### PARSENUM
+
+**One implementation**, `phase-targets.ts`. `equations.ts` already imported it;
+`fmea.ts` reimplemented it under a comment reading *"mirrors phase-targets.ts
+parseNum"* and now imports it too. Enforced by a source scan rather than an
+output comparison, because the failure mode is a second implementation existing
+at all — comparing outputs only catches a copy that has already diverged. FMEA
+record count unchanged at 1,037.
+
+### DISCREPANCY
+
+- **`D30` — `R233`'s eight template metrics are not the eight strings the row
+  quotes.** `§BQ9` lists catalog targets like `'>={X}% reduction in avoidable
+  admissions'`. Those are the `template` field on each `EquationDef`, not the
+  catalog target. The actual eight are `KPP-C2` plus `KPP-D1` to `KPP-D7`, whose
+  catalog targets are prose: *"reduction to be calibrated"*, *"to be
+  calibrated"*. **The code wins.** The row's "six of the eight are percentages"
+  is likewise not a statement about the catalog targets.
+- **`D31` — `R233`'s `!matMeta` bypass admits nothing today.** Measured across
+  every authoritative anchor: no metric has an anchor whose unit differs from
+  its own, and the seven null-parsing metrics have no parseable authoritative
+  anchor at all. The guard was inert. **But KPP-C2 was live and the row missed
+  it** — see `D32`.
+- **`D32` — `R277`'s "demonstrated but unverified" hazard is live, in a
+  different place.** `§BU6` predicted a calendar year parsed out of a
+  parenthetical, unverified in the corpus. That does not reproduce. What does:
+  `KPP-C2`'s maturity target *"to be reconciled with $4.75T total system cost
+  and current population denominator"* parses as `{num: 4.75, unit: 'money'}` —
+  a national total in trillions read as a per-person dollar target, and eligible
+  as a clamping anchor against a metric published near $14,000 per person. It
+  never bit because the comparison is `<=` and the bound could only raise a
+  floor the equation was already far above. That is luck about the direction,
+  not a guard. Declared in `DECLARED_TARGET_MISPARSES`; removed from the anchor
+  set by `R233`.
+- **`D33` — `R147` was measured, not implemented as filed.** The row asks for a
+  registry entry and a source for each of thirteen constants. Replacing the
+  whole function with `meta.num * 0.137` **and** replacing the linear
+  interpolation with a power curve changes **0 of 727** published rows. The
+  constants are a scaffold whose values are discarded; a registry entry would
+  document a placeholder. They are not deleted, because the entry anchor is what
+  lets the interpolation bracket the phases before a metric's first committed
+  anchor, and deleting it drops the published count below 727.
+- **`D34` — `R150`'s fallback is eleven ids, not zero, and ten are one family.**
+  `KPP-W2` to `KPP-W5`, `TPP-W1`, `TPP-W2`, `TPP-IMM1` to `TPP-IMM4` (Workforce
+  and care delivery) plus `TPP-FORM1`. They stay at P4: there is no sourced
+  start phase for the health-talent channel, and writing a per-family reason
+  that cannot be sourced would be the same defect in prose. Declared instead, so
+  a new metric without a rule fails the build.
+- **`D35` — `R231`'s 12% tolerance was hiding exactly what the exemption list
+  exists to show.** 106 of 118 metrics close to within one part in a million.
+  The slack was carrying a normalization residual (widest `KPP-B2`, 1.4%) and
+  four real misses. Two of the four, `KPP-C7` (8.7%) and `TPP-W1` (3.9%), sat
+  **inside** the old bound and appeared nowhere. `KPP-C7`'s gap was already
+  written up in the methodology without the test acknowledging it; `TPP-W1`'s
+  was written up nowhere. Tolerance now 2%; the exemption list is four.
+- **`D36` — the header's "base-case maturity values close exactly" was nearly
+  true and the assertion was nine times looser than it needed to be.** Both are
+  corrected rather than one being softened to match the other.
+- **`D37` — `R232` was cheaper than filed and its second half was different.**
+  `§BR3`'s `!compact` removal is one condition. But `entry.interpretation` said
+  only *that* an adjustment happened; it now names both numbers, and
+  `RolloutEntry` carries `raw` and `bounded` so the two can be shown together.
+- **`D38` — `R221`'s question resolves against the page, not the code.** The
+  equation layer is real (`V3`). The page's *"Targets here are calculated, not
+  asserted"* is false for 189 of 727 published rows. The page states the split
+  now, counted from the catalog.
+- **`D39` — the methodology overstated one self-test.** It said
+  `equationSelfTests` checks finiteness *"across all 19 scenarios"*. It checks
+  `SCN-BASE`; the Vitest suite does the scenario sweep. Corrected in place.
+
+### NEW FINDINGS
+
+- **`§S4` (P5) — the FMEA is unaffected by §S3.** All 1,037 criticality ranks
+  identical before and after. `§BU1`'s dependency is real but it runs through
+  the published targets, and this section moved none.
+- **`§S12` (P18) / `R220` — `quality.astro` now derives four more counts** (the
+  derivation split, the published-row total, the equation share, the kappa
+  metric count). The hardcoded `45` / `85` / `310` in the same file are
+  untouched and still `R220`'s to fix.
+- **`§S16` (P22) — `RolloutEntry` and `QualityParameter` gained four optional
+  fields** (`raw`, `bounded`, `documentedGap`, `documentedGapSection`), emitted
+  by `tools/extract_quality_catalog.py`. The catalog regenerates cleanly; the
+  payload is byte-identical apart from the four stamped records.
+- **A check that could not fail shipped and was caught in the same session**
+  (`a71d57a`). R232's source assertion anchored on `"computed value strip"`
+  where the comment reads `"Computed value strip"`; `indexOf` returned -1 and
+  every derived slice was empty. This is `R43`'s defect for the third time in
+  four sections. **Breaking the code and watching is the only thing that finds
+  it** — the fixed version was verified against the failing state before it was
+  committed.
+- **`applyPhaseTargets` is more robustly idempotent than its flag suggests.**
+  Forcing it past its `have[phase]` guard changes nothing, because on a second
+  pass every phase is anchored and the interpolation's bracket collapses to
+  `lo === hi`. Recorded because the first attempt to prove `R225`'s test could
+  fail used exactly that probe and it passed.
+- **`git checkout -- <path>` cost work again**, exactly as the P3 handoff warns.
+  R150's edits to `phase-targets.ts` were discarded while proving an unrelated
+  gate. Committing before proving gates is the only reliable order.
+
+### CONTRADICTIONS
+
+None between the code and itself. Ten between the audit documents and the code,
+recorded as `D30` to `D39` above. The rate is consistent with the `## P2` and
+`## P3` sections (nine and ten).
+
+### Notes for §S4 (P5), which runs next
+
+- **Nothing to re-derive from this section.** The criticality ranking is
+  unchanged, so `§BU1`'s "one bug, two chapters, opposite directions" concern is
+  discharged by measurement rather than by argument.
+- **`fmea.ts` no longer owns a parser.** `R277`'s consolidation means a change
+  to `parseNum` now moves FMEA probability scores too. That is the point, and it
+  is also a new coupling to be aware of.
+- **`R244`'s pattern and `R250`'s pattern are untouched**, as the brief requires.
+- **The 14 non-finite cells are still 14 and still inert.** §S3 did not close
+  them; they sit at phases earlier than their metric's `_phaseStart` and no
+  rollout row exists at any of them. Making them finite remains open.
