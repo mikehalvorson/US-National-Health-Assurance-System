@@ -172,6 +172,21 @@ function renderTiers(): void {
     }
     host.appendChild(card);
   });
+
+  /* R272: the ranking compares two populations, and which one a row belongs to
+     decides whether a correction inside the equation layer moves it. Say so
+     where the ranking is read, with counts derived from the records. */
+  const kinds = F.committedKinds.map(function (k) { return k.rows + ' ' + k.kind; });
+  const note = el('p', 'fmea-axis-note',
+    'Two populations are ranked against each other here. ' +
+    F.counts.equationDerived.toLocaleString('en-US') + ' of these failure modes score a ' +
+    'target the equation layer recomputes from the model, and ' +
+    F.counts.committed.toLocaleString('en-US') + ' score a value the plan committed to and ' +
+    'the equation layer is required to leave alone (' + kinds.join(', ') + '). ' +
+    'A correction inside the equation layer therefore moves part of this ranking ' +
+    'and leaves the rest exactly where it was, which changes the order without ' +
+    'any of the committed targets having changed.');
+  host.appendChild(note);
 }
 
 /* ---- Cost-parameter calibration risk (separate chart) ----------------- */

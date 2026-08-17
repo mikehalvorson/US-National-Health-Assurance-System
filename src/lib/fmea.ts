@@ -37,9 +37,29 @@ import type { QualityParameter, RolloutEntry } from './quality-data';
    the parser; equations.ts already imported it; now so does this. */
 import { parseNum } from './phase-targets';
 import type { NumMeta } from './phase-targets';
+/* R272 [§S4]: two imports that make an invisible dependency visible.
+ *
+ * This module used to import QUALITY_DATA and nothing else, so nothing at the
+ * import line said that the values it scores are rewritten by the equation
+ * layer at load time - the dependency arrived entirely through quality.ts
+ * mutating the shared catalog. That is why R226's blast radius reached this
+ * chapter without anyone tracing it, and why R263 had to be graded on the
+ * page's prose instead of on read code.
+ *
+ *   PHASE_YEAR         - the one phase->year definition (R251). priorNum's
+ *                        "previous phase" ordering is a probability input, and
+ *                        it used to be ordered by a fourth local copy of the
+ *                        phase list declared as a literal in this file.
+ *   AUTHORITATIVE_KINDS - the rollout kinds applyEquationTargets does NOT
+ *                        rewrite. Rows of those kinds are scored from the
+ *                        catalog value verbatim and are ranked against rows the
+ *                        equation layer recomputed. See TARGET_PROVENANCE. */
+import { PHASE_YEAR } from './rollout';
+import { AUTHORITATIVE_KINDS } from './equations';
 
 /* ---- Phase order and anchors ----------------------------------------- */
-const PHASE_ORDER = ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
+const PHASE_ORDER: string[] = Object.keys(PHASE_YEAR)
+  .sort(function (a, b) { return PHASE_YEAR[a] - PHASE_YEAR[b]; });
 function pIdx(p: string): number { return PHASE_ORDER.indexOf(p); }
 const PHASE_ANCHOR: Record<string, string> = {};
 QUALITY_DATA.phases.forEach(function (ph) { PHASE_ANCHOR[ph.id] = ph.anchor; });
@@ -381,6 +401,26 @@ function effectText(p: QualityParameter, cls: EffectClass, e: RolloutEntry | nul
   }
 }
 
+/* ---- Where the scored value came from (R272) --------------------------
+ * applyEquationTargets replaces only 'derived interim target' rows, and marks
+ * each one it replaces by rewriting its kind to 'equation-derived target'.
+ * Every other rollout kind is carried out of the catalog verbatim: committed
+ * progression floors, phase milestones, data-plan interim targets and maturity
+ * targets, all declared in AUTHORITATIVE_KINDS because the equation layer is
+ * required to leave them alone.
+ *
+ * Both sets land in one criticality ranking and are compared directly. So a
+ * correction inside the equation layer moves part of the ranking and leaves
+ * the rest exactly where it was - R226 was such a correction, and it moved 538
+ * of the 727 phase-target rows while the other 189 did not move at all. The
+ * ranking is this chapter's whole product, so the split is published rather
+ * than left for a reader to infer from a `kind` string. */
+export const EQUATION_DERIVED_KIND = 'equation-derived target';
+export type TargetProvenance = 'equation' | 'committed' | 'calibration';
+function provenanceOf(kind: string): TargetProvenance {
+  return kind === EQUATION_DERIVED_KIND ? 'equation' : 'committed';
+}
+
 /* ---- FMEA record shape ------------------------------------------------ */
 export interface FmeaRecord {
   id: string;
@@ -392,6 +432,7 @@ export interface FmeaRecord {
   phase: string;          // P0..P8, or 'calibration' for CP
   phaseAnchor: string;
   targetKind: string;
+  targetProvenance: TargetProvenance;  // R272: equation-recomputed or carried verbatim
   target: string;         // the phase-target value that must be met
   gate: string | null;
   failureMode: string;
@@ -432,6 +473,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
         id: 'FM-' + p.id, paramId: p.id, paramType: 'CP', paramName: p.name,
         concept: p.concept, family: p.family, phase: 'calibration',
         phaseAnchor: 'calibration', targetKind: 'calibration control',
+        targetProvenance: 'calibration',
         target: p.target, gate: gate,
         failureMode: 'Value never calibrated, or calibrated outside the controlled range.',
         effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, null),
@@ -450,6 +492,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
         id: 'FM-' + p.id, paramId: p.id, paramType: 'CP', paramName: p.name,
         concept: p.concept, family: p.family, phase: 'calibration',
         phaseAnchor: 'calibration', targetKind: 'calibration control',
+        targetProvenance: 'calibration',
         target: p.target, gate: gate,
         failureMode: 'Value never calibrated, or calibrated outside the controlled range.',
         effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, null),
@@ -478,7 +521,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
       paramId: p.id, paramType: p.type as 'KPP' | 'TPP', paramName: p.name,
       concept: p.concept, family: p.id.match(/^(KPP-[A-Z]+|TPP-[0-9]+|TPP-[A-Z]+)/) ? p.id.match(/^(KPP-[A-Z]+|TPP-[0-9]+|TPP-[A-Z]+)/)![0] : p.id,
       phase: e.phase, phaseAnchor: PHASE_ANCHOR[e.phase] || e.phase,
-      targetKind: e.kind, target: e.value,
+      targetKind: e.kind, targetProvenance: provenanceOf(e.kind), target: e.value,
       gate: isGateRow ? gate : (gate || null),
       failureMode: 'Phase target not met: ' + e.value + ' at ' + e.phase + '.',
       effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, e),
@@ -524,6 +567,41 @@ const CP_RECS = RECORDS.filter(function (r) { return r.paramType === 'CP'; });
 const P_AGG = buildMatrix(PRIMARY);
 const C_AGG = buildMatrix(CP_RECS);
 
+/* R272: the provenance split of the ranked set, and the kinds it was built
+   from, so the page can state the mix and a check can compare it with the
+   equation layer's own declaration rather than a list retyped here. */
+const EQUATION_ROWS = PRIMARY.filter(function (r) { return r.targetProvenance === 'equation'; });
+const COMMITTED_ROWS = PRIMARY.filter(function (r) { return r.targetProvenance === 'committed'; });
+export function committedKindCounts(): { kind: string; rows: number }[] {
+  const byKind: Record<string, number> = {};
+  COMMITTED_ROWS.forEach(function (r) { byKind[r.targetKind] = (byKind[r.targetKind] || 0) + 1; });
+  return Object.keys(byKind).sort().map(function (k) { return { kind: k, rows: byKind[k] }; });
+}
+/* A carried-forward row whose kind the equation layer never promised to leave
+   alone: either a new kind arrived, or applyEquationTargets stopped rewriting
+   one it used to. Both make the provenance label wrong, silently. */
+export function undeclaredCommittedKinds(): string[] {
+  return committedKindCounts()
+    .filter(function (c) { return !AUTHORITATIVE_KINDS[c.kind]; })
+    .map(function (c) { return c.kind; });
+}
+/* The phase ordering priorNum compares against, checked against the one
+   phase->year definition rather than assumed (R251, R272). */
+export function phaseOrderDrift(): string[] {
+  const problems: string[] = [];
+  for (let i = 1; i < PHASE_ORDER.length; i++) {
+    const prev = PHASE_ORDER[i - 1], cur = PHASE_ORDER[i];
+    if (!(PHASE_YEAR[prev] < PHASE_YEAR[cur])) {
+      problems.push(prev + ' (year ' + PHASE_YEAR[prev] + ') not before ' +
+        cur + ' (year ' + PHASE_YEAR[cur] + ')');
+    }
+  }
+  QUALITY_DATA.phases.forEach(function (ph) {
+    if (pIdx(ph.id) < 0) problems.push(ph.id + ' is in the catalog but not in PHASE_YEAR');
+  });
+  return problems;
+}
+
 /* headline groupings the brief asks for, over the phase-target set */
 const mostProbable = PRIMARY.filter(function (r) { return r.probability === 5 && r.risk > 0; });
 const mostConsequential = PRIMARY.filter(function (r) { return r.consequence === 5 && r.risk > 0; });
@@ -563,8 +641,12 @@ export const FMEA_DATA = {
     extreme: P_AGG.bands.extreme, high: P_AGG.bands.high,
     moderate: P_AGG.bands.moderate, low: P_AGG.bands.low,
     cpExtreme: C_AGG.bands.extreme, cpHigh: C_AGG.bands.high,
-    cpModerate: C_AGG.bands.moderate, cpLow: C_AGG.bands.low
+    cpModerate: C_AGG.bands.moderate, cpLow: C_AGG.bands.low,
+    /* R272: how the ranked phase-target set splits by where its value came from */
+    equationDerived: EQUATION_ROWS.length,
+    committed: COMMITTED_ROWS.length
   },
+  committedKinds: committedKindCounts(),
   matrix: P_AGG.matrix,        // KPP/TPP phase-target failures
   cpMatrix: C_AGG.matrix,      // CP calibration failures (borrowed occurrence)
   bandMeta: BAND_META,
@@ -628,6 +710,13 @@ export function fmeaSelfTests(): { ok: boolean; messages: string[] } {
 
   /* every record carries a non-empty effect */
   RECORDS.forEach(function (r) { check(!!r.effect && r.effect.length > 10, r.id + ' has an effect narrative'); });
+
+  /* R272: every ranked phase-target row carries a provenance label. The two
+     halves are compared against the equation layer's own declaration by a
+     separate registered row, so a failure there names that invariant. */
+  check(EQUATION_ROWS.length + COMMITTED_ROWS.length === PRIMARY.length,
+    'provenance split ' + EQUATION_ROWS.length + ' + ' + COMMITTED_ROWS.length +
+    ' covers all ' + PRIMARY.length + ' phase-target records');
 
   return { ok: ok, messages: msgs };
 }

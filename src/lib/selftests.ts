@@ -29,7 +29,7 @@ import {
   DECLARED_TARGET_MISPARSES, staleTargetMisparses, undeclaredTargetMisparses,
   unTemplatedNonParsingTargets
 } from './target-parse-check';
-import { fmeaSelfTests } from './fmea';
+import { committedKindCounts, fmeaSelfTests, phaseOrderDrift, undeclaredCommittedKinds } from './fmea';
 import {
   ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
   readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, routeDrift,
@@ -714,10 +714,38 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
   {
     /* R273 */
     surface: 'fmea.ts',
-    rows: () => [runGuarded('Failure-mode records: counts, score ranges and bands', () => {
-      const r = fmeaSelfTests();
-      return { ok: r.ok, note: r.messages.join('; ') };
-    })]
+    rows: () => [
+      runGuarded('Failure-mode records: counts, score ranges and bands', () => {
+        const r = fmeaSelfTests();
+        return { ok: r.ok, note: r.messages.join('; ') };
+      }),
+      /* R272 [§S4]: the criticality ranking compares rows the equation layer
+         recomputed against rows it is required to carry verbatim. That split is
+         published, so it has to be the equation layer's own declaration and not
+         a kind list retyped in fmea.ts. */
+      runGuarded('Every carried-forward failure mode has a kind the equation layer leaves alone', () => {
+        const undeclared = undeclaredCommittedKinds();
+        const kinds = committedKindCounts();
+        return {
+          ok: !undeclared.length,
+          note: undeclared.length
+            ? 'not in AUTHORITATIVE_KINDS: ' + undeclared.join(', ')
+            : kinds.reduce((n, k) => n + k.rows, 0) + ' carried forward across ' +
+              kinds.map((k) => k.kind + ' ' + k.rows).join(', ')
+        };
+      }),
+      /* R272 [§S4]: priorNum's "previous phase" comparison is one of the two
+         probability inputs. It used to be ordered by a fourth local copy of the
+         phase list; it now reads PHASE_YEAR, and this is what keeps it there. */
+      runGuarded('Failure-mode phase ordering comes from the one phase-year map', () => {
+        const problems = phaseOrderDrift();
+        return {
+          ok: !problems.length,
+          note: problems.join('; ') ||
+            Object.keys(PHASE_YEAR).length + ' phases, strictly increasing by year'
+        };
+      })
+    ]
   },
   {
     /* R54 */

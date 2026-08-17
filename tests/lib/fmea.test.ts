@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { FMEA_DATA, fmeaSelfTests, BAND_META } from '../../src/lib/fmea';
+import {
+  BAND_META, committedKindCounts, EQUATION_DERIVED_KIND, FMEA_DATA, fmeaSelfTests,
+  phaseOrderDrift, undeclaredCommittedKinds
+} from '../../src/lib/fmea';
+import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
+import { PHASE_YEAR } from '../../src/lib/rollout';
 
 describe('FMEA derivation', () => {
   test('built-in self-tests pass', () => {
@@ -61,5 +66,53 @@ describe('FMEA derivation', () => {
 
   test('the seven deferred qualitative targets surface as parameter gaps', () => {
     expect(FMEA_DATA.gaps.deferredParamIds.length).toBe(7);
+  });
+});
+
+/* R272 [§S4]: the ranking compares two populations. Which one a row belongs to
+   decides whether a correction inside the equation layer moves it, so the
+   labelling has to hold and the split has to be published. */
+describe('R272 value provenance in the criticality ranking', () => {
+  test('every record is labelled by where its scored value came from', () => {
+    for (const r of FMEA_DATA.records) {
+      if (r.paramType === 'CP') {
+        expect(r.targetProvenance, r.id).toBe('calibration');
+      } else if (r.targetKind === EQUATION_DERIVED_KIND) {
+        expect(r.targetProvenance, r.id).toBe('equation');
+      } else {
+        expect(r.targetProvenance, r.id).toBe('committed');
+      }
+    }
+  });
+
+  test('the two populations partition the phase-target set and are published', () => {
+    expect(FMEA_DATA.counts.equationDerived + FMEA_DATA.counts.committed)
+      .toBe(FMEA_DATA.counts.kpptpp);
+    const carried = committedKindCounts().reduce((n, k) => n + k.rows, 0);
+    expect(carried).toBe(FMEA_DATA.counts.committed);
+  });
+
+  test('every carried-forward kind is one the equation layer promised to leave alone', () => {
+    expect(undeclaredCommittedKinds()).toEqual([]);
+    for (const k of committedKindCounts()) {
+      expect(AUTHORITATIVE_KINDS[k.kind], k.kind).toBe(true);
+    }
+  });
+
+  test('phaseOrderDrift reports a phase order that disagrees with PHASE_YEAR', () => {
+    expect(phaseOrderDrift()).toEqual([]);
+    /* Constructed failing input: move the last phase back before the first.
+       PHASE_ORDER was frozen from PHASE_YEAR at import, so the two now
+       disagree and the check has to say so. */
+    const restore = PHASE_YEAR.P8;
+    try {
+      PHASE_YEAR.P8 = 0;
+      const problems = phaseOrderDrift();
+      expect(problems.length).toBeGreaterThan(0);
+      expect(problems.join(' ')).toContain('P8');
+    } finally {
+      PHASE_YEAR.P8 = restore;
+    }
+    expect(phaseOrderDrift()).toEqual([]);
   });
 });
