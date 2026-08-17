@@ -16,7 +16,9 @@ import type { QualityData } from '../../src/lib/quality-data';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { AUTHORITATIVE_KINDS, EQUATIONS } from '../../src/lib/equations';
 import { parseNum } from '../../src/lib/phase-targets';
-import { PARSER_HOME, parserImplementations } from '../../src/lib/manifest-check';
+import {
+  PARSER_DEFINITION_SOURCE, PARSER_HOME, parserImplementations
+} from '../../src/lib/manifest-check';
 import {
   authoritativeKindDrift, DECLARED_TARGET_MISPARSES, derivationCounts, ROLLOUT_KINDS,
   staleTargetMisparses, underivedPublishedKinds,
@@ -93,6 +95,23 @@ describe('R228: the rollout kind vocabulary', () => {
 describe('R277: the target parser has one implementation', () => {
   test('parseNum is defined exactly once, in phase-targets.ts', () => {
     expect(parserImplementations()).toEqual([PARSER_HOME]);
+    /* A repo-relative path, so a copy anywhere under src/ is named correctly.
+       Slicing 'src/lib/'.length off a src/scripts/ hit reported "ipts/foo.ts". */
+    expect(PARSER_HOME).toBe('src/lib/phase-targets.ts');
+  });
+
+  test('the scan sees an arrow-function copy, not only a `function` one', () => {
+    /* A reimplementation written as `const parseNum = (s) => ...` would pass a
+       scan that only knew the `function` keyword, which is how the original
+       mirror would have been written today. */
+    const re = () => new RegExp(PARSER_DEFINITION_SOURCE);
+    expect(re().test('function parseNum(s) { return null; }')).toBe(true);
+    expect(re().test('const parseNum = (s: string) => null;')).toBe(true);
+    expect(re().test('let parseNum = function (s) { return null; };')).toBe(true);
+    expect(re().test('var parseNum: Parser = mirrorOf(other);')).toBe(true);
+    /* And it does not fire on a call site or a longer name. */
+    expect(re().test('const meta = parseNum(p.target);')).toBe(false);
+    expect(re().test('const parseNumber = (s) => null;')).toBe(false);
   });
 
   test('fmea.ts scores from the shared parser', async () => {

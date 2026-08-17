@@ -15,7 +15,7 @@ import {
 import { QUALITY_DATA } from './quality';
 import {
   AUTHORITATIVE_KINDS, clampCounts, computeTargets, documentedGapIds, equationSelfTests,
-  KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, MATURITY_TOLERANCE
+  KAPPA_CONFIDENCE, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, MATURITY_TOLERANCE
 } from './equations';
 import {
   calibrationDrift, documentedGapDrift, kappaBand, kappaRegistryGaps, kappaTableDrift,
@@ -388,7 +388,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         const gaps = kappaRegistryGaps();
         return {
           ok: !gaps.length,
-          note: gaps.join('; ') || 'registered, sourced to GATES[' + KAPPA_SOURCE_GATE + '], graded low'
+          note: gaps.join('; ') || 'registered, sourced to GATES[' + KAPPA_SOURCE_GATE + '], graded ' + KAPPA_CONFIDENCE
         };
       }),
       /* R231 [§S3]: the stated tolerance and the applied one. */
@@ -460,26 +460,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             : derivationCounts().map((d) => d.rows + ' from ' + d.derivation).join('; ')
         };
       }),
-      /* R151 + R277 [§S3]: what the target parser does, said out loud. */
-      /* R229 [§S3]: the convention is in quality.ts; this is what makes it a
-         rule. An undeclared import-time enricher fails the build. */
-      runGuarded('Every import-time enricher is declared with its re-entry guard', () => {
-        const bad = undeclaredEnrichers();
-        return {
-          ok: !bad.length,
-          note: bad.join('; ') ||
-            Object.keys(ENRICHERS).map((n) => n + ' (' + ENRICHERS[n].flag + ')').join(', ')
-        };
-      }),
-      runGuarded('The target parser has one implementation', () => {
-        const found = parserImplementations();
-        return {
-          ok: found.length === 1 && found[0] === PARSER_HOME,
-          note: found.length === 1 && found[0] === PARSER_HOME
-            ? 'parseNum defined once, in ' + PARSER_HOME
-            : 'defined in: ' + (found.join(', ') || 'nowhere')
-        };
-      }),
+      /* R151 [§S3]: what the target parser does, said out loud. */
       runGuarded('Every target that does not parse carries an equation template', () => {
         const bad = unTemplatedNonParsingTargets();
         return {
@@ -870,6 +851,30 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
     /* R271 + R267: the inventory and the route registry stop being guesses */
     surface: 'manifest-check.ts',
     rows: () => [
+      /* R229 [§S3]: the convention is in quality.ts; this is what makes it a
+         rule. An undeclared import-time enricher fails the build. Registered
+         under this surface rather than under the vocabulary's, because the
+         scan lives here and `surface` is what attributes a check to its
+         module (R206). */
+      runGuarded('Every import-time enricher is declared with its re-entry guard', () => {
+        const bad = undeclaredEnrichers();
+        return {
+          ok: !bad.length,
+          note: bad.join('; ') ||
+            Object.keys(ENRICHERS).map((n) => n + ' (' + ENRICHERS[n].flag + ')').join(', ')
+        };
+      }),
+      /* R277 [§S3]: one parser, enforced by a source scan. */
+      runGuarded('The target parser has one implementation', () => {
+        const found = parserImplementations();
+        const ok = found.length === 1 && found[0] === PARSER_HOME;
+        return {
+          ok: ok,
+          note: ok
+            ? 'parseNum defined once, in ' + PARSER_HOME
+            : 'defined in: ' + (found.join(', ') || 'nowhere')
+        };
+      }),
       runGuarded('File manifest matches the working tree', () => {
         const d = manifestDrift();
         const parts: string[] = [];

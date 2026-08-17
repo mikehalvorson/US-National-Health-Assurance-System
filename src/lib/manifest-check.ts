@@ -83,15 +83,24 @@ export function manifestDrift(actual: string[] = enumerateSourceFiles()): Manife
  * A source scan rather than a runtime comparison, because the failure mode is
  * a second implementation existing at all. Comparing outputs would only catch
  * a copy that had ALREADY diverged. */
-const PARSER_DEFINITION = /\bfunction parseNum\s*\(/g;
-export const PARSER_HOME = 'phase-targets.ts';
+/* Both declaration forms, because a copy written as an arrow constant would
+   otherwise pass a scan that only knows the `function` keyword. Exported so
+   the test can exercise the pattern directly rather than re-deriving it. */
+export const PARSER_DEFINITION_SOURCE =
+  String.raw`\bfunction parseNum\s*\(|\b(?:const|let|var)\s+parseNum\s*(?::[^=]+)?=`;
+const PARSER_DEFINITION = new RegExp(PARSER_DEFINITION_SOURCE, 'g');
+export const PARSER_HOME = 'src/lib/phase-targets.ts';
 
 export function parserImplementations(root = REPO_ROOT): string[] {
   const out: string[] = [];
   for (const rel of enumerateSourceFiles(root)) {
     if (!rel.startsWith('src/') || !rel.endsWith('.ts')) continue;
     const text = readFileSync(join(root, rel), 'utf8');
-    for (const _ of text.matchAll(PARSER_DEFINITION)) out.push(rel.slice('src/lib/'.length));
+    /* The repo-relative path, not a slice: the scan covers all of src/, and
+       slicing 'src/lib/'.length off a src/scripts/ hit reported it as
+       "ipts/foo.ts". The gate still fired on the count, but the note lied
+       about where the copy was, which is the only thing the note is for. */
+    for (const _ of text.matchAll(PARSER_DEFINITION)) out.push(rel);
   }
   return out.sort();
 }
