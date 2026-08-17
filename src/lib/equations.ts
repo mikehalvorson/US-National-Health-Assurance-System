@@ -1280,6 +1280,47 @@ export const AUTHORITATIVE_KINDS: Record<string, boolean> = {
   'maturity target': true, 'phase milestone': true, 'progression floor': true,
   'data-plan interim target': true
 };
+/* R233 [§S3]: the unit an anchor must match, or null for "match nothing".
+ *
+ * The guard downstream exists to stop a rollout entry in one unit clamping a
+ * target in another - a "within 12 months" milestone bounding a percentage. It
+ * used to read `!matMeta || pn.unit === matMeta.unit`, so a metric whose
+ * maturity target does not parse took EVERY anchor in every unit instead of
+ * none. `!matMeta` was doing double duty: "no unit to match" and "match
+ * anything".
+ *
+ * A template is the second half of the same question. `template` is set
+ * exactly when the catalog target carries no numeric scaffold, so any number
+ * parsed out of that prose is incidental - KPP-C2's target names $4.75T of
+ * national system cost and parses as 4.75 in unit money, against a metric
+ * published in dollars per person (declared in R151/R277). Reading a unit off
+ * that string is the same mistake as reading a value off it.
+ *
+ * So: no parse, or a templated target, means take no anchors. */
+export function anchorUnit(d: EquationDef, catalogTarget: string) {
+  return d.template ? null : parseNum(catalogTarget);
+}
+
+/* The committed numeric anchors a metric's trajectory is bounded by, keyed by
+   phase. Extracted so R233's guard is observable: a test can ask which anchors
+   a parameter admits without reproducing the bounding loop. */
+export function committedAnchors(
+  d: EquationDef, p: QualityParameter
+): Record<string, number> {
+  const matMeta = anchorUnit(d, p.target);
+  const anchors: Record<string, number> = {};
+  if (!matMeta) return anchors;
+  (p.rollout || []).forEach(function (e) {
+    if (!AUTHORITATIVE_KINDS[e.kind]) return;
+    const pn = parseNum(e.value);
+    if (!pn || pn.unit !== matMeta.unit) return;
+    anchors[e.phase] = anchors[e.phase] !== undefined
+      ? (d.cmp === '<=' ? Math.min(anchors[e.phase], pn.num) : Math.max(anchors[e.phase], pn.num))
+      : pn.num;
+  });
+  return anchors;
+}
+
 export function applyEquationTargets(Q: QualityData, targets: EqTargets): void {
   const marker = Q as { __equationApplied?: boolean };
   if (marker.__equationApplied) return;
@@ -1290,18 +1331,7 @@ export function applyEquationTargets(Q: QualityData, targets: EqTargets): void {
     const d = EQUATIONS[p.id];
     const t = targets[p.id];
     if (!d || !t) return;
-    const matMeta = parseNum(p.target);
-    /* committed numeric anchors by phase (unit-matched to the maturity target) */
-    const anchors: Record<string, number> = {};
-    p.rollout.forEach(function (e) {
-      if (!AUTHORITATIVE_KINDS[e.kind]) return;
-      const pn = parseNum(e.value);
-      if (pn && (!matMeta || pn.unit === matMeta.unit)) {
-        anchors[e.phase] = anchors[e.phase] !== undefined
-          ? (d.cmp === '<=' ? Math.min(anchors[e.phase], pn.num) : Math.max(anchors[e.phase], pn.num))
-          : pn.num;
-      }
-    });
+    const anchors = committedAnchors(d, p);
     let prevShown: number | null = null;
     order.forEach(function (ph) {
       if (anchors[ph] !== undefined) { prevShown = anchors[ph]; }

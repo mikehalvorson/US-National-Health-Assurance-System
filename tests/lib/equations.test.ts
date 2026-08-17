@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { parseNum } from '../../src/lib/phase-targets';
 import {
-  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, evaluateAtPhase, equationSelfTests,
-  computeTargets, collectDeps, modelValueAt
+  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, anchorUnit, committedAnchors, evaluateAtPhase,
+  equationSelfTests, computeTargets, collectDeps, modelValueAt
 } from '../../src/lib/equations';
 import { runPath, sampleParams } from '../../src/lib/model';
 import { effectiveParams, SCENARIOS, scenarioStructural } from '../../src/lib/scenarios';
@@ -182,4 +182,75 @@ test('R226: the same holds for the other detail-row leaves', () => {
   // P3 is Year 4 = 2030, index 3 - the phase R226 says used to read Year 5.
   expect(modelValueAt('SCN-BASE', 'pubCost', 'P3')).toBeCloseTo(detail[3].pubCost, 9);
   expect(detail[3].year).toBe(2030);
+});
+
+/* R233 [§S3] - the anchor unit guard.
+ *
+ * `!matMeta` used to mean both "no unit to match" and "match anything", so a
+ * metric whose maturity target does not parse admitted every anchor in every
+ * unit: a "within 12 months" milestone could clamp a percentage target. It now
+ * means "take no anchors", and a templated target is treated the same way,
+ * because a template says the catalog string has no numeric scaffold. */
+describe('R233: anchors are unit-matched or refused', () => {
+  const TEMPLATE_IDS = Object.keys(EQUATIONS).filter(id => EQUATIONS[id].template);
+
+  test('the templated metrics are the eight the audit named', () => {
+    expect(TEMPLATE_IDS.sort()).toEqual([
+      'KPP-C2', 'KPP-D1', 'KPP-D2', 'KPP-D3', 'KPP-D4', 'KPP-D5', 'KPP-D6', 'KPP-D7'
+    ]);
+  });
+
+  test('every templated metric admits zero anchors', () => {
+    for (const id of TEMPLATE_IDS) {
+      const p = QUALITY_DATA.parameters.find(x => x.id === id)!;
+      expect(anchorUnit(EQUATIONS[id], p.target), id).toBeNull();
+      expect(Object.keys(committedAnchors(EQUATIONS[id], p)), id).toEqual([]);
+    }
+  });
+
+  test('KPP-C2 no longer admits its own maturity row as a money anchor', () => {
+    /* The row parses to 4.75 - $4.75T of national system cost - against a
+       metric the equation publishes at about $14,000 per person. */
+    const p = QUALITY_DATA.parameters.find(x => x.id === 'KPP-C2')!;
+    const maturity = p.rollout.find(e => e.kind === 'maturity target')!;
+    expect(parseNum(maturity.value)!.num).toBe(4.75);
+    expect(committedAnchors(EQUATIONS['KPP-C2'], p)).toEqual({});
+  });
+
+  test('every admitted anchor matches its metric maturity unit', () => {
+    for (const p of KPP_TPP) {
+      const d = EQUATIONS[p.id];
+      const unit = anchorUnit(d, p.target);
+      const anchors = committedAnchors(d, p);
+      if (!unit) { expect(anchors, p.id).toEqual({}); continue; }
+      for (const phase of Object.keys(anchors)) {
+        const src = p.rollout.filter(e => e.phase === phase)
+          .map(e => parseNum(e.value)).filter(Boolean);
+        expect(src.some(m => m!.unit === unit.unit), p.id + ' ' + phase).toBe(true);
+      }
+    }
+  });
+
+  test('a milestone in the wrong unit cannot anchor a target', () => {
+    /* The failure the row describes, constructed: a percentage metric with a
+       months milestone. Under the old guard an unparseable target made this
+       12 an admitted anchor. */
+    const monthsMilestone = {
+      id: 'TPP-6.1', target: 'reduction to be calibrated',
+      rollout: [{ phase: 'P5', kind: 'phase milestone', value: 'within 12 months' }]
+    } as unknown as (typeof QUALITY_DATA.parameters)[number];
+    const templated = { ...EQUATIONS['TPP-6.1'], template: '>={X}% of units certified' };
+    expect(committedAnchors(templated, monthsMilestone)).toEqual({});
+
+    /* And with a parseable percentage target, the months value is still
+       refused while a percentage one is taken. */
+    const pctTarget = {
+      id: 'TPP-6.1', target: '>=95%',
+      rollout: [
+        { phase: 'P5', kind: 'phase milestone', value: 'within 12 months' },
+        { phase: 'P6', kind: 'progression floor', value: '>=60%' }
+      ]
+    } as unknown as (typeof QUALITY_DATA.parameters)[number];
+    expect(committedAnchors(EQUATIONS['TPP-6.1'], pctTarget)).toEqual({ P6: 60 });
+  });
 });
