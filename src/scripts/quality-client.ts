@@ -9,7 +9,7 @@
 import { QUALITY_DATA as DATA } from '../lib/quality';
 import type { QualityParameter } from '../lib/quality-data';
 import {
-  EQUATIONS, DIAGRAM_GROUPS, computeTargets, evaluateAtPhase, EQ_PHASES,
+  EQUATIONS, DIAGRAM_GROUPS, computeTargets, evaluateAtPhase, EQ_PHASES, NOT_RELEVANT_TEXT,
   RAMP_META, MODEL_META, paramValueAt, rampValueAt, modelValueAt, collectDeps
 } from '../lib/equations';
 import type { EqTargets, ExprNode, RampId, ModelId } from '../lib/equations';
@@ -260,7 +260,10 @@ function renderFloorTable(): void {
  * Equation panel + flow diagrams
  * ========================================================================= */
 function fmtVal(v: number, decimals: number): string {
-  if (!isFinite(v)) return 'not yet measurable';
+  /* One sentence for one state, wherever the reader meets it (R226-adjacent,
+     §S3). A non-finite equation result means the metric has no quantity at
+     this phase, not that the number is large or missing. */
+  if (!isFinite(v)) return NOT_RELEVANT_TEXT;
   if (Math.abs(v) >= 10000) return Math.round(v).toLocaleString('en-US');
   return v.toFixed(decimals);
 }
@@ -419,7 +422,7 @@ function buildEquationPanel(id: string, compact?: boolean): HTMLElement {
         top.appendChild(el('b', '', ph));
         cell.appendChild(top);
         if (i < startIdx || !t[ph] || !isFinite(t[ph].num)) {
-          cell.appendChild(el('p', 'quality-no-target', 'Not yet measurable'));
+          cell.appendChild(el('p', 'quality-no-target', NOT_RELEVANT_TEXT));
         } else {
           cell.classList.add('has-target');
           cell.appendChild(el('p', 'quality-cell-value', t[ph].text));

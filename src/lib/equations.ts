@@ -1330,6 +1330,39 @@ export type EqTargets = Record<string, Record<string, EqPhaseValue>>;
 
 /* Raw equation values per phase for every KPP/TPP (no anchor bounding).
    Needs the catalog for target-template text. */
+/* R226-adjacent, §S3: what a cell says when the equation cannot produce a
+ * number at that phase.
+ *
+ * Fourteen cells across eight metrics evaluate non-finite, all of them at a
+ * phase EARLIER than the phase their own metric becomes measurable. The cause
+ * is structural, not a bug in any one equation: the queueing form is
+ *
+ *     queue(M, S) = M x (load(S) / load_at_P8(S)),  load(S) = util / (WSI x S)
+ *
+ * and at P0 every build ramp S is zero, so load is Infinity and the ratio is
+ * Infinity / Infinity. TPP-9.3 and TPP-9.5 read the expansions ramp, which
+ * stays zero until P4, which is why they contribute four phases each rather
+ * than one. The list grew from eleven to fourteen when R226 corrected the
+ * phase-to-index conversion: P0 used to resolve ramp index 1, Year 2, where
+ * some build had begun; it now resolves index 0, Year 1, where none has.
+ *
+ * There is no number to invent here. A wait time under a system that does not
+ * exist yet is not a large number, it is not a quantity. Flooring the ramp at
+ * some epsilon would manufacture one, which is the failure mode this codebase
+ * exists to prevent. So the cell keeps its non-finite `num` - the diagnostics
+ * in selftests.ts still count them, and KNOWN_NON_FINITE still pins them - and
+ * carries a sentence a reader can act on instead of a formatted NaN.
+ *
+ * Before this, formatEqTarget rendered the value into the metric's own
+ * template and produced strings like "median <=NaN hours". Nothing published
+ * them, because applyEquationTargets skips non-finite values and no rollout
+ * row exists at any of those phases. That guard is correct and stays. It was
+ * also the only thing standing between those strings and a reader: add one
+ * early-phase rollout row to any of the eight metrics and the page ships
+ * "median <=NaN hours". This removes the string, so there is nothing to
+ * publish even if the guard is one day wrong. */
+export const NOT_RELEVANT_TEXT = 'Parameter not relevant yet.';
+
 export function computeTargets(Q: QualityData, scenarioId: string): EqTargets {
   const out: EqTargets = {};
   const byId: Record<string, QualityParameter> = {};
@@ -1341,7 +1374,10 @@ export function computeTargets(Q: QualityData, scenarioId: string): EqTargets {
     const rec: Record<string, EqPhaseValue> = {};
     EQ_PHASES.forEach(function (ph) {
       const v = evaluateAtPhase(d.id, scenarioId, ph);
-      rec[ph] = { num: v, text: formatEqTarget(d, cat.target, v) };
+      rec[ph] = {
+        num: v,
+        text: isFinite(v) ? formatEqTarget(d, cat.target, v) : NOT_RELEVANT_TEXT
+      };
     });
     out[d.id] = rec;
   });

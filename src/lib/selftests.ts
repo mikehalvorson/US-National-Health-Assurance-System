@@ -15,7 +15,8 @@ import {
 import { QUALITY_DATA } from './quality';
 import {
   AUTHORITATIVE_KINDS, clampCounts, computeTargets, documentedGapIds, equationSelfTests,
-  KAPPA_CONFIDENCE, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, MATURITY_TOLERANCE
+  KAPPA_CONFIDENCE, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, MATURITY_TOLERANCE,
+  NOT_RELEVANT_TEXT
 } from './equations';
 import {
   calibrationDrift, documentedGapDrift, kappaBand, kappaRegistryGaps, kappaTableDrift,
@@ -336,6 +337,25 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: p.length === 0,
           note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+        };
+      }),
+      /* §S3, with R226: the row above is the guard that keeps a non-finite cell
+         off the page. This is the one that means a reader could not be hurt if
+         that guard were ever wrong. formatEqTarget used to render a non-finite
+         value into the metric's own template and produce "median <=NaN hours";
+         the cell now carries a sentence instead, so there is no NaN string in
+         the layer at all rather than one that nothing happens to publish. */
+      runGuarded('No equation cell carries a formatted non-finite value', () => {
+        const d = equationTargetDiagnostics();
+        const wrong = d.nonFinite.filter((c) => c.text !== NOT_RELEVANT_TEXT);
+        const leaked = d.nonFinite.filter((c) => /NaN|Infinity/.test(c.text));
+        return {
+          ok: !wrong.length && !leaked.length,
+          note: leaked.length
+            ? 'renders a raw non-finite: ' + leaked.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+            : wrong.length
+              ? 'non-finite cell not labelled: ' + wrong.map((c) => c.metric + '@' + c.phase).join(', ')
+              : d.nonFinite.length + ' non-finite cells, every one reading "' + NOT_RELEVANT_TEXT + '"'
         };
       }),
       /* R232 [§S3]: both halves of the clamp disclosure. */
