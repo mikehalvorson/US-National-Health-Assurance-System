@@ -22,8 +22,10 @@ import {
   maturityToleranceDrift
 } from './kappa-check';
 import {
-  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, ROLLOUT_KINDS, staleTargetMisparses,
-  undeclaredRolloutKinds, undeclaredTargetMisparses, unproducedRolloutKinds,
+  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, derivationCounts, ROLLOUT_KINDS,
+  staleTargetMisparses,
+  undeclaredRolloutKinds, undeclaredTargetMisparses, underivedPublishedKinds,
+  unproducedRolloutKinds,
   unTemplatedNonParsingTargets
 } from './rollout-kind-check';
 import { fmeaSelfTests } from './fmea';
@@ -444,6 +446,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !drift.length,
           note: drift.join('; ') ||
             Object.keys(AUTHORITATIVE_KINDS).length + ' preserved by applyEquationTargets'
+        };
+      }),
+      /* R221 [§S3]: the page names where every published target came from. */
+      runGuarded('Every published target has a derivation the page can state', () => {
+        const missing = underivedPublishedKinds();
+        return {
+          ok: !missing.length,
+          note: missing.length
+            ? 'published with no stated derivation: ' + missing.join(', ')
+            : derivationCounts().map((d) => d.rows + ' from ' + d.derivation).join('; ')
         };
       }),
       /* R151 + R277 [§S3]: what the target parser does, said out loud. */

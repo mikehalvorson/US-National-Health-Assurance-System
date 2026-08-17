@@ -30,30 +30,92 @@ export type KindDisposition =
   | 'replaced'         /* overwritten with the equation's value */
   | 'equation-output'; /* what a replaced row becomes */
 
-export interface KindDecl { producer: string; disposition: KindDisposition }
+/* R221 [§S3]: the phrase the Quality tab uses for where a published target
+   came from. The page said "Targets here are calculated, not asserted", which
+   is true of 538 of the 727 published rows and false of the other 189. Each
+   kind now names its derivation, the page renders the counts from the catalog
+   instead of asserting a blanket claim, and no published row may carry a kind
+   that has no derivation to state. */
+export interface KindDecl {
+  producer: string;
+  disposition: KindDisposition;
+  /* null for the kind no reader ever sees, because it is replaced. */
+  derivation: string | null;
+}
 
 export const ROLLOUT_KINDS: Record<string, KindDecl> = {
   'maturity target': {
-    producer: 'tools/extract_quality_catalog.py', disposition: 'authoritative'
+    producer: 'tools/extract_quality_catalog.py', disposition: 'authoritative',
+    derivation: 'the plan\'s own maturity target'
   },
   'phase milestone': {
-    producer: 'tools/extract_quality_catalog.py', disposition: 'authoritative'
+    producer: 'tools/extract_quality_catalog.py', disposition: 'authoritative',
+    derivation: 'the plan\'s own gate floors and milestones'
   },
   'progression floor': {
     producer: 'tools/extract_quality_catalog.py and phase-targets.ts EXTRA_ANCHORS',
-    disposition: 'authoritative'
+    disposition: 'authoritative',
+    derivation: 'the plan\'s own gate floors and milestones'
   },
   'data-plan interim target': {
-    producer: 'phase-targets.ts, from DATA_PHASES', disposition: 'authoritative'
+    producer: 'phase-targets.ts, from DATA_PHASES', disposition: 'authoritative',
+    derivation: 'the Data tab\'s information-mesh plan'
   },
   'derived interim target': {
     producer: 'phase-targets.ts entry floors, interpolation and QUAL_LADDER',
-    disposition: 'replaced'
+    disposition: 'replaced', derivation: null
   },
   'equation-derived target': {
-    producer: 'equations.ts applyEquationTargets', disposition: 'equation-output'
+    producer: 'equations.ts applyEquationTargets', disposition: 'equation-output',
+    derivation: 'that parameter\'s own equation'
   }
 };
+
+/* The published rows grouped by the derivation the page states for them, so
+   the page can render counts instead of a claim. */
+export interface DerivationCount { derivation: string; rows: number; kinds: string[] }
+
+export function derivationCounts(Q: QualityData = QUALITY_DATA): DerivationCount[] {
+  const byDerivation = new Map<string, { rows: number; kinds: Set<string> }>();
+  for (const p of Q.parameters) {
+    if (p.type === 'CP') continue;
+    for (const e of (p.rollout || [])) {
+      const decl = ROLLOUT_KINDS[e.kind];
+      if (!decl || !decl.derivation) continue;
+      const hit = byDerivation.get(decl.derivation) ||
+        { rows: 0, kinds: new Set<string>() };
+      hit.rows += 1;
+      hit.kinds.add(e.kind);
+      byDerivation.set(decl.derivation, hit);
+    }
+  }
+  return [...byDerivation.entries()]
+    .map(([derivation, v]) => ({ derivation, rows: v.rows, kinds: [...v.kinds].sort() }))
+    .sort((a, b) => b.rows - a.rows);
+}
+
+/* A published row whose kind has no stated derivation.
+ *
+ * The Quality tab renders derivationCounts() directly, so it cannot state a
+ * derivation the declaration does not have; what it CAN do is publish a row
+ * whose kind was never given one, and that row then appears in a total the
+ * page describes without being described. Only 'derived interim target' is
+ * allowed to have none, because it is replaced before publication - and if it
+ * ever survives, this fires, which is the state R248 reports separately.
+ *
+ * The page's half of the claim is pinned in tests/pages/quality.test.ts,
+ * against the rendered HTML rather than the template. */
+export function underivedPublishedKinds(Q: QualityData = QUALITY_DATA): string[] {
+  const out = new Set<string>();
+  for (const p of Q.parameters) {
+    if (p.type === 'CP') continue;
+    for (const e of (p.rollout || [])) {
+      const decl = ROLLOUT_KINDS[e.kind];
+      if (!decl || !decl.derivation) out.add(e.kind);
+    }
+  }
+  return [...out].sort();
+}
 
 function catalogKinds(Q: QualityData): Set<string> {
   const seen = new Set<string>();

@@ -8,10 +8,21 @@ import {
   KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE
 } from '../lib/equations';
 import { kappaBand } from '../lib/kappa-check';
+import { derivationCounts } from '../lib/rollout-kind-check';
 import { QUALITY_DATA } from '../lib/quality';
 
 const kppTppCount = QUALITY_DATA.parameters.filter((p) => p.type !== 'CP').length;
 const kappaMetricsMoved = Math.max(...kappaBand().map((r) => r.metricsMoved));
+
+/* R221 [§S3]: the page claimed "Targets here are calculated, not asserted".
+   True of most published rows and false of the rest, so it states the split
+   instead, counted from the catalog rather than typed. */
+const derivations = derivationCounts();
+const publishedRows = derivations.reduce((n, d) => n + d.rows, 0);
+const eqRows = derivations
+  .filter((d) => d.kinds.includes('equation-derived target'))
+  .reduce((n, d) => n + d.rows, 0);
+const assertedRows = publishedRows - eqRows;
 ---
 <BaseLayout title="National Health Assurance: Quality">
   <main>
@@ -54,14 +65,16 @@ const kappaMetricsMoved = Math.max(...kappaBand().map((r) => r.metricsMoved));
   <section class="card">
     <h2>Targets across the twelve-year rollout</h2>
     <p class="desc">Every KPP and TPP carries a target at every phase
-      where it is measurable, built from three sources in priority order:
-      the plan's own gate floors and milestones (authoritative, shown
-      below), the Data tab's hand-derived information-mesh plan (reused
-      verbatim so the two tabs always agree), and a calculated value from
-      that parameter's own equation for everything else. The panel and
-      table here show only the plan's explicit floors; each parameter's
-      full phase-by-phase strip, including the equation-derived targets,
-      lives in the explorer.</p>
+      where it is measurable. {publishedRows} targets, from four sources in
+      priority order, and this is how they divide:
+      {derivations.map((d, i) => (
+        <>{i > 0 ? '; ' : ''}<b>{d.rows}</b> from {d.derivation}</>
+      ))}. The plan's own commitments are authoritative and are shown below;
+      the Data tab's entries are reused verbatim so the two tabs always agree;
+      the equation supplies the rest. The panel and table here show only the
+      plan's explicit floors. Each parameter's full phase-by-phase strip,
+      including the equation-derived targets and the number the equation gave
+      wherever a committed floor replaced it, lives in the explorer.</p>
     <div id="quality-phase-overview" class="quality-phase-overview"
       aria-label="Numeric parameter milestones and gate floors across rollout phases"></div>
     <div id="quality-floor-table" class="tbl-scroll quality-floor-wrap"></div>
@@ -78,13 +91,15 @@ const kappaMetricsMoved = Math.max(...kappaBand().map((r) => r.metricsMoved));
 
   <section class="card">
     <h2>The equation behind every target</h2>
-    <p class="desc">Targets here are calculated, not asserted. Pick a
-      stress scenario from the healthcare model and every equation
-      recomputes: the same inputs that move total system cost also move
-      what each phase can credibly demand. Pick a diagram to see how
-      equations feed each other, reading left to right from model inputs
-      through operating parameters (TPP) to system outcomes (KPP). Select
-      any node for its formula, inputs, and phase-by-phase values.</p>
+    <p class="desc">{eqRows} of the {publishedRows} published phase targets are
+      calculated from that parameter's own equation; the other {assertedRows}
+      are the plan's own commitments, carried as written. Pick a stress
+      scenario from the healthcare model and every equation recomputes: the
+      same inputs that move total system cost also move what each phase can
+      credibly demand. Pick a diagram to see how equations feed each other,
+      reading left to right from model inputs through operating parameters
+      (TPP) to system outcomes (KPP). Select any node for its formula, inputs,
+      and phase-by-phase values.</p>
     <div class="quality-controls" role="group" aria-label="Equation explorer controls">
       <label class="quality-control">
         <span>Stress scenario</span>

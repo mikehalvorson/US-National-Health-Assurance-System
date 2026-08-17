@@ -18,7 +18,8 @@ import { AUTHORITATIVE_KINDS, EQUATIONS } from '../../src/lib/equations';
 import { parseNum } from '../../src/lib/phase-targets';
 import { PARSER_HOME, parserImplementations } from '../../src/lib/manifest-check';
 import {
-  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, ROLLOUT_KINDS, staleTargetMisparses,
+  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, derivationCounts, ROLLOUT_KINDS,
+  staleTargetMisparses, underivedPublishedKinds,
   undeclaredRolloutKinds, undeclaredTargetMisparses, unproducedRolloutKinds,
   unTemplatedNonParsingTargets
 } from '../../src/lib/rollout-kind-check';
@@ -148,5 +149,40 @@ describe('R151: parse outcomes are declared, not silent', () => {
     expect(undeclaredTargetMisparses(bad)).toEqual([
       'KPP-D1: templated target parses as 2024 plain'
     ]);
+  });
+});
+
+describe('R221: every published target has a stated derivation', () => {
+  test('no live kind is published without one', () => {
+    expect(underivedPublishedKinds()).toEqual([]);
+  });
+
+  test('the derivations partition the published rows', () => {
+    const counts = derivationCounts();
+    const total = counts.reduce((n, d) => n + d.rows, 0);
+    const published = QUALITY_DATA.parameters
+      .filter((p) => p.type !== 'CP')
+      .reduce((n, p) => n + (p.rollout || []).length, 0);
+    expect(total).toBe(published);
+    expect(counts.map((d) => d.derivation)).toEqual([
+      "that parameter's own equation",
+      "the plan's own maturity target",
+      "the Data tab's information-mesh plan",
+      "the plan's own gate floors and milestones"
+    ]);
+  });
+
+  test('a kind published without a derivation is reported', () => {
+    /* The state the row is about: a row reaching a reader with nothing the
+       page can say about where it came from. 'derived interim target' is the
+       one kind with no derivation, because it is replaced before publication;
+       a catalog where one survives is exactly that failure. */
+    const survived = {
+      parameters: [{
+        id: 'TPP-1.1', type: 'TPP',
+        rollout: [{ phase: 'P3', kind: 'derived interim target', value: '>=90%' }]
+      }]
+    } as unknown as QualityData;
+    expect(underivedPublishedKinds(survived)).toEqual(['derived interim target']);
   });
 });
