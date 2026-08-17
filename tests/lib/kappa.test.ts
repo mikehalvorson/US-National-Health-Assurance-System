@@ -7,7 +7,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   KAPPA_BAND, KAPPA_CONFIDENCE, KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT,
-  KAPPA_SOURCE_GATE, KAPPA_VALUE, currentKappa, documentedGap, documentedGapIds, EQUATIONS,
+  KAPPA_SOURCE_GATE, KAPPA_VALUE, currentKappa, documentedGapIds, EQUATIONS,
   equationSelfTests, evaluateAtPhase, MATURITY_TOLERANCE, withKappa
 } from '../../src/lib/equations';
 import {
@@ -109,7 +109,7 @@ describe('R231: maturity closure says what it means', () => {
       expect(missed, id + ' computed ' + v.toFixed(2) + ' vs ' + p.target).toBe(true);
       const withinOld = meta.cmp === '<=' ? v <= meta.num * 1.12 : v >= meta.num * 0.88;
       expect(withinOld, id + ' used to pass the 12% bound').toBe(true);
-      expect(documentedGap(p), id + ' must be declared').toBeTruthy();
+      expect(p.documentedGap, id + ' must be declared').toBeTruthy();
     }
   });
 
@@ -128,8 +128,8 @@ describe('R231: maturity closure says what it means', () => {
       const ok = meta.cmp === '<='
         ? v <= meta.num * (1 + MATURITY_TOLERANCE)
         : v >= meta.num * (1 - MATURITY_TOLERANCE);
-      if (!ok && !documentedGap(p)) missing.push(p.id);
-      if (ok && documentedGap(p)) closingButExempt.push(p.id);
+      if (!ok && !p.documentedGap) missing.push(p.id);
+      if (ok && p.documentedGap) closingButExempt.push(p.id);
     }
     expect(missing, 'misses the target and is not declared').toEqual([]);
     /* R235 turns the second list into a failure with its own message; here it

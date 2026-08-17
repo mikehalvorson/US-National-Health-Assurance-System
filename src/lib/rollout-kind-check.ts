@@ -19,9 +19,9 @@
  * So the table below is the enum, `disposition` is what equations.ts will do
  * with each kind, and the three checks assert the table, the catalog and
  * AUTHORITATIVE_KINDS all still describe the same six strings. */
-import { AUTHORITATIVE_KINDS, EQUATIONS } from './equations';
-import { parseNum } from './phase-targets';
-import { QUALITY_DATA } from './quality';
+import { AUTHORITATIVE_KINDS } from './equations';
+import { declaredVsLive } from './declared-sets';
+import { forEachRolloutRow, QUALITY_DATA } from './quality';
 import type { QualityData } from './quality-data';
 
 /* What applyEquationTargets does with a row carrying this kind. */
@@ -77,18 +77,15 @@ export interface DerivationCount { derivation: string; rows: number; kinds: stri
 
 export function derivationCounts(Q: QualityData = QUALITY_DATA): DerivationCount[] {
   const byDerivation = new Map<string, { rows: number; kinds: Set<string> }>();
-  for (const p of Q.parameters) {
-    if (p.type === 'CP') continue;
-    for (const e of (p.rollout || [])) {
-      const decl = ROLLOUT_KINDS[e.kind];
-      if (!decl || !decl.derivation) continue;
-      const hit = byDerivation.get(decl.derivation) ||
-        { rows: 0, kinds: new Set<string>() };
-      hit.rows += 1;
-      hit.kinds.add(e.kind);
-      byDerivation.set(decl.derivation, hit);
-    }
-  }
+  forEachRolloutRow(Q, function (_p, e) {
+    const decl = ROLLOUT_KINDS[e.kind];
+    if (!decl || !decl.derivation) return;
+    const hit = byDerivation.get(decl.derivation) ||
+      { rows: 0, kinds: new Set<string>() };
+    hit.rows += 1;
+    hit.kinds.add(e.kind);
+    byDerivation.set(decl.derivation, hit);
+  });
   return [...byDerivation.entries()]
     .map(([derivation, v]) => ({ derivation, rows: v.rows, kinds: [...v.kinds].sort() }))
     .sort((a, b) => b.rows - a.rows);
@@ -107,29 +104,23 @@ export function derivationCounts(Q: QualityData = QUALITY_DATA): DerivationCount
  * against the rendered HTML rather than the template. */
 export function underivedPublishedKinds(Q: QualityData = QUALITY_DATA): string[] {
   const out = new Set<string>();
-  for (const p of Q.parameters) {
-    if (p.type === 'CP') continue;
-    for (const e of (p.rollout || [])) {
-      const decl = ROLLOUT_KINDS[e.kind];
-      if (!decl || !decl.derivation) out.add(e.kind);
-    }
-  }
+  forEachRolloutRow(Q, function (_p, e) {
+    const decl = ROLLOUT_KINDS[e.kind];
+    if (!decl || !decl.derivation) out.add(e.kind);
+  });
   return [...out].sort();
 }
 
 function catalogKinds(Q: QualityData): Set<string> {
   const seen = new Set<string>();
-  for (const p of Q.parameters) {
-    if (p.type === 'CP') continue;
-    for (const e of (p.rollout || [])) seen.add(e.kind);
-  }
+  forEachRolloutRow(Q, function (_p, e) { seen.add(e.kind); });
   return seen;
 }
 
 /* A kind on a live row that the table does not describe. This is the one that
    catches a new string added in phase-targets.ts or in the generator. */
 export function undeclaredRolloutKinds(Q: QualityData = QUALITY_DATA): string[] {
-  return [...catalogKinds(Q)].filter((k) => !ROLLOUT_KINDS[k]).sort();
+  return declaredVsLive(Object.keys(ROLLOUT_KINDS), catalogKinds(Q)).undeclared;
 }
 
 /* A kind the table declares that no row carries. Catches the reverse drift: a
@@ -142,104 +133,9 @@ export function undeclaredRolloutKinds(Q: QualityData = QUALITY_DATA): string[] 
    asserts separately. Requiring it here would be requiring the conversion to
    fail. */
 export function unproducedRolloutKinds(Q: QualityData = QUALITY_DATA): string[] {
-  const live = catalogKinds(Q);
-  return Object.keys(ROLLOUT_KINDS)
-    .filter((k) => ROLLOUT_KINDS[k].disposition !== 'replaced' && !live.has(k))
-    .sort();
-}
-
-/* R151 + R277 [§S3]: parseNum takes the FIRST numeric token in a string, and
- * nothing said which strings that is safe on.
- *
- * Two outcomes are silent today. A target that does not parse routes its
- * metric to the qualitative ladder with no error; a target that parses the
- * WRONG number anchors a whole trajectory to it. Both are decided by the
- * catalog's prose, which the audit does not control.
- *
- * Measured across the 130 KPP/TPP maturity targets:
- *   - 7 do not parse: KPP-D1 to D7, the "to be calibrated" outcome metrics.
- *     Every one of them carries a `template` on its equation, which is the
- *     declared mechanism for a target with no numeric scaffold. So the null
- *     result is not silent after all - it is corroborated by a second signal,
- *     and NON_PARSING_IS_TEMPLATED asserts the two sets agree.
- *   - 1 parses a number a reader would not pick: KPP-C2's target reads "to be
- *     reconciled with $4.75T total system cost and current population
- *     denominator", and the parser returns 4.75 with unit 'money' - a national
- *     total in trillions read as a per-person dollar figure. BQ9 filed this
- *     hazard as demonstrated but unverified. It is live, on a maturity target,
- *     and it is used as a clamping anchor. R233 stops it being used; this
- *     declares it so it cannot be rediscovered as new. */
-export const DECLARED_TARGET_MISPARSES: Record<string, string> = {
-  'KPP-C2': 'the target names $4.75T of national system cost, not a per-person ' +
-    'dollar target; parseNum returns 4.75 money. The equation carries a template, ' +
-    'so the parse is not used to render the value, and R233 keeps it out of the ' +
-    'anchor set.'
-};
-
-/* A maturity target that parses to something a reader would not pick, and that
-   nobody has declared. Two shapes are caught: a calendar year read as a value,
-   and a template metric whose target parses at all - a template says the
-   catalog string has no numeric scaffold, so a parse from it is incidental. */
-export function undeclaredTargetMisparses(Q: QualityData = QUALITY_DATA): string[] {
-  const out: string[] = [];
-  for (const p of Q.parameters) {
-    if (p.type === 'CP') continue;
-    if (DECLARED_TARGET_MISPARSES[p.id]) continue;
-    const meta = parseNum(p.target);
-    if (meta) {
-      const d = EQUATIONS[p.id];
-      if (d && d.template) {
-        out.push(p.id + ': templated target parses as ' + meta.num + ' ' + meta.unit);
-      } else if (isCalendarShaped(meta.num)) {
-        out.push(p.id + ': target parses a calendar-shaped ' + meta.num);
-      }
-    }
-    /* Review finding: the scan covered the 130 maturity targets and stopped
-       there, but parseNum is also called on every rollout value inside
-       committedAnchors, where a wrong number becomes a clamping anchor rather
-       than a displayed target. All 727 are scanned now. */
-    for (const e of (p.rollout || [])) {
-      const ev = parseNum(e.value);
-      if (ev && isCalendarShaped(ev.num)) {
-        out.push(p.id + '@' + e.phase + ': value parses a calendar-shaped ' + ev.num);
-      }
-    }
-  }
-  return out.sort();
-}
-
-/* A year read as a quantity is the failure R277 demonstrated. Bounded rather
-   than pattern-matched, because the shape it takes varies and the magnitude
-   does not: no live KPP/TPP target or rollout value is a count in the 1900s. */
-function isCalendarShaped(n: number): boolean {
-  return Number.isInteger(n) && n >= 1900 && n <= 2100;
-}
-
-/* A declared misparse that no longer reproduces. Keeps the list from
-   outliving the prose it describes. */
-export function staleTargetMisparses(Q: QualityData = QUALITY_DATA): string[] {
-  const byId = new Map(Q.parameters.map((p) => [p.id, p]));
-  return Object.keys(DECLARED_TARGET_MISPARSES).filter((id) => {
-    const p = byId.get(id);
-    if (!p) return true;
-    const meta = parseNum(p.target);
-    const d = EQUATIONS[id];
-    return !meta || !d || !d.template;
-  }).sort();
-}
-
-/* Every KPP/TPP whose maturity target does not parse must carry a template.
-   That is what turns "the parser returned null" from a silent reroute into a
-   corroborated decision - two independent signals saying the same thing. */
-export function unTemplatedNonParsingTargets(Q: QualityData = QUALITY_DATA): string[] {
-  const out: string[] = [];
-  for (const p of Q.parameters) {
-    if (p.type === 'CP') continue;
-    if (parseNum(p.target)) continue;
-    const d = EQUATIONS[p.id];
-    if (!d || !d.template) out.push(p.id);
-  }
-  return out.sort();
+  const shouldBeLive = Object.keys(ROLLOUT_KINDS)
+    .filter((k) => ROLLOUT_KINDS[k].disposition !== 'replaced');
+  return declaredVsLive(shouldBeLive, catalogKinds(Q)).stale;
 }
 
 /* The table's 'authoritative' set and equations.ts's AUTHORITATIVE_KINDS are
@@ -249,14 +145,9 @@ export function authoritativeKindDrift(): string[] {
   const declared = Object.keys(ROLLOUT_KINDS)
     .filter((k) => ROLLOUT_KINDS[k].disposition === 'authoritative');
   const inCode = Object.keys(AUTHORITATIVE_KINDS).filter((k) => AUTHORITATIVE_KINDS[k]);
-  const out: string[] = [];
-  for (const k of declared) {
-    if (!AUTHORITATIVE_KINDS[k]) out.push('declared authoritative, not in AUTHORITATIVE_KINDS: ' + k);
-  }
-  for (const k of inCode) {
-    if (ROLLOUT_KINDS[k]?.disposition !== 'authoritative') {
-      out.push('in AUTHORITATIVE_KINDS, not declared authoritative: ' + k);
-    }
-  }
-  return out.sort();
+  const diff = declaredVsLive(declared, inCode);
+  return [
+    ...diff.stale.map((k) => 'declared authoritative, not in AUTHORITATIVE_KINDS: ' + k),
+    ...diff.undeclared.map((k) => 'in AUTHORITATIVE_KINDS, not declared authoritative: ' + k)
+  ].sort();
 }

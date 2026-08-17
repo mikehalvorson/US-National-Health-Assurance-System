@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { parseNum } from '../../src/lib/phase-targets';
 import {
-  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, anchorUnit, clampCounts, committedAnchors,
+  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, anchorMatchTarget, clampCounts, committedAnchors,
   evaluateAtPhase, equationSelfTests, computeTargets, collectDeps, modelValueAt
 } from '../../src/lib/equations';
 import { runPath, sampleParams } from '../../src/lib/model';
@@ -203,7 +203,7 @@ describe('R233: anchors are unit-matched or refused', () => {
   test('every templated metric admits zero anchors', () => {
     for (const id of TEMPLATE_IDS) {
       const p = QUALITY_DATA.parameters.find(x => x.id === id)!;
-      expect(anchorUnit(EQUATIONS[id], p.target), id).toBeNull();
+      expect(anchorMatchTarget(EQUATIONS[id], p.target), id).toBeNull();
       expect(Object.keys(committedAnchors(EQUATIONS[id], p)), id).toEqual([]);
     }
   });
@@ -220,7 +220,7 @@ describe('R233: anchors are unit-matched or refused', () => {
   test('every admitted anchor matches its metric maturity unit', () => {
     for (const p of KPP_TPP) {
       const d = EQUATIONS[p.id];
-      const unit = anchorUnit(d, p.target);
+      const unit = anchorMatchTarget(d, p.target);
       const anchors = committedAnchors(d, p);
       if (!unit) { expect(anchors, p.id).toEqual({}); continue; }
       for (const phase of Object.keys(anchors)) {

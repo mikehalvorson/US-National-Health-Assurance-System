@@ -6,6 +6,7 @@
 import type { QualityData, QualityParameter } from './quality-data';
 import type { DataPhase } from './data-phases';
 import { PHASE_YEAR } from './rollout';
+import { declaredVsLive } from './declared-sets';
 
 const PHASES = ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
 function pIdx(p: string): number { return PHASES.indexOf(p); }
@@ -101,27 +102,26 @@ function relevance(id: string): { phase: string; why: string } {
   return { phase: REL_FALLBACK_PHASE, why: REL_FALLBACK_WHY };
 }
 
-/* An id with no family rule that nobody has declared. This is the one that
-   fires when a metric is added to the catalog and the REL table is not. */
-export function undeclaredRelevanceFallbacks(Q: QualityData): string[] {
-  const declared = new Set(REL_FALLBACK_IDS);
+/* The ids that actually reach the fallback: in the catalog, and matched by no
+   rule. Both checks below are one comparison against this set, which is why
+   "gained a rule" and "left the catalog" collapse into the same answer. */
+function idsOnFallback(Q: QualityData): string[] {
   return Q.parameters
     .filter(function (p) { return p.type !== 'CP'; })
     .map(function (p) { return p.id; })
-    .filter(function (id) { return !hasRelRule(id) && !declared.has(id); })
-    .sort();
+    .filter(function (id) { return !hasRelRule(id); });
+}
+
+/* An id with no family rule that nobody has declared. This is the one that
+   fires when a metric is added to the catalog and the REL table is not. */
+export function undeclaredRelevanceFallbacks(Q: QualityData): string[] {
+  return declaredVsLive(REL_FALLBACK_IDS, idsOnFallback(Q)).undeclared;
 }
 
 /* The reverse: a declared id that has since gained a rule, or left the
    catalog. Keeps the list from outliving what it describes. */
 export function staleRelevanceFallbacks(Q: QualityData): string[] {
-  const live = new Set(
-    Q.parameters.filter(function (p) { return p.type !== 'CP'; })
-      .map(function (p) { return p.id; })
-  );
-  return REL_FALLBACK_IDS.filter(function (id) {
-    return !live.has(id) || hasRelRule(id);
-  }).sort();
+  return declaredVsLive(REL_FALLBACK_IDS, idsOnFallback(Q)).stale;
 }
 
 /* ---- Numeric parsing + formatting ------------------------------------- */

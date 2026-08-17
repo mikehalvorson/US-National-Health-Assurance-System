@@ -113,15 +113,41 @@ function bp(of: ExprNode): ExprNode { return { k: 'basep', of: of }; }
  * research/quality-equation-methodology.md, checked against this constant by
  * kappa-check.ts. KAPPA_SOURCE_GATE names the gate so a change to that floor
  * invalidates the calibration loudly instead of leaving it stale. */
-export const KAPPA_VALUE = 8;
-export const KAPPA_SOURCE_GATE = 'G5';
-export const KAPPA_SOURCE_FLOOR_PCT = 97;
-export const KAPPA_MATURE_PCT = 99;
-export const KAPPA_BUILD_AT_P5 = 0.75;
-export const KAPPA_CONFIDENCE = 'low';
-/* The band published as the uncertainty range. Halving and doubling the
-   fitted value, because one observation gives no basis for a narrower one. */
-export const KAPPA_BAND = [4, 8, 16];
+/* One registry entry rather than seven loose constants. They only ever travel
+   together - kappa-check.ts, selftests.ts and quality.astro each imported the
+   whole block - and they are one claim: this value, from this observation, at
+   this grade, with this band. The individual names are kept as aliases so the
+   call sites read as prose. */
+export interface KappaCalibration {
+  value: number;
+  /* The single observation the value is fitted to. */
+  sourceGate: string;
+  sourceFloorPct: number;
+  maturePct: number;
+  buildAtP5: number;
+  confidence: string;
+  /* The band published as the uncertainty range. Halving and doubling the
+     fitted value, because one observation gives no basis for a narrower one. */
+  band: number[];
+}
+
+export const KAPPA_CALIBRATION: KappaCalibration = {
+  value: 8,
+  sourceGate: 'G5',
+  sourceFloorPct: 97,
+  maturePct: 99,
+  buildAtP5: 0.75,
+  confidence: 'low',
+  band: [4, 8, 16]
+};
+
+export const KAPPA_VALUE = KAPPA_CALIBRATION.value;
+export const KAPPA_SOURCE_GATE = KAPPA_CALIBRATION.sourceGate;
+export const KAPPA_SOURCE_FLOOR_PCT = KAPPA_CALIBRATION.sourceFloorPct;
+export const KAPPA_MATURE_PCT = KAPPA_CALIBRATION.maturePct;
+export const KAPPA_BUILD_AT_P5 = KAPPA_CALIBRATION.buildAtP5;
+export const KAPPA_CONFIDENCE = KAPPA_CALIBRATION.confidence;
+export const KAPPA_BAND = KAPPA_CALIBRATION.band;
 
 /* The active value. Evaluation reads this rather than a baked-in 8, so the
    whole catalog can be recomputed at another setting without rebuilding the
@@ -1352,7 +1378,7 @@ export const AUTHORITATIVE_KINDS: Record<string, boolean> = {
  * that string is the same mistake as reading a value off it.
  *
  * So: no parse, or a templated target, means take no anchors. */
-export function anchorUnit(d: EquationDef, catalogTarget: string) {
+export function anchorMatchTarget(d: EquationDef, catalogTarget: string) {
   return d.template ? null : parseNum(catalogTarget);
 }
 
@@ -1362,7 +1388,7 @@ export function anchorUnit(d: EquationDef, catalogTarget: string) {
 export function committedAnchors(
   d: EquationDef, p: QualityParameter
 ): Record<string, number> {
-  const matMeta = anchorUnit(d, p.target);
+  const matMeta = anchorMatchTarget(d, p.target);
   const anchors: Record<string, number> = {};
   if (!matMeta) return anchors;
   (p.rollout || []).forEach(function (e) {
@@ -1504,9 +1530,6 @@ export const MATURITY_TOLERANCE = 0.02;
  * The reasons now live in the generator and are stamped onto the parameter
  * (`documentedGap`, `documentedGapSection`), so they travel with the record,
  * and the check below fails in both directions. */
-export function documentedGap(p: QualityParameter): string | undefined {
-  return p.documentedGap;
-}
 export function documentedGapIds(Q: QualityData): string[] {
   return Q.parameters.filter(function (p) { return !!p.documentedGap; })
     .map(function (p) { return p.id; }).sort();
@@ -1556,7 +1579,7 @@ export function equationSelfTests(Q: QualityData): { ok: boolean; messages: stri
     const ok = meta.cmp === '<='
       ? v <= meta.num * (1 + MATURITY_TOLERANCE)
       : v >= meta.num * (1 - MATURITY_TOLERANCE);
-    const exempt = !!documentedGap(p);
+    const exempt = !!p.documentedGap;
     if (!ok && !exempt) {
       messages.push('maturity miss: ' + p.id + ' computed ' + v.toFixed(2) + ' vs ' + p.target);
     }

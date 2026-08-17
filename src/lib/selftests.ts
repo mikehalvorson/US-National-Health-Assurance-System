@@ -22,12 +22,13 @@ import {
   maturityToleranceDrift
 } from './kappa-check';
 import {
-  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, derivationCounts, ROLLOUT_KINDS,
-  staleTargetMisparses,
-  undeclaredRolloutKinds, undeclaredTargetMisparses, underivedPublishedKinds,
-  unproducedRolloutKinds,
-  unTemplatedNonParsingTargets
+  authoritativeKindDrift, derivationCounts, ROLLOUT_KINDS, undeclaredRolloutKinds,
+  underivedPublishedKinds, unproducedRolloutKinds
 } from './rollout-kind-check';
+import {
+  DECLARED_TARGET_MISPARSES, staleTargetMisparses, undeclaredTargetMisparses,
+  unTemplatedNonParsingTargets
+} from './target-parse-check';
 import { fmeaSelfTests } from './fmea';
 import {
   ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,

@@ -20,11 +20,13 @@ import {
   PARSER_DEFINITION_SOURCE, PARSER_HOME, parserImplementations
 } from '../../src/lib/manifest-check';
 import {
-  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, derivationCounts, ROLLOUT_KINDS,
-  staleTargetMisparses, underivedPublishedKinds,
-  undeclaredRolloutKinds, undeclaredTargetMisparses, unproducedRolloutKinds,
-  unTemplatedNonParsingTargets
+  authoritativeKindDrift, derivationCounts, ROLLOUT_KINDS, underivedPublishedKinds,
+  undeclaredRolloutKinds, unproducedRolloutKinds
 } from '../../src/lib/rollout-kind-check';
+import {
+  DECLARED_TARGET_MISPARSES, staleTargetMisparses, undeclaredTargetMisparses,
+  unTemplatedNonParsingTargets
+} from '../../src/lib/target-parse-check';
 
 function catalogWithKinds(kinds: string[]): QualityData {
   return {

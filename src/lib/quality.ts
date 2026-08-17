@@ -38,6 +38,7 @@
    defensible. A new client should pick one of the three deliberately rather
    than invent a fourth. */
 import { NHA_QUALITY_DATA } from './quality-data';
+import type { QualityData, QualityParameter, RolloutEntry } from './quality-data';
 import { DATA_PHASES } from './data-phases';
 import { applyPhaseTargets } from './phase-targets';
 import { computeTargets, applyEquationTargets } from './equations';
@@ -59,3 +60,23 @@ NHA_QUALITY_DATA.parameters.forEach(function (parameter) {
 });
 
 export const QUALITY_DATA = NHA_QUALITY_DATA;
+
+/* The two walks §S3 wrote nine times between them.
+ *
+ * `if (p.type === 'CP') continue;` then iterate p.rollout is the shape of
+ * nearly every check in this section, and CP records are the reason: they
+ * carry no phase targets at all, so a walk that forgets to skip them counts
+ * 310 empty rollouts into whatever it is measuring. Naming the walk once puts
+ * that rule in one place instead of nine. */
+export function kppTpp(Q: QualityData = QUALITY_DATA): QualityParameter[] {
+  return Q.parameters.filter(function (p) { return p.type !== 'CP'; });
+}
+
+export function forEachRolloutRow(
+  Q: QualityData,
+  visit: (p: QualityParameter, entry: RolloutEntry) => void
+): void {
+  for (const p of kppTpp(Q)) {
+    for (const entry of (p.rollout || [])) visit(p, entry);
+  }
+}
