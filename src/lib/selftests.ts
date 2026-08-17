@@ -29,7 +29,10 @@ import {
   DECLARED_TARGET_MISPARSES, staleTargetMisparses, undeclaredTargetMisparses,
   unTemplatedNonParsingTargets
 } from './target-parse-check';
-import { committedKindCounts, fmeaSelfTests, phaseOrderDrift, undeclaredCommittedKinds } from './fmea';
+import {
+  committedKindCounts, fmeaSelfTests, phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR,
+  probabilityScaleReach, undeclaredCommittedKinds
+} from './fmea';
 import {
   ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
   readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, routeDrift,
@@ -732,6 +735,24 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? 'not in AUTHORITATIVE_KINDS: ' + undeclared.join(', ')
             : kinds.reduce((n, k) => n + k.rows, 0) + ' carried forward across ' +
               kinds.map((k) => k.kind + ' ' + k.rows).join(', ')
+        };
+      }),
+      /* R274 [§S4]: the published occurrence scale and the scale the model can
+         reach are the same claim. The chart is drawn from PROBABILITY_FLOOR, so
+         an unreachable column cannot be rendered; this catches the mirror
+         failure, a declared floor no record ever reaches. */
+      runGuarded('Every score on the published occurrence scale is reachable', () => {
+        const reach = probabilityScaleReach();
+        return {
+          ok: !reach.unreached.length && !reach.unlabelled.length &&
+            reach.floor === PROBABILITY_FLOOR,
+          note: reach.unreached.length
+            ? 'no failure mode scores ' + reach.unreached.join(', ')
+            : reach.unlabelled.length
+              ? 'no published wording for ' + reach.unlabelled.join(', ')
+              : reach.floor !== PROBABILITY_FLOOR
+                ? 'declared floor ' + PROBABILITY_FLOOR + ', lowest reached ' + reach.floor
+                : 'scale ' + PROBABILITY_FLOOR + '..' + PROBABILITY_CEILING + ', every score reached and published'
         };
       }),
       /* R272 [§S4]: priorNum's "previous phase" comparison is one of the two

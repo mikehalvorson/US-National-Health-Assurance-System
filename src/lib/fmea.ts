@@ -220,7 +220,31 @@ export function cellBand(consequence: number, probability: number): Band {
 /* ---- Probability (occurrence, 1-5) ------------------------------------
  * Higher when the target is stringent, when it demands a large improvement
  * over the previous phase, when the parameter is not yet calibrated, and in
- * the foundation phases where systems are unproven. */
+ * the foundation phases where systems are unproven.
+ *
+ * R274 [§S4]: the scale this model can actually reach is derived here rather
+ * than assumed to be 1..5.
+ *
+ * Every bump below is additive and non-negative, so a phase target with no
+ * bump at all scores the baseline - and Math.round(1.5) is 2. Probability 1
+ * was therefore unreachable by construction, which made the first column of
+ * the 5x5 chart permanently empty and five of its twenty-five cells dead
+ * while cellBand coloured them anyway. The page published that empty column
+ * as a finding: "No failure mode scores probability 1: every controlled
+ * target sits on an unproven or ambitious trajectory." It was arithmetic
+ * about a constant, presented to a reader as evidence about the programme.
+ *
+ * The baseline is kept. Lowering it to make column 1 reachable would move
+ * roughly half of the 727 published probability scores to fix a presentation
+ * defect, and would replace one unsourced constant with another. What the
+ * model is actually saying is that every controlled target is at least
+ * "unlikely" to be missed, because every one of them is a target on a system
+ * still being built. That is a modelling position, so it is stated, the claim
+ * that dressed it up as a result is gone, and the chart is drawn from the
+ * reachable range so an unreachable band cannot be rendered again. */
+const PROB_BASELINE = 1.5;
+function clampScore(score: number): number { return Math.max(1, Math.min(5, Math.round(score))); }
+
 function stringencyBump(meta: NumMeta): number {
   const isMax = meta.cmp !== '<=';
   if (isMax && meta.unit === '%') {
@@ -282,8 +306,8 @@ function probabilityForRow(p: QualityParameter, e: RolloutEntry): { score: numbe
     /* qualitative ladder rung: the number itself was deferred */
     return { score: 3, basis: 'Deferred numeric target: occurrence proxied at moderate; a controlled number is required to assess it properly.', assessed: false };
   }
-  let score = 1.5;
-  const parts: string[] = ['baseline 1.5'];
+  let score = PROB_BASELINE;
+  const parts: string[] = ['baseline ' + PROB_BASELINE];
   const sb = stringencyBump(meta);
   if (sb) { score += sb; parts.push('target stringency +' + sb); }
   const prev = priorNum(p.rollout, e.phase, meta.unit);
@@ -292,9 +316,29 @@ function probabilityForRow(p: QualityParameter, e: RolloutEntry): { score: numbe
   if (statusUncertain(p)) { score += 0.5; parts.push('not yet calibrated +0.5'); }
   if (e.phase === 'P0' || e.phase === 'P1') { score += 1; parts.push('unproven foundation system +1'); }
   else if (e.phase === 'P2') { score += 0.5; parts.push('first live operation +0.5'); }
-  const clamped = Math.max(1, Math.min(5, Math.round(score)));
-  return { score: clamped, basis: parts.join(', '), assessed: true };
+  return { score: clampScore(score), basis: parts.join(', '), assessed: true };
 }
+
+/* R274: the reachable ends of the occurrence scale, derived from the two
+   things that produce a score - the phase-target construction above, whose
+   floor is the baseline with no bump, and the borrowed CP grades. Nothing
+   types "2" anywhere; the published scale and the chart both read this. */
+export const PROBABILITY_CEILING = 5;
+export const PROBABILITY_FLOOR = Math.min(
+  clampScore(PROB_BASELINE),
+  Math.min.apply(null, Object.keys(CONF_TO_OCC).map(function (k) { return CONF_TO_OCC[k]; }))
+);
+/* The published wording for each occurrence score, declared over the whole
+   1..5 grid so a score leaving the reachable range stops being published
+   without its definition being deleted - and so the page renders the scale
+   the model can produce rather than a list typed beside it. */
+export const PROBABILITY_SCALE: Record<number, string> = {
+  5: 'Almost certain: a near-perfect target on an unproven foundation system.',
+  4: 'Likely: a stringent target demanding a large step-up in one phase.',
+  3: 'Possible: a tight but incremental target on a system in operation.',
+  2: 'Unlikely: routine headroom on an established rail.',
+  1: 'Rare: a settled target on a system already running at the level required.'
+};
 
 /* ---- Consequence (severity, 1-5) --------------------------------------
  * Severity is the harm if the target is missed, scaled by three things:
@@ -318,7 +362,7 @@ function consequenceForRow(p: QualityParameter, cls: EffectClass, e: RolloutEntr
     if (/derived output/.test(role)) { parts.push('derived headline output, full domain'); }
     else if (/input/.test(role)) { base -= 2; parts.push('single input line -2'); }
     else { base -= 1; parts.push('state or ledger line -1'); }
-    const s = Math.max(2, Math.min(5, Math.round(base)));
+    const s = Math.max(2, clampScore(base));
     return { score: s, basis: parts.join(', ') };
   }
 
@@ -343,8 +387,7 @@ function consequenceForRow(p: QualityParameter, cls: EffectClass, e: RolloutEntr
     score += 1;
     parts.push('gate ' + gate + ' go/no-go +1');
   }
-  const clamped = Math.max(1, Math.min(5, Math.round(score)));
-  return { score: clamped, basis: parts.join(', ') };
+  return { score: clampScore(score), basis: parts.join(', ') };
 }
 
 /* ---- Detectability (1 easy .. 5 hidden) -> risk priority number -------- */
@@ -355,8 +398,7 @@ function detectability(p: QualityParameter): { score: number; basis: string } {
   if ((p.datasets || '').trim()) { score -= 1; parts.push('named datasets -1'); }
   else if (p.type === 'CP') { score += 1; parts.push('no dataset contract +1'); }
   if ((p.ownerVerifier || '').indexOf('/') >= 0) { score -= 0.5; parts.push('independent verifier -0.5'); }
-  const clamped = Math.max(1, Math.min(5, Math.round(score)));
-  return { score: clamped, basis: parts.join(', ') };
+  return { score: clampScore(score), basis: parts.join(', ') };
 }
 
 /* ---- Effect narrative ------------------------------------------------- */
@@ -585,6 +627,30 @@ export function undeclaredCommittedKinds(): string[] {
     .filter(function (c) { return !AUTHORITATIVE_KINDS[c.kind]; })
     .map(function (c) { return c.kind; });
 }
+/* R274: the occurrence scores the model actually produces, so the declared
+   floor can be compared with the reached one. A floor nobody reaches is the
+   same false statement as an unreachable band, one column further in. */
+export function probabilityScaleReach(): {
+  floor: number; ceiling: number; unreached: number[]; unlabelled: number[];
+} {
+  const scored = RECORDS.filter(function (r) { return r.risk > 0; });
+  const seen: Record<number, boolean> = {};
+  scored.forEach(function (r) { seen[r.probability] = true; });
+  const values = scored.map(function (r) { return r.probability; });
+  const unreached: number[] = [];
+  const unlabelled: number[] = [];
+  for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
+    if (!seen[p]) unreached.push(p);
+    if (!PROBABILITY_SCALE[p]) unlabelled.push(p);
+  }
+  return {
+    floor: values.length ? Math.min.apply(null, values) : 0,
+    ceiling: values.length ? Math.max.apply(null, values) : 0,
+    unreached: unreached,
+    unlabelled: unlabelled
+  };
+}
+
 /* The phase ordering priorNum compares against, checked against the one
    phase->year definition rather than assumed (R251, R272). */
 export function phaseOrderDrift(): string[] {

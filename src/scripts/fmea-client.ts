@@ -5,7 +5,10 @@
    hovers are attached by scripts/acronyms-client.ts, so this file does not
    decorate acronyms itself. Runs on astro:page-load; idempotent via the
    matrix host's dataset.wired guard. */
-import { FMEA_DATA as F, cellBand, BAND_META, type FmeaRecord } from '../lib/fmea';
+import {
+  FMEA_DATA as F, cellBand, BAND_META, PROBABILITY_CEILING, PROBABILITY_FLOOR,
+  PROBABILITY_SCALE, type FmeaRecord
+} from '../lib/fmea';
 
 const BANDS = ['extreme', 'high', 'moderate', 'low'] as const;
 type Band = typeof BANDS[number];
@@ -23,6 +26,10 @@ function byId(id: string): HTMLElement | null { return document.getElementById(i
 function natural(a: string, b: string): number {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 }
+/* R274: both charts size their column track from the reachable score range. */
+function setMatrixColumns(grid: HTMLElement): void {
+  grid.style.setProperty('--fmea-cols', String(PROBABILITY_CEILING - PROBABILITY_FLOOR + 1));
+}
 
 /* ---- Intro counts ----------------------------------------------------- */
 function renderCounts(): void {
@@ -34,6 +41,34 @@ function renderCounts(): void {
   set('fmea-n-cp', F.counts.cp);
 }
 
+/* ---- Probability scale (R274) -----------------------------------------
+   The page used to list five scores including a "1 Rare" the model cannot
+   produce. The list is built from the reachable range instead, and the reason
+   the range starts where it does is stated rather than reported as a finding
+   about the programme. */
+function renderProbabilityScale(): void {
+  const list = byId('fmea-prob-scale');
+  if (list) {
+    list.innerHTML = '';
+    for (let p = PROBABILITY_CEILING; p >= PROBABILITY_FLOOR; p--) {
+      const li = el('li');
+      li.appendChild(el('b', '', String(p)));
+      li.appendChild(document.createTextNode(' ' + PROBABILITY_SCALE[p]));
+      list.appendChild(li);
+    }
+  }
+  const floorNote = byId('fmea-prob-floor');
+  if (floorNote) {
+    floorNote.textContent =
+      'The scale runs ' + PROBABILITY_FLOOR + ' to ' + PROBABILITY_CEILING +
+      ', not 1 to ' + PROBABILITY_CEILING + '. Every score starts from one shared ' +
+      'baseline and only rises from there, so ' + PROBABILITY_FLOOR + ' is the floor ' +
+      'of the model rather than a reading of any particular target. A score of 1 ' +
+      'would mean a settled target on a system already running at the level ' +
+      'required, and nothing in a rollout plan is that.';
+  }
+}
+
 /* ---- Five-by-five risk chart ------------------------------------------ */
 function renderMatrix(): void {
   const host = byId('fmea-matrix');
@@ -41,14 +76,18 @@ function renderMatrix(): void {
   host.innerHTML = '';
 
   const grid = el('div', 'fmea-matrix');
+  /* R274: the columns are the reachable occurrence scores, not a hardcoded
+     1..5, so a band the model cannot produce is never drawn. */
+  setMatrixColumns(grid);
   /* top-left corner label */
   grid.appendChild(el('div', 'fmea-matrix-corner', 'Consequence ↓ / Probability →'));
-  /* probability column headers 1..5 */
-  for (let p = 1; p <= 5; p++) grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
+    grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  }
 
   for (let c = 5; c >= 1; c--) {
     grid.appendChild(el('div', 'fmea-matrix-rowhead', String(c)));
-    for (let p = 1; p <= 5; p++) {
+    for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
       const band = cellBand(c, p);
       const count = F.matrix[c][p];
       const cell = el('button', 'fmea-cell fmea-cell-' + band) as HTMLButtonElement;
@@ -77,10 +116,17 @@ function renderMatrix(): void {
   });
   host.appendChild(legend);
 
+  /* R274: the old note read "No failure mode scores probability 1: every
+     controlled target sits on an unproven or ambitious trajectory", which
+     presented a property of the scoring baseline as a result of the analysis.
+     What the columns are is stated instead, floor included and derived. */
   const axisNote = el('p', 'fmea-axis-note',
-    'Columns are probability, 1 rare to 5 almost certain. Rows are consequence, ' +
-    '1 negligible to 5 catastrophic. No failure mode scores probability 1: every ' +
-    'controlled target sits on an unproven or ambitious trajectory.');
+    'Columns are probability, ' + PROBABILITY_FLOOR + ' unlikely to ' +
+    PROBABILITY_CEILING + ' almost certain. Rows are consequence, 1 negligible ' +
+    'to 5 catastrophic. The scale starts at ' + PROBABILITY_FLOOR +
+    ' because every score begins from a shared baseline and only rises: nothing ' +
+    'here is a routine target on a settled system, so the model does not offer a ' +
+    '"rare" score for one.');
   host.appendChild(axisNote);
 }
 
@@ -192,11 +238,14 @@ function renderTiers(): void {
 /* ---- Cost-parameter calibration risk (separate chart) ----------------- */
 function miniMatrix(matrix: number[][], labelPrefix: string): HTMLElement {
   const grid = el('div', 'fmea-matrix fmea-matrix-cp');
+  setMatrixColumns(grid);
   grid.appendChild(el('div', 'fmea-matrix-corner', 'Consequence ↓ / Probability →'));
-  for (let p = 1; p <= 5; p++) grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
+    grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  }
   for (let c = 5; c >= 1; c--) {
     grid.appendChild(el('div', 'fmea-matrix-rowhead', String(c)));
-    for (let p = 1; p <= 5; p++) {
+    for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
       const band = cellBand(c, p);
       const count = matrix[c][p];
       const cell = el('button', 'fmea-cell fmea-cell-' + band) as HTMLButtonElement;
@@ -514,6 +563,7 @@ function initFmea(): void {
   selectedCell = null;
 
   renderCounts();
+  renderProbabilityScale();
   renderMatrix();
   renderHeadlines();
   renderTiers();

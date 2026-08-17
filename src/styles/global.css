@@ -3738,8 +3738,10 @@ footer.site a { color: var(--text-muted); }
 
 /* ---- Matrix ---- */
 .fmea-matrix-wrap { margin-top: 14px; }
+/* R274: the column count is set by the client from the reachable probability
+   range, so a score the model cannot produce is never given a column. */
 .fmea-matrix {
-  display: grid; grid-template-columns: auto repeat(5, minmax(52px, 1fr));
+  display: grid; grid-template-columns: auto repeat(var(--fmea-cols, 5), minmax(52px, 1fr));
   gap: 4px; max-width: 560px;
 }
 .fmea-matrix-corner {
@@ -3910,7 +3912,7 @@ footer.site a { color: var(--text-muted); }
 
 /* ---- CP calibration panel ---- */
 .fmea-cp-layout { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 24px; align-items: start; }
-.fmea-matrix-cp { max-width: 320px; grid-template-columns: auto repeat(5, minmax(40px, 1fr)); }
+.fmea-matrix-cp { max-width: 320px; grid-template-columns: auto repeat(var(--fmea-cols, 5), minmax(40px, 1fr)); }
 .fmea-matrix-cp .fmea-cell { min-height: 38px; }
 .fmea-cp-right { min-width: 0; }
 .fmea-cp-families { display: grid; gap: 6px; margin-top: 10px; max-height: 340px; overflow-y: auto; }

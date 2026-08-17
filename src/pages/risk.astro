@@ -61,16 +61,11 @@ import ChapterNav from '../components/ChapterNav.astro';
     <div class="fmea-scales">
       <div class="fmea-scale">
         <h3>Probability (occurrence)</h3>
-        <ul>
-          <li><b>5</b> Almost certain: a near-perfect target on an unproven foundation system.</li>
-          <li><b>4</b> Likely: a stringent target demanding a large step-up in one phase.</li>
-          <li><b>3</b> Possible: a tight but incremental target on a system in operation.</li>
-          <li><b>2</b> Unlikely: routine headroom on an established rail.</li>
-          <li><b>1</b> Rare.</li>
-        </ul>
+        <ul id="fmea-prob-scale"></ul>
         <p class="fmea-scale-note">Raised by target stringency, by the size of
           the required phase-to-phase improvement, by the parameter not yet
           being calibrated, and by the unproven foundation phases.</p>
+        <p class="fmea-scale-note" id="fmea-prob-floor"></p>
       </div>
       <div class="fmea-scale">
         <h3>Consequence (severity)</h3>

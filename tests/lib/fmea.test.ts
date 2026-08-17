@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import {
   BAND_META, committedKindCounts, EQUATION_DERIVED_KIND, FMEA_DATA, fmeaSelfTests,
-  phaseOrderDrift, undeclaredCommittedKinds
+  phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SCALE,
+  probabilityScaleReach, undeclaredCommittedKinds
 } from '../../src/lib/fmea';
 import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
 import { PHASE_YEAR } from '../../src/lib/rollout';
@@ -66,6 +67,51 @@ describe('FMEA derivation', () => {
 
   test('the seven deferred qualitative targets surface as parameter gaps', () => {
     expect(FMEA_DATA.gaps.deferredParamIds.length).toBe(7);
+  });
+});
+
+/* R274 [§S4]: the page used to publish "No failure mode scores probability 1"
+   as a result. It was Math.round(1.5). The scale the chart draws is now the
+   scale the model can reach, so the claim has nothing left to say. */
+describe('R274 the occurrence scale is the one the model can reach', () => {
+  test('probability 1 is unreachable, and is therefore not part of the scale', () => {
+    const scored = FMEA_DATA.records.filter((r) => r.risk > 0);
+    expect(scored.some((r) => r.probability === 1)).toBe(false);
+    expect(PROBABILITY_FLOOR).toBeGreaterThan(1);
+  });
+
+  test('every column the chart can draw carries at least one failure mode', () => {
+    const columns: number[] = [];
+    for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) columns.push(p);
+    expect(columns).not.toContain(1);
+    for (const p of columns) {
+      expect(
+        FMEA_DATA.records.some((r) => r.risk > 0 && r.probability === p),
+        'no failure mode scores probability ' + p
+      ).toBe(true);
+    }
+  });
+
+  test('the declared floor equals the lowest score any record actually carries', () => {
+    const reach = probabilityScaleReach();
+    expect(reach.floor).toBe(PROBABILITY_FLOOR);
+    expect(reach.ceiling).toBe(PROBABILITY_CEILING);
+    expect(reach.unreached).toEqual([]);
+  });
+
+  test('probabilityScaleReach reports a reachable score with no published wording', () => {
+    expect(probabilityScaleReach().unlabelled).toEqual([]);
+    /* Constructed failing input: take the wording away from a score the chart
+       still draws. A column with no definition beside it is the same defect as
+       a definition with no column. */
+    const saved = PROBABILITY_SCALE[PROBABILITY_FLOOR];
+    try {
+      delete PROBABILITY_SCALE[PROBABILITY_FLOOR];
+      expect(probabilityScaleReach().unlabelled).toContain(PROBABILITY_FLOOR);
+    } finally {
+      PROBABILITY_SCALE[PROBABILITY_FLOOR] = saved;
+    }
+    expect(probabilityScaleReach().unlabelled).toEqual([]);
   });
 });
 
