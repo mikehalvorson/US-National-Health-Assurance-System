@@ -661,6 +661,45 @@ export interface FmeaRecord {
   newParamNote: string;
 }
 
+/* ---- Record ids ------------------------------------------------------
+ * NEW FINDING (P5 §S4): 'FM-' + paramId + '-' + phase is not unique. Three
+ * parameters carry two rollout rows at one phase - KPP-C5, KPP-C6 and
+ * TPP-11.5 each hold a progression floor and a maturity target at P8 - so
+ * 1,037 records shared 1,034 ids. Every consumer resolves a record by
+ * `filter(r => r.id === id)[0]`, so the second of each pair could not be
+ * selected, and the table gave both rows the same data-fmea-id and the same
+ * aria-pressed, which lit both when either was chosen.
+ *
+ * Ids stay as they were for the 1,031 rows that are already unique; the rows
+ * that share a phase take a short kind suffix, so the ID column stays
+ * readable and existing ids do not churn. The slugs are declared rather than
+ * generated so a new rollout kind cannot silently produce an id nobody can
+ * read - the build fails instead. */
+const KIND_SLUG: Record<string, string> = {
+  'equation-derived target': 'eq',
+  'maturity target': 'maturity',
+  'progression floor': 'floor',
+  'phase milestone': 'milestone',
+  'data-plan interim target': 'data-plan'
+};
+export function unslugedKinds(): string[] {
+  const missing: Record<string, boolean> = {};
+  QUALITY_DATA.parameters.forEach(function (p) {
+    (p.rollout || []).forEach(function (e) { if (!KIND_SLUG[e.kind]) missing[e.kind] = true; });
+  });
+  return Object.keys(missing).sort();
+}
+export function duplicateRecordIds(): string[] {
+  const seen: Record<string, number> = {};
+  RECORDS.forEach(function (r) { seen[r.id] = (seen[r.id] || 0) + 1; });
+  return Object.keys(seen).filter(function (id) { return seen[id] > 1; }).sort();
+}
+function rowsPerPhase(p: QualityParameter): Record<string, number> {
+  const n: Record<string, number> = {};
+  (p.rollout || []).forEach(function (e) { n[e.phase] = (n[e.phase] || 0) + 1; });
+  return n;
+}
+
 const RECORDS: FmeaRecord[] = [];
 
 QUALITY_DATA.parameters.forEach(function (p) {
@@ -717,6 +756,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
   }
 
   /* KPP / TPP: one failure mode per phase target */
+  const perPhase = rowsPerPhase(p);
   p.rollout.forEach(function (e) {
     const prob = probabilityForRow(p, e);
     const cons = consequenceForRow(p, cls, e);
@@ -727,7 +767,8 @@ QUALITY_DATA.parameters.forEach(function (p) {
     const band: Band = scored ? bandFor(cons.score, prob.score) : 'unscored';
     const isGateRow = gate && e.phase === GATE_BIND_PHASE[gate];
     RECORDS.push({
-      id: 'FM-' + p.id + '-' + e.phase,
+      id: 'FM-' + p.id + '-' + e.phase +
+        (perPhase[e.phase] > 1 ? '-' + (KIND_SLUG[e.kind] || 'row') : ''),
       paramId: p.id, paramType: p.type as 'KPP' | 'TPP', paramName: p.name,
       concept: p.concept, family: p.id.match(/^(KPP-[A-Z]+|TPP-[0-9]+|TPP-[A-Z]+)/) ? p.id.match(/^(KPP-[A-Z]+|TPP-[0-9]+|TPP-[A-Z]+)/)![0] : p.id,
       phase: e.phase, phaseAnchor: PHASE_ANCHOR[e.phase] || e.phase,

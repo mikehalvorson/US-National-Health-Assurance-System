@@ -30,10 +30,10 @@ import {
   unTemplatedNonParsingTargets
 } from './target-parse-check';
 import {
-  committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, fmeaSelfTests, gateBumpedRecords,
-  gateWiring, phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SOURCES,
-  probabilityScaleReach, probabilitySourceConflicts, probabilitySourceCounts, proxiedInMatrix,
-  undeclaredCommittedKinds
+  committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, duplicateRecordIds, FMEA_DATA,
+  fmeaSelfTests, gateBumpedRecords, gateWiring, phaseOrderDrift, PROBABILITY_CEILING,
+  PROBABILITY_FLOOR, PROBABILITY_SOURCES, probabilityScaleReach, probabilitySourceConflicts,
+  probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
   ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
@@ -737,6 +737,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? 'not in AUTHORITATIVE_KINDS: ' + undeclared.join(', ')
             : kinds.reduce((n, k) => n + k.rows, 0) + ' carried forward across ' +
               kinds.map((k) => k.kind + ' ' + k.rows).join(', ')
+        };
+      }),
+      /* NEW FINDING (P5 §S4): every consumer resolves a failure mode by
+         `filter(r => r.id === id)[0]`, so a shared id makes a record
+         unselectable and lights two table rows at once. */
+      runGuarded('Every failure mode has an id no other failure mode shares', () => {
+        const dups = duplicateRecordIds();
+        const unsluged = unslugedKinds();
+        return {
+          ok: !dups.length && !unsluged.length,
+          note: [
+            dups.length ? 'shared by more than one record: ' + dups.join(', ') : '',
+            unsluged.length ? 'rollout kind with no id slug: ' + unsluged.join(', ') : ''
+          ].filter(Boolean).join(' | ') || FMEA_DATA.counts.total + ' records, all ids distinct'
         };
       }),
       /* R279 [§S4]: a deferred target had its occurrence "proxied at moderate"

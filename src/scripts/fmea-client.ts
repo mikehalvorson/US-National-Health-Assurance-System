@@ -25,9 +25,6 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
   return node;
 }
 function byId(id: string): HTMLElement | null { return document.getElementById(id); }
-function natural(a: string, b: string): number {
-  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-}
 /* R274: both charts size their column track from the reachable score range. */
 function setMatrixColumns(grid: HTMLElement): void {
   grid.style.setProperty('--fmea-cols', String(PROBABILITY_CEILING - PROBABILITY_FLOOR + 1));

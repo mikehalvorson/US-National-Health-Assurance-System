@@ -5,9 +5,9 @@ import {
   probabilityScaleReach, undeclaredCommittedKinds
 } from '../../src/lib/fmea';
 import {
-  cpConfidenceWiring, cpFamilyConfidence, DEFERRED_TARGET_DEFINITION, gateBumpedRecords,
-  gateWiring, PROBABILITY_SOURCE_NOTE, PROBABILITY_SOURCES, probabilitySourceConflicts,
-  probabilitySourceCounts, proxiedInMatrix
+  cpConfidenceWiring, cpFamilyConfidence, DEFERRED_TARGET_DEFINITION, duplicateRecordIds,
+  gateBumpedRecords, gateWiring, PROBABILITY_SOURCE_NOTE, PROBABILITY_SOURCES,
+  probabilitySourceConflicts, probabilitySourceCounts, proxiedInMatrix, unslugedKinds
 } from '../../src/lib/fmea';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
@@ -74,6 +74,39 @@ describe('FMEA derivation', () => {
 
   test('the seven deferred qualitative targets surface as parameter gaps', () => {
     expect(FMEA_DATA.gaps.deferredParamIds.length).toBe(7);
+  });
+});
+
+/* NEW FINDING (P5 §S4): 'FM-' + paramId + '-' + phase collided for the three
+   parameters holding two rollout rows at one phase, so 1,037 records shared
+   1,034 ids and three failure modes could not be selected at all. */
+describe('failure-mode ids are unique', () => {
+  test('no two records share an id', () => {
+    expect(duplicateRecordIds()).toEqual([]);
+    const ids = new Set(FMEA_DATA.records.map((r) => r.id));
+    expect(ids.size).toBe(FMEA_DATA.records.length);
+  });
+
+  test('every rollout kind has an id slug, so a collision can always be broken', () => {
+    expect(unslugedKinds()).toEqual([]);
+  });
+
+  test('the three colliding pairs are distinguishable and still resolvable', () => {
+    for (const paramId of ['KPP-C5', 'KPP-C6', 'TPP-11.5']) {
+      const atP8 = FMEA_DATA.records.filter((r) => r.paramId === paramId && r.phase === 'P8');
+      expect(atP8.length, paramId).toBe(2);
+      expect(atP8[0].id, paramId).not.toBe(atP8[1].id);
+      for (const r of atP8) {
+        /* the lookup every consumer uses has to land on this record */
+        expect(FMEA_DATA.records.filter((x) => x.id === r.id)[0], r.id).toBe(r);
+      }
+    }
+  });
+
+  test('a parameter with one row per phase keeps its plain id', () => {
+    const plain = FMEA_DATA.records.filter((r) => r.paramId === 'KPP-D1' && r.phase === 'P4');
+    expect(plain.length).toBe(1);
+    expect(plain[0].id).toBe('FM-KPP-D1-P4');
   });
 });
 
