@@ -1013,3 +1013,181 @@ rather than enforced by ordering.
 
 Registry unchanged at 78; `astro check` 0 errors, 0 warnings, 3 pre-existing
 hints; 329 tests pass.
+
+---
+
+## P5 — §S4 Risk chapter / FMEA · 2026-08-17 · branch `nha-remediation`
+STATUS: complete — all 6 implementable rows landed, one commit each, plus one new finding fixed
+
+**Entry gate:** `## P1` through `## P4` all `STATUS: complete` ✅ · `grep -rn "PHASE_T" src/`
+returns no local definition (three lines, all `PHASE_TOKEN` or a provenance comment, as the
+P5 handoff already corrected) ✅ · the `## P3` entry records the criticality-ranking diff path,
+`NHA-Mental-Health/baseline-P3/` ✅ · `check_audit_docs.py` exit 0, `astro build` passes, tree
+clean ✅.
+
+### REPORT — the criticality ranking before and after `R226`
+
+The section brief asks for this and it is P3's movement, not P5's. Measured from
+`baseline-P3/preP3-` and `postP3-criticality-ranking.json`, all 1,037 records:
+
+| | before `R226` | after |
+|---|---|---|
+| extreme | 236 | 230 |
+| high | 362 | 369 |
+| moderate | 377 | 374 |
+| low | 62 | 64 |
+
+**89 records changed probability, risk and RPN; 0 changed consequence; 49 changed band; 996 of
+1,037 positions moved.** RPN fell on 58 and rose on 31. Band transitions: extreme to high 15,
+high to extreme 9, moderate to low 9, low to moderate 7, moderate to high 5, high to moderate 4.
+
+**`§BU1`'s prediction holds and is now measured on both sides.** The chapter read alarmed
+because a target read a year further along a monotone ramp has less headroom, so
+`stringencyBump` scored it harder; correcting the phase index calmed it, net six records out of
+the extreme band, while the Quality tab moved the other way.
+
+**But the distortion was uneven, and that is the part nothing on the page said.**
+`applyEquationTargets` rewrites only `'derived interim target'` rows. **538 of the 727
+phase-target failure modes carry a value the equation layer recomputes; 189 carry a committed
+value it is required to leave alone** — 130 maturity targets, 47 data-plan interim targets, 11
+progression floors, 1 phase milestone. Both sets are ranked against each other, so `R226`
+reordered the ranking without any committed target having changed. `R272` publishes that split
+where the ranking is read.
+
+### The section's own movement
+
+`preP5` vs `postP5` over all 1,037 records: **67 changed probability, risk and RPN; 0 changed
+consequence; 32 changed band.** All 67 are cost parameters or deferred targets; **no natively
+scored KPP/TPP failure mode moved at all.**
+
+| | before §S4 | after |
+|---|---|---|
+| phase-target records on the chart | 727 | 720 |
+| extreme / high / moderate / low | 200 / 319 / 144 / 64 | 193 / 319 / 144 / 64 |
+| CP records on their chart | 310 | 295 |
+| CP extreme / high / moderate | 30 / 50 / 230 | 27 / 44 / 224 |
+| unscored (no probability published) | 0 | 22 |
+
+Band transitions: moderate to unscored 13, extreme to unscored 7, high to moderate 7,
+extreme to high 3, high to unscored 2. 1,004 of 1,037 ranking positions changed, which is what a
+risk re-sort looks like when 67 records change risk.
+
+Self-tests **78 to 86**. `astro check`: 0 errors, 0 warnings, **2 hints** (was 3; the third was
+`fmea-client.ts`'s unused `natural`, removed as this section's own dead code). 361 tests pass.
+
+### LANDED
+
+| R | sha | What |
+|---|---|---|
+| R272 | `b0d22bb` | The two populations the ranking compares, named and published; `priorNum`'s phase order off `PHASE_YEAR` |
+| R274 | `53d2af4` | 🔴 The occurrence scale the model can reach, and the probability-1 claim withdrawn |
+| R275 | `d19551a` | 🔴 CP occurrence read from `params.ts`; the unassessable branch made reachable |
+| R276 | `f45f831` | Borrowed, proxied and unscored separated; `counts.assessed` retired |
+| R278 | `59deae2` | Gate linkage checked against the gate table; `G5`'s bind phase corrected |
+| R279 | `c78f014` | Proxied placeholders off the risk chart and out of the band totals |
+| — | `2b21738` | New finding: three failure modes shared an id with another failure mode |
+
+**`R263` is superseded and was not implemented**, as the prompt directs. Its investigative half
+was answered at Pass 53; `R272` carries its implementation half.
+
+### DISCREPANCY
+
+- **`D40` — the gate table does carry its parameter list, and the prompt says it does not.**
+  The prompt states *"the `gates` records inside `quality-data.ts` carry no parameter list at
+  all — keys are `id, name, decision, floor, evidence, fallback` — so the linkage exists only in
+  `fmea.ts`."* The keys are right and the conclusion is wrong: **`evidence` carries the list**,
+  in the framework's compressed notation (`"PR-SCH-013; TPP-8.1/9.1–9.7; workforce and service
+  records"`). **The code wins.** `R278` therefore checks the extraction against its own source
+  in both directions rather than only resolving it against the catalog. All 8 gates, 41 ids,
+  zero differences.
+
+- **`D41` — `GATE_BIND_PHASE.G5` was wrong, and `§BU7` says it is not.** `§BU7`: *"Bind phases
+  reconcile with `rollout.ts` for G1 to G6."* They do not for G5. `TPP-11.5` carries a
+  progression floor at **both** P5 and P8, and only the P8 row is tagged `G5`, so the +1
+  consequence bump went to three ungated P5 rows and was withheld from the gated P8 rows.
+  Corrected to P8. **The error was live and inert:** all six affected rows are safety-class
+  parameters already at the severity ceiling of 5, so `clampScore` absorbed the +1 at both
+  phases. Six published consequence bases changed; no score did.
+
+- **`D42` — `medium-high` cannot reach `params.ts`'s sampled parameters today.** `§BU4` clause
+  (a) says *"`medium-high` cannot round-trip — the type is `'low' | 'medium' | 'high'` and `§A1`
+  showed the seed uses `medium-high` on load-bearing rows."* The type is correct, but all 31
+  `PARAM_DEFS` entries carry one of the three simple grades. `medium-high` and `low-medium`
+  appear in `OUTCOME_STATS` (outcomes the model deliberately does not price) and in the seed
+  CSV, neither of which this chart reads. **Reading from `params.ts` introduces no round-trip
+  failure today.** The hazard is one §S11a edit away, so `CONF_TO_OCC` and `GRADE_RANK` cover the
+  compound grades and an unmapped grade fails the build.
+
+- **`D43` — the seven unassessed KPP records are not a parser failure.** The prompt flags them
+  as *"outside the CP-proxy story"* and asks why they are unassessed. They are `KPP-D1` through
+  `KPP-D7`, the seven clinical-outcome parameters, and each is deferred **at P8 and only at P8**:
+  *"reduction to be calibrated"*, *"increase to be calibrated"*, *"to be calibrated"*. Every one
+  carries real computed targets at P4 through P7. So the catalog is not incomplete — the
+  framework declined to fix the mature value for avoidable admissions, readmissions, preventive
+  deferral, chronic-care control, cost-related nonadherence, safety-event reporting and care
+  experience. All seven are safety-class at maturity, which is why all seven sat in the extreme
+  band on a number nobody had set.
+
+- **`D44` — `GATE_PARAMS` holds 41 ids, not the 36 the audit states.** Already recorded at P0
+  and restated in the prompt; confirmed again, and all 41 resolve.
+
+### CP OCCURRENCE, BEFORE AND AFTER
+
+`R275` replaced twenty hand-typed family grades with a declared mapping from each family to the
+sampled parameters that enter its cost line in `model.ts`. Four families moved:
+
+| Family | records | occurrence | why |
+|---|---|---|---|
+| `CP-TOT` | 10 | 3 to 2 | weakest input is `baselineRealGrowth`, graded `high` on CMS NHE Projections |
+| `CP-CLM` | 15 | 3 to 4 | weakest input is `legacyAdminFloor`, graded `low` |
+| `CP-OFF` | 20 | 3 to 4 | weakest input is `extractionSavings`, graded `low` — **`§E1`'s complaint arriving by itself** |
+| `CP-DX` | 15 | 3 to unassessable | devices, labs and diagnostics reach the engine only inside `otherPhc0`, a carried-forward CMS aggregate with no sampled parameter |
+
+The other sixteen resolved to the grade they had been typed with. **`§BU4`'s clause (b) is not
+fixed here and should not be:** `CP-POP` against `§E2` and `CP-BH` against `§D1`/`§D2` are now
+one grade in `params.ts` each, and §S11b owns them. Regrading `popGrowth` or `bhExpansion` there
+will move this chart with no further work, which is the architectural result the row was after.
+
+### NEW FINDINGS
+
+1. **Three failure modes shared an id with another failure mode.** 1,037 records carried 1,034
+   distinct ids. `'FM-' + paramId + '-' + phase` assumes one rollout row per parameter per
+   phase; `KPP-C5`, `KPP-C6` and `TPP-11.5` each hold a progression floor **and** a maturity
+   target at P8. Every consumer resolves a record with `filter(r => r.id === id)[0]`, so the
+   second of each pair could never be opened, and `renderTable` gave both rows the same
+   `data-fmea-id` and the same `aria-pressed`, so selecting either lit both. **Two of the three
+   are `G4` fiscal-readiness floors** — the rows a reader following the criticality ranking is
+   most likely to click. Fixed at `2b21738`; six ids gained a kind suffix, 1,031 unchanged.
+
+2. **`§S12` (P18) / `R220`** — `risk.astro` no longer hardcodes *"Seven outcome targets"*; that
+   count and its definition are client-filled from the records. The page's remaining prose
+   counts are unaffected.
+
+3. **`§S14` (P20) / `R245`** — `risk.astro`'s 7 role-less `aria-label`led `<div>`s are still 7
+   and still open. §S4 added no new ones: the two new hosts (`#fmea-prob-scale`,
+   `#fmea-deferred-note`) are a `<ul>` and a `<p>` with no `aria-label`.
+
+4. **`§S15` / `R280`** — the `document`-level listener leak in `initFmea` is **not** fixed here;
+   it is `§S15`'s row and the section brief does not list it. Still reproducible.
+
+5. **The 14 non-finite equation cells are still 14 and still inert.** Unchanged by this section.
+
+### CONTRADICTIONS
+
+None beyond `D40` to `D44`. `V3` (130/130 equation coverage) and `V6` (P8 certifies 11 of 26
+metrics, neither care-interrupting metric among them) both still pass; `KPP-T1` and `KPP-T2` are
+`G8`-linked and their records are unchanged by this section.
+
+### The discipline note
+
+Every one of the eight new checks was proven against a failing state, six of them against a
+**constructed** input inside `tests/lib/fmea.test.ts` rather than by reading the assertion —
+`PHASE_YEAR.P8` moved before P0, a published scale wording deleted, a parameter regraded to
+`medium-high`, a mapped parameter id removed, a gate's evidence string edited in both
+directions, an unscored record given a probability, and the old proxy put back on a deferred
+target. The other two were proven by breaking the source and reading the build failure.
+
+Two of them earned it immediately. `R279` broke `R276`'s "no failure mode both carries a score
+and denies having one" on its first build, because that check still treated `proxied` as
+score-publishing; and the duplicate-id check named all three collisions when the suffix was
+removed. A check written beside its fix restates the fix — these were written to fail first.
