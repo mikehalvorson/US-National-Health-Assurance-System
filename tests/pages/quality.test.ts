@@ -28,10 +28,14 @@ test('the raw-value strip is not gated away from the view that shows the publish
 
   /* buildEquationPanel(id, true) is the detail card, the only call site where
      the published value is on screen. A `!compact` gate on the strip is
-     exactly what kept the two numbers one view apart. */
-  const strip = client.slice(client.indexOf('computed value strip'));
-  const condition = strip.slice(0, strip.indexOf('{', strip.indexOf('if (')));
-  expect(condition).not.toContain('!compact');
+     exactly what kept the two numbers one view apart.
+     Anchored on the statement the strip opens with rather than on a comment,
+     and the match itself is asserted: an assertion that silently finds nothing
+     to check is the failure mode this whole section exists to catch. */
+  const source = client.replace(/\r/g, '');
+  const strip = /if \(([^)]*)\) \{\s*const t = eqTargets\(\)\[id\];/.exec(source);
+  expect(strip, 'strip condition not found in buildEquationPanel').toBeTruthy();
+  expect(strip![1]).toBe('cat');
 
   /* And the field applyEquationTargets has always written is now read. */
   expect(client).toContain('entry.interpretation');
