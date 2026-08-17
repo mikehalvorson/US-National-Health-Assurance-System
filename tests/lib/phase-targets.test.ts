@@ -13,7 +13,10 @@
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import type { QualityData } from '../../src/lib/quality-data';
 import { DATA_PHASES } from '../../src/lib/data-phases';
-import { applyPhaseTargets, parseNum } from '../../src/lib/phase-targets';
+import {
+  applyPhaseTargets, hasRelRule, parseNum, REL_FALLBACK_IDS, REL_FALLBACK_PHASE,
+  staleRelevanceFallbacks, undeclaredRelevanceFallbacks
+} from '../../src/lib/phase-targets';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { PHASE_YEAR } from '../../src/lib/rollout';
 
@@ -153,5 +156,46 @@ describe('R147: the entry floors and the interpolation are a replaced scaffold',
     const s1 = stage1.parameters.reduce((n, p) => n + (p.rollout || []).length, 0);
     const s2 = QUALITY_DATA.parameters.reduce((n, p) => n + (p.rollout || []).length, 0);
     expect(s2).toBe(s1);
+  });
+});
+
+describe('R150: the relevance table has no silent default', () => {
+  test('every metric matches a rule or is on the declared fallback list', () => {
+    expect(undeclaredRelevanceFallbacks(QUALITY_DATA)).toEqual([]);
+    expect(staleRelevanceFallbacks(QUALITY_DATA)).toEqual([]);
+  });
+
+  test('a metric with no rule and no declaration is reported', () => {
+    const invented = {
+      parameters: [{ id: 'TPP-NEWFAMILY1', type: 'TPP', rollout: [] }]
+    } as unknown as QualityData;
+    expect(undeclaredRelevanceFallbacks(invented)).toEqual(['TPP-NEWFAMILY1']);
+  });
+
+  test('a declared id that has left the catalog is reported', () => {
+    const thin = {
+      parameters: [{ id: 'KPP-W2', type: 'KPP', rollout: [] }]
+    } as unknown as QualityData;
+    /* The other ten declared ids are absent from this catalog. */
+    expect(staleRelevanceFallbacks(thin).length).toBe(REL_FALLBACK_IDS.length - 1);
+  });
+
+  test('no declared fallback id is also matched by a rule', () => {
+    for (const id of REL_FALLBACK_IDS) {
+      expect(hasRelRule(id), id + ' has a rule and should not be on the fallback list')
+        .toBe(false);
+    }
+  });
+
+  test('the declared fallback ids start where the fallback says, unless the data plan moves them', () => {
+    for (const id of REL_FALLBACK_IDS) {
+      const p = QUALITY_DATA.parameters.find((x) => x.id === id);
+      expect(p, id).toBeDefined();
+      /* TPP-FORM1 is a data-plan metric: the plan's first phase wins, which is
+         why the list records it as reaching relevance() rather than as ending
+         up at P4. */
+      if (id === 'TPP-FORM1') expect(p!._phaseStart).toBe('P0');
+      else expect(p!._phaseStart, id).toBe(REL_FALLBACK_PHASE);
+    }
   });
 });

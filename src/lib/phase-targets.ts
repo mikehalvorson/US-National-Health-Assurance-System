@@ -60,11 +60,68 @@ const REL: [RegExp, string, string][] = [
   [/^TPP-REG/, 'P5', 'regional waivers begin at delivery scale'],
   [/^TPP-TRIB/, 'P1', 'tribal compacts are foundation-phase work']
 ];
+/* R150 [§S3]: the table above ends in a fallback, and a fallback that nobody
+ * enumerates is a silent identifier - the eleventh instance of that class in
+ * this codebase, and the best behaved, because it at least declares itself in
+ * a `why` string that reaches the reader.
+ *
+ * What it does not declare is WHO is on it. `_phaseStart` decides the first
+ * phase a metric carries a target at, so an id that quietly lands here gets a
+ * whole trajectory that starts where nobody chose. Eleven ids do, and all
+ * eleven are named below rather than left to be discovered.
+ *
+ * They stay at P4. There is no sourced start phase for the workforce
+ * sufficiency, shortage-staffing, merit-immigration or formula-registry
+ * families - the rollout does not place the health-talent channel in a phase -
+ * and inventing a reason per family would be the same defect in prose. What
+ * changes is that the list is now declared, so a NEW metric arriving without a
+ * rule fails the build instead of inheriting P4 in silence. */
+export const REL_FALLBACK_PHASE = 'P4';
+export const REL_FALLBACK_WHY = 'conservatively tied to the delivery-pilot phase';
+export const REL_FALLBACK_IDS = [
+  /* Workforce & care delivery: sufficiency, distribution and the merit
+     health-talent channel. KPP-W1 has its own rule; W2 to W5 do not. */
+  'KPP-W2', 'KPP-W3', 'KPP-W4', 'KPP-W5', 'TPP-W1', 'TPP-W2',
+  'TPP-IMM1', 'TPP-IMM2', 'TPP-IMM3', 'TPP-IMM4',
+  /* Governance: the only non-workforce id on the list. It is a data-plan
+     metric, so the plan's own first phase overrides this fallback before it
+     reaches a reader - it is declared because it reaches relevance(), not
+     because P4 is what it ends up with. */
+  'TPP-FORM1'
+];
+
+export function hasRelRule(id: string): boolean {
+  return REL.some(function (rule) { return rule[0].test(id); });
+}
+
 function relevance(id: string): { phase: string; why: string } {
   for (let i = 0; i < REL.length; i++) {
     if (REL[i][0].test(id)) return { phase: REL[i][1], why: REL[i][2] };
   }
-  return { phase: 'P4', why: 'conservatively tied to the delivery-pilot phase' };
+  return { phase: REL_FALLBACK_PHASE, why: REL_FALLBACK_WHY };
+}
+
+/* An id with no family rule that nobody has declared. This is the one that
+   fires when a metric is added to the catalog and the REL table is not. */
+export function undeclaredRelevanceFallbacks(Q: QualityData): string[] {
+  const declared = new Set(REL_FALLBACK_IDS);
+  return Q.parameters
+    .filter(function (p) { return p.type !== 'CP'; })
+    .map(function (p) { return p.id; })
+    .filter(function (id) { return !hasRelRule(id) && !declared.has(id); })
+    .sort();
+}
+
+/* The reverse: a declared id that has since gained a rule, or left the
+   catalog. Keeps the list from outliving what it describes. */
+export function staleRelevanceFallbacks(Q: QualityData): string[] {
+  const live = new Set(
+    Q.parameters.filter(function (p) { return p.type !== 'CP'; })
+      .map(function (p) { return p.id; })
+  );
+  return REL_FALLBACK_IDS.filter(function (id) {
+    return !live.has(id) || hasRelRule(id);
+  }).sort();
 }
 
 /* ---- Numeric parsing + formatting ------------------------------------- */

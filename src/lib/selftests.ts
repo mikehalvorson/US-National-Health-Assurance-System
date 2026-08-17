@@ -8,7 +8,10 @@ import { runOverviewMc } from './overview';
 import { effectiveParams, scenarioStructural } from './scenarios';
 import { bridgeSteps } from './bridge';
 import { TAX_SELFTESTS } from './taxmodel';
-import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-targets';
+import {
+  REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
+  staleRelevanceFallbacks, undeclaredRelevanceFallbacks
+} from './phase-targets';
 import { QUALITY_DATA } from './quality';
 import { AUTHORITATIVE_KINDS, computeTargets, equationSelfTests } from './equations';
 import {
@@ -248,7 +251,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('Every relevant phase carries a target', () =>
         ({ ok: selfTestEveryRelevantPhase(QUALITY_DATA) })),
       runGuarded('Phase targets show no regression toward maturity', () =>
-        ({ ok: selfTestNoRegression(QUALITY_DATA) }))
+        ({ ok: selfTestNoRegression(QUALITY_DATA) })),
+      /* R150 [§S3]: the relevance table's fallback, enumerated. */
+      runGuarded('Every metric matches a relevance rule or a declared fallback', () => {
+        const undeclared = undeclaredRelevanceFallbacks(QUALITY_DATA);
+        const stale = staleRelevanceFallbacks(QUALITY_DATA);
+        return {
+          ok: !undeclared.length && !stale.length,
+          note: [
+            undeclared.length ? 'no rule, not declared: ' + undeclared.join(', ') : '',
+            stale.length ? 'declared but ruled or gone: ' + stale.join(', ') : ''
+          ].filter(Boolean).join(' | ') ||
+            REL_FALLBACK_IDS.length + ' on the declared fallback at ' + REL_FALLBACK_PHASE
+        };
+      })
     ]
   },
   {
