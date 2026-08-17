@@ -30,9 +30,10 @@ import {
   unTemplatedNonParsingTargets
 } from './target-parse-check';
 import {
-  committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, fmeaSelfTests, phaseOrderDrift,
-  PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SOURCES, probabilityScaleReach,
-  probabilitySourceConflicts, probabilitySourceCounts, undeclaredCommittedKinds
+  committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, fmeaSelfTests, gateBumpedRecords,
+  gateWiring, phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SOURCES,
+  probabilityScaleReach, probabilitySourceConflicts, probabilitySourceCounts,
+  undeclaredCommittedKinds
 } from './fmea';
 import {
   ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
@@ -736,6 +737,29 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? 'not in AUTHORITATIVE_KINDS: ' + undeclared.join(', ')
             : kinds.reduce((n, k) => n + k.rows, 0) + ' carried forward across ' +
               kinds.map((k) => k.kind + ' ' + k.rows).join(', ')
+        };
+      }),
+      /* R278 [§S4]: gate linkage adds +1 to consequence, enough to move a band,
+         on exactly the parameters the framework made go/no-go. The 41 ids were
+         read out of each gate's `evidence` string, so they are compared with it
+         in both directions and resolved against the catalog. A typo used to
+         leave a GATE_OF_PARAM key that never matches, so the +1 would silently
+         never fire and the failure mode would publish one band too low. */
+      runGuarded('Every gate-linked parameter matches the gate table and the catalog', () => {
+        const w = gateWiring();
+        const problems = [
+          w.unresolved.length ? 'no such parameter: ' + w.unresolved.join(', ') : '',
+          w.missing.length ? 'named by the gate, not linked: ' + w.missing.join(', ') : '',
+          w.extra.length ? 'linked, not named by the gate: ' + w.extra.join(', ') : '',
+          w.phaseDrift.length ? w.phaseDrift.join('; ') : '',
+          w.undeclaredAssumption.length ? 'bind phase with no evidence and no declared reason: ' + w.undeclaredAssumption.join(', ') : '',
+          w.staleAssumption.length ? 'declared unevidenced but now evidenced: ' + w.staleAssumption.join(', ') : ''
+        ].filter(Boolean);
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') ||
+            w.linkedIds + ' gate-linked ids reconcile with the gate table, ' +
+            gateBumpedRecords().length + ' failure modes carry the go/no-go bump'
         };
       }),
       /* R276 [§S4]: a record either carries a score on the published scale or

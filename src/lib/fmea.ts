@@ -72,11 +72,40 @@ QUALITY_DATA.phases.forEach(function (ph) { PHASE_ANCHOR[ph.id] = ph.anchor; });
  * rollout wave, so gate-linked failures carry systemic consequence. Parsed
  * from the controlled gate table (QUALITY_DATA.gates) plus the phase each
  * gate decision binds at. */
+/* R278 [§S4]: the phase each gate binds at, checked against the catalog.
+ *
+ * A gate floor written at a phase carries `gate` on its rollout entry, so for
+ * five of the eight gates the catalog states the binding phase itself. This
+ * map used to be typed with nothing comparing it, and one entry was wrong:
+ * G5 was P5 while the catalog tags TPP-11.5's G5 floor at P8. TPP-11.5 has a
+ * progression floor at BOTH phases and only the P8 one carries the gate, so
+ * the +1 went to three P5 rows that are not gated and was withheld from the
+ * three P8 rows that are. Corrected here, enforced by gateWiring() below.
+ *
+ * Three gates have no gate-tagged floor row anywhere in the catalog, so their
+ * phase is a stated assumption rather than a reading. They are declared in
+ * GATE_PHASE_UNEVIDENCED with the reason, because "nothing contradicts it" and
+ * "something confirms it" are different claims and this file should say which
+ * one it is making. */
 const GATE_BIND_PHASE: Record<string, string> = {
   G1: 'P3', G2: 'P6', G3: 'P7', G4: 'P8',
-  G5: 'P5', G6: 'P6', G7: 'P3', G8: 'P6'
+  G5: 'P8', G6: 'P6', G7: 'P3', G8: 'P6'
 };
-/* Explicit id lists (some gate floors name id ranges in prose). */
+const GATE_PHASE_UNEVIDENCED: Record<string, string> = {
+  G6: 'No gate-tagged floor row exists. "Before national record reliance" names an event, not a boundary, and P6 is where the record-reliance work lands on the rollout.',
+  G7: 'No gate-tagged floor row exists. PHASES[P3].evidence names Legitimacy Gate 7 as ready before broader conversion, which is the same phase, so P3 is corroborated but not stated as the binding phase.',
+  G8: 'No gate-tagged floor row exists. PHASES[P3].evidence names Continuity Gate 8 as READY at P3; the gate binds at the legacy-payer sunset, which is later. P6 is the assumption, and readiness at P3 is not evidence against it.'
+};
+/* G1 is the one gate whose floor is written at two phases: TPP-2.1 carries it
+   at P3 and again at P4. Its `when` reads "Before P3 -> P4", so it binds at the
+   earlier of the two. Declared so the both-directions check can allow it
+   without allowing the general case. */
+const GATE_PHASE_SPANS: Record<string, string[]> = { G1: ['P3', 'P4'] };
+
+/* Explicit id lists. The framework states them compressed inside each gate's
+   `evidence` string ("TPP-8.1/9.1-9.7"), which is what these were read out of;
+   gateWiring() below expands that notation and compares both directions, so
+   the extraction is checked against its own source rather than trusted. */
 const GATE_PARAMS: Record<string, string[]> = {
   G1: ['TPP-2.1', 'TPP-2.2', 'TPP-2.4'],
   G2: ['KPP-B2', 'KPP-B7', 'KPP-B8', 'KPP-B9'],
@@ -753,6 +782,127 @@ export function undeclaredCommittedKinds(): string[] {
     .filter(function (c) { return !AUTHORITATIVE_KINDS[c.kind]; })
     .map(function (c) { return c.kind; });
 }
+/* R278 [§S4]: the gate linkage, checked against the framework's own statement
+ * of it.
+ *
+ * Gate linkage adds +1 to consequence, which is enough to move a band, and it
+ * drives the "a miss holds the whole rollout wave" clause in the effect
+ * narrative. GATE_PARAMS was 41 identifiers read out of prose with nothing
+ * checking that any of them existed, so a typo or a renamed metric would leave
+ * GATE_OF_PARAM with a key that never matches, the +1 would silently never
+ * fire, and the failure mode would publish one band too low - on exactly the
+ * parameters the framework made go/no-go.
+ *
+ * The prose it was read out of is in the repository: each gate record's
+ * `evidence` field names its parameters in the framework's compressed
+ * notation, "PR-SCH-013; TPP-8.1/9.1-9.7; workforce and service records". So
+ * the extraction can be compared with its source instead of trusted, in both
+ * directions, and separately resolved against the catalog. */
+function expandEvidenceIds(text: string): string[] {
+  const out: string[] = [];
+  /* KPP-/TPP- runs only. PR-SCH-*, SR-DATA-* and the like are requirement
+     ids, not parameters, and are left alone. */
+  const RUN = /\b(KPP|TPP)-([A-Z0-9./–—-]+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = RUN.exec(text)) !== null) {
+    const prefix = m[1];
+    m[2].split('/').forEach(function (piece) {
+      piece = piece.replace(/[.,;]+$/, '');
+      if (!piece) return;
+      /* "9.1-9.7" and "11.4-11.6": a range over the trailing number. Both
+         ends carry their own major, so nothing is inferred across the dash. */
+      const ends = piece.split(/[–—-]/);
+      if (ends.length === 2 && ends[0] && ends[1]) {
+        const a = /^([A-Z]*)([0-9]+)\.([0-9]+)$/.exec(ends[0]);
+        const b = /^([A-Z]*)([0-9]+)\.([0-9]+)$/.exec(ends[1]);
+        if (a && b && a[1] === b[1] && a[2] === b[2]) {
+          for (let i = Number(a[3]); i <= Number(b[3]); i++) {
+            out.push(prefix + '-' + a[1] + a[2] + '.' + i);
+          }
+        }
+        return;
+      }
+      out.push(prefix + '-' + piece);
+    });
+  }
+  return Array.from(new Set(out));
+}
+
+export interface GateWiring {
+  /* an id GATE_PARAMS lists that no catalog parameter answers to */
+  unresolved: string[];
+  /* an id the gate's own evidence names that GATE_PARAMS does not carry */
+  missing: string[];
+  /* an id GATE_PARAMS carries that the gate's evidence does not name */
+  extra: string[];
+  /* a gate whose bind phase disagrees with the phase its floor is written at */
+  phaseDrift: string[];
+  /* a gate with no gate-tagged floor row and no declared reason for its phase */
+  undeclaredAssumption: string[];
+  /* a declared reason for a gate that now has a floor row after all */
+  staleAssumption: string[];
+  linkedIds: number;
+}
+export function gateWiring(): GateWiring {
+  const catalog: Record<string, boolean> = {};
+  QUALITY_DATA.parameters.forEach(function (p) { catalog[p.id] = true; });
+  const evidenceOf: Record<string, string> = {};
+  QUALITY_DATA.gates.forEach(function (g) { evidenceOf[g.id] = g.evidence || ''; });
+
+  const floorPhases: Record<string, Record<string, boolean>> = {};
+  QUALITY_DATA.parameters.forEach(function (p) {
+    (p.rollout || []).forEach(function (e) {
+      if (!e.gate) return;
+      floorPhases[e.gate] = floorPhases[e.gate] || {};
+      floorPhases[e.gate][e.phase] = true;
+    });
+  });
+
+  const unresolved: string[] = [];
+  const missing: string[] = [];
+  const extra: string[] = [];
+  const phaseDrift: string[] = [];
+  const undeclaredAssumption: string[] = [];
+  const staleAssumption: string[] = [];
+  let linkedIds = 0;
+
+  Object.keys(GATE_PARAMS).forEach(function (g) {
+    const declared = GATE_PARAMS[g];
+    linkedIds += declared.length;
+    const named = expandEvidenceIds(evidenceOf[g] || '');
+    declared.forEach(function (id) {
+      if (!catalog[id]) unresolved.push(g + ':' + id);
+      if (named.indexOf(id) < 0) extra.push(g + ':' + id);
+    });
+    named.forEach(function (id) {
+      if (declared.indexOf(id) < 0) missing.push(g + ':' + id);
+    });
+
+    const written = Object.keys(floorPhases[g] || {}).sort();
+    const bind = GATE_BIND_PHASE[g];
+    if (!written.length) {
+      if (!GATE_PHASE_UNEVIDENCED[g]) undeclaredAssumption.push(g + ' binds at ' + bind);
+    } else {
+      if (GATE_PHASE_UNEVIDENCED[g]) staleAssumption.push(g + ' now has a floor at ' + written.join(','));
+      const allowed = GATE_PHASE_SPANS[g] || written;
+      if (written.indexOf(bind) < 0 || allowed.indexOf(bind) < 0) {
+        phaseDrift.push(g + ' binds at ' + bind + ' but its floor is written at ' + written.join(','));
+      }
+    }
+  });
+
+  return {
+    unresolved: unresolved, missing: missing, extra: extra,
+    phaseDrift: phaseDrift, undeclaredAssumption: undeclaredAssumption,
+    staleAssumption: staleAssumption, linkedIds: linkedIds
+  };
+}
+/* The rows the +1 actually reached, so the check can say it fired rather than
+   only that nothing is broken. */
+export function gateBumpedRecords(): FmeaRecord[] {
+  return RECORDS.filter(function (r) { return /go\/no-go \+1/.test(r.consequenceBasis); });
+}
+
 /* R275: the family -> simulation-parameter mapping, checked both directions.
  *
  * Undeclared: a sampled parameter no family claims and SYSTEM_WIDE_PARAMS does

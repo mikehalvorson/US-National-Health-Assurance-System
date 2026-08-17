@@ -5,9 +5,11 @@ import {
   probabilityScaleReach, undeclaredCommittedKinds
 } from '../../src/lib/fmea';
 import {
-  cpConfidenceWiring, cpFamilyConfidence, PROBABILITY_SOURCE_NOTE, PROBABILITY_SOURCES,
-  probabilitySourceConflicts, probabilitySourceCounts
+  cpConfidenceWiring, cpFamilyConfidence, gateBumpedRecords, gateWiring,
+  PROBABILITY_SOURCE_NOTE, PROBABILITY_SOURCES, probabilitySourceConflicts,
+  probabilitySourceCounts
 } from '../../src/lib/fmea';
+import { QUALITY_DATA } from '../../src/lib/quality';
 import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
 import { PHASE_YEAR } from '../../src/lib/rollout';
 import { PARAMS_BY_ID } from '../../src/lib/params';
@@ -72,6 +74,55 @@ describe('FMEA derivation', () => {
 
   test('the seven deferred qualitative targets surface as parameter gaps', () => {
     expect(FMEA_DATA.gaps.deferredParamIds.length).toBe(7);
+  });
+});
+
+/* R278 [§S4]: gate linkage adds +1 to consequence, enough to move a band, and
+   nothing checked that the 41 hand-extracted ids existed. The prose they were
+   read out of is in the repository, so they are compared with it. */
+describe('R278 gate linkage is checked against the gate table', () => {
+  test('all 41 gate-linked ids reconcile in both directions and resolve', () => {
+    const w = gateWiring();
+    expect(w.linkedIds).toBe(41);
+    expect(w.unresolved, 'linked id no catalog parameter answers to').toEqual([]);
+    expect(w.missing, 'named by the gate but not linked').toEqual([]);
+    expect(w.extra, 'linked but not named by the gate').toEqual([]);
+    expect(w.phaseDrift, 'bind phase against the phase the floor is written at').toEqual([]);
+    expect(w.undeclaredAssumption).toEqual([]);
+    expect(w.staleAssumption).toEqual([]);
+  });
+
+  test('the go/no-go bump reaches real records', () => {
+    const bumped = gateBumpedRecords();
+    expect(bumped.length).toBeGreaterThan(0);
+    for (const r of bumped) {
+      expect(r.gate, r.id).toBeTruthy();
+      expect(r.consequenceBasis, r.id).toContain('go/no-go +1');
+    }
+  });
+
+  test("G5 binds where the catalog tags its floor, not where it was typed", () => {
+    /* TPP-11.5 carries a progression floor at P5 and another at P8, and only
+       the P8 one is tagged G5. The bump used to fire at P5. */
+    const g5 = gateBumpedRecords().filter((r) => r.gate === 'G5');
+    expect(g5.length).toBeGreaterThan(0);
+    for (const r of g5) expect(r.phase, r.id).toBe('P8');
+  });
+
+  test('gateWiring reports a linked id the gate table stops naming', () => {
+    const gate = QUALITY_DATA.gates.filter((g) => g.id === 'G1')[0];
+    const saved = gate.evidence;
+    try {
+      /* Constructed failing input: the extraction and its source disagree. */
+      gate.evidence = saved.replace('TPP-2.1/2.2/2.4', 'TPP-2.1/2.4');
+      expect(gateWiring().extra).toContain('G1:TPP-2.2');
+      gate.evidence = saved.replace('TPP-2.1/2.2/2.4', 'TPP-2.1/2.2/2.4/2.9');
+      expect(gateWiring().missing).toContain('G1:TPP-2.9');
+    } finally {
+      gate.evidence = saved;
+    }
+    expect(gateWiring().extra).toEqual([]);
+    expect(gateWiring().missing).toEqual([]);
   });
 });
 
