@@ -96,6 +96,55 @@ export function parserImplementations(root = REPO_ROOT): string[] {
   return out.sort();
 }
 
+/* R229 [§S3]: the import-time enricher convention, enforced.
+ *
+ * The convention itself is written at the top of quality.ts, where the
+ * pipeline is assembled. This is the half that makes it a rule rather than a
+ * comment: every exported `apply*` in src/lib must be declared here with the
+ * re-entry flag it guards on, and the flag must actually appear in the
+ * function's own module.
+ *
+ * The failure it prevents: a third enricher mutating the shared catalog at
+ * import time with no guard. Nothing would report that, and the symptom is
+ * doubled enrichment in whichever consumer imports twice - which in an Astro
+ * build is any page that pulls the module through a different graph. */
+export const ENRICHERS: Record<string, { module: string; flag: string }> = {
+  applyPhaseTargets: { module: 'phase-targets.ts', flag: '__enriched' },
+  applyEquationTargets: { module: 'equations.ts', flag: '__equationApplied' }
+};
+
+const ENRICHER_EXPORT = /export function (apply\w+)\s*\(/g;
+
+export function undeclaredEnrichers(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/lib/') || !rel.endsWith('.ts')) continue;
+    const text = readFileSync(join(root, rel), 'utf8');
+    const module = rel.slice('src/lib/'.length);
+    for (const m of text.matchAll(ENRICHER_EXPORT)) {
+      const decl = ENRICHERS[m[1]];
+      if (!decl) { out.push(m[1] + ' in ' + module + ' is not declared'); continue; }
+      if (decl.module !== module) {
+        out.push(m[1] + ' is declared in ' + decl.module + ' but defined in ' + module);
+      } else if (!text.includes(decl.flag)) {
+        out.push(m[1] + ' declares the guard ' + decl.flag + ', which is not in ' + module);
+      }
+    }
+  }
+  /* And the reverse: a declared enricher that no longer exists. */
+  const defined = new Set<string>();
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/lib/') || !rel.endsWith('.ts')) continue;
+    for (const m of readFileSync(join(root, rel), 'utf8').matchAll(ENRICHER_EXPORT)) {
+      defined.add(m[1]);
+    }
+  }
+  for (const name of Object.keys(ENRICHERS)) {
+    if (!defined.has(name)) out.push(name + ' is declared but no longer exported');
+  }
+  return out.sort();
+}
+
 /* R206 [§S0]: no self-test surface outside the registry.
  *
  * R24 unified the three shapes that existed. This stops a fourth appearing:

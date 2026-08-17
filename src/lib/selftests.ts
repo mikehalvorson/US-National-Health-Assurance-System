@@ -28,9 +28,9 @@ import {
 } from './rollout-kind-check';
 import { fmeaSelfTests } from './fmea';
 import {
-  manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
+  ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
   readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, routeDrift,
-  statedChapterCountDrift, unregisteredSelfTestSurfaces
+  statedChapterCountDrift, undeclaredEnrichers, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
 import { AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
@@ -447,6 +447,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         };
       }),
       /* R151 + R277 [§S3]: what the target parser does, said out loud. */
+      /* R229 [§S3]: the convention is in quality.ts; this is what makes it a
+         rule. An undeclared import-time enricher fails the build. */
+      runGuarded('Every import-time enricher is declared with its re-entry guard', () => {
+        const bad = undeclaredEnrichers();
+        return {
+          ok: !bad.length,
+          note: bad.join('; ') ||
+            Object.keys(ENRICHERS).map((n) => n + ' (' + ENRICHERS[n].flag + ')').join(', ')
+        };
+      }),
       runGuarded('The target parser has one implementation', () => {
         const found = parserImplementations();
         return {
