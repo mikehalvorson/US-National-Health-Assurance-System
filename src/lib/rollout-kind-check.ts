@@ -186,14 +186,33 @@ export function undeclaredTargetMisparses(Q: QualityData = QUALITY_DATA): string
     if (p.type === 'CP') continue;
     if (DECLARED_TARGET_MISPARSES[p.id]) continue;
     const meta = parseNum(p.target);
-    if (!meta) continue;
-    const d = EQUATIONS[p.id];
-    if (d && d.template) out.push(p.id + ': templated target parses as ' + meta.num + ' ' + meta.unit);
-    else if (meta.num >= 1900 && meta.num <= 2100 && /\(|\)/.test(p.target)) {
-      out.push(p.id + ': parses a calendar-shaped ' + meta.num + ' from a parenthetical');
+    if (meta) {
+      const d = EQUATIONS[p.id];
+      if (d && d.template) {
+        out.push(p.id + ': templated target parses as ' + meta.num + ' ' + meta.unit);
+      } else if (isCalendarShaped(meta.num)) {
+        out.push(p.id + ': target parses a calendar-shaped ' + meta.num);
+      }
+    }
+    /* Review finding: the scan covered the 130 maturity targets and stopped
+       there, but parseNum is also called on every rollout value inside
+       committedAnchors, where a wrong number becomes a clamping anchor rather
+       than a displayed target. All 727 are scanned now. */
+    for (const e of (p.rollout || [])) {
+      const ev = parseNum(e.value);
+      if (ev && isCalendarShaped(ev.num)) {
+        out.push(p.id + '@' + e.phase + ': value parses a calendar-shaped ' + ev.num);
+      }
     }
   }
   return out.sort();
+}
+
+/* A year read as a quantity is the failure R277 demonstrated. Bounded rather
+   than pattern-matched, because the shape it takes varies and the magnitude
+   does not: no live KPP/TPP target or rollout value is a count in the 1900s. */
+function isCalendarShaped(n: number): boolean {
+  return Number.isInteger(n) && n >= 1900 && n <= 2100;
 }
 
 /* A declared misparse that no longer reproduces. Keeps the list from

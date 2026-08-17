@@ -130,10 +130,37 @@ function stripTemporal(s: string): string {
           .replace(/\s{2,}/g, ' ').trim();
 }
 export interface NumMeta { num: number; cmp: '>=' | '<=' | null; unit: string; decimals: number; comma: boolean; }
+
+/* R277 [§S3]: a parenthetical is an aside, never the target.
+ *
+ * The parser takes the FIRST numeric token in the string, and the worked
+ * example the row supplies is a scale note: '<=${X} per person per year (2024
+ * dollars, 2023 scale)' parses as 2024 in unit money, a calendar year read as
+ * the target value. Parenthetical spans are removed before matching, so an
+ * aside can no longer supply the number.
+ *
+ * Measured before landing: of 1,207 live strings - every maturity target,
+ * every rollout value and every carried raw value - three contain a
+ * parenthesis and **zero** parses change. This closes a shape rather than
+ * moving a number.
+ *
+ * The unit sniff runs on the ORIGINAL string, because a unit written only in
+ * an aside is still the unit: '<=30 (median hours)' is hours either way.
+ *
+ * What this does NOT fix, and the tests say so: the first number anywhere in
+ * the surviving text still wins, so '>={X}% reduction in 30-day readmissions'
+ * parses 30. That case is covered by the template mechanism instead, and
+ * KPP-C2's '$4.75T total system cost' has no parenthesis at all - it is
+ * declared in DECLARED_TARGET_MISPARSES and kept out of the anchor set by
+ * R233. */
+export function withoutAsides(str: string): string {
+  return str.replace(/\([^)]*\)/g, ' ');
+}
+
 /* returns {num, cmp:'>='|'<=', unit, decimals} or null */
 export function parseNum(str: string | undefined): NumMeta | null {
   if (!str) return null;
-  const m = str.match(/(median\s*)?(>=|<=|≥|≤)?\s*\$?([\d][\d,]*(?:\.\d+)?)/);
+  const m = withoutAsides(str).match(/(median\s*)?(>=|<=|≥|≤)?\s*\$?([\d][\d,]*(?:\.\d+)?)/);
   if (!m) return null;
   const raw = m[3], num = parseFloat(raw.replace(/,/g, ''));
   if (!isFinite(num)) return null;

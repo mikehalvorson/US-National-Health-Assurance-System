@@ -15,7 +15,7 @@ import type { QualityData } from '../../src/lib/quality-data';
 import { DATA_PHASES } from '../../src/lib/data-phases';
 import {
   applyPhaseTargets, hasRelRule, parseNum, REL_FALLBACK_IDS, REL_FALLBACK_PHASE,
-  staleRelevanceFallbacks, undeclaredRelevanceFallbacks
+  staleRelevanceFallbacks, undeclaredRelevanceFallbacks, withoutAsides
 } from '../../src/lib/phase-targets';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { PHASE_YEAR } from '../../src/lib/rollout';
@@ -199,3 +199,137 @@ describe('R150: the relevance table has no silent default', () => {
     }
   });
 });
+
+/* R277 [§S3], clause 2: "fix the first-number match".
+ *
+ * The acceptance criterion is `a target string containing a parenthetical year
+ * does not parse the year as the value`. Asserted directly on the parser, with
+ * the row's own worked example, and with the limits the fix does NOT close
+ * stated as assertions rather than left to be rediscovered. */
+describe('R277: a parenthetical cannot supply the number', () => {
+  test("the row's worked example no longer parses its scale note", () => {
+    const template = '<=${X} per person per year (2024 dollars, 2023 scale)';
+    expect(parseNum(template)).toBeNull();
+  });
+
+  test('a parenthetical year is not read as the value', () => {
+    const meta = parseNum('>=95% of claims auto-adjudicated (2024 baseline)');
+    expect(meta!.num).toBe(95);
+    expect(meta!.cmp).toBe('>=');
+    expect(meta!.unit).toBe('%');
+  });
+
+  test('a value that is only in an aside parses as nothing, not as the aside', () => {
+    expect(parseNum('to be calibrated (against 2024)')).toBeNull();
+  });
+
+  test('the unit is still read from the whole string, asides included', () => {
+    /* The unit sniff deliberately runs on the original: a unit written only in
+       an aside is still the unit. */
+    const meta = parseNum('<=30 (median hours to resolution)');
+    expect(meta!.num).toBe(30);
+    expect(meta!.unit).toBe('hours');
+  });
+
+  test('nested and unclosed parentheses degrade safely', () => {
+    expect(parseNum('>=90% complete (see note (a) 2024)')!.num).toBe(90);
+    expect(parseNum('>=90% complete (unclosed 2024')!.num).toBe(90);
+  });
+
+  test('what the fix does not close, stated rather than assumed', () => {
+    /* The first number in the surviving text still wins. This one is covered
+       by the template mechanism, not by the parser. */
+    expect(parseNum('>={X}% reduction in 30-day readmissions')!.num).toBe(30);
+    /* And KPP-C2's target has no parenthesis at all, so the strip cannot
+       help it; it is declared, and R233 keeps it out of the anchor set. */
+    expect(parseNum('to be reconciled with $4.75T total system cost')!.num).toBe(4.75);
+  });
+
+  test('stripping asides changes no live parse', () => {
+    /* Measured before the change landed, and pinned so it stays true: of every
+       maturity target, rollout value and carried raw value, none depends on a
+       number inside a parenthesis. */
+    let checked = 0;
+    for (const p of QUALITY_DATA.parameters) {
+      const strings = [p.target, ...(p.rollout || []).flatMap((e) => [e.value, e.raw])];
+      for (const s of strings) {
+        if (typeof s !== 'string') continue;
+        checked += 1;
+        expect(JSON.stringify(parseNum(s)), s)
+          .toBe(JSON.stringify(parseNum(withoutAsides(s))));
+      }
+    }
+    expect(checked).toBeGreaterThan(1000);
+  });
+});
+
+/* R148 [§S3], the row's stated acceptance criterion: `implied annual
+ * improvement rate is monotone across a derived trajectory, or the variation
+ * is declared`.
+ *
+ * The earlier test asserted the fix (values sit nearer the calendar convention
+ * than the index one). This asserts the criterion, which is a different claim:
+ * within a bracket the implied ANNUAL rate must be constant, which is what
+ * interpolating on years means and what interpolating on list position
+ * violates. P3 to P4 is two calendar years and P0 to P1 is one, so an
+ * index-based step demands the same gain over twice the calendar and the rate
+ * halves mid-bracket.
+ *
+ * Across brackets the rate is NOT constant and is not required to be: each
+ * bracket runs between two different committed anchors, and a plan that
+ * commits to a steeper climb between P6 and P7 than between P1 and P2 is
+ * making a claim about the plan, not about the interpolation. That is the
+ * "or the variation is declared" half, and this is the declaration. */
+describe('R148: the implied annual rate is constant within a bracket', () => {
+  test('every interpolated value is linear in years between its own anchors', () => {
+    const rowsById = new Map<string, Map<string, string>>();
+    for (const p of stage1.parameters) {
+      const m = new Map<string, string>();
+      for (const e of (p.rollout || [])) m.set(e.phase, e.value);
+      rowsById.set(p.id, m);
+    }
+
+    let checked = 0, spanningATwoYearStep = 0;
+    for (const p of stage1.parameters) {
+      if (p.type === 'CP') continue;
+      const mat = parseNum(p.target);
+      if (!mat) continue;
+      for (const e of (p.rollout || [])) {
+        const m = /^Derived: linear interpolation between the (P\d) and (P\d) anchors/
+          .exec(e.interpretation || '');
+        if (!m) continue;
+        const [, loK, hiK] = m;
+        const rows = rowsById.get(p.id)!;
+        const lo = parseNum(rows.get(loK)), hi = parseNum(rows.get(hiK));
+        const got = parseNum(e.value);
+        if (!lo || !hi || !got) continue;
+
+        const spanYears = PHASE_YEAR[hiK] - PHASE_YEAR[loK];
+        const stepYears = PHASE_YEAR[e.phase] - PHASE_YEAR[loK];
+        if (spanYears === 0 || stepYears === 0) continue;
+        const bracketRate = (hi.num - lo.num) / spanYears;
+        const impliedRate = (got.num - lo.num) / stepYears;
+        checked += 1;
+
+        /* The published string is rounded to the target's own precision, so
+           the rate comparison carries that rounding: one display unit spread
+           over the step. */
+        const unit = mat.decimals ? Math.pow(10, -mat.decimals) : 1;
+        const slack = Math.max(Math.abs(bracketRate) * 0.02, unit / stepYears);
+        expect(Math.abs(impliedRate - bracketRate), p.id + ' ' + e.phase +
+          ' (' + loK + '-' + hiK + '): ' + impliedRate.toFixed(4) +
+          '/yr vs bracket ' + bracketRate.toFixed(4) + '/yr').toBeLessThanOrEqual(slack);
+
+        /* The rows that discriminate: a bracket containing an uneven step is
+           where the index convention produces a different rate per step. */
+        const uneven = ['P4', 'P7', 'P8'].indexOf(e.phase) >= 0 ||
+          (PHASE_YEAR[e.phase] - PHASE_YEAR[loK]) > (PHASES_IN_ORDER.indexOf(e.phase) - PHASES_IN_ORDER.indexOf(loK));
+        if (uneven) spanningATwoYearStep += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+    expect(spanningATwoYearStep).toBeGreaterThan(20);
+  });
+});
+
+const PHASES_IN_ORDER = Object.keys(PHASE_YEAR);
