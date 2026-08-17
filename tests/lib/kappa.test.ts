@@ -187,3 +187,51 @@ describe('R235: documented gaps travel with their parameter', () => {
     expect(r.messages.join(' ')).toContain('maturity miss: KPP-C7');
   });
 });
+
+/* Review fix: a non-finite maturity value is a failure, not a skip.
+ *
+ * R231 introduced `if (!isFinite(v)) return;` in the closure loop while
+ * tightening the tolerance. Before it, a NaN at P8 reported as "computed NaN"
+ * because every comparison against NaN is false. The early return replaced a
+ * loud wrong answer with silence, in the section whose whole subject was
+ * silences. It reports explicitly now. */
+describe('maturity closure reports a non-finite value', () => {
+  const FAKE = 'TPP-NONFINITE1';
+
+  test('a metric that evaluates non-finite at P8 fails by name', () => {
+    /* The non-finite value has to come from an equation, because the closure
+       loop calls evaluateAtPhase rather than reading the catalog. Division by
+       zero is the mechanism all fourteen known cases use. */
+    (EQUATIONS as Record<string, unknown>)[FAKE] = {
+      id: FAKE, kind: 'TPP', name: 'Constructed non-finite metric', group: 'access',
+      cmp: '>=', unit: '%', decimals: 0,
+      expr: {
+        k: 'div',
+        a: { k: 'num', v: 1, label: 'numerator' },
+        b: { k: 'num', v: 0, label: 'zero build state' }
+      },
+      why: 'Constructed for tests/lib/kappa.test.ts; never in the live catalog.'
+    };
+    try {
+      const withFake = {
+        ...QUALITY_DATA,
+        parameters: [
+          ...QUALITY_DATA.parameters,
+          { id: FAKE, type: 'TPP', target: '>=95%', rollout: [], _phaseStart: 'P8' }
+        ]
+      };
+      const r = equationSelfTests(withFake as typeof QUALITY_DATA);
+      expect(r.ok).toBe(false);
+      expect(r.messages.join(' ')).toContain('maturity value is not finite: ' + FAKE);
+      /* And it is NOT reported as a miss, which is what the NaN comparison
+         used to produce before R231 replaced it with an early return. */
+      expect(r.messages.join(' ')).not.toContain('maturity miss: ' + FAKE);
+    } finally {
+      delete (EQUATIONS as Record<string, unknown>)[FAKE];
+    }
+  });
+
+  test('the live catalog is finite at P8 everywhere', () => {
+    expect(equationSelfTests(QUALITY_DATA).ok).toBe(true);
+  });
+});

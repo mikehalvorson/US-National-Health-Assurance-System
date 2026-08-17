@@ -406,7 +406,9 @@ function buildEquationPanel(id: string, compact?: boolean): HTMLElement {
       stripHead.appendChild(el('span', '',
         'Raw equation output; the catalog holds committed floors where they are stricter.' +
         (clamps
-          ? ' Held at a committed floor in ' + clamps + ' of the phases below, marked there.'
+          ? ' A committed floor replaces it at ' + clamps +
+            (clamps === 1 ? ' phase' : ' phases') +
+            '; compare against the published strip above, which marks each one.'
           : '')));
       panel.appendChild(stripHead);
       const strip = el('div', 'quality-phase-strip quality-eq-strip');

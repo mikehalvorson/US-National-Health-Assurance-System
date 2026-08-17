@@ -1544,7 +1544,15 @@ export function equationSelfTests(Q: QualityData): { ok: boolean; messages: stri
     const meta = parseNum(p.target);
     if (!meta || !meta.cmp) return;
     const v = evaluateAtPhase(p.id, 'SCN-BASE', 'P8');
-    if (!isFinite(v)) return;
+    /* A non-finite maturity value is a failure, not a skip. It used to report
+       as "computed NaN" because every comparison against NaN is false; R231
+       briefly turned that into an early return, which added a silence to the
+       one section whose defects were silences. Reported explicitly instead, so
+       the message says what happened rather than describing a miss. */
+    if (!isFinite(v)) {
+      messages.push('maturity value is not finite: ' + p.id + ' at P8 vs ' + p.target);
+      return;
+    }
     const ok = meta.cmp === '<='
       ? v <= meta.num * (1 + MATURITY_TOLERANCE)
       : v >= meta.num * (1 - MATURITY_TOLERANCE);
