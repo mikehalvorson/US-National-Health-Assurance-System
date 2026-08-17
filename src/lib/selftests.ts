@@ -36,9 +36,9 @@ import {
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
-  ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
-  readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, routeDrift,
-  statedChapterCountDrift, undeclaredEnrichers, unregisteredSelfTestSurfaces
+  ENRICHERS, guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
+  readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets,
+  routeDrift, statedChapterCountDrift, undeclaredEnrichers, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
 import { AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
@@ -990,6 +990,22 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
     /* R271 + R267: the inventory and the route registry stop being guesses */
     surface: 'manifest-check.ts',
     rows: () => [
+      /* R280 [§S15]: an element-guarded init may not register a listener on a
+         target the guard does not cover. <ClientRouter /> replaces the guard
+         element, so the init runs again on every return visit; a listener on
+         `document` or `window` outlives that swap and accumulates. Measured on
+         fmea-client.ts before the fix: one extra listener per return visit,
+         linear, and after three visits one click ran the selection handler
+         four times. The shape is checked rather than the instance, because
+         there are seven client scripts and it recurs. */
+      runGuarded('No element-guarded init registers a document or window listener', () => {
+        const bad = guardedGlobalListeners();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.file + ':' + b.fn + ' binds ' + b.target).join(', ') ||
+            'every global listener is registered at module scope'
+        };
+      }),
       /* R229 [§S3]: the convention is in quality.ts; this is what makes it a
          rule. An undeclared import-time enricher fails the build. Registered
          under this surface rather than under the vocabulary's, because the

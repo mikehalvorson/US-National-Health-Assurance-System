@@ -413,6 +413,73 @@ export function maskComments(text: string): string {
   return out.join('');
 }
 
+/* R280 [§S15]: a listener bound to a target the guard does not cover.
+ *
+ * Every client script guards its init with `dataset.wired` on an element
+ * inside <main>. <ClientRouter /> replaces that element, so the guard is new
+ * on every navigation and the init runs in full each time. That is correct for
+ * listeners bound to elements inside <main> - they die with their host - and
+ * wrong for anything bound to `document` or `window`, which outlive the swap.
+ * fmea-client.ts did the latter and gained one listener per return visit,
+ * measured linear, until one click ran selectRecord four times.
+ *
+ * This is not a defect that stays fixed by being fixed once: it recurs
+ * wherever `document` or `window` is reached inside an element-guarded init,
+ * and there are seven client scripts. So the shape is checked, not the
+ * instance. A registration bound to a global belongs at module scope, which is
+ * acronyms-client.ts's pattern (§CB3) and the reason that file is the one to
+ * copy.
+ *
+ * Comments are masked first: a file may describe the hazard, and describing it
+ * is the opposite of committing it. */
+const GUARD_TOKEN = 'dataset.wired';
+const GLOBAL_LISTENER = /\b(document|window)\.addEventListener\b/g;
+
+export interface GuardedGlobalListener { file: string; fn: string; target: string }
+
+/* Brace-match forward from the `{` at or after `from`. Returns the index just
+   past the closing brace, or -1 if the source is unbalanced. */
+function functionSpanEnd(text: string, from: number): number {
+  const open = text.indexOf('{', from);
+  if (open < 0) return -1;
+  let depth = 0;
+  for (let i = open; i < text.length; i += 1) {
+    if (text[i] === '{') depth += 1;
+    else if (text[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return i + 1;
+    }
+  }
+  return -1;
+}
+
+const guardedListenerCache = new Map<string, GuardedGlobalListener[]>();
+
+export function guardedGlobalListeners(root = REPO_ROOT): GuardedGlobalListener[] {
+  const hit = guardedListenerCache.get(root);
+  if (hit) return hit;
+  const out: GuardedGlobalListener[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/scripts/') || !rel.endsWith('.ts')) continue;
+    const masked = maskComments(readFileSync(join(root, rel), 'utf8'));
+    const DECL = /\bfunction\s+([A-Za-z0-9_$]+)\s*\([^)]*\)\s*(?::[^{]*)?\{/g;
+    let m: RegExpExecArray | null;
+    while ((m = DECL.exec(masked)) !== null) {
+      const end = functionSpanEnd(masked, m.index);
+      if (end < 0) continue;
+      const body = masked.slice(m.index, end);
+      if (body.indexOf(GUARD_TOKEN) < 0) continue;   // not an element-guarded init
+      GLOBAL_LISTENER.lastIndex = 0;
+      let g: RegExpExecArray | null;
+      while ((g = GLOBAL_LISTENER.exec(body)) !== null) {
+        out.push({ file: rel, fn: m[1], target: g[1] });
+      }
+    }
+  }
+  guardedListenerCache.set(root, out);
+  return out;
+}
+
 const codeRefCache = new Map<string, CodeReference[]>();
 
 export function retiredTreeCodeReferences(root = REPO_ROOT): CodeReference[] {

@@ -4,7 +4,28 @@
    and a filterable explorer with a per-record detail panel. Site-wide acronym
    hovers are attached by scripts/acronyms-client.ts, so this file does not
    decorate acronyms itself. Runs on astro:page-load; idempotent via the
-   matrix host's dataset.wired guard. */
+   matrix host's dataset.wired guard.
+
+   ---- Listener lifetime (R280 [§S15]) ------------------------------------
+
+   The dataset.wired guard lives on #fmea-matrix, an element <ClientRouter />
+   REPLACES on every navigation. So the guard is new each visit and initFmea
+   runs in full each visit. That is correct for everything bound to an element
+   inside <main>: those listeners die with the host they were attached to.
+
+   It is wrong for anything bound to `document` or `window`, which outlive the
+   swap. The record-selection handler was registered on `document` inside
+   initFmea, so a return visit added a second one, and none was ever removed.
+   Measured: one extra listener per return visit, linear. After three return
+   visits one click ran selectRecord four times - four filter resets, four
+   passes over 1,037 records, four smooth-scroll calls, 581ms for one click.
+   Unbounded, and invisible until the page feels slow.
+
+   The rule, which is acronyms-client.ts's (§CB3) and is the reason that file
+   is the one to copy: A LISTENER ON A TARGET THE GUARD DOES NOT COVER MUST BE
+   REGISTERED AT MODULE SCOPE, ONCE, AT MODULE EVALUATION. Not inside the init
+   the guard protects. Module evaluation happens once per document, which is
+   exactly the lifetime `document` has. */
 import {
   FMEA_DATA as F, cellBand, BAND_META, PROBABILITY_CEILING, PROBABILITY_FLOOR,
   PROBABILITY_SCALE, PROBABILITY_SOURCE_NOTE, SCORE_PUBLISHING_SOURCES, type FmeaRecord
@@ -666,12 +687,9 @@ function initFmea(): void {
     if (table) table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
-  /* any button carrying data-fmea-id selects that record */
-  document.addEventListener('click', function (e) {
-    const btn = (e.target as Element).closest('button[data-fmea-id]') as HTMLElement | null;
-    if (!btn) return;
-    selectRecord(btn.dataset.fmeaId || '');
-  });
+  /* The record-selection handler is NOT registered here. It is bound to
+     `document`, which survives the navigation this guard does not, so it lives
+     at module scope below (R280). */
 
   ['fmea-search', 'fmea-type', 'fmea-concept', 'fmea-phase', 'fmea-band'].forEach(function (id) {
     const node = byId(id);
@@ -690,6 +708,19 @@ function initFmea(): void {
     refresh();
   });
 }
+
+/* R280 [§S15]: bound to `document`, so registered here, at module scope, once.
+   It needs no re-registration across navigations because it is fully delegated
+   - it resolves the button from the event target rather than holding a
+   reference to one - and `document` is not swapped. The page guard is on the
+   handler instead of on the registration: on any chapter without the matrix
+   host there is nothing to select and it returns. */
+document.addEventListener('click', function (e) {
+  if (!byId('fmea-matrix')) return;
+  const btn = (e.target as Element).closest('button[data-fmea-id]') as HTMLElement | null;
+  if (!btn) return;
+  selectRecord(btn.dataset.fmeaId || '');
+});
 
 /* Also init on first load without waiting for astro:page-load: if this module
    finishes evaluating after ClientRouter fired that event, the listener alone
