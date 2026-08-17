@@ -7,12 +7,15 @@
 import { describe, expect, test } from 'vitest';
 import {
   KAPPA_BAND, KAPPA_CONFIDENCE, KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT,
-  KAPPA_SOURCE_GATE, KAPPA_VALUE, currentKappa, evaluateAtPhase, withKappa
+  KAPPA_SOURCE_GATE, KAPPA_VALUE, currentKappa, DOCUMENTED_GAPS, EQUATIONS,
+  evaluateAtPhase, MATURITY_TOLERANCE, withKappa
 } from '../../src/lib/equations';
 import {
   calibrationDrift, kappaBand, kappaFromObservation, kappaRegistryGaps,
-  kappaTableDrift, renderedKappaRows
+  kappaTableDrift, maturityToleranceDrift, renderedKappaRows
 } from '../../src/lib/kappa-check';
+import { parseNum } from '../../src/lib/phase-targets';
+import { QUALITY_DATA } from '../../src/lib/quality';
 import { GATES } from '../../src/lib/rollout';
 
 describe('R227: the constant traces to its source', () => {
@@ -78,5 +81,66 @@ describe('R227: the band is published and cannot drift', () => {
   test('the registry entry names its source and grade', () => {
     expect(KAPPA_CONFIDENCE).toBe('low');
     expect(kappaRegistryGaps()).toEqual([]);
+  });
+});
+
+/* R231 [§S3]: the tolerance, measured rather than assumed. */
+describe('R231: maturity closure says what it means', () => {
+  test('the tolerance is a named constant, not a literal', () => {
+    expect(MATURITY_TOLERANCE).toBe(0.02);
+  });
+
+  test('the methodology states the tolerance the check applies', () => {
+    expect(maturityToleranceDrift()).toEqual([]);
+  });
+
+  test('the old 12% bound was covering two undeclared misses', () => {
+    /* Why the tolerance was tightened rather than the header softened: at 12%
+       KPP-C7 (8.7% short) and TPP-W1 (3.9% over) passed silently. Both are
+       now named gaps. The check is the same shape either way, so this asserts
+       the state that made the loose bound wrong. */
+    for (const id of ['KPP-C7', 'TPP-W1']) {
+      const p = QUALITY_DATA.parameters.find((x) => x.id === id)!;
+      const meta = parseNum(p.target)!;
+      const v = evaluateAtPhase(id, 'SCN-BASE', 'P8');
+      const missed = meta.cmp === '<='
+        ? v > meta.num * (1 + MATURITY_TOLERANCE)
+        : v < meta.num * (1 - MATURITY_TOLERANCE);
+      expect(missed, id + ' computed ' + v.toFixed(2) + ' vs ' + p.target).toBe(true);
+      const withinOld = meta.cmp === '<=' ? v <= meta.num * 1.12 : v >= meta.num * 0.88;
+      expect(withinOld, id + ' used to pass the 12% bound').toBe(true);
+      expect(DOCUMENTED_GAPS[id], id + ' must be declared').toBeTruthy();
+    }
+  });
+
+  test('every documented gap really misses, and every other metric closes', () => {
+    const gaps = Object.keys(DOCUMENTED_GAPS).sort();
+    const missing: string[] = [];
+    const closingButExempt: string[] = [];
+    for (const p of QUALITY_DATA.parameters) {
+      if (p.type === 'CP') continue;
+      const d = EQUATIONS[p.id];
+      if (!d || d.template) continue;
+      const meta = parseNum(p.target);
+      if (!meta || !meta.cmp) continue;
+      const v = evaluateAtPhase(p.id, 'SCN-BASE', 'P8');
+      if (!isFinite(v)) continue;
+      const ok = meta.cmp === '<='
+        ? v <= meta.num * (1 + MATURITY_TOLERANCE)
+        : v >= meta.num * (1 - MATURITY_TOLERANCE);
+      if (!ok && !DOCUMENTED_GAPS[p.id]) missing.push(p.id);
+      if (ok && DOCUMENTED_GAPS[p.id]) closingButExempt.push(p.id);
+    }
+    expect(missing, 'misses the target and is not declared').toEqual([]);
+    /* R235 turns the second list into a failure with its own message; here it
+       is asserted so the exemption list cannot quietly outlive its reason. */
+    expect(closingButExempt, 'exempt but now closing').toEqual([]);
+    expect(gaps).toEqual(['KPP-C1', 'KPP-C7', 'KPP-C8', 'TPP-W1']);
+  });
+
+  test('the closure claim in the module header is no longer "exactly"', () => {
+    const { readFileSync } = require('node:fs') as typeof import('node:fs');
+    const header = readFileSync('src/lib/equations.ts', 'utf8').slice(0, 2200);
+    expect(header).not.toContain('close exactly');
   });
 });

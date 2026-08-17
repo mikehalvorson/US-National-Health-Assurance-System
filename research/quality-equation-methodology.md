@@ -32,8 +32,10 @@ can credibly demand at each phase from actual inputs:
    flow diagrams.
 
 Phase values are read at the end of each phase's anchor year
-(P0 = year 1 ... P8 = year 12), where every ramp reaches its mature level,
-so base-case maturity values close exactly.
+(P0 = year 1 ... P8 = year 12), where every ramp reaches its mature level, so
+most base-case maturity values close on their source target exactly. The
+exceptions are measured and bounded rather than assumed away: see "Maturity
+closure and its tolerance" below.
 
 ## Functional forms
 
@@ -54,8 +56,9 @@ model reads or explicit mechanism equations.
   where load `L = D(t) / (WSI(t) x C(t))`, `D` is the cost model's demand
   index (induced utilization), `WSI` the workforce sufficiency index
   (KPP-W2 / 100), and `C` the relevant capacity build. Normalizing by the
-  base-case mature load means the base case lands exactly on the controlled
-  standard while stress scenarios land above or below it. Confidence:
+  base-case mature load means the base case lands on the controlled standard
+  to within the maturity tolerance, while stress scenarios land above or
+  below it. Confidence:
   medium (the load ratio is a first-order queueing proxy, not a queueing
   model).
 - **Need-inflation divisors**: where a scenario inflates a need-driven cost
@@ -153,28 +156,51 @@ than a later committed one; entries note when this bounding was applied.
 Under a stress scenario the explorer shows the raw equation values instead,
 which is the honest gap a gate review would confront.
 
+## Maturity closure and its tolerance
+
+Base-case maturity values are checked against the source target with a named
+tolerance, `MATURITY_TOLERANCE`, currently 2%. Of the 118 metrics the check
+covers, **106 close to within one part in a million**. The remainder are the
+composite and queue forms, which normalize against base-case mature load
+rather than solving to the target and so close to within a couple of percent;
+the widest is KPP-B2 at 1.4%. The tolerance covers that residual with about
+half a point of headroom and nothing else.
+
+It was 12% until this was measured, against a header claiming values "close
+exactly". At 12% a 99% target passed at 87.1% and a 30-minute target passed at
+33.6 minutes. Two of the four documented gaps below sat inside that bound and
+were therefore invisible: the loose tolerance was hiding exactly what the
+exemption list exists to show.
+
 ## Documented gaps the model refuses to hide
 
 - **KPP-C1** (health share of GDP, target <= 15.2%): the fiscal engine,
-  holding scale constant, computes about 17.6-18% at maturity because the
+  holding scale constant, computes about 18% at maturity because the
   expanded benefits roughly offset the savings levers. The engine is not
   tuned to the source's ambition and reports the gap.
-- **KPP-C8** (ordinary-taxpayer burden share, target <= 5%): the engine
-  computes about 6% of program cost in the base case after wealth
-  financing, household relief, and wage pass-through.
 - **KPP-C7** (wealth collection efficiency, target >= 92%): the researched
-  collection efficiency (mode 84%) sits below the controlled ambition.
+  mature collection rate is 84%, so the equation approaches 84 and the gap is
+  the distance between researched practice and the controlled ambition.
+- **KPP-C8** (ordinary-taxpayer burden share, target <= 5%): the engine
+  computes about 6.5% of program cost in the base case after wealth
+  financing, household relief, and wage pass-through.
+- **TPP-W1** (role-region vacancy ceiling, target <= 8%): the error form
+  closes only where its build state reaches 1, and this one averages
+  infrastructure with the workforce sufficiency index, whose own controlled
+  target is 98% rather than 100%. The plan's sufficiency ambition leaves the
+  vacancy ceiling about a third of a point short.
 
-These are surfaced in the equation explorer rather than reconciled away;
-the Vitest suite exempts exactly C1 and C8 from the maturity-closure check
-and the exemption is documented here.
+These are surfaced rather than reconciled away. The maturity-closure check
+exempts exactly these four and no others, and the exemptions are declared in
+`DOCUMENTED_GAPS` with the reason attached to each.
 
 ## Self-tests
 
 `equationSelfTests` (surfaced through `tests/lib/equations.test.ts`) checks:
 every KPP/TPP has an equation; evaluation is acyclic and finite from each
-metric's start phase across all 19 scenarios; base-case maturity values meet
-or land within 12% of the source target (with the two documented
-exemptions); applied rollout trajectories never regress; diagrams keep KPPs
-on the right edge unless they feed other equations; and no generated string
-contains an em dash.
+metric's start phase (the Vitest suite repeats that sweep across all 19
+scenarios); base-case maturity values meet or land within MATURITY_TOLERANCE
+of the source target, with the four documented exemptions above; applied
+rollout trajectories never regress; diagrams keep KPPs on the right edge
+unless they feed other equations; and no generated string contains an em
+dash.

@@ -25,7 +25,8 @@ import { fileURLToPath } from 'node:url';
 
 import {
   computeTargets, EQ_PHASES, EQUATIONS, KAPPA_BAND, KAPPA_BUILD_AT_P5, KAPPA_CONFIDENCE,
-  KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, withKappa
+  KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE,
+  MATURITY_TOLERANCE, withKappa
 } from './equations';
 import { QUALITY_DATA } from './quality';
 import { GATES } from './rollout';
@@ -176,6 +177,21 @@ function methodology(): string {
 export function kappaTableDrift(): string[] {
   const text = methodology();
   return renderedKappaRows().filter((row) => !text.includes(row));
+}
+
+/* R231 [§S3]: the tolerance the document states and the tolerance the check
+   applies are the same claim written twice, and the pair that just cost this
+   section a finding was a header saying "exactly" against an assertion
+   permitting 12%. Compared here rather than trusted. */
+export function maturityToleranceDrift(): string[] {
+  const stated = /`MATURITY_TOLERANCE`, currently (\d+(?:\.\d+)?)%/.exec(methodology());
+  if (!stated) return ['the methodology does not state the maturity tolerance'];
+  const pct = Number(stated[1]);
+  if (Math.abs(pct - MATURITY_TOLERANCE * 100) > 1e-9) {
+    return ['the methodology states ' + pct + '%, the check applies ' +
+      (MATURITY_TOLERANCE * 100) + '%'];
+  }
+  return [];
 }
 
 /* The registry entry itself. Read off the ONE table row that names the

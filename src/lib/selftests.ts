@@ -14,10 +14,12 @@ import {
 } from './phase-targets';
 import { QUALITY_DATA } from './quality';
 import {
-  AUTHORITATIVE_KINDS, clampCounts, computeTargets, equationSelfTests,
-  KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE
+  AUTHORITATIVE_KINDS, clampCounts, computeTargets, DOCUMENTED_GAPS, equationSelfTests,
+  KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, MATURITY_TOLERANCE
 } from './equations';
-import { calibrationDrift, kappaBand, kappaRegistryGaps, kappaTableDrift } from './kappa-check';
+import {
+  calibrationDrift, kappaBand, kappaRegistryGaps, kappaTableDrift, maturityToleranceDrift
+} from './kappa-check';
 import {
   authoritativeKindDrift, DECLARED_TARGET_MISPARSES, ROLLOUT_KINDS, staleTargetMisparses,
   undeclaredRolloutKinds, undeclaredTargetMisparses, unproducedRolloutKinds,
@@ -382,6 +384,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: !gaps.length,
           note: gaps.join('; ') || 'registered, sourced to GATES[' + KAPPA_SOURCE_GATE + '], graded low'
+        };
+      }),
+      /* R231 [§S3]: the stated tolerance and the applied one. */
+      runGuarded('The methodology states the maturity tolerance the check applies', () => {
+        const drift = maturityToleranceDrift();
+        return {
+          ok: !drift.length,
+          note: drift.join('; ') ||
+            'closure checked at ' + (MATURITY_TOLERANCE * 100) + '%, ' +
+            Object.keys(DOCUMENTED_GAPS).length + ' documented gaps exempt'
         };
       }),
       runGuarded('The published KAPPA sensitivity band matches the model', () => {

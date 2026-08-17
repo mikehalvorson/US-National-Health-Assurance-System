@@ -31,7 +31,11 @@
  *
  * The phase map reads each ramp at the END of the phase's anchor year
  * (P0 year 1 ... P8 year 12), which is also where every ramp reaches its
- * mature level, so base-case maturity values close exactly.
+ * mature level. 106 of the 118 checkable metrics therefore close on their
+ * source target to within one part in a million; the composite and queue
+ * forms normalize against base-case mature load instead of solving to the
+ * target, so they close to within MATURITY_TOLERANCE. Four metrics miss by
+ * more and are named in DOCUMENTED_GAPS rather than absorbed.
  * ========================================================================= */
 import { effectiveParams, scenarioStructural } from './scenarios';
 import { buildRamps, runPath } from './model';
@@ -1464,6 +1468,50 @@ export function clampCounts(Q: QualityData): ClampCount[] {
   });
 }
 
+/* ---- Maturity closure: the tolerance, and what it is allowed to cover ----
+ *
+ * R231 [§S3]: the header claimed base-case maturity values "close exactly" and
+ * the assertion permitted a 12% miss. A 99% target passed at 87.1%; a
+ * 30-minute target passed at 33.6 minutes. Those are materially different
+ * promises and both shipped green, which is the mechanism by which a slowly
+ * drifting model stays green.
+ *
+ * Measured, the claim was nearly true and the tolerance was far too loose. Of
+ * the 118 metrics the check covers, 106 close to within one part in a million.
+ * Everything the slack was actually carrying sat in two places:
+ *
+ *   - Composite and queue-form metrics normalize against base-case mature
+ *     load rather than solving to the target, so they close to a couple of
+ *     percent rather than exactly. The widest is KPP-B2 at 1.4%.
+ *   - Four metrics genuinely miss, by 3.9% to 29.2%.
+ *
+ * So the tolerance is 2%: it covers the normalization residual with about half
+ * a point of headroom and nothing else. The four real misses are named below
+ * instead of being absorbed. Two of them, KPP-C7 and TPP-W1, were inside the
+ * old 12% and therefore invisible - the loose bound was hiding exactly the
+ * thing the exemption list exists to make visible. */
+export const MATURITY_TOLERANCE = 0.02;
+
+/* Metrics whose base-case maturity value does not meet the source target, with
+   the reason. This is the most honest thing in the codebase and it is the
+   reason the check can be tightened at all: a gap that is named is not a gap
+   that is hidden. R235 moves it onto the catalog record. */
+export const DOCUMENTED_GAPS: Record<string, string> = {
+  'KPP-C1': 'health share of GDP: the fiscal engine, holding scale constant, computes ' +
+    'about 18% at maturity against the 15.2% ambition, because the expanded benefits ' +
+    'roughly offset the savings levers. The engine is not tuned to the ambition.',
+  'KPP-C7': 'wealth-financing collection efficiency: the researched mature collection rate ' +
+    'is 84% against a controlled 92% ambition, so the equation approaches 84 and the gap ' +
+    'is the difference between researched practice and the plan\'s target.',
+  'KPP-C8': 'ordinary-taxpayer burden share: the engine computes about 6.5% of program ' +
+    'cost against the 5% cap, after wealth financing, household relief and wage ' +
+    'pass-through.',
+  'TPP-W1': 'role-region vacancy ceiling: the error form closes only where its build state ' +
+    'reaches 1, and its build state averages infrastructure with the workforce sufficiency ' +
+    'index, whose own controlled target is 98% rather than 100%. The plan\'s sufficiency ' +
+    'ambition therefore leaves the vacancy ceiling about a third of a point short.'
+};
+
 /* ---- Self-checks (consumed by Vitest) ----------------------------------- */
 export function equationSelfTests(Q: QualityData): { ok: boolean; messages: string[] } {
   const messages: string[] = [];
@@ -1486,17 +1534,17 @@ export function equationSelfTests(Q: QualityData): { ok: boolean; messages: stri
       if (!isFinite(v)) messages.push('non-finite: ' + d.id + ' at ' + ph);
     });
   });
-  /* 3. base-case maturity meets (or lands within 12% of) the source target.
-     KPP-C1 and KPP-C8 are exempt: the fiscal engine honestly computes a gap
-     against those source ambitions, documented in the methodology file. */
-  const documentedGap: Record<string, boolean> = { 'KPP-C1': true, 'KPP-C8': true };
+  /* 3. base-case maturity meets the source target, within MATURITY_TOLERANCE,
+     except for the metrics whose shortfall is documented rather than hidden. */
   kppTpp.forEach(function (p) {
     const d = EQUATIONS[p.id];
-    if (!d || d.template || documentedGap[p.id]) return;
+    if (!d || d.template || DOCUMENTED_GAPS[p.id]) return;
     const meta = parseNum(p.target);
     if (!meta || !meta.cmp) return;
     const v = evaluateAtPhase(p.id, 'SCN-BASE', 'P8');
-    const ok = meta.cmp === '<=' ? v <= meta.num * 1.12 : v >= meta.num * 0.88;
+    const ok = meta.cmp === '<='
+      ? v <= meta.num * (1 + MATURITY_TOLERANCE)
+      : v >= meta.num * (1 - MATURITY_TOLERANCE);
     if (!ok) messages.push('maturity miss: ' + p.id + ' computed ' + v.toFixed(2) + ' vs ' + p.target);
   });
   return { ok: messages.length === 0, messages: messages };
