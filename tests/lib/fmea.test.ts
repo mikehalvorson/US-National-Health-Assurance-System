@@ -5,9 +5,9 @@ import {
   probabilityScaleReach, undeclaredCommittedKinds
 } from '../../src/lib/fmea';
 import {
-  cpConfidenceWiring, cpFamilyConfidence, gateBumpedRecords, gateWiring,
-  PROBABILITY_SOURCE_NOTE, PROBABILITY_SOURCES, probabilitySourceConflicts,
-  probabilitySourceCounts
+  cpConfidenceWiring, cpFamilyConfidence, DEFERRED_TARGET_DEFINITION, gateBumpedRecords,
+  gateWiring, PROBABILITY_SOURCE_NOTE, PROBABILITY_SOURCES, probabilitySourceConflicts,
+  probabilitySourceCounts, proxiedInMatrix
 } from '../../src/lib/fmea';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
@@ -77,6 +77,61 @@ describe('FMEA derivation', () => {
   });
 });
 
+/* R279 [§S4]: a deferred target was scored 3 under the words "occurrence
+   proxied at moderate", and that 3 landed in a coloured cell, a band total, a
+   risk and an RPN, on a page saying the probability could not be assessed. */
+describe('R279 a proxied placeholder is not charted as a score', () => {
+  test('no proxied record reaches either risk matrix', () => {
+    const p = proxiedInMatrix();
+    expect(p.records).toBeGreaterThan(0);
+    expect(p.cells).toBe(0);
+  });
+
+  test('a proxied record publishes no probability, risk, RPN or band', () => {
+    const proxied = FMEA_DATA.records.filter((r) => r.probabilitySource === 'proxied');
+    expect(proxied.length).toBe(7);
+    for (const r of proxied) {
+      expect(r.probability, r.id).toBe(0);
+      expect(r.risk, r.id).toBe(0);
+      expect(r.rpn, r.id).toBe(0);
+      expect(r.band, r.id).toBe('unscored');
+      expect(r.consequence, r.id).toBeGreaterThanOrEqual(1);  // still assessed
+    }
+  });
+
+  test('the band totals no longer count a placeholder', () => {
+    let charted = 0;
+    for (let c = 1; c <= 5; c++) for (let p = 1; p <= 5; p++) charted += FMEA_DATA.matrix[c][p];
+    const banded = FMEA_DATA.counts.extreme + FMEA_DATA.counts.high +
+      FMEA_DATA.counts.moderate + FMEA_DATA.counts.low;
+    expect(charted).toBe(banded);
+    expect(charted).toBe(FMEA_DATA.counts.scored);
+    expect(FMEA_DATA.counts.scored + proxiedInMatrix().records).toBe(FMEA_DATA.counts.kpptpp);
+  });
+
+  test('the deferred-target count and its definition are on the page data', () => {
+    expect(FMEA_DATA.gaps.deferredParamIds.length).toBe(7);
+    expect(FMEA_DATA.gaps.deferredDefinition).toBe(DEFERRED_TARGET_DEFINITION);
+    expect(DEFERRED_TARGET_DEFINITION).toContain('P8');
+    expect(DEFERRED_TARGET_DEFINITION).toContain('consequence is still assessed');
+  });
+
+  test('proxiedInMatrix reports a placeholder that gets charted again', () => {
+    /* Constructed failing input: put the old proxy back on one record. */
+    const rec = FMEA_DATA.records.filter((r) => r.probabilitySource === 'proxied')[0];
+    const savedP = rec.probability, savedR = rec.risk;
+    try {
+      rec.probability = 3;
+      rec.risk = rec.probability * rec.consequence;
+      expect(proxiedInMatrix().cells).toBe(1);
+    } finally {
+      rec.probability = savedP;
+      rec.risk = savedR;
+    }
+    expect(proxiedInMatrix().cells).toBe(0);
+  });
+});
+
 /* R278 [§S4]: gate linkage adds +1 to consequence, enough to move a band, and
    nothing checked that the 41 hand-extracted ids existed. The prose they were
    read out of is in the repository, so they are compared with it. */
@@ -111,7 +166,7 @@ describe('R278 gate linkage is checked against the gate table', () => {
 
   test('gateWiring reports a linked id the gate table stops naming', () => {
     const gate = QUALITY_DATA.gates.filter((g) => g.id === 'G1')[0];
-    const saved = gate.evidence;
+    const saved = gate.evidence ?? '';
     try {
       /* Constructed failing input: the extraction and its source disagree. */
       gate.evidence = saved.replace('TPP-2.1/2.2/2.4', 'TPP-2.1/2.4');

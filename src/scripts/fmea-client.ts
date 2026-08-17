@@ -7,7 +7,7 @@
    matrix host's dataset.wired guard. */
 import {
   FMEA_DATA as F, cellBand, BAND_META, PROBABILITY_CEILING, PROBABILITY_FLOOR,
-  PROBABILITY_SCALE, PROBABILITY_SOURCE_NOTE, type FmeaRecord
+  PROBABILITY_SCALE, PROBABILITY_SOURCE_NOTE, SCORE_PUBLISHING_SOURCES, type FmeaRecord
 } from '../lib/fmea';
 
 /* The bands the risk grid produces, in worst-first order. 'unscored' is not
@@ -41,6 +41,22 @@ function renderCounts(): void {
   set('fmea-n-kpp', kpp);
   set('fmea-n-tpp', tpp);
   set('fmea-n-cp', F.counts.cp);
+}
+
+/* ---- Deferred targets (R279) ------------------------------------------
+   The page used to state the count as the word "Seven" in prose beside a
+   description that did not say what a deferred target is, or that these
+   records are off the risk chart because of it. Both come from the data. */
+function renderDeferredNote(): void {
+  const host = byId('fmea-deferred-note');
+  if (!host) return;
+  host.innerHTML = '';
+  host.appendChild(el('b', '', 'How many, and what that means. '));
+  host.appendChild(document.createTextNode(
+    F.gaps.deferredParamIds.length.toLocaleString('en-US') + ' of the ' +
+    F.counts.kpptpp.toLocaleString('en-US') + ' phase-target failure modes are ' +
+    'deferred, across ' + F.gaps.deferredParamIds.length.toLocaleString('en-US') +
+    ' outcome parameters. ' + F.gaps.deferredDefinition));
 }
 
 /* ---- Probability scale (R274) -----------------------------------------
@@ -369,8 +385,7 @@ function renderGaps(): void {
     ' outcome parameters were deliberately left as a number to be calibrated ' +
     'later, so their probability cannot be scored against a real value. The ' +
     'missing parameter is the calibrated target itself, adopted by the ' +
-    'scorekeeping board. Consequence is still assessed; probability is shown ' +
-    'as unscored on their records.'));
+    'scorekeeping board. ' + F.gaps.deferredDefinition));
   const list = el('ul', 'fmea-gap-ids');
   F.gaps.deferredParamIds.forEach(function (id) {
     const rec = F.gaps.deferredTargets.filter(function (r) { return r.paramId === id; })[0];
@@ -460,9 +475,9 @@ function renderSelected(r: FmeaRecord | undefined): void {
   /* R276: a record with no probability has no risk and no RPN either, so the
      pills that would multiply through it are not drawn. Consequence is still
      assessed and is still shown, which is what the page says happens. */
-  if (r.probabilitySource === 'unscored') {
+  if (SCORE_PUBLISHING_SOURCES.indexOf(r.probabilitySource) < 0) {
     pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
-    pills.appendChild(el('span', 'fmea-pill fmea-pill-p', 'probability not derived'));
+    pills.appendChild(el('span', 'fmea-pill fmea-pill-p', 'probability not published'));
   } else {
     pills.appendChild(scorePill('probability', r.probability, 'fmea-pill-p'));
     pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
@@ -597,6 +612,7 @@ function initFmea(): void {
   selectedCell = null;
 
   renderCounts();
+  renderDeferredNote();
   renderProbabilityScale();
   renderMatrix();
   renderHeadlines();

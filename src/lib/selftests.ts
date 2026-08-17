@@ -32,7 +32,7 @@ import {
 import {
   committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, fmeaSelfTests, gateBumpedRecords,
   gateWiring, phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SOURCES,
-  probabilityScaleReach, probabilitySourceConflicts, probabilitySourceCounts,
+  probabilityScaleReach, probabilitySourceConflicts, probabilitySourceCounts, proxiedInMatrix,
   undeclaredCommittedKinds
 } from './fmea';
 import {
@@ -737,6 +737,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? 'not in AUTHORITATIVE_KINDS: ' + undeclared.join(', ')
             : kinds.reduce((n, k) => n + k.rows, 0) + ' carried forward across ' +
               kinds.map((k) => k.kind + ' ' + k.rows).join(', ')
+        };
+      }),
+      /* R279 [§S4]: a deferred target had its occurrence "proxied at moderate"
+         and that 3 was a real score everywhere it mattered - a coloured cell,
+         a band total, a risk and an RPN computed through it - on a page saying
+         its probability could not be assessed. Checked against the built
+         aggregate, not against the filter that builds it. */
+      runGuarded('No proxied probability is charted as a real one', () => {
+        const p = proxiedInMatrix();
+        return {
+          ok: p.cells === 0,
+          note: p.cells
+            ? p.cells + ' proxied records are counted in a risk matrix'
+            : p.records + ' deferred targets, none on the chart or in a band total'
         };
       }),
       /* R278 [§S4]: gate linkage adds +1 to consequence, enough to move a band,

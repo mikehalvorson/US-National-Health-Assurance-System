@@ -382,6 +382,10 @@ export function cellBand(consequence: number, probability: number): ScoredBand {
  * unchanged. */
 export type ProbabilitySource = 'native' | 'borrowed' | 'proxied' | 'unscored';
 export const PROBABILITY_SOURCES: ProbabilitySource[] = ['native', 'borrowed', 'proxied', 'unscored'];
+/* Which of the four publish a number. R279 moved 'proxied' out of this set:
+   a placeholder is not a measurement, so it is not charted, banded or
+   multiplied through into a risk or an RPN. */
+export const SCORE_PUBLISHING_SOURCES: ProbabilitySource[] = ['native', 'borrowed'];
 /* How each source is disclosed wherever a score of that provenance is shown. */
 export const PROBABILITY_SOURCE_NOTE: Record<ProbabilitySource, string> = {
   native: '',
@@ -452,10 +456,18 @@ function probabilityForRow(
 ): { score: number; basis: string; source: ProbabilitySource } {
   const meta = parseNum(e.value);
   if (!meta) {
-    /* qualitative ladder rung: the number itself was deferred */
+    /* R279 [§S4]: the framework deferred the number itself, so there is no
+       value to score against. This used to publish a probability of 3 under
+       the words "occurrence proxied at moderate", and that 3 was a real
+       score everywhere it mattered: the record landed in a coloured cell of
+       the 5x5 chart, was counted in matrix[c][3] and in the band totals, and
+       carried a risk and an RPN computed through it - on the same page that
+       says its probability cannot be assessed. A placeholder is not a
+       measurement, so none of it is published now. Consequence is still
+       assessed, which is what the page has always said happens. */
     return {
-      score: 3,
-      basis: 'Deferred numeric target: occurrence proxied at moderate; a controlled number is required to assess it properly.',
+      score: 0,
+      basis: 'The framework deliberately left this target as a number to be calibrated later, so there is no value to score an occurrence against. Consequence is assessed; probability is not published.',
       source: 'proxied'
     };
   }
@@ -709,7 +721,10 @@ QUALITY_DATA.parameters.forEach(function (p) {
     const prob = probabilityForRow(p, e);
     const cons = consequenceForRow(p, cls, e);
     const det = detectability(p);
-    const band = bandFor(cons.score, prob.score);
+    /* R279: a proxied placeholder gets no cell on the grid, so it gets no band
+       off the grid either. Consequence is still assessed and still shown. */
+    const scored = prob.source !== 'proxied';
+    const band: Band = scored ? bandFor(cons.score, prob.score) : 'unscored';
     const isGateRow = gate && e.phase === GATE_BIND_PHASE[gate];
     RECORDS.push({
       id: 'FM-' + p.id + '-' + e.phase,
@@ -1019,21 +1034,34 @@ export function probabilitySourceCounts(): Record<ProbabilitySource, number> {
   RECORDS.forEach(function (r) { out[r.probabilitySource] += 1; });
   return out;
 }
+/* R279: a proxied placeholder must not reach the risk chart. This counts what
+   actually landed in the two matrices, so the claim is checked against the
+   built aggregate rather than against the filter that builds it. */
+export function proxiedInMatrix(): { records: number; cells: number } {
+  const proxied = RECORDS.filter(function (r) { return r.probabilitySource === 'proxied'; });
+  /* the same condition buildMatrix uses to decide a record gets a cell */
+  const charted = proxied.filter(function (r) {
+    return r.probability >= 1 && r.probability <= 5 && r.risk > 0;
+  });
+  return { records: proxied.length, cells: charted.length };
+}
+
 export function probabilitySourceConflicts(): string[] {
   const bad: string[] = [];
   RECORDS.forEach(function (r) {
+    const publishes = SCORE_PUBLISHING_SOURCES.indexOf(r.probabilitySource) >= 0;
     const hasScore = r.probability >= PROBABILITY_FLOOR && r.probability <= PROBABILITY_CEILING;
-    if (r.probabilitySource === 'unscored' && (hasScore || r.risk > 0 || r.rpn > 0)) {
-      bad.push(r.id + ' is unscored but carries probability ' + r.probability +
-        ', risk ' + r.risk + ', RPN ' + r.rpn);
+    if (!publishes && (hasScore || r.risk > 0 || r.rpn > 0)) {
+      bad.push(r.id + ' is ' + r.probabilitySource + ' but carries probability ' +
+        r.probability + ', risk ' + r.risk + ', RPN ' + r.rpn);
     }
-    if (r.probabilitySource !== 'unscored' && !hasScore) {
+    if (publishes && !hasScore) {
       bad.push(r.id + ' is ' + r.probabilitySource + ' but carries no score on the scale');
     }
-    if (r.probabilitySource === 'unscored' && r.band !== 'unscored') {
-      bad.push(r.id + ' is unscored but publishes the ' + r.band + ' band');
+    if (!publishes && r.band !== 'unscored') {
+      bad.push(r.id + ' is ' + r.probabilitySource + ' but publishes the ' + r.band + ' band');
     }
-    if (r.probabilitySource !== 'unscored' && r.band === 'unscored') {
+    if (publishes && r.band === 'unscored') {
       bad.push(r.id + ' is ' + r.probabilitySource + ' but publishes no band');
     }
   });
@@ -1042,7 +1070,11 @@ export function probabilitySourceConflicts(): string[] {
 
 /* headline groupings the brief asks for, over the phase-target set */
 const mostProbable = PRIMARY.filter(function (r) { return r.probability === 5 && r.risk > 0; });
-const mostConsequential = PRIMARY.filter(function (r) { return r.consequence === 5 && r.risk > 0; });
+/* R279: consequence is assessed for every phase-target record, including the
+   ones whose probability was deferred, so this card does not filter on risk.
+   Dropping a catastrophic failure mode from the "most consequential" list
+   because nobody has set its target yet would hide it twice over. */
+const mostConsequential = PRIMARY.filter(function (r) { return r.consequence === 5; });
 const both = PRIMARY.filter(function (r) { return r.probability === 5 && r.consequence === 5; });
 
 /* per-family CP calibration-risk summary for the CP panel */
@@ -1062,6 +1094,18 @@ const cpFamilyRisk = (QUALITY_DATA.cpFamilies || []).map(function (f) {
 /* parameter gaps: where probability could not be assessed */
 const deferredTargets = RECORDS.filter(function (r) { return r.paramType !== 'CP' && r.needsNewParam; });
 const deferredParamIds = Array.from(new Set(deferredTargets.map(function (r) { return r.paramId; })));
+/* R279: what "deferred" means, stated once and rendered rather than retyped
+   into the page as prose next to a hardcoded seven. The phases matter: these
+   parameters carry real computed targets everywhere else and defer only the
+   mature one, which is not what "deferred target" sounds like on its own. */
+export const DEFERRED_TARGET_DEFINITION =
+  'A deferred target is a rollout row whose value the framework left as words ' +
+  'rather than a number, so nothing can be scored against it. Every one of ' +
+  'them carries a real computed target at its earlier phases; what was ' +
+  'deferred is the value at ' +
+  Array.from(new Set(deferredTargets.map(function (r) { return r.phase; }))).sort().join(', ') +
+  '. Their consequence is still assessed. Their probability is not published, ' +
+  'so they do not appear on the risk chart or in its band totals.';
 const cpFamilyGaps = (QUALITY_DATA.cpFamilies || []).map(function (f) {
   return {
     id: f.id, domain: f.domain, records: f.records,
@@ -1109,6 +1153,7 @@ export const FMEA_DATA = {
   gaps: {
     deferredTargets: deferredTargets,
     deferredParamIds: deferredParamIds,
+    deferredDefinition: DEFERRED_TARGET_DEFINITION,
     cpFamilies: cpFamilyGaps
   }
 };
