@@ -82,6 +82,11 @@ export interface QualityParameter {
   calculation: string; datasets: string; ownerVerifier: string; status: string; unit: string;
   modelRole: string; temporal: string; unitStatus: string; family: string; phaseNote: string;
   rollout: RolloutEntry[]; _search?: string; _phaseStart?: string;
+  /* R235: set on the metrics whose base-case maturity value does not meet the
+     source target, with the reason and a pointer to where it is written up.
+     The maturity-closure check exempts exactly the records carrying it, and
+     fails if one of them starts meeting its target. */
+  documentedGap?: string; documentedGapSection?: string;
 }
 export interface QualityPhase { id: string; anchor: string; purpose: string; scope?: string; exitEvidence?: string; }
 export interface QualityGate { id: string; decision: string; name?: string; floor?: string; evidence?: string; fallback?: string; }
@@ -400,6 +405,64 @@ def apply_house_style(parameter: dict) -> None:
             parameter[field] = parameter[field].replace(before, after)
 
 
+DOCUMENTED_GAP_SECTION = (
+    "research/quality-equation-methodology.md"
+    "#documented-gaps-the-model-refuses-to-hide"
+)
+
+# R235 [S3]: the metrics whose base-case maturity value does not meet the
+# source target, and why.
+#
+# This lived as `const documentedGap = { 'KPP-C1': true, 'KPP-C8': true }`
+# inside the maturity-closure check.  The audit calls it the most honest thing
+# in the codebase, and it was: the model does not reach two of its own targets
+# and the code said so, by ID, with a pointer to where it is written up.
+#
+# The problem was where it lived.  An exemption held inside the test it
+# exempts from cannot be seen by anyone reading the catalog, and it persists
+# silently if the gap ever closes - the metric would start meeting its target
+# and nothing would say the exemption was no longer needed.  Stamping it onto
+# the record makes it a property of the parameter, carried wherever the
+# parameter goes, and lets the check fail in BOTH directions.
+DOCUMENTED_GAPS = {
+    "KPP-C1": (
+        "Health share of GDP: the fiscal engine, holding scale constant, computes "
+        "about 18% at maturity against the 15.2% ambition, because the expanded "
+        "benefits roughly offset the savings levers. The engine is not tuned to the "
+        "ambition and reports the gap."
+    ),
+    "KPP-C7": (
+        "Wealth-financing collection efficiency: the researched mature collection "
+        "rate is 84% against a controlled 92% ambition, so the equation approaches "
+        "84 and the gap is the distance between researched practice and the plan's "
+        "target."
+    ),
+    "KPP-C8": (
+        "Ordinary-taxpayer burden share: the engine computes about 6.5% of program "
+        "cost against the 5% cap, after wealth financing, household relief and wage "
+        "pass-through."
+    ),
+    "TPP-W1": (
+        "Role-region vacancy ceiling: the error form closes only where its build "
+        "state reaches 1, and this one averages infrastructure with the workforce "
+        "sufficiency index, whose own controlled target is 98% rather than 100%. The "
+        "plan's sufficiency ambition leaves the vacancy ceiling about a third of a "
+        "point short."
+    ),
+}
+
+
+def stamp_documented_gaps(parameters: list[dict]) -> None:
+    """Attach each declared gap to its record, and fail on a stale id."""
+    by_id = {item["id"]: item for item in parameters}
+    missing = sorted(set(DOCUMENTED_GAPS) - set(by_id))
+    if missing:
+        raise ValueError(f"DOCUMENTED_GAPS names records not in the catalog: {missing}")
+    for identifier, reason in DOCUMENTED_GAPS.items():
+        by_id[identifier]["documentedGap"] = reason
+        by_id[identifier]["documentedGapSection"] = DOCUMENTED_GAP_SECTION
+
+
 def load_addendum() -> list[dict]:
     """The records that are not in the DOCX, in the order the live file has them."""
     payload = json.loads(ADDENDUM.read_text(encoding="utf-8"))
@@ -454,6 +517,8 @@ def build_catalog() -> dict:
     identifiers = [item["id"] for item in parameters]
     if len(identifiers) != len(set(identifiers)):
         raise ValueError("Addendum reuses an identifier the DOCX already defines")
+
+    stamp_documented_gaps(parameters)
 
     family_rows = table_rows(document.tables[120])
     return {

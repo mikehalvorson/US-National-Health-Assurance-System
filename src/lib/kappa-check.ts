@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import {
   computeTargets, EQ_PHASES, EQUATIONS, KAPPA_BAND, KAPPA_BUILD_AT_P5, KAPPA_CONFIDENCE,
   KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE,
-  MATURITY_TOLERANCE, withKappa
+  documentedGapIds, MATURITY_TOLERANCE, withKappa
 } from './equations';
 import { QUALITY_DATA } from './quality';
 import { GATES } from './rollout';
@@ -192,6 +192,39 @@ export function maturityToleranceDrift(): string[] {
       (MATURITY_TOLERANCE * 100) + '%'];
   }
   return [];
+}
+
+/* R235 [§S3]: each exempt record points at a methodology section, and that
+   section must actually name it. Checked in both directions, so a gap written
+   up but not stamped, or stamped but not written up, fails. */
+export function documentedGapDrift(): string[] {
+  const text = methodology();
+  const out: string[] = [];
+  const heading = 'Documented gaps the model refuses to hide';
+  const start = text.indexOf('## ' + heading);
+  if (start < 0) return ['the methodology has no "' + heading + '" section'];
+  const rest = text.slice(start + heading.length);
+  const nextHeading = rest.indexOf('\n## ');
+  const section = nextHeading < 0 ? rest : rest.slice(0, nextHeading);
+
+  const stamped = documentedGapIds(QUALITY_DATA);
+  for (const id of stamped) {
+    if (!section.includes(id)) out.push('stamped but not written up: ' + id);
+  }
+  /* Every KPP/TPP id the section names must be stamped. Matching on the id
+     pattern rather than on a list, so a gap added to the prose alone is
+     caught. */
+  for (const m of section.matchAll(/\*\*((?:KPP|TPP)-[A-Z0-9.]+)\*\*/g)) {
+    if (stamped.indexOf(m[1]) < 0) out.push('written up but not stamped: ' + m[1]);
+  }
+  /* And the pointer on the record has to lead here. */
+  for (const p of QUALITY_DATA.parameters) {
+    if (!p.documentedGap) continue;
+    if (!p.documentedGapSection || !p.documentedGapSection.startsWith(METHODOLOGY)) {
+      out.push(p.id + ' points at ' + (p.documentedGapSection || 'nothing'));
+    }
+  }
+  return [...new Set(out)].sort();
 }
 
 /* The registry entry itself. Read off the ONE table row that names the

@@ -7,12 +7,12 @@
 import { describe, expect, test } from 'vitest';
 import {
   KAPPA_BAND, KAPPA_CONFIDENCE, KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT,
-  KAPPA_SOURCE_GATE, KAPPA_VALUE, currentKappa, DOCUMENTED_GAPS, EQUATIONS,
-  evaluateAtPhase, MATURITY_TOLERANCE, withKappa
+  KAPPA_SOURCE_GATE, KAPPA_VALUE, currentKappa, documentedGap, documentedGapIds, EQUATIONS,
+  equationSelfTests, evaluateAtPhase, MATURITY_TOLERANCE, withKappa
 } from '../../src/lib/equations';
 import {
   calibrationDrift, kappaBand, kappaFromObservation, kappaRegistryGaps,
-  kappaTableDrift, maturityToleranceDrift, renderedKappaRows
+  documentedGapDrift, kappaTableDrift, maturityToleranceDrift, renderedKappaRows
 } from '../../src/lib/kappa-check';
 import { parseNum } from '../../src/lib/phase-targets';
 import { QUALITY_DATA } from '../../src/lib/quality';
@@ -109,12 +109,12 @@ describe('R231: maturity closure says what it means', () => {
       expect(missed, id + ' computed ' + v.toFixed(2) + ' vs ' + p.target).toBe(true);
       const withinOld = meta.cmp === '<=' ? v <= meta.num * 1.12 : v >= meta.num * 0.88;
       expect(withinOld, id + ' used to pass the 12% bound').toBe(true);
-      expect(DOCUMENTED_GAPS[id], id + ' must be declared').toBeTruthy();
+      expect(documentedGap(p), id + ' must be declared').toBeTruthy();
     }
   });
 
   test('every documented gap really misses, and every other metric closes', () => {
-    const gaps = Object.keys(DOCUMENTED_GAPS).sort();
+    const gaps = documentedGapIds(QUALITY_DATA);
     const missing: string[] = [];
     const closingButExempt: string[] = [];
     for (const p of QUALITY_DATA.parameters) {
@@ -128,8 +128,8 @@ describe('R231: maturity closure says what it means', () => {
       const ok = meta.cmp === '<='
         ? v <= meta.num * (1 + MATURITY_TOLERANCE)
         : v >= meta.num * (1 - MATURITY_TOLERANCE);
-      if (!ok && !DOCUMENTED_GAPS[p.id]) missing.push(p.id);
-      if (ok && DOCUMENTED_GAPS[p.id]) closingButExempt.push(p.id);
+      if (!ok && !documentedGap(p)) missing.push(p.id);
+      if (ok && documentedGap(p)) closingButExempt.push(p.id);
     }
     expect(missing, 'misses the target and is not declared').toEqual([]);
     /* R235 turns the second list into a failure with its own message; here it
@@ -142,5 +142,48 @@ describe('R231: maturity closure says what it means', () => {
     const { readFileSync } = require('node:fs') as typeof import('node:fs');
     const header = readFileSync('src/lib/equations.ts', 'utf8').slice(0, 2200);
     expect(header).not.toContain('close exactly');
+  });
+});
+
+/* R235 [§S3]: the exemption belongs to the record, not to the test. */
+describe('R235: documented gaps travel with their parameter', () => {
+  test('each exempt metric carries its reason and a pointer', () => {
+    const ids = documentedGapIds(QUALITY_DATA);
+    expect(ids).toEqual(['KPP-C1', 'KPP-C7', 'KPP-C8', 'TPP-W1']);
+    for (const id of ids) {
+      const p = QUALITY_DATA.parameters.find((x) => x.id === id)!;
+      expect(p.documentedGap!.length, id).toBeGreaterThan(60);
+      expect(p.documentedGapSection, id)
+        .toContain('research/quality-equation-methodology.md#');
+    }
+  });
+
+  test('the record and the methodology name the same set', () => {
+    expect(documentedGapDrift()).toEqual([]);
+  });
+
+  test('an exemption that is no longer needed is reported, not tolerated', () => {
+    /* The defect the row names: if a gap closes, a hardcoded map in the test
+       keeps exempting a metric that now passes, and nothing says so. Simulated
+       by exempting a metric that already meets its target. */
+    const clone = {
+      ...QUALITY_DATA,
+      parameters: QUALITY_DATA.parameters.map((p) =>
+        p.id === 'TPP-1.1' ? { ...p, documentedGap: 'invented for this test' } : p)
+    };
+    const r = equationSelfTests(clone as typeof QUALITY_DATA);
+    expect(r.ok).toBe(false);
+    expect(r.messages.join(' ')).toContain('exemption no longer needed: TPP-1.1');
+  });
+
+  test('a real gap with its exemption removed still fails as a miss', () => {
+    const clone = {
+      ...QUALITY_DATA,
+      parameters: QUALITY_DATA.parameters.map((p) =>
+        p.id === 'KPP-C7' ? { ...p, documentedGap: undefined } : p)
+    };
+    const r = equationSelfTests(clone as typeof QUALITY_DATA);
+    expect(r.ok).toBe(false);
+    expect(r.messages.join(' ')).toContain('maturity miss: KPP-C7');
   });
 });

@@ -1492,25 +1492,25 @@ export function clampCounts(Q: QualityData): ClampCount[] {
  * thing the exemption list exists to make visible. */
 export const MATURITY_TOLERANCE = 0.02;
 
-/* Metrics whose base-case maturity value does not meet the source target, with
-   the reason. This is the most honest thing in the codebase and it is the
-   reason the check can be tightened at all: a gap that is named is not a gap
-   that is hidden. R235 moves it onto the catalog record. */
-export const DOCUMENTED_GAPS: Record<string, string> = {
-  'KPP-C1': 'health share of GDP: the fiscal engine, holding scale constant, computes ' +
-    'about 18% at maturity against the 15.2% ambition, because the expanded benefits ' +
-    'roughly offset the savings levers. The engine is not tuned to the ambition.',
-  'KPP-C7': 'wealth-financing collection efficiency: the researched mature collection rate ' +
-    'is 84% against a controlled 92% ambition, so the equation approaches 84 and the gap ' +
-    'is the difference between researched practice and the plan\'s target.',
-  'KPP-C8': 'ordinary-taxpayer burden share: the engine computes about 6.5% of program ' +
-    'cost against the 5% cap, after wealth financing, household relief and wage ' +
-    'pass-through.',
-  'TPP-W1': 'role-region vacancy ceiling: the error form closes only where its build state ' +
-    'reaches 1, and its build state averages infrastructure with the workforce sufficiency ' +
-    'index, whose own controlled target is 98% rather than 100%. The plan\'s sufficiency ' +
-    'ambition therefore leaves the vacancy ceiling about a third of a point short.'
-};
+/* R235 [§S3]: the exemption is a property of the record, not of the test.
+ *
+ * It began as `const documentedGap = { 'KPP-C1': true, 'KPP-C8': true }`
+ * inside the closure check. The audit calls that the most honest thing in the
+ * codebase and it was: the model does not reach two of its own targets, and
+ * the code said so by ID with a pointer to the write-up. What it could not do
+ * was survive contact with anything else - a reader of the catalog could not
+ * see it, and if a gap ever closed the exemption would persist in silence.
+ *
+ * The reasons now live in the generator and are stamped onto the parameter
+ * (`documentedGap`, `documentedGapSection`), so they travel with the record,
+ * and the check below fails in both directions. */
+export function documentedGap(p: QualityParameter): string | undefined {
+  return p.documentedGap;
+}
+export function documentedGapIds(Q: QualityData): string[] {
+  return Q.parameters.filter(function (p) { return !!p.documentedGap; })
+    .map(function (p) { return p.id; }).sort();
+}
 
 /* ---- Self-checks (consumed by Vitest) ----------------------------------- */
 export function equationSelfTests(Q: QualityData): { ok: boolean; messages: string[] } {
@@ -1535,17 +1535,28 @@ export function equationSelfTests(Q: QualityData): { ok: boolean; messages: stri
     });
   });
   /* 3. base-case maturity meets the source target, within MATURITY_TOLERANCE,
-     except for the metrics whose shortfall is documented rather than hidden. */
+     except for the metrics whose shortfall is documented rather than hidden.
+     R235: an exempt metric that now MEETS its target is reported too, so
+     closing a gap surfaces the stale exemption instead of hiding behind it. */
   kppTpp.forEach(function (p) {
     const d = EQUATIONS[p.id];
-    if (!d || d.template || DOCUMENTED_GAPS[p.id]) return;
+    if (!d || d.template) return;
     const meta = parseNum(p.target);
     if (!meta || !meta.cmp) return;
     const v = evaluateAtPhase(p.id, 'SCN-BASE', 'P8');
+    if (!isFinite(v)) return;
     const ok = meta.cmp === '<='
       ? v <= meta.num * (1 + MATURITY_TOLERANCE)
       : v >= meta.num * (1 - MATURITY_TOLERANCE);
-    if (!ok) messages.push('maturity miss: ' + p.id + ' computed ' + v.toFixed(2) + ' vs ' + p.target);
+    const exempt = !!documentedGap(p);
+    if (!ok && !exempt) {
+      messages.push('maturity miss: ' + p.id + ' computed ' + v.toFixed(2) + ' vs ' + p.target);
+    }
+    if (ok && exempt) {
+      messages.push('exemption no longer needed: ' + p.id + ' computed ' + v.toFixed(2) +
+        ' and now meets ' + p.target + '. Remove it from DOCUMENTED_GAPS in ' +
+        'tools/extract_quality_catalog.py and from ' + (p.documentedGapSection || 'the methodology') + '.');
+    }
   });
   return { ok: messages.length === 0, messages: messages };
 }

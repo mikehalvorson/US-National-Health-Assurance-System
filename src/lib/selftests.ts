@@ -14,11 +14,12 @@ import {
 } from './phase-targets';
 import { QUALITY_DATA } from './quality';
 import {
-  AUTHORITATIVE_KINDS, clampCounts, computeTargets, DOCUMENTED_GAPS, equationSelfTests,
+  AUTHORITATIVE_KINDS, clampCounts, computeTargets, documentedGapIds, equationSelfTests,
   KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, MATURITY_TOLERANCE
 } from './equations';
 import {
-  calibrationDrift, kappaBand, kappaRegistryGaps, kappaTableDrift, maturityToleranceDrift
+  calibrationDrift, documentedGapDrift, kappaBand, kappaRegistryGaps, kappaTableDrift,
+  maturityToleranceDrift
 } from './kappa-check';
 import {
   authoritativeKindDrift, DECLARED_TARGET_MISPARSES, ROLLOUT_KINDS, staleTargetMisparses,
@@ -393,7 +394,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !drift.length,
           note: drift.join('; ') ||
             'closure checked at ' + (MATURITY_TOLERANCE * 100) + '%, ' +
-            Object.keys(DOCUMENTED_GAPS).length + ' documented gaps exempt'
+            documentedGapIds(QUALITY_DATA).length + ' documented gaps exempt'
+        };
+      }),
+      /* R235 [§S3]: the exemption travels with the record it exempts. */
+      runGuarded('Every documented gap is stamped on its record and written up', () => {
+        const drift = documentedGapDrift();
+        return {
+          ok: !drift.length,
+          note: drift.join('; ') ||
+            documentedGapIds(QUALITY_DATA).join(', ') + ', each pointing at the methodology'
         };
       }),
       runGuarded('The published KAPPA sensitivity band matches the model', () => {
