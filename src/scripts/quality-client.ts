@@ -390,14 +390,24 @@ function buildEquationPanel(id: string, compact?: boolean): HTMLElement {
     panel.appendChild(wrap);
   }
 
-  /* computed value strip for catalog parameters */
-  if (cat && !compact) {
+  /* Computed value strip for catalog parameters.
+     R232 [§S3]: this strip used to be gated on `!compact`, and the only view
+     where the published value is also on screen is the one that passes
+     compact = true. So the explorer showed the equation's number and never the
+     published one, the detail card showed the published one and never the
+     equation's, and a reader comparing them had to hold nine values across a
+     scroll. The gate is gone: both appear in the same view. */
+  if (cat) {
     const t = eqTargets()[id];
     if (t) {
+      const clamps = cat.rollout.filter(function (e) { return e.bounded; }).length;
       const stripHead = el('div', 'quality-phase-strip-head');
       stripHead.appendChild(el('b', '', 'Equation value by phase (' + eqScenarioName() + ')'));
       stripHead.appendChild(el('span', '',
-        'Raw equation output; the catalog holds committed floors where they are stricter.'));
+        'Raw equation output; the catalog holds committed floors where they are stricter.' +
+        (clamps
+          ? ' Held at a committed floor in ' + clamps + ' of the phases below, marked there.'
+          : '')));
       panel.appendChild(stripHead);
       const strip = el('div', 'quality-phase-strip quality-eq-strip');
       const startIdx = EQ_PHASES.indexOf(cat._phaseStart || 'P0');
@@ -600,16 +610,38 @@ function renderSelected(parameter: QualityParameter): void {
       entries.forEach(function (entry) {
         let text = entry.value;
         let kindNote = (entry.gate ? entry.gate + ' · ' : '') + entry.kind;
+        let showRaw = entry.bounded ? entry.raw : '';
         if (entry.kind === 'equation-derived target' && eqScenario !== 'SCN-BASE') {
           const t = eqTargets()[parameter.id];
           if (t && t[phase.id] && isFinite(t[phase.id].num)) {
             text = t[phase.id].text;
             kindNote = 'equation-derived · ' + eqScenarioName();
+            /* Under a stress scenario the strip already shows the raw value,
+               so the base-case clamp note would describe a different number. */
+            showRaw = '';
           }
         }
         const value = el('p', 'quality-cell-value', text);
         value.appendChild(el('small', '', kindNote));
+        /* R232 [§S3]: when the published number is a committed floor carried
+           forward, say what the equation gave instead of showing only the
+           number that won. */
+        if (showRaw) value.appendChild(el('small', 'quality-cell-raw', 'equation: ' + showRaw));
         cell.appendChild(value);
+        /* R232 [§S3]: applyEquationTargets and applyPhaseTargets have both been
+           composing an explanation per entry, and nothing in the application
+           read it - not this page, not the Data tab, not any of the seven
+           clients. Rendered here in the collapsible form the Data tab already
+           uses for its per-target rationales. */
+        if (entry.interpretation) {
+          const why = document.createElement('details');
+          why.className = 'quality-cell-why';
+          const label = document.createElement('summary');
+          label.textContent = 'Why this value';
+          why.appendChild(label);
+          why.appendChild(el('p', '', entry.interpretation));
+          cell.appendChild(why);
+        }
       });
     }
     strip.appendChild(cell);

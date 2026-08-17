@@ -14,7 +14,7 @@ import {
 } from './phase-targets';
 import { QUALITY_DATA } from './quality';
 import {
-  AUTHORITATIVE_KINDS, computeTargets, equationSelfTests,
+  AUTHORITATIVE_KINDS, clampCounts, computeTargets, equationSelfTests,
   KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE
 } from './equations';
 import { calibrationDrift, kappaBand, kappaRegistryGaps, kappaTableDrift } from './kappa-check';
@@ -135,6 +135,25 @@ const KNOWN_NON_FINITE = [
   'TPP-9.3@P0', 'TPP-9.3@P1', 'TPP-9.3@P2', 'TPP-9.3@P3',
   'TPP-9.5@P0', 'TPP-9.5@P1', 'TPP-9.5@P2', 'TPP-9.5@P3'
 ].join(', ');
+
+/* R232 [§S3]: the metrics whose published trajectory is entirely committed
+   floors carried forward, with the equation contributing no interim number a
+   reader ever sees. The row's own words: a metric bounded at six of nine
+   phases is a metric whose equation is not doing the work, and nobody could
+   see that, because the bound was applied and then discarded.
+
+   Four are in that state, and they are named rather than counted so a fifth
+   fails the build. This is not a defect to fix by loosening the clamp - the
+   clamp is correct, it stops the equation contradicting a committed floor. It
+   is a fact about where the model is decorative, and it belongs where someone
+   reading the checks will meet it.
+
+   They are not equally interesting. KPP-C5 publishes four interim rows and
+   every one is a floor; TPP-10.2 and TPP-11.1 publish two each. KPP-A1
+   publishes exactly one, so "all of it" is one row, which is a much weaker
+   statement about the same arrangement. The list does not rank them; the note
+   the check prints carries the counts. */
+const FULLY_CLAMPED = ['KPP-A1', 'KPP-C5', 'TPP-10.2', 'TPP-11.1'];
 
 export interface SelfTestRow { name: string; ok: boolean; note: string }
 export interface SelfTestReport {
@@ -304,6 +323,42 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: p.length === 0,
           note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+        };
+      }),
+      /* R232 [§S3]: both halves of the clamp disclosure. */
+      runGuarded('Every clamped value carries the equation number it replaced', () => {
+        const missing = clampCounts(QUALITY_DATA)
+          .flatMap((c) => {
+            const p = QUALITY_DATA.parameters.filter((x) => x.id === c.id)[0];
+            return (p?.rollout || [])
+              .filter((e) => e.bounded && !e.raw)
+              .map((e) => c.id + '@' + e.phase);
+          });
+        const counts = clampCounts(QUALITY_DATA).filter((c) => c.bounded > 0);
+        return {
+          ok: !missing.length,
+          note: missing.length
+            ? 'bounded with no raw value: ' + missing.join(', ')
+            : counts.reduce((n, c) => n + c.bounded, 0) + ' clamped rows across ' +
+              counts.length + ' metrics, each carrying its raw value'
+        };
+      }),
+      runGuarded('Every metric whose equation is fully overridden is declared', () => {
+        const full = clampCounts(QUALITY_DATA)
+          .filter((c) => c.rows > 0 && c.bounded === c.rows)
+          .map((c) => c.id).sort();
+        const declared = FULLY_CLAMPED.slice().sort();
+        const added = full.filter((id) => declared.indexOf(id) < 0);
+        const gone = declared.filter((id) => full.indexOf(id) < 0);
+        return {
+          ok: !added.length && !gone.length,
+          note: [
+            added.length ? 'newly fully clamped: ' + added.join(', ') : '',
+            gone.length ? 'no longer fully clamped: ' + gone.join(', ') : ''
+          ].filter(Boolean).join(' | ') ||
+            full.length + ' metrics publish only committed floors: ' +
+            clampCounts(QUALITY_DATA).filter((c) => full.indexOf(c.id) >= 0)
+              .map((c) => c.id + ' (' + c.bounded + '/' + c.rows + ')').join(', ')
         };
       })
     ]

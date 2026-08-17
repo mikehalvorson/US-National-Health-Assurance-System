@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { parseNum } from '../../src/lib/phase-targets';
 import {
-  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, anchorUnit, committedAnchors, evaluateAtPhase,
-  equationSelfTests, computeTargets, collectDeps, modelValueAt
+  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, anchorUnit, clampCounts, committedAnchors,
+  evaluateAtPhase, equationSelfTests, computeTargets, collectDeps, modelValueAt
 } from '../../src/lib/equations';
 import { runPath, sampleParams } from '../../src/lib/model';
 import { effectiveParams, SCENARIOS, scenarioStructural } from '../../src/lib/scenarios';
@@ -252,5 +252,71 @@ describe('R233: anchors are unit-matched or refused', () => {
       ]
     } as unknown as (typeof QUALITY_DATA.parameters)[number];
     expect(committedAnchors(EQUATIONS['TPP-6.1'], pctTarget)).toEqual({ P6: 60 });
+  });
+});
+
+/* R232 [§S3] - the clamp, disclosed.
+ *
+ * The row was filed as a missing feature. The feature existed twice and was
+ * disconnected both times: applyEquationTargets composed an explanation into
+ * `entry.interpretation` that no client read, and buildEquationPanel rendered a
+ * raw-value strip gated on `!compact`, which is false at the only call site
+ * where the published value is also on screen. */
+describe('R232: the raw value survives the clamp', () => {
+  test('every bounded entry carries the equation number it replaced', () => {
+    let bounded = 0;
+    for (const p of KPP_TPP) {
+      for (const e of p.rollout) {
+        if (!e.bounded) continue;
+        bounded += 1;
+        expect(e.raw, p.id + '@' + e.phase).toBeTruthy();
+        expect(e.raw, p.id + '@' + e.phase).not.toBe(e.value);
+      }
+    }
+    expect(bounded).toBeGreaterThan(0);
+  });
+
+  test('an unbounded entry carries no raw value to contradict its own', () => {
+    for (const p of KPP_TPP) {
+      for (const e of p.rollout) {
+        if (e.kind !== 'equation-derived target' || e.bounded) continue;
+        expect(e.raw, p.id + '@' + e.phase).toBeUndefined();
+      }
+    }
+  });
+
+  test('the interpretation names both numbers, not just that an adjustment happened', () => {
+    /* BQ8 criticised the old string for disclosing that an adjustment
+       happened but not from what to what. BR2 found it was never rendered at
+       all. Both halves: it now says both numbers, and quality-client renders
+       it. */
+    const clamped = KPP_TPP.flatMap(p => p.rollout.filter(e => e.bounded));
+    expect(clamped.length).toBeGreaterThan(0);
+    for (const e of clamped) {
+      expect(e.interpretation).toContain(e.raw!);
+      expect(e.interpretation).toContain(e.value);
+    }
+  });
+
+  test('clamp counts are per metric and ranked', () => {
+    const counts = clampCounts(QUALITY_DATA);
+    const bounded = counts.filter(c => c.bounded > 0);
+    expect(bounded.length).toBeGreaterThan(0);
+    for (let i = 1; i < bounded.length; i++) {
+      expect(bounded[i - 1].bounded).toBeGreaterThanOrEqual(bounded[i].bounded);
+    }
+    for (const c of counts) {
+      expect(c.phases.length, c.id).toBe(c.bounded);
+      expect(c.bounded, c.id).toBeLessThanOrEqual(c.rows);
+    }
+  });
+
+  test('the metrics whose equation does no published work are visible', () => {
+    /* The row's own example: a metric bounded at most of its phases is one
+       whose equation is not doing the work. KPP-C5 is bounded at every phase
+       it publishes. */
+    const c5 = clampCounts(QUALITY_DATA).find(c => c.id === 'KPP-C5')!;
+    expect(c5.bounded).toBe(c5.rows);
+    expect(c5.rows).toBeGreaterThan(1);
   });
 });

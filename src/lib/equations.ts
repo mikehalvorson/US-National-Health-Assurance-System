@@ -1414,10 +1414,53 @@ export function applyEquationTargets(Q: QualityData, targets: EqTargets): void {
       const entry = entries[0];
       entry.value = formatEqTarget(d, p.target, v);
       entry.kind = 'equation-derived target';
+      /* R232 [§S3]: when the value is clamped, the published number is a flat
+         carry-forward of the previous phase or a committed anchor, and it is
+         NOT what the equation produced. Carry the equation's own number beside
+         it so the two can be shown together, rather than leaving a reader to
+         evaluate the tree in the explorer and get a third number. */
+      entry.bounded = bounded;
+      entry.raw = bounded ? formatEqTarget(d, p.target, val.num) : undefined;
       entry.interpretation = 'Calculated from this parameter\'s equation at the phase build state. '
         + d.why
-        + (bounded ? ' The raw equation value is adjusted here to stay consistent with the plan\'s committed floors and milestones.' : '');
+        + (bounded
+          ? ' The equation gives ' + entry.raw + ' here; the published value holds at ' +
+            entry.value + ' to stay consistent with the plan\'s committed floors and milestones.'
+          : '');
     });
+  });
+}
+
+/* R232 [§S3]: how often the clamp fires, per metric.
+ *
+ * The size of the clamp is itself a finding. A metric bounded at six of nine
+ * phases is a metric whose equation is not doing the work: the trajectory a
+ * reader sees is the plan's committed floors carried forward, and the equation
+ * is decoration. Nobody could see that before, because the bound was applied
+ * and then discarded. */
+export interface ClampCount {
+  id: string;
+  /* equation-derived rows this metric publishes */
+  rows: number;
+  /* of those, rows where the published value is not the equation's */
+  bounded: number;
+  phases: string[];
+}
+export function clampCounts(Q: QualityData): ClampCount[] {
+  const out: ClampCount[] = [];
+  Q.parameters.forEach(function (p) {
+    if (p.type === 'CP') return;
+    let rows = 0, bounded = 0;
+    const phases: string[] = [];
+    (p.rollout || []).forEach(function (e) {
+      if (e.kind !== 'equation-derived target') return;
+      rows += 1;
+      if (e.bounded) { bounded += 1; phases.push(e.phase); }
+    });
+    if (rows) out.push({ id: p.id, rows: rows, bounded: bounded, phases: phases });
+  });
+  return out.sort(function (a, b) {
+    return b.bounded - a.bounded || a.id.localeCompare(b.id);
   });
 }
 
