@@ -19,7 +19,8 @@
  * So the table below is the enum, `disposition` is what equations.ts will do
  * with each kind, and the three checks assert the table, the catalog and
  * AUTHORITATIVE_KINDS all still describe the same six strings. */
-import { AUTHORITATIVE_KINDS } from './equations';
+import { AUTHORITATIVE_KINDS, EQUATIONS } from './equations';
+import { parseNum } from './phase-targets';
 import { QUALITY_DATA } from './quality';
 import type { QualityData } from './quality-data';
 
@@ -83,6 +84,81 @@ export function unproducedRolloutKinds(Q: QualityData = QUALITY_DATA): string[] 
   return Object.keys(ROLLOUT_KINDS)
     .filter((k) => ROLLOUT_KINDS[k].disposition !== 'replaced' && !live.has(k))
     .sort();
+}
+
+/* R151 + R277 [§S3]: parseNum takes the FIRST numeric token in a string, and
+ * nothing said which strings that is safe on.
+ *
+ * Two outcomes are silent today. A target that does not parse routes its
+ * metric to the qualitative ladder with no error; a target that parses the
+ * WRONG number anchors a whole trajectory to it. Both are decided by the
+ * catalog's prose, which the audit does not control.
+ *
+ * Measured across the 130 KPP/TPP maturity targets:
+ *   - 7 do not parse: KPP-D1 to D7, the "to be calibrated" outcome metrics.
+ *     Every one of them carries a `template` on its equation, which is the
+ *     declared mechanism for a target with no numeric scaffold. So the null
+ *     result is not silent after all - it is corroborated by a second signal,
+ *     and NON_PARSING_IS_TEMPLATED asserts the two sets agree.
+ *   - 1 parses a number a reader would not pick: KPP-C2's target reads "to be
+ *     reconciled with $4.75T total system cost and current population
+ *     denominator", and the parser returns 4.75 with unit 'money' - a national
+ *     total in trillions read as a per-person dollar figure. BQ9 filed this
+ *     hazard as demonstrated but unverified. It is live, on a maturity target,
+ *     and it is used as a clamping anchor. R233 stops it being used; this
+ *     declares it so it cannot be rediscovered as new. */
+export const DECLARED_TARGET_MISPARSES: Record<string, string> = {
+  'KPP-C2': 'the target names $4.75T of national system cost, not a per-person ' +
+    'dollar target; parseNum returns 4.75 money. The equation carries a template, ' +
+    'so the parse is not used to render the value, and R233 keeps it out of the ' +
+    'anchor set.'
+};
+
+/* A maturity target that parses to something a reader would not pick, and that
+   nobody has declared. Two shapes are caught: a calendar year read as a value,
+   and a template metric whose target parses at all - a template says the
+   catalog string has no numeric scaffold, so a parse from it is incidental. */
+export function undeclaredTargetMisparses(Q: QualityData = QUALITY_DATA): string[] {
+  const out: string[] = [];
+  for (const p of Q.parameters) {
+    if (p.type === 'CP') continue;
+    if (DECLARED_TARGET_MISPARSES[p.id]) continue;
+    const meta = parseNum(p.target);
+    if (!meta) continue;
+    const d = EQUATIONS[p.id];
+    if (d && d.template) out.push(p.id + ': templated target parses as ' + meta.num + ' ' + meta.unit);
+    else if (meta.num >= 1900 && meta.num <= 2100 && /\(|\)/.test(p.target)) {
+      out.push(p.id + ': parses a calendar-shaped ' + meta.num + ' from a parenthetical');
+    }
+  }
+  return out.sort();
+}
+
+/* A declared misparse that no longer reproduces. Keeps the list from
+   outliving the prose it describes. */
+export function staleTargetMisparses(Q: QualityData = QUALITY_DATA): string[] {
+  const byId = new Map(Q.parameters.map((p) => [p.id, p]));
+  return Object.keys(DECLARED_TARGET_MISPARSES).filter((id) => {
+    const p = byId.get(id);
+    if (!p) return true;
+    const meta = parseNum(p.target);
+    const d = EQUATIONS[id];
+    return !meta || !d || !d.template;
+  }).sort();
+}
+
+/* Every KPP/TPP whose maturity target does not parse must carry a template.
+   That is what turns "the parser returned null" from a silent reroute into a
+   corroborated decision - two independent signals saying the same thing. */
+export function unTemplatedNonParsingTargets(Q: QualityData = QUALITY_DATA): string[] {
+  const out: string[] = [];
+  for (const p of Q.parameters) {
+    if (p.type === 'CP') continue;
+    if (parseNum(p.target)) continue;
+    const d = EQUATIONS[p.id];
+    if (!d || !d.template) out.push(p.id);
+  }
+  return out.sort();
 }
 
 /* The table's 'authoritative' set and equations.ts's AUTHORITATIVE_KINDS are

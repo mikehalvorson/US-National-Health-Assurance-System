@@ -1,4 +1,4 @@
-/* R147 [§S3] — what stage one of the pipeline actually contributes.
+/* R147 [§S3] : what stage one of the pipeline actually contributes.
  *
  * phase-targets.ts derives an interim value for every phase a metric is
  * measurable at, from thirteen entry-floor constants plus linear interpolation.

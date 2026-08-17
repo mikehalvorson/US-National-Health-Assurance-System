@@ -1,4 +1,4 @@
-/* R228 [§S3] — the rollout `kind` vocabulary.
+/* R228 [§S3] : the rollout `kind` vocabulary.
  *
  * The row asked a question before it asked for code: does phase-targets.ts tag
  * every value derived from entryNum() as 'derived interim target'? Measured:
@@ -14,9 +14,13 @@
 import { describe, expect, test } from 'vitest';
 import type { QualityData } from '../../src/lib/quality-data';
 import { QUALITY_DATA } from '../../src/lib/quality';
-import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
+import { AUTHORITATIVE_KINDS, EQUATIONS } from '../../src/lib/equations';
+import { parseNum } from '../../src/lib/phase-targets';
+import { PARSER_HOME, parserImplementations } from '../../src/lib/manifest-check';
 import {
-  authoritativeKindDrift, ROLLOUT_KINDS, undeclaredRolloutKinds, unproducedRolloutKinds
+  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, ROLLOUT_KINDS, staleTargetMisparses,
+  undeclaredRolloutKinds, undeclaredTargetMisparses, unproducedRolloutKinds,
+  unTemplatedNonParsingTargets
 } from '../../src/lib/rollout-kind-check';
 
 function catalogWithKinds(kinds: string[]): QualityData {
@@ -81,5 +85,68 @@ describe('R228: the rollout kind vocabulary', () => {
         expect(preserved || isEngineOutput, p.id + ' ' + e.kind).toBe(true);
       }
     }
+  });
+});
+
+/* R151 + R277 [§S3]: one parser, and its two silent outcomes made loud. */
+describe('R277: the target parser has one implementation', () => {
+  test('parseNum is defined exactly once, in phase-targets.ts', () => {
+    expect(parserImplementations()).toEqual([PARSER_HOME]);
+  });
+
+  test('fmea.ts scores from the shared parser', async () => {
+    /* The former mirror was invisible because both copies agreed. What the
+       scan protects is a third copy appearing, not a disagreement today. */
+    const fmea = await import('../../src/lib/fmea');
+    expect(fmea.FMEA_DATA.records.length).toBeGreaterThan(1000);
+  });
+});
+
+describe('R151: parse outcomes are declared, not silent', () => {
+  test('every target that does not parse carries an equation template', () => {
+    expect(unTemplatedNonParsingTargets()).toEqual([]);
+  });
+
+  test('the non-parsing targets are the seven deferred outcome metrics', () => {
+    const nonParsing = QUALITY_DATA.parameters
+      .filter((p) => p.type !== 'CP' && !parseNum(p.target))
+      .map((p) => p.id)
+      .sort();
+    expect(nonParsing).toEqual([
+      'KPP-D1', 'KPP-D2', 'KPP-D3', 'KPP-D4', 'KPP-D5', 'KPP-D6', 'KPP-D7'
+    ]);
+  });
+
+  test('an untemplated non-parsing target is reported', () => {
+    const bad = {
+      parameters: [{ id: 'TPP-1.1', type: 'TPP', target: 'to be decided later', rollout: [] }]
+    } as unknown as QualityData;
+    /* TPP-1.1 has an equation with no template, so a prose target on it is
+       exactly the silent reroute to QUAL_LADDER the row is about. */
+    expect(EQUATIONS['TPP-1.1'].template).toBeUndefined();
+    expect(unTemplatedNonParsingTargets(bad)).toEqual(['TPP-1.1']);
+  });
+
+  test('KPP-C2 misparses, and the misparse is declared', () => {
+    const p = QUALITY_DATA.parameters.find((x) => x.id === 'KPP-C2')!;
+    const meta = parseNum(p.target)!;
+    /* $4.75T of national system cost, read as a per-person dollar target. */
+    expect(meta.num).toBe(4.75);
+    expect(meta.unit).toBe('money');
+    expect(DECLARED_TARGET_MISPARSES['KPP-C2']).toBeDefined();
+    expect(undeclaredTargetMisparses()).toEqual([]);
+    expect(staleTargetMisparses()).toEqual([]);
+  });
+
+  test('an undeclared templated target that parses is reported', () => {
+    const bad = {
+      parameters: [{
+        id: 'KPP-D1', type: 'KPP',
+        target: 'reduction to be calibrated against the 2024 baseline', rollout: []
+      }]
+    } as unknown as QualityData;
+    expect(undeclaredTargetMisparses(bad)).toEqual([
+      'KPP-D1: templated target parses as 2024 plain'
+    ]);
   });
 });

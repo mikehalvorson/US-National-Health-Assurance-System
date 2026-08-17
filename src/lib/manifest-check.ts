@@ -72,6 +72,30 @@ export function manifestDrift(actual: string[] = enumerateSourceFiles()): Manife
   };
 }
 
+/* R277 [§S3]: the target parser has one implementation.
+ *
+ * phase-targets.ts owned the original, equations.ts imported it, and fmea.ts
+ * reimplemented it under a comment reading "mirrors phase-targets.ts
+ * parseNum". Two implementations, three consumers, nothing asserting they
+ * agreed - so every robustness concern about the parser applied twice,
+ * independently, and the copies could drift without a symptom.
+ *
+ * A source scan rather than a runtime comparison, because the failure mode is
+ * a second implementation existing at all. Comparing outputs would only catch
+ * a copy that had ALREADY diverged. */
+const PARSER_DEFINITION = /\bfunction parseNum\s*\(/g;
+export const PARSER_HOME = 'phase-targets.ts';
+
+export function parserImplementations(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/') || !rel.endsWith('.ts')) continue;
+    const text = readFileSync(join(root, rel), 'utf8');
+    for (const _ of text.matchAll(PARSER_DEFINITION)) out.push(rel.slice('src/lib/'.length));
+  }
+  return out.sort();
+}
+
 /* R206 [§S0]: no self-test surface outside the registry.
  *
  * R24 unified the three shapes that existed. This stops a fourth appearing:

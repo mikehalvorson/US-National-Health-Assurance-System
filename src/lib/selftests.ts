@@ -15,12 +15,14 @@ import {
 import { QUALITY_DATA } from './quality';
 import { AUTHORITATIVE_KINDS, computeTargets, equationSelfTests } from './equations';
 import {
-  authoritativeKindDrift, ROLLOUT_KINDS, undeclaredRolloutKinds, unproducedRolloutKinds
+  authoritativeKindDrift, DECLARED_TARGET_MISPARSES, ROLLOUT_KINDS, staleTargetMisparses,
+  undeclaredRolloutKinds, undeclaredTargetMisparses, unproducedRolloutKinds,
+  unTemplatedNonParsingTargets
 } from './rollout-kind-check';
 import { fmeaSelfTests } from './fmea';
 import {
-  manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift,
-  retiredTreeCodeReferences, retiredTreeTargets, routeDrift,
+  manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
+  readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, routeDrift,
   statedChapterCountDrift, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
@@ -329,6 +331,37 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !drift.length,
           note: drift.join('; ') ||
             Object.keys(AUTHORITATIVE_KINDS).length + ' preserved by applyEquationTargets'
+        };
+      }),
+      /* R151 + R277 [§S3]: what the target parser does, said out loud. */
+      runGuarded('The target parser has one implementation', () => {
+        const found = parserImplementations();
+        return {
+          ok: found.length === 1 && found[0] === PARSER_HOME,
+          note: found.length === 1 && found[0] === PARSER_HOME
+            ? 'parseNum defined once, in ' + PARSER_HOME
+            : 'defined in: ' + (found.join(', ') || 'nowhere')
+        };
+      }),
+      runGuarded('Every target that does not parse carries an equation template', () => {
+        const bad = unTemplatedNonParsingTargets();
+        return {
+          ok: !bad.length,
+          note: bad.length
+            ? 'no template, silently qualitative: ' + bad.join(', ')
+            : 'the 7 deferred outcome metrics, each templated'
+        };
+      }),
+      runGuarded('Every target that misparses is declared', () => {
+        const undeclared = undeclaredTargetMisparses();
+        const stale = staleTargetMisparses();
+        return {
+          ok: !undeclared.length && !stale.length,
+          note: [
+            undeclared.length ? 'undeclared: ' + undeclared.join('; ') : '',
+            stale.length ? 'declared but no longer misparsing: ' + stale.join(', ') : ''
+          ].filter(Boolean).join(' | ') ||
+            Object.keys(DECLARED_TARGET_MISPARSES).length + ' declared (KPP-C2)'
         };
       })
     ]

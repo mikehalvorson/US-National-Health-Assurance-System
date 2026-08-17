@@ -31,33 +31,18 @@
  * ========================================================================= */
 import { QUALITY_DATA } from './quality';
 import type { QualityParameter, RolloutEntry } from './quality-data';
+/* R277 [§S3]: this module used to carry its own copy of parseNum under a
+   comment reading "mirrors phase-targets.ts parseNum" - two implementations,
+   three consumers, and nothing asserting they agreed. phase-targets.ts owns
+   the parser; equations.ts already imported it; now so does this. */
+import { parseNum } from './phase-targets';
+import type { NumMeta } from './phase-targets';
 
 /* ---- Phase order and anchors ----------------------------------------- */
 const PHASE_ORDER = ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
 function pIdx(p: string): number { return PHASE_ORDER.indexOf(p); }
 const PHASE_ANCHOR: Record<string, string> = {};
 QUALITY_DATA.phases.forEach(function (ph) { PHASE_ANCHOR[ph.id] = ph.anchor; });
-
-/* ---- Numeric target parsing (mirrors phase-targets.ts parseNum) ------- */
-interface NumMeta { num: number; cmp: '>=' | '<=' | null; unit: string; }
-function parseNum(str: string | undefined): NumMeta | null {
-  if (!str) return null;
-  const m = str.match(/(median\s*)?(>=|<=|≥|≤)?\s*\$?([\d][\d,]*(?:\.\d+)?)/);
-  if (!m) return null;
-  const num = parseFloat(m[3].replace(/,/g, ''));
-  if (!isFinite(num)) return null;
-  const cmp: '>=' | '<=' | null = /≥|>=/.test(m[2] || '') ? '>=' : (/≤|<=/.test(m[2] || '') ? '<=' : null);
-  let unit = 'plain';
-  if (/%/.test(str)) unit = '%';
-  else if (/per 100,000/.test(str)) unit = 'per100k';
-  else if (/per 10,000/.test(str)) unit = 'per10k';
-  else if (/hours/.test(str)) unit = 'hours';
-  else if (/months/.test(str)) unit = 'months';
-  else if (/days/.test(str)) unit = 'days';
-  else if (/\$/.test(str)) unit = 'money';
-  else if (/percentage points/.test(str)) unit = 'pp';
-  return { num: num, cmp: cmp, unit: unit };
-}
 
 /* ---- Gate linkage: parameters the framework itself made go/no-go ------
  * Each phase gate (G1..G8) names the parameters whose floors it enforces
