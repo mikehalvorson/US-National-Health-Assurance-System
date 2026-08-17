@@ -103,7 +103,29 @@ export function withNum(template: string, num: number, meta: NumMeta): string {
   return t.replace(/([\d][\d,]*(?:\.\d+)?)/, txt);
 }
 
-/* entry-floor magnitude for a maturity value with no interior anchor */
+/* Entry-floor magnitude for a maturity value with no interior anchor.
+ *
+ * R147 [§S3] filed these thirteen constants as unsourced numbers setting the
+ * starting floor of ~94 public metric trajectories. Measured, they set none of
+ * them. Every row this function contributes to is tagged 'derived interim
+ * target', and equations.ts replaces every row carrying that kind with an
+ * equation value - all 538 of them, survivor count 0 (R228, R248).
+ *
+ * Proven rather than argued: replacing this whole function with `meta.num *
+ * 0.137` changes 0 of the 727 published rows. The constants are a SCAFFOLD -
+ * they give each phase a plausible row to exist at, and the row's value is
+ * overwritten before a reader sees it.
+ *
+ * They are kept rather than deleted because the scaffold is load-bearing: the
+ * entry anchor is what lets the interpolation below bracket the phases between
+ * the start phase and the first committed anchor. Without it those rows are
+ * never created, and the published count drops from 727. What a registry entry
+ * would document here is the shape of a placeholder, not the source of a
+ * number - so R147 closes as a measurement, not as thirteen citations.
+ *
+ * The inertness is pinned in tests/lib/phase-targets.test.ts. If an equation
+ * is ever lost or evaluates non-finite at a published phase, one of these
+ * numbers becomes visible, and that test is what says so. */
 function entryNum(meta: NumMeta): number {
   const M = meta.num, isMax = meta.cmp !== '<=';
   if (isMax) {
