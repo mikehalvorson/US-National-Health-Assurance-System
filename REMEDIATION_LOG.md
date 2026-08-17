@@ -930,3 +930,86 @@ recorded as `D30` to `D39` above. The rate is consistent with the `## P2` and
 - **The 14 non-finite cells are still 14 and still inert.** §S3 did not close
   them; they sit at phases earlier than their metric's `_phaseStart` and no
   rollout row exists at any of them. Making them finite remains open.
+
+### Post-section code review (two-axis, `373beca...HEAD`)
+
+Run after the log entry above, against the §S3 diff: 16 commits, 23 files.
+Standards and Spec as parallel sub-agents, reported separately and not merged.
+**Eight findings, all real, all fixed.** No published value moved: 727 rows and
+1,037 FMEA ranks identical to the P4 baseline after every fix.
+
+**Spec axis, 5 findings**
+
+- **`R277` clause 2 was never implemented.** The row says *"Collapse the third
+  `parseNum` into one shared parser, **and fix the first-number match**"*, with
+  the criterion `a target string containing a parenthetical year does not parse
+  the year as the value`. §S3 declared the misparse instead of fixing it, and
+  did not record the substitution - a deviation that should have been in
+  `D32`. Fixed for real (`c009ca2`): `parseNum` strips parenthetical spans
+  before matching, so the row's own worked example parses to null rather than
+  2024 in unit money. Measured first: of 1,207 live strings, three contain a
+  parenthesis and **zero** parses change.
+- **The misparse scan stopped at the 130 maturity targets.** `parseNum` is also
+  called on every rollout value inside `committedAnchors`, where a wrong number
+  becomes a clamping anchor rather than a displayed target. All 727 values are
+  scanned now.
+- **`R277` clause 3's substitute scan was too narrow.** `\bfunction parseNum\s*\(`
+  would not see `const parseNum = (…) => …`, which is how the mirror it exists
+  to prevent would be written today. Widened, and the pattern is exported so
+  the test exercises it on four positive and two negative forms.
+- **`R148`'s test asserted the fix, not the criterion.** The row's column says
+  `implied annual improvement rate is monotone across a derived trajectory, or
+  the variation is declared`; the test asserted that values sit nearer the
+  calendar convention than the index one. The criterion is asserted directly
+  now: within a bracket the implied ANNUAL rate is constant, and the
+  across-bracket variation is declared, because each bracket runs between two
+  different committed anchors.
+- **`R231` added a silence.** `if (!isFinite(v)) return;` entered the
+  maturity-closure loop unasked. Before it, a NaN at P8 reported as "computed
+  NaN"; the early return replaced a loud wrong answer with nothing, in the one
+  section whose subject was silences. It reports explicitly now (`0a8b0d9`),
+  and the test constructs the state with a temporary division-by-zero equation
+  rather than describing it.
+- Plus one prose defect: the raw-value strip head said clamped phases were
+  *"marked there"*, pointing at the strip it heads, which has no markers.
+
+**Standards axis, 3 documented-standard findings**
+
+- **Two checks were registered under a module that does not contain them.**
+  `undeclaredEnrichers` and `parserImplementations` live in `manifest-check.ts`
+  and sat under `surface: 'rollout-kind-check.ts'`. `surface` is what R206
+  compares against when hunting orphaned harnesses, so mis-attributing one is
+  the same class of drift R206 exists to stop. **The hard finding of the pass.**
+- **The parser scan mislabelled its own findings.** It filtered on `src/` and
+  labelled with `rel.slice('src/lib/'.length)`, so a copy in `src/scripts/`
+  would report as `ipts/foo.ts`. The gate still fired - it fires on the count -
+  but the note is the only part that says WHERE the copy is.
+- **A drift check typed the value it exists to keep from drifting.** The kappa
+  registry row's note read `'graded low'` as a literal beside an imported
+  `KAPPA_CONFIDENCE`.
+
+**Seven baseline smells, all fixed** (`a5374a2`): the declared-versus-live
+comparison written six times (now `declared-sets.ts`); the CP-skipping catalog
+walk written nine times (now `quality.ts`); `rollout-kind-check.ts` carrying two
+subjects (parser half split to `target-parse-check.ts`); seven `KAPPA_*`
+constants travelling as a block (now `KAPPA_CALIBRATION`); a Middle Man
+`documentedGap(p)`; and `anchorUnit`, which returned a `NumMeta` every caller
+renamed `matMeta` (now `anchorMatchTarget`).
+
+Extracting the declared-versus-live helper surfaced something worth keeping:
+`undeclaredRelevanceFallbacks` and `staleRelevanceFallbacks` looked like
+different questions and are the two directions of one set difference against
+"the ids that reach the fallback". The three-clause version was the same
+comparison spelled twice.
+
+**What the review says about the section's own discipline.** Two of the eight
+findings are checks that could not do their job, and one of those - R232's
+source assertion, caught and fixed in-session at `a71d57a` - could not fail at
+all. That is `R43`'s defect three times in four sections. The other lesson
+repeated itself twice more this pass: **`git checkout -- <path>` discarded
+uncommitted work again**, once on R150's edits and once on the parser change.
+Commit, then prove the gate. There is no version of this that is remembered
+rather than enforced by ordering.
+
+Registry unchanged at 78; `astro check` 0 errors, 0 warnings, 3 pre-existing
+hints; 329 tests pass.
