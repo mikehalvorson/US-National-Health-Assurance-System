@@ -13,7 +13,11 @@ import {
   staleRelevanceFallbacks, undeclaredRelevanceFallbacks
 } from './phase-targets';
 import { QUALITY_DATA } from './quality';
-import { AUTHORITATIVE_KINDS, computeTargets, equationSelfTests } from './equations';
+import {
+  AUTHORITATIVE_KINDS, computeTargets, equationSelfTests,
+  KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE
+} from './equations';
+import { calibrationDrift, kappaBand, kappaRegistryGaps, kappaTableDrift } from './kappa-check';
 import {
   authoritativeKindDrift, DECLARED_TARGET_MISPARSES, ROLLOUT_KINDS, staleTargetMisparses,
   undeclaredRolloutKinds, undeclaredTargetMisparses, unproducedRolloutKinds,
@@ -300,6 +304,38 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: p.length === 0,
           note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+        };
+      })
+    ]
+  },
+  {
+    /* R227 [§S3]: one fitted scalar shapes the interior of most of the 130
+       trajectories. Its source, its grade and its band are all checked. */
+    surface: 'kappa-check.ts',
+    rows: () => [
+      runGuarded('KAPPA still follows from the gate floor it was fitted to', () => {
+        const drift = calibrationDrift();
+        return {
+          ok: !drift.length,
+          note: drift.map((d) => d.what + ': expected ' + d.expected + ', found ' + d.found)
+            .join('; ') ||
+            'GATES[' + KAPPA_SOURCE_GATE + '] at ' + KAPPA_SOURCE_FLOOR_PCT + '% gives KAPPA = ' + KAPPA_VALUE
+        };
+      }),
+      runGuarded('KAPPA carries a registry entry with its source and grade', () => {
+        const gaps = kappaRegistryGaps();
+        return {
+          ok: !gaps.length,
+          note: gaps.join('; ') || 'registered, sourced to GATES[' + KAPPA_SOURCE_GATE + '], graded low'
+        };
+      }),
+      runGuarded('The published KAPPA sensitivity band matches the model', () => {
+        const drift = kappaTableDrift();
+        return {
+          ok: !drift.length,
+          note: drift.length
+            ? drift.length + ' row(s) not in the methodology: ' + drift.join(' ')
+            : kappaBand().map((r) => r.kappa + ': ' + r.metricsMoved + ' metrics move').join(', ')
         };
       })
     ]

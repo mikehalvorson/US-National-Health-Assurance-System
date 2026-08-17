@@ -70,14 +70,52 @@ The plan states exactly one controlled interior error floor with both a
 mature value and an interior value on the same metric: AI override/audit
 capture must reach 97% at P5 against 99% at maturity, with the driving
 infrastructure 75% built at P5. Three times the mature shortfall at 25%
-remaining build implies `F = 1 + kappa x 0.25 = 3`, so `kappa = 8`. That
-single sourced point calibrates the immaturity inflation for the whole
-catalog. Confidence: medium (one calibration point, applied uniformly).
+remaining build implies `F = 1 + kappa x 0.25 = 3`, so `kappa = 8`.
+
+The source is `GATES[G5]`, *AI safety readiness*: "High-stakes human review
+and audit capture >=97%". That is a controlled gate floor, not an invented
+anchor, and `kappa-check.ts` re-derives the constant from the gate's own
+floor text at build time, so a change to the gate invalidates the
+calibration instead of leaving it stale.
+
+**The exposure, stated plainly.** One scalar, fitted to one observation on
+one metric, sets the interior shape of the ceiling and error forms, and
+those two forms cover most of the catalog. A one-parameter model through one
+point fits that point exactly by construction, so nothing in the calibration
+distinguishes 8 from 5 or 12 on any metric other than the one it was fitted
+to. There is no argument that ambulance response times share a curvature
+with AI oversight capture. Confidence: low (one calibration point, applied
+uniformly, with no second observation to test it against).
+
+#### Sensitivity band
+
+The whole catalog recomputed at half and double the fitted value. Maturity
+values are unchanged by construction at every setting, which is why the
+constant was invisible to the one self-test that looked at it, so the table
+covers interior phases only, from each metric's own start phase to P7.
+
+| kappa | Metrics moved (of 130) | Median shift | 90th pct shift | Widest single interim target |
+| --- | --- | --- | --- | --- |
+| 4 | 102 | 1.5% | 35.7% | `TPP-8.1@P3`, <=43.2% to <=22.4% |
+| **8** (fitted) | 0 | 0.0% | 0.0% | `TPP-1.1@P1`, >=98.4% to >=98.4% |
+| 16 | 102 | 3.1% | 76.2% | `TPP-8.1@P3`, <=43.2% to <=84.8% |
+
+Read the last column first: the training-slot vacancy ceiling at P3 is
+`<=43.2%` as published, `<=22.4%` if the multiplier is 4 and `<=84.8%` if it
+is 16. That is the honest width of an interim target whose calibration rests
+on a single point about a different subsystem. 102 of the 130 metrics move
+somewhere in their interior; the median cell moves a few percent, and the
+top decile moves by a third to three quarters.
+
+The rows above are rendered from the model by `kappa-check.ts` and checked
+against this file at build time, so the published band cannot drift from the
+constant it describes.
 
 ## Constants that are not cost-model parameters
 
 | Constant | Used in | Source | Confidence |
 | --- | --- | --- | --- |
+| `kappa = 8` immaturity stress multiplier | the ceiling and error forms, so the interior of most of the 130 trajectories | `GATES[G5]`, AI safety readiness: high-stakes human review and audit capture >=97% at P5 against 99% at maturity, infrastructure 75% built. One observation; see the sensitivity band above | low |
 | 8.0% baseline uninsured share | KPP-A1 | 26.7M uninsured / 334M population (KFF/Census 2024; CMS population) | high |
 | 17.6% baseline health share of GDP | KPP-C1 | CMS NHE 2023 | high |
 | $14,950 baseline per-person cost (2024$) | KPP-C2 | CMS NHE 2023 ($14,570 in 2023$), deflated at 2.6% | high |

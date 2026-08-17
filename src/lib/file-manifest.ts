@@ -58,6 +58,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/growth-decomp.ts',
   'src/lib/hardening.ts',
   'src/lib/household.ts',
+  'src/lib/kappa-check.ts',
   'src/lib/legislation.ts',
   'src/lib/ltc.ts',
   'src/lib/manifest-check.ts',

@@ -47,7 +47,10 @@ export type ModelId = 'util' | 'trainProg' | 'year' | 'costRatio'
   | 'adminShare' | 'pubCost' | 'newRev' | 'wealthRev' | 'houseRelief' | 'wageGain';
 
 export type ExprNode =
-  | { k: 'num'; v: number; label: string }
+  /* `kappa` marks the one leaf whose value is a sensitivity knob rather than a
+     fixed number: it is read from the active setting at evaluation time so the
+     model can be run at other values (R227). Every other num node is its v. */
+  | { k: 'num'; v: number; label: string; kappa?: boolean }
   | { k: 'param'; id: string }
   | { k: 'ramp'; id: RampId }
   | { k: 'model'; id: ModelId }
@@ -86,8 +89,53 @@ function mx(...args: ExprNode[]): ExprNode { return { k: 'max', args: args }; }
 function b8(of: ExprNode): ExprNode { return { k: 'base8', of: of }; }
 function bp(of: ExprNode): ExprNode { return { k: 'basep', of: of }; }
 
+/* R227 [§S3]: the immaturity stress multiplier.
+ *
+ * KAPPA sets the interior shape of the `ceiling` and `errors` forms, which
+ * between them cover most of the 130 metrics. It is fitted to ONE observation:
+ * the controlled AI-oversight floor, 97% at P5 against 99% at maturity with
+ * the records and AI infrastructure 75% built - three times the mature
+ * shortfall at 25% remaining build, so 1 + KAPPA x 0.25 = 3 and KAPPA = 8.
+ *
+ * The arithmetic is correct and the observation is real: it is GATES[G5],
+ * "High-stakes human review and audit capture >=97%", a controlled gate floor
+ * rather than an invented anchor. The exposure is the finding. A one-parameter
+ * model through one point fits that point exactly by construction, so nothing
+ * in the calibration distinguishes 8 from 5 or 12 on any metric other than the
+ * one it was fitted to, and there is no argument that ambulance response times
+ * share a curvature with AI oversight capture.
+ *
+ * Its source, grade and sensitivity band are registered in
+ * research/quality-equation-methodology.md, checked against this constant by
+ * kappa-check.ts. KAPPA_SOURCE_GATE names the gate so a change to that floor
+ * invalidates the calibration loudly instead of leaving it stale. */
+export const KAPPA_VALUE = 8;
+export const KAPPA_SOURCE_GATE = 'G5';
+export const KAPPA_SOURCE_FLOOR_PCT = 97;
+export const KAPPA_MATURE_PCT = 99;
+export const KAPPA_BUILD_AT_P5 = 0.75;
+export const KAPPA_CONFIDENCE = 'low';
+/* The band published as the uncertainty range. Halving and doubling the
+   fitted value, because one observation gives no basis for a narrower one. */
+export const KAPPA_BAND = [4, 8, 16];
+
+/* The active value. Evaluation reads this rather than a baked-in 8, so the
+   whole catalog can be recomputed at another setting without rebuilding the
+   expression trees. Restored by withKappa's finally, so no caller can leave
+   the model on a different constant. */
+let activeKappa = KAPPA_VALUE;
+export function currentKappa(): number { return activeKappa; }
+export function withKappa<T>(k: number, run: () => T): T {
+  const prev = activeKappa;
+  activeKappa = k;
+  try { return run(); } finally { activeKappa = prev; }
+}
+
 function KAPPA(): ExprNode {
-  return n(8, 'immaturity stress multiplier, calibrated from the controlled P5 AI-oversight floor');
+  return {
+    k: 'num', v: KAPPA_VALUE, kappa: true,
+    label: 'immaturity stress multiplier, calibrated from the controlled P5 AI-oversight floor'
+  };
 }
 /* F(t) = 1 + KAPPA * (1 - S) */
 function stressF(S: ExprNode): ExprNode {
@@ -1178,7 +1226,7 @@ const evalMemo: Record<string, number> = {};
 function evalExpr(x: ExprNode, scenarioId: string, t: number, stack: Record<string, boolean>): number {
   const ctx = scnCtx(scenarioId);
   switch (x.k) {
-    case 'num': return x.v;
+    case 'num': return x.kappa ? activeKappa : x.v;
     case 'param': return ctx.P[x.id];
     case 'ramp': return rampAt(ctx, x.id, t);
     case 'model': return modelAt(ctx, x.id, t);
@@ -1201,7 +1249,10 @@ export function evaluateEquation(
   id: string, scenarioId: string, t: number,
   stack?: Record<string, boolean>
 ): number {
-  const key = scenarioId + '|' + t + '|' + id;
+  /* The active kappa is part of the key: the same metric at the same phase is
+     a different number under a different setting, and the sensitivity run
+     would otherwise read the base case back out of the cache. */
+  const key = scenarioId + '|' + t + '|' + id + '|' + activeKappa;
   if (evalMemo[key] !== undefined) return evalMemo[key];
   const s = stack || {};
   const sKey = id + '@' + scenarioId + '@' + t;

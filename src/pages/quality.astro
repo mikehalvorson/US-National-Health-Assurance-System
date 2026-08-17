@@ -1,6 +1,17 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R227 [§S3]: the interior of every trajectory rests on one fitted scalar, and
+   until now the page published the results without saying so. Every figure in
+   the note below is read from the model, never typed. */
+import {
+  KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE
+} from '../lib/equations';
+import { kappaBand } from '../lib/kappa-check';
+import { QUALITY_DATA } from '../lib/quality';
+
+const kppTppCount = QUALITY_DATA.parameters.filter((p) => p.type !== 'CP').length;
+const kappaMetricsMoved = Math.max(...kappaBand().map((r) => r.metricsMoved));
 ---
 <BaseLayout title="National Health Assurance: Quality">
   <main>
@@ -99,6 +110,17 @@ import ChapterNav from '../components/ChapterNav.astro';
       </label>
     </div>
     <p id="quality-eq-groupdesc" class="note quality-eq-groupdesc"></p>
+    <p class="note">How far short of maturity a target sits at each interior
+      phase is set by one number, the immaturity stress multiplier
+      (kappa = {KAPPA_VALUE}). It is fitted to a single controlled
+      observation: Gate {KAPPA_SOURCE_GATE} requires high-stakes AI review and
+      audit capture of {KAPPA_SOURCE_FLOOR_PCT}% at P5 against
+      {KAPPA_MATURE_PCT}% at maturity. Maturity targets do not depend on it;
+      every interim target on {kappaMetricsMoved} of the {kppTppCount} metrics
+      does. At half and double that multiplier the typical interim target
+      moves a few percent and the widest moves a great deal more, which is
+      published as a sensitivity band in the methodology. Nothing else in the
+      plan tests the choice.</p>
     <div class="quality-eq-legend" aria-hidden="true">
       <span class="quality-eq-chip chip-param">cost model input</span>
       <span class="quality-eq-chip chip-ramp">rollout build state</span>
