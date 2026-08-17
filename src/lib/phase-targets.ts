@@ -5,6 +5,7 @@
    parameters in place; run once. Fidelity-critical: do not re-derive. */
 import type { QualityData, QualityParameter } from './quality-data';
 import type { DataPhase } from './data-phases';
+import { PHASE_YEAR } from './rollout';
 
 const PHASES = ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
 function pIdx(p: string): number { return PHASES.indexOf(p); }
@@ -295,7 +296,13 @@ export function applyPhaseTargets(Q: QualityData, D: DataPhase[]): void {
       });
       if (lo === null || hi === null || lo === hi) continue;
       const loK: string = lo, hiK: string = hi;
-      const f = (i - pIdx(loK)) / (pIdx(hiK) - pIdx(loK));
+      /* R148 [§S3]: interpolate on the calendar, not on the phase's position in
+         the list. The phases are unevenly spaced - P3 is Year 4, P4 is Year 6,
+         P7 is Year 10, P8 is Year 12 - so dividing by the index gives every
+         phase step the same increment and silently halves the implied annual
+         rate of improvement across P3-P4, P6-P7 and P7-P8. PHASE_YEAR is the
+         one map (R251), imported rather than re-derived. */
+      const f = (PHASE_YEAR[phase] - PHASE_YEAR[loK]) / (PHASE_YEAR[hiK] - PHASE_YEAR[loK]);
       const num = anchors[loK].num + (anchors[hiK].num - anchors[loK].num) * f;
       p.rollout.push({ phase: phase, gate: '', kind: 'derived interim target',
         value: withNum(p.target, num, mat),

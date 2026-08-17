@@ -13,8 +13,9 @@
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import type { QualityData } from '../../src/lib/quality-data';
 import { DATA_PHASES } from '../../src/lib/data-phases';
-import { applyPhaseTargets } from '../../src/lib/phase-targets';
+import { applyPhaseTargets, parseNum } from '../../src/lib/phase-targets';
 import { QUALITY_DATA } from '../../src/lib/quality';
+import { PHASE_YEAR } from '../../src/lib/rollout';
 
 /* A catalog carrying stage one only.
  *
@@ -92,6 +93,57 @@ describe('R147: the entry floors and the interpolation are a replaced scaffold',
       const kind = published.get(r.id + '@' + r.phase);
       expect(kind, r.id + '@' + r.phase).toBe('equation-derived target');
     }
+  });
+
+  test('R148: interpolation divides by years, not by phase index', () => {
+    /* Every interpolated row names its own bracketing anchors, so each one can
+       be recomputed from the two anchor values and checked against both
+       conventions. The phases are unevenly spaced, so the two disagree
+       wherever a bracket spans a two-year step. */
+    const PHASES = Object.keys(PHASE_YEAR);
+    const rowsById = new Map<string, Map<string, string>>();
+    for (const p of stage1.parameters) {
+      const m = new Map<string, string>();
+      for (const e of (p.rollout || [])) m.set(e.phase, e.value);
+      rowsById.set(p.id, m);
+    }
+
+    let checked = 0, discriminating = 0;
+    for (const p of stage1.parameters) {
+      if (p.type === 'CP') continue;
+      const mat = parseNum(p.target);
+      if (!mat) continue;
+      for (const e of (p.rollout || [])) {
+        const m = /^Derived: linear interpolation between the (P\d) and (P\d) anchors/
+          .exec(e.interpretation || '');
+        if (!m) continue;
+        const [, loK, hiK] = m;
+        const rows = rowsById.get(p.id)!;
+        const lo = parseNum(rows.get(loK)), hi = parseNum(rows.get(hiK));
+        const got = parseNum(e.value);
+        if (!lo || !hi || !got) continue;
+
+        const fYear = (PHASE_YEAR[e.phase] - PHASE_YEAR[loK]) / (PHASE_YEAR[hiK] - PHASE_YEAR[loK]);
+        const fIdx = (PHASES.indexOf(e.phase) - PHASES.indexOf(loK)) /
+          (PHASES.indexOf(hiK) - PHASES.indexOf(loK));
+        const byYear = lo.num + (hi.num - lo.num) * fYear;
+        const byIndex = lo.num + (hi.num - lo.num) * fIdx;
+        checked += 1;
+        /* withNum rounds to the maturity target's own precision - integers
+           above 1,000 - so the comparison is which convention the published
+           number is nearer to, not an exact match against either. */
+        const spread = Math.abs(byYear - byIndex);
+        if (spread <= Math.max(0.06, Math.abs(byYear) * 0.002)) continue;
+        discriminating += 1;
+        const label = p.id + ' ' + e.phase + ' (' + loK + '-' + hiK + '): ' + got.num +
+          ' vs year ' + byYear.toFixed(2) + ' / index ' + byIndex.toFixed(2);
+        expect(Math.abs(got.num - byYear), label).toBeLessThan(Math.abs(got.num - byIndex));
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+    /* Without this the assertions above could all be vacuous: a corpus where
+       the two conventions never differ would pass either implementation. */
+    expect(discriminating).toBeGreaterThan(20);
   });
 
   test('stage one and stage two produce the same number of rows', () => {
