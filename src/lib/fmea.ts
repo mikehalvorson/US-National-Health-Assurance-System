@@ -56,6 +56,8 @@ import type { NumMeta } from './phase-targets';
  *                        equation layer recomputed. See TARGET_PROVENANCE. */
 import { PHASE_YEAR } from './rollout';
 import { AUTHORITATIVE_KINDS } from './equations';
+/* R275 [§S4]: the one confidence store. See CP_FAMILY_MODEL_INPUTS. */
+import { PARAM_DEFS, PARAMS_BY_ID } from './params';
 
 /* ---- Phase order and anchors ----------------------------------------- */
 const PHASE_ORDER: string[] = Object.keys(PHASE_YEAR)
@@ -175,21 +177,99 @@ function effectClassFor(p: QualityParameter): string {
   return CONCEPT_CLASS[p.concept] || 'governance';
 }
 
-/* ---- CP calibration confidence imported from the simulation layer ------
+/* ---- CP calibration confidence read from the simulation layer ----------
  * Cost parameters carry no phase target and no native likelihood attribute.
- * The only likelihood signal available is the confidence grade of the
- * modeled quantity each CP family calibrates (see params.ts). We map that
- * grade to an occurrence score. Where a family has no modeled analogue the
- * occurrence is unassessable and the FMEA reports a parameter gap instead
- * of guessing. */
-const CP_FAMILY_CONFIDENCE: Record<string, 'low' | 'medium' | 'high'> = {
-  'CP-TOT': 'medium', 'CP-POP': 'high', 'CP-CLM': 'medium', 'CP-HOSP': 'medium',
-  'CP-CLIN': 'medium', 'CP-UNIT': 'low', 'CP-LTC': 'low', 'CP-RX': 'medium',
-  'CP-DX': 'medium', 'CP-BH': 'medium', 'CP-DVH': 'medium', 'CP-EMS': 'medium',
-  'CP-PH': 'medium', 'CP-IT': 'low', 'CP-GOV': 'medium', 'CP-RD': 'medium',
-  'CP-EDU': 'medium', 'CP-TRN': 'low', 'CP-FIN': 'medium', 'CP-OFF': 'medium'
+ * The only likelihood signal available is the confidence grade of the modeled
+ * quantity each CP family calibrates, and that grade lives in params.ts.
+ *
+ * R275 [§S4]: it used to be retyped here. Twenty family grades sat under a
+ * comment reading "see params.ts" and were not read from params.ts, so two
+ * confidence stores existed with nothing reconciling them, and this one was
+ * per-family where the real grades are per-parameter. What is declared here
+ * now is a list of IDENTIFIERS, not of grades: which sampled parameters enter
+ * each family's ledger line in model.ts. Identifiers can be checked against
+ * PARAMS_BY_ID in both directions and the build fails on a typo or an
+ * unclaimed parameter; grades could only be compared by eye, and were not.
+ *
+ * The consequence that matters: a regrade in params.ts now moves this chart.
+ * The audit's own complaints about these grades (E1 on the offsets lever, E2
+ * on population, D1/D2 on behavioral health) become one fix in one file
+ * instead of two, and §S11b owns it.
+ *
+ * The mapping rule, so the next parameter has an obvious home: name the
+ * parameters specific to that ledger's cost line in model.ts. Parameters that
+ * multiply every line, or no line, belong to no family and are declared in
+ * SYSTEM_WIDE_PARAMS instead - folding them in would flatten every family to
+ * the weakest grade in the model.
+ *
+ * A family with no parameterised line in the engine is UNASSESSABLE, and that
+ * is not a hypothetical: CP-DX has none. Devices, labs and diagnostics reach
+ * the engine only inside otherPhc0, a carried-forward CMS aggregate with no
+ * sampled parameter of its own. Before this change all twenty families were
+ * in the map, so the branch reporting an unassessable case could never run -
+ * an honesty mechanism written and unreachable. */
+const CP_FAMILY_MODEL_INPUTS: Record<string, string[]> = {
+  'CP-TOT':  ['baselineRealGrowth'],                    // nheBase = nheTotal * G
+  'CP-POP':  ['popGrowth', 'gdpRealGrowth'],            // pop, gdp
+  'CP-CLM':  ['publicAdminRate', 'legacyAdminFloor', 'providerAdminSavings'],
+  'CP-HOSP': ['providerPaymentFactor', 'embeddedDrugSpend'],  // cHosp
+  'CP-CLIN': ['providerPaymentFactor', 'embeddedDrugSpend'],  // cClin
+  'CP-UNIT': ['unitsCost'],                             // cUnits
+  'CP-LTC':  ['ltcExpansion', 'ltcWageFloor'],          // cLtc + cLtcAides
+  'CP-RX':   ['drugPriceCut', 'embeddedDrugSpend'],     // cDrugs
+  'CP-DX':   [],                                        // no parameterised line
+  'CP-BH':   ['bhExpansion'],                           // cBh
+  'CP-DVH':  ['dvhExpansion'],                          // cDvh
+  'CP-EMS':  ['emsPhExpansion'],                        // cEmsPh, shared with CP-PH
+  'CP-PH':   ['emsPhExpansion'],                        // cEmsPh, shared with CP-EMS
+  'CP-IT':   ['itOperating', 'itCapital'],              // cItOp + itcap
+  'CP-GOV':  ['governanceRate'],                        // govCost
+  'CP-RD':   ['rdPublic'],                              // cRd
+  'CP-EDU':  ['workforceEdu'],                          // cWf
+  'CP-TRN':  ['transitionTotal', 'itCapital'],          // trans + itcap
+  'CP-FIN':  ['employerCapture', 'wagePassThrough', 'wealthTaxPotential', 'wealthCollectionEff'],
+  'CP-OFF':  ['providerAdminSavings', 'careModelSavings', 'lowValueCapture', 'extractionSavings']
 };
-const CONF_TO_OCC: Record<string, number> = { low: 4, medium: 3, high: 2 };
+/* Parameters that shape demand or the public/private split across every
+   ledger at once, so no single family's calibration confidence is theirs. */
+const SYSTEM_WIDE_PARAMS: string[] = [
+  'utilIncrease', 'coverageDemandShare', 'residualPrivateShare'
+];
+
+/* Grades ordered weakest to strongest. The compound grades are not in
+   params.ts's PARAM_DEFS today - they appear in OUTCOME_STATS and in the seed
+   CSV - but they are in the project's vocabulary, so they are mapped here
+   rather than left to resolve to undefined if §S11a or §S11b widens the type.
+   A compound grade rounds toward its weaker half, which is the conservative
+   direction for an occurrence score. */
+const GRADE_RANK: Record<string, number> = {
+  low: 0, 'low-medium': 1, medium: 2, 'medium-high': 3, high: 4
+};
+const CONF_TO_OCC: Record<string, number> = {
+  low: 4, 'low-medium': 4, medium: 3, 'medium-high': 3, high: 2
+};
+
+/* The weakest grade among a family's inputs: if any quantity calibrating the
+   ledger rests on an analyst assumption, the ledger is at least that
+   uncertain. Returns null where the family has no parameterised line. */
+function familyConfidence(family: string): string | null {
+  const ids = CP_FAMILY_MODEL_INPUTS[family];
+  if (!ids || !ids.length) return null;
+  let weakest: string | null = null;
+  ids.forEach(function (id) {
+    const grade = PARAMS_BY_ID[id] && PARAMS_BY_ID[id].confidence;
+    if (!grade) return;
+    if (weakest === null || GRADE_RANK[grade] < GRADE_RANK[weakest]) weakest = grade;
+  });
+  return weakest;
+}
+function familyInputLabel(family: string): string {
+  const ids = CP_FAMILY_MODEL_INPUTS[family] || [];
+  return ids.map(function (id) {
+    const grade = (PARAMS_BY_ID[id] && PARAMS_BY_ID[id].confidence) || 'ungraded';
+    return id + ' (' + grade + ')';
+  }).join(', ');
+}
 
 /* ---- 5x5 risk grid: band per (consequence row, probability col) --------
  * Standard risk matrix. Rows are consequence 1..5, columns probability 1..5.
@@ -504,7 +584,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
 
   if (p.type === 'CP') {
     /* one calibration-tolerance failure mode per cost parameter */
-    const conf = CP_FAMILY_CONFIDENCE[p.family];
+    const conf = familyConfidence(p.family);
     const assessed = conf != null;
     const cons = consequenceForRow(p, cls, null);
     const det = detectability(p);
@@ -520,7 +600,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
         failureMode: 'Value never calibrated, or calibrated outside the controlled range.',
         effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, null),
         probability: prob,
-        probabilityBasis: 'No native likelihood attribute on the cost parameter; occurrence imported from the ' + conf + ' confidence grade of the ' + p.family + ' modeled quantity.',
+        probabilityBasis: 'No native likelihood attribute on the cost parameter; occurrence read from the weakest confidence grade among the simulation parameters that calibrate the ' + p.family + ' ledger: ' + familyInputLabel(p.family) + '. Weakest is ' + conf + ', which maps to ' + prob + '.',
         probabilityAssessed: false,
         consequence: cons.score, consequenceBasis: cons.basis,
         detect: det.score, detectBasis: det.basis,
@@ -539,7 +619,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
         failureMode: 'Value never calibrated, or calibrated outside the controlled range.',
         effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, null),
         probability: 0,
-        probabilityBasis: 'Unassessable: no phase target and no modeled analogue supply a likelihood signal.',
+        probabilityBasis: 'Unassessable: the ' + p.family + ' ledger has no phase target and no sampled parameter of its own in the simulation, so nothing in either layer supplies a likelihood signal to borrow.',
         probabilityAssessed: false,
         consequence: cons.score, consequenceBasis: cons.basis,
         detect: det.score, detectBasis: det.basis,
@@ -627,6 +707,71 @@ export function undeclaredCommittedKinds(): string[] {
     .filter(function (c) { return !AUTHORITATIVE_KINDS[c.kind]; })
     .map(function (c) { return c.kind; });
 }
+/* R275: the family -> simulation-parameter mapping, checked both directions.
+ *
+ * Undeclared: a sampled parameter no family claims and SYSTEM_WIDE_PARAMS does
+ *   not exempt. Somebody added a cost line and nothing here noticed.
+ * Unknown: an id in the mapping that no longer resolves in params.ts. A typo,
+ *   or a rename, and the family silently loses that input from its grade.
+ * Ungraded: a mapped parameter carrying no confidence grade at all, which
+ *   would make the borrowed occurrence quietly weaker than it looks.
+ * Uncovered: a CP family in the catalog with no entry in the mapping. A new
+ *   ledger family would otherwise be scored unassessable by accident rather
+ *   than by a decision.
+ * Unmapped grade: a grade in use with no occurrence score, which used to
+ *   produce `undefined` and land in the matrix as NaN. */
+export function cpConfidenceWiring(): {
+  undeclared: string[]; unknown: string[]; ungraded: string[];
+  uncovered: string[]; unmappedGrades: string[];
+} {
+  const claimed: Record<string, boolean> = {};
+  const unknown: string[] = [];
+  const ungraded: string[] = [];
+  Object.keys(CP_FAMILY_MODEL_INPUTS).forEach(function (fam) {
+    CP_FAMILY_MODEL_INPUTS[fam].forEach(function (id) {
+      claimed[id] = true;
+      const def = PARAMS_BY_ID[id];
+      if (!def) { unknown.push(fam + ':' + id); return; }
+      if (!def.confidence) ungraded.push(fam + ':' + id);
+    });
+  });
+  SYSTEM_WIDE_PARAMS.forEach(function (id) {
+    claimed[id] = true;
+    if (!PARAMS_BY_ID[id]) unknown.push('SYSTEM_WIDE:' + id);
+  });
+  const undeclared = PARAM_DEFS
+    .map(function (d) { return d.id; })
+    .filter(function (id) { return !claimed[id]; });
+  const uncovered = (QUALITY_DATA.cpFamilies || [])
+    .map(function (f) { return f.id; })
+    .filter(function (id) { return CP_FAMILY_MODEL_INPUTS[id] === undefined; });
+  const unmappedGrades = Array.from(new Set(
+    PARAM_DEFS
+      .map(function (d) { return d.confidence || ''; })
+      .filter(function (g) { return g && CONF_TO_OCC[g] === undefined; })
+  ));
+  return {
+    undeclared: undeclared, unknown: unknown, ungraded: ungraded,
+    uncovered: uncovered, unmappedGrades: unmappedGrades
+  };
+}
+
+/* R275: what each family's borrowed occurrence resolved to, for the page and
+   for the log entry. A family with a null grade is the unassessable case. */
+export function cpFamilyConfidence(): {
+  id: string; grade: string | null; occurrence: number; inputs: string[];
+}[] {
+  return (QUALITY_DATA.cpFamilies || []).map(function (f) {
+    const grade = familyConfidence(f.id);
+    return {
+      id: f.id,
+      grade: grade,
+      occurrence: grade === null ? 0 : CONF_TO_OCC[grade],
+      inputs: (CP_FAMILY_MODEL_INPUTS[f.id] || []).slice()
+    };
+  });
+}
+
 /* R274: the occurrence scores the model actually produces, so the declared
    floor can be compared with the reached one. A floor nobody reaches is the
    same false statement as an unreachable band, one column further in. */

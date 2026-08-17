@@ -30,8 +30,8 @@ import {
   unTemplatedNonParsingTargets
 } from './target-parse-check';
 import {
-  committedKindCounts, fmeaSelfTests, phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR,
-  probabilityScaleReach, undeclaredCommittedKinds
+  committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, fmeaSelfTests, phaseOrderDrift,
+  PROBABILITY_CEILING, PROBABILITY_FLOOR, probabilityScaleReach, undeclaredCommittedKinds
 } from './fmea';
 import {
   ENRICHERS, manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
@@ -735,6 +735,30 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? 'not in AUTHORITATIVE_KINDS: ' + undeclared.join(', ')
             : kinds.reduce((n, k) => n + k.rows, 0) + ' carried forward across ' +
               kinds.map((k) => k.kind + ' ' + k.rows).join(', ')
+        };
+      }),
+      /* R275 [§S4]: CP occurrence is borrowed from params.ts, so what is
+         declared in fmea.ts is a list of parameter IDENTIFIERS. Identifiers can
+         be checked in both directions; the grades they used to retype could
+         only be compared by eye, and were not. */
+      runGuarded('Cost-parameter occurrence is wired to params.ts in both directions', () => {
+        const w = cpConfidenceWiring();
+        const problems = [
+          w.unknown.length ? 'no such parameter: ' + w.unknown.join(', ') : '',
+          w.undeclared.length ? 'parameter no family claims: ' + w.undeclared.join(', ') : '',
+          w.ungraded.length ? 'mapped but ungraded: ' + w.ungraded.join(', ') : '',
+          w.uncovered.length ? 'CP family with no mapping: ' + w.uncovered.join(', ') : '',
+          w.unmappedGrades.length ? 'grade with no occurrence score: ' + w.unmappedGrades.join(', ') : ''
+        ].filter(Boolean);
+        const fams = cpFamilyConfidence();
+        const unassessable = fams.filter((f) => f.grade === null).map((f) => f.id);
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') ||
+            fams.length + ' families read from params.ts, ' +
+            (unassessable.length
+              ? unassessable.join(', ') + ' unassessable (no sampled parameter)'
+              : 'all assessable')
         };
       }),
       /* R274 [§S4]: the published occurrence scale and the scale the model can

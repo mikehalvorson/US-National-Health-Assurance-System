@@ -4,8 +4,10 @@ import {
   phaseOrderDrift, PROBABILITY_CEILING, PROBABILITY_FLOOR, PROBABILITY_SCALE,
   probabilityScaleReach, undeclaredCommittedKinds
 } from '../../src/lib/fmea';
+import { cpConfidenceWiring, cpFamilyConfidence } from '../../src/lib/fmea';
 import { AUTHORITATIVE_KINDS } from '../../src/lib/equations';
 import { PHASE_YEAR } from '../../src/lib/rollout';
+import { PARAMS_BY_ID } from '../../src/lib/params';
 
 describe('FMEA derivation', () => {
   test('built-in self-tests pass', () => {
@@ -67,6 +69,79 @@ describe('FMEA derivation', () => {
 
   test('the seven deferred qualitative targets surface as parameter gaps', () => {
     expect(FMEA_DATA.gaps.deferredParamIds.length).toBe(7);
+  });
+});
+
+/* R275 [§S4]: CP occurrence used to be twenty grades retyped under a comment
+   saying they came from params.ts. What is declared now is a list of parameter
+   identifiers, which can be checked in both directions. */
+describe('R275 cost-parameter occurrence is read from params.ts', () => {
+  test('the mapping resolves in both directions', () => {
+    const w = cpConfidenceWiring();
+    expect(w.unknown, 'mapped id that params.ts does not define').toEqual([]);
+    expect(w.undeclared, 'sampled parameter no family claims').toEqual([]);
+    expect(w.ungraded, 'mapped parameter with no confidence grade').toEqual([]);
+    expect(w.uncovered, 'CP family with no mapping entry').toEqual([]);
+    expect(w.unmappedGrades, 'grade with no occurrence score').toEqual([]);
+  });
+
+  test('every family covers exactly the twenty in the catalog', () => {
+    expect(cpFamilyConfidence().length).toBe(20);
+  });
+
+  test('a family grade equals the weakest grade among its own inputs', () => {
+    const rank: Record<string, number> = {
+      low: 0, 'low-medium': 1, medium: 2, 'medium-high': 3, high: 4
+    };
+    for (const f of cpFamilyConfidence()) {
+      if (!f.inputs.length) { expect(f.grade, f.id).toBeNull(); continue; }
+      const grades = f.inputs.map((id) => PARAMS_BY_ID[id].confidence as string);
+      const weakest = grades.reduce((a, b) => (rank[b] < rank[a] ? b : a));
+      expect(f.grade, f.id + ' from ' + f.inputs.join(', ')).toBe(weakest);
+    }
+  });
+
+  test('the unassessable branch is reachable, and CP-DX is what reaches it', () => {
+    const unassessable = cpFamilyConfidence().filter((f) => f.grade === null);
+    expect(unassessable.map((f) => f.id)).toContain('CP-DX');
+    const dx = FMEA_DATA.records.filter((r) => r.family === 'CP-DX');
+    expect(dx.length).toBeGreaterThan(0);
+    for (const r of dx) {
+      expect(r.probability, r.id).toBe(0);
+      expect(r.tier, r.id).toBe('Unassessed');
+      expect(r.probabilityBasis, r.id).toContain('Unassessable');
+    }
+  });
+
+  test('a compound grade maps to an occurrence rather than to undefined', () => {
+    /* medium-high is not in PARAM_DEFS today. It is in OUTCOME_STATS and in the
+       seed CSV, so it is one §S11a edit away from reaching here, and it used to
+       resolve to undefined and land in the matrix as NaN. Constructed input:
+       regrade a mapped parameter and require a real occurrence score out. */
+    const def = PARAMS_BY_ID.governanceRate;
+    const saved = def.confidence;
+    try {
+      (def as { confidence?: string }).confidence = 'medium-high';
+      const gov = cpFamilyConfidence().filter((f) => f.id === 'CP-GOV')[0];
+      expect(gov.grade).toBe('medium-high');
+      expect(Number.isFinite(gov.occurrence)).toBe(true);
+      expect(gov.occurrence).toBeGreaterThanOrEqual(1);
+      expect(cpConfidenceWiring().unmappedGrades).toEqual([]);
+    } finally {
+      def.confidence = saved;
+    }
+  });
+
+  test('cpConfidenceWiring reports a mapped id that no longer resolves', () => {
+    /* Constructed failing input: the typo the row exists to prevent. */
+    const saved = PARAMS_BY_ID.unitsCost;
+    try {
+      delete (PARAMS_BY_ID as Record<string, unknown>).unitsCost;
+      expect(cpConfidenceWiring().unknown.join(' ')).toContain('unitsCost');
+    } finally {
+      PARAMS_BY_ID.unitsCost = saved;
+    }
+    expect(cpConfidenceWiring().unknown).toEqual([]);
   });
 });
 
