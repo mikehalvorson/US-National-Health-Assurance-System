@@ -10,7 +10,10 @@ import { bridgeSteps } from './bridge';
 import { TAX_SELFTESTS } from './taxmodel';
 import { selfTestEveryRelevantPhase, selfTestNoRegression } from './phase-targets';
 import { QUALITY_DATA } from './quality';
-import { computeTargets, equationSelfTests } from './equations';
+import { AUTHORITATIVE_KINDS, computeTargets, equationSelfTests } from './equations';
+import {
+  authoritativeKindDrift, ROLLOUT_KINDS, undeclaredRolloutKinds, unproducedRolloutKinds
+} from './rollout-kind-check';
 import { fmeaSelfTests } from './fmea';
 import {
   manifestDrift, readmeAdvertisedTestCount, readmeDeployDrift,
@@ -279,6 +282,37 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: p.length === 0,
           note: p.map((c) => c.metric + '@' + c.phase + ' = ' + c.text).join(', ')
+        };
+      })
+    ]
+  },
+  {
+    /* R228 [§S3]: the `kind` field decides whether a row is replaced, preserved
+       or silently carried through. Three modules write it; one reads it. */
+    surface: 'rollout-kind-check.ts',
+    rows: () => [
+      runGuarded('Every rollout kind is in the declared vocabulary', () => {
+        const undeclared = undeclaredRolloutKinds();
+        return {
+          ok: !undeclared.length,
+          note: undeclared.length
+            ? 'undeclared: ' + undeclared.join(', ')
+            : Object.keys(ROLLOUT_KINDS).length + ' kinds declared'
+        };
+      }),
+      runGuarded('Every declared rollout kind still has a producer', () => {
+        const unproduced = unproducedRolloutKinds();
+        return {
+          ok: !unproduced.length,
+          note: unproduced.length ? 'no live row: ' + unproduced.join(', ') : 'all produced'
+        };
+      }),
+      runGuarded('The authoritative kinds agree with what the engine preserves', () => {
+        const drift = authoritativeKindDrift();
+        return {
+          ok: !drift.length,
+          note: drift.join('; ') ||
+            Object.keys(AUTHORITATIVE_KINDS).length + ' preserved by applyEquationTargets'
         };
       })
     ]

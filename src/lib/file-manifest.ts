@@ -74,6 +74,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/phase-targets.ts',
   'src/lib/quality-data.ts',
   'src/lib/quality.ts',
+  'src/lib/rollout-kind-check.ts',
   'src/lib/rollout.ts',
   'src/lib/scenarios.ts',
   'src/lib/selftests.ts',

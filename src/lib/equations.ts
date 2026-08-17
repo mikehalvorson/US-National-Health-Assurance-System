@@ -1274,7 +1274,9 @@ export function computeTargets(Q: QualityData, scenarioId: string): EqTargets {
  *   maximize metrics: at least every earlier committed value, at most any
  *   later committed value; minimize metrics: mirrored.
  * Entry counts and phases are unchanged. */
-const AUTHORITATIVE_KINDS: Record<string, boolean> = {
+/* Exported for rollout-kind-check.ts (R228): the declared vocabulary and this
+   list are the same claim, and the check compares them in both directions. */
+export const AUTHORITATIVE_KINDS: Record<string, boolean> = {
   'maturity target': true, 'phase milestone': true, 'progression floor': true,
   'data-plan interim target': true
 };
