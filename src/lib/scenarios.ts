@@ -9,8 +9,8 @@
  * These are honest simplifications: each scenario notes its mechanism, and
  * qualitative effects the cost model cannot capture are stated, not faked.
  * ========================================================================= */
-import { PARAM_DEFS } from './params';
-import type { Triangular } from './model-types';
+import { PARAM_DEFS, PARAMS_BY_ID } from './params';
+import type { ParamDef, Triangular } from './model-types';
 
 export type ScenarioOverride = [number, number, number] | { mult: number };
 
@@ -421,6 +421,131 @@ export function effectiveParams(
     out[p.id] = { low: lo, mode: mo, high: hi };
   });
   return out;
+}
+
+/* ---- R139 [AP1, AC2, U7]: what low and high actually are ------------------
+ * AC2 read the catalog as violating declared bounds. AP1 settled it by
+ * measuring: every override stepped outside its parameter's low/high, and a
+ * rule broken by every case is not a rule. low/high are the ends of a
+ * triangular distribution and a scenario replaces the distribution. R59, which
+ * asked for stress bounds to constrain that, was superseded by R139, which
+ * asks only that the relationship be written down. Implementing R59 as written
+ * would have encoded a constraint the model does not have.
+ *
+ * Two things AP1 recorded are no longer true of the live code, and both are
+ * measured here rather than restated:
+ *
+ *   - "52 of 52 overrides fall outside their base low/high" is now 51 of 52.
+ *     S6a widened publicAdminRate's high from 3.2% to the 6% its own evidence
+ *     names, which brought SCN-PESS's [2.5, 3.5, 4.5] inside the base band.
+ *
+ *   - "no override exceeds its sliderMax" is false. The same widening put
+ *     SCN-STATE-RESIST's 1.15 multiplier at 6.9% against a slider ceiling of
+ *     6%. That was the one real constraint AP1 found the catalog respecting,
+ *     and it was being respected by coincidence: it broke the moment an
+ *     unrelated parameter was re-ranged, which is the definition of a rule
+ *     that was never a rule. R139's declared test - no override exceeds its
+ *     sliderMax - would fail the build on the tree as it stands, so it is not
+ *     the test that ships.
+ *
+ * What ships instead is the pattern this repo already uses for a fact it wants
+ * visible rather than forbidden: the exception is declared with its reason,
+ * and the check holds the declared set equal to the measured one in both
+ * directions. A new override stepping outside a slider range fails the build
+ * until someone writes down why.
+ *
+ * The bound that IS enforced, on both the scenario path and the slider path,
+ * is the natural domain a parameter's own unit implies. model.ts sweeps it
+ * over every scenario and every parameter.
+ * ------------------------------------------------------------------------ */
+export interface OverrideBeyondSlider {
+  scenario: string;
+  param: string;
+  why: string;
+}
+
+export const OVERRIDES_BEYOND_SLIDER: OverrideBeyondSlider[] = [
+  {
+    scenario: 'SCN-STATE-RESIST',
+    param: 'publicAdminRate',
+    why: 'The scenario multiplies the whole band by 1.15 and the base high is ' +
+      'now 6%, so the product reaches 6.9% against a slider ceiling of 6%. ' +
+      'The ceiling is the top of what the control exposes, not a limit on what ' +
+      'a stress case may explore, and a fallback administration running above ' +
+      'the 5-6% fully-loaded figure the parameter cites is the whole content ' +
+      'of multi-state noncooperation. Declared rather than clamped, because ' +
+      'clamping would quietly weaken the scenario to protect a UI bound.'
+  }
+];
+
+/* The effective triple a scenario gives a parameter, without the slider path.
+ * Used by the checks and by the note below; not by the engine, which reads
+ * effectiveParams. */
+function overrideTriple(p: ParamDef, ov: ScenarioOverride): Triangular {
+  if (Array.isArray(ov)) return { low: ov[0], mode: ov[1], high: ov[2] };
+  return { low: p.low * ov.mult, mode: p.mode * ov.mult, high: p.high * ov.mult };
+}
+
+export interface BandCounts {
+  parameters: number;
+  overrides: number;
+  outsideBase: number;
+  withSliderBounds: number;
+  beyondSlider: string[];
+}
+
+export function bandCounts(): BandCounts {
+  let overrides = 0;
+  let outsideBase = 0;
+  const beyondSlider: string[] = [];
+  for (const s of SCENARIOS) {
+    for (const key of Object.keys(s.overrides)) {
+      const p = PARAMS_BY_ID[key];
+      const ov = s.overrides[key];
+      if (!p || !ov) continue;
+      overrides += 1;
+      const t = overrideTriple(p, ov);
+      if (t.low < p.low - 1e-9 || t.high > p.high + 1e-9 ||
+          t.mode < p.low - 1e-9 || t.mode > p.high + 1e-9) {
+        outsideBase += 1;
+      }
+      const ceiling = p.sliderMax;
+      const floor = p.sliderMin;
+      if (typeof ceiling === 'number' && typeof floor === 'number' &&
+          (t.high > ceiling + 1e-9 || t.mode > ceiling + 1e-9 ||
+           t.low > ceiling + 1e-9 || t.low < floor - 1e-9 ||
+           t.mode < floor - 1e-9 || t.high < floor - 1e-9)) {
+        beyondSlider.push(s.id + '/' + key);
+      }
+    }
+  }
+  return {
+    parameters: PARAM_DEFS.length,
+    overrides: overrides,
+    outsideBase: outsideBase,
+    withSliderBounds: PARAM_DEFS.filter(function (p) {
+      return typeof p.sliderMin === 'number' && typeof p.sliderMax === 'number';
+    }).length,
+    beyondSlider: beyondSlider
+  };
+}
+
+/* The reader-facing sentence, assembled from the counts rather than stating
+ * them, so it cannot drift from the catalog it describes. It renders above the
+ * full parameter table, which is the only place a reader meets a parameter
+ * whole. */
+export function paramBandNote(): string {
+  const c = bandCounts();
+  return 'Low and high are the ends of the range each parameter is drawn from, ' +
+    'not limits the model refuses to cross. A stress scenario replaces the ' +
+    'whole range, and ' + c.outsideBase + ' of the ' + c.overrides + ' scenario ' +
+    'adjustments here sit outside the range shown in this table. That is what a ' +
+    'stress catalog is for. What cannot be crossed comes from the unit: a ' +
+    'percentage or a share is held between 0 and 100 wherever a scenario or a ' +
+    'slider would push past it. ' + c.withSliderBounds + ' of the ' +
+    c.parameters + ' parameters also carry slider limits, which set how far the ' +
+    'controls above can be dragged; those limits bound the controls, not the ' +
+    'scenarios.';
 }
 
 /* Structural knobs for a scenario (ramp delays, shocks, MOE multipliers) */

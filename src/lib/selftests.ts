@@ -10,10 +10,10 @@ import {
 import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
-  BASE_SCENARIO_ID, catalogShapeProblems, effectiveParams, naturalCeiling,
-  scenarioStructural, SCENARIOS as MODEL_SCENARIOS, SIGNED_PATH_FIELDS,
-  STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS, unknownOverrideKeys,
-  unknownStructuralKeys
+  bandCounts, BASE_SCENARIO_ID, catalogShapeProblems, effectiveParams,
+  naturalCeiling, OVERRIDES_BEYOND_SLIDER, paramBandNote, scenarioStructural,
+  SCENARIOS as MODEL_SCENARIOS, SIGNED_PATH_FIELDS, STRESS_SCENARIO_COUNT,
+  STRUCTURAL_KNOBS, unknownOverrideKeys, unknownStructuralKeys
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -51,7 +51,8 @@ import {
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
-  ALLOWED_ASSERTIONS, baselineSplitCopies, displayOnlyDatasetsInEngine,
+  ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
+  displayOnlyDatasetsInEngine,
   divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
   matureYearDerivations, MATURE_YEAR_HOME, mechanismsMissingFromDoc,
   primitiveAssertions, undeclaredEngineDeclarations,
@@ -1364,6 +1365,58 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !unread.length,
           note: unread.join(', ') || STRUCTURAL_KNOBS.length +
             ' knobs declared, each read in ' + ENGINE_FILE
+        };
+      }),
+      /* R139 [§S6b, AP1]: AP1 found the catalog respecting exactly one real
+         constraint - no override above its parameter's sliderMax - and asked
+         that it be written down. It is not respected any more, and it was
+         being respected by coincidence: S6a widened publicAdminRate's high to
+         6% and SCN-STATE-RESIST's 1.15 multiplier now reaches 6.9% against a
+         6% ceiling. So the row's declared test would fail the build today.
+
+         What ships is the declared-exception pattern this repo already uses:
+         the one override that steps outside its slider range is named with its
+         reason, and the check holds the declared set equal to the measured one
+         in BOTH directions. A new one fails the build until somebody writes
+         down why; a stale entry fails it too, so the list cannot outlive the
+         fact it describes. */
+      runGuarded('Every override outside its slider range is declared', () => {
+        const measured = bandCounts().beyondSlider;
+        const declared = OVERRIDES_BEYOND_SLIDER.map(
+          (o) => o.scenario + '/' + o.param);
+        const undeclared = measured.filter((m) => !declared.includes(m));
+        const stale = declared.filter((d) => !measured.includes(d));
+        const unexplained = OVERRIDES_BEYOND_SLIDER
+          .filter((o) => o.why.trim().length < 60)
+          .map((o) => o.scenario + '/' + o.param + ' gives no reason');
+        const problems = undeclared.map((u) => u + ' is not declared')
+          .concat(stale.map((s) => s + ' is declared and does not happen'))
+          .concat(unexplained);
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || declared.length +
+            ' declared, each with its reason: ' + (declared.join(', ') || 'none')
+        };
+      }),
+      /* And the relationship itself, where a reader can see it. Declaring what
+         low and high mean inside params.ts and never showing it would be the
+         same silence at a new address. The note is assembled from the counts
+         rather than stating them, so it cannot drift; what is checked here is
+         that it reaches the page and that it names the three things a reader
+         needs to tell design from defect. */
+      runGuarded('The parameter bands say what they are, where a reader can see them', () => {
+        const note = paramBandNote();
+        const missing = ['Low and high', 'stress scenario', 'slider limits']
+          .filter((phrase) => !note.includes(phrase));
+        const problems: string[] = [];
+        if (!bandNoteIsRendered()) problems.push('the note reaches no page');
+        if (missing.length) problems.push('the note never mentions ' + missing.join(', '));
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || bandCounts().outsideBase + ' of ' +
+            bandCounts().overrides + ' overrides outside the base band, ' +
+            bandCounts().withSliderBounds + ' of ' + bandCounts().parameters +
+            ' parameters carry slider limits, both stated on the page'
         };
       }),
       runGuarded('The catalog holds one base case and its declared stress set', () => {

@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
 import { computeOverview } from '../lib/overview';
 import { OUTCOME_STATS, PARAM_DEFS } from '../lib/params';
+import { paramBandNote } from '../lib/scenarios';
 import { CARE_SCENARIOS, moneyRange } from '../lib/care';
 import { selfTestSummary } from '../lib/selftests';
 
@@ -386,6 +387,7 @@ const selftests = selfTestSummary();
         <span id="gaps-list">{gapsList}</span>
       </div>
       <details class="tableview"><summary>Full parameter table with sources (the entire evidence base)</summary>
+        <p class="note"><b>What the low and high columns mean.</b> {paramBandNote()}</p>
         <div class="tbl-scroll">
           <table class="data" id="param-table">
             <thead><tr>

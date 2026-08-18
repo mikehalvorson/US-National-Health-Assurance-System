@@ -893,6 +893,15 @@ export function divergenceNamesRecommendation(
   return headline !== undefined && note.includes(headline);
 }
 
+/* R139 [§S6b]: the same shape as the divergence check below, and for the same
+ * reason. Declaring what low and high mean inside params.ts and never showing
+ * it is the silence AP1 filed, moved to a new address. The only place a reader
+ * meets a parameter whole is the full parameter table, so that page is read. */
+export function bandNoteIsRendered(root = REPO_ROOT): boolean {
+  const text = readFileSync(join(root, PARAMETER_EXPLORER), 'utf8');
+  return /paramBandNote\(\)/.test(text);
+}
+
 export function divergenceIsRendered(root = REPO_ROOT): boolean {
   const text = readFileSync(join(root, PARAMETER_EXPLORER), 'utf8');
   return /p\.divergence/.test(text) && /divergence\.note/.test(text) &&
