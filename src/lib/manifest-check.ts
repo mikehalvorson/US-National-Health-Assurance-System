@@ -921,6 +921,13 @@ export function bandNoteIsRendered(root = REPO_ROOT): boolean {
   return /paramBandNote\(\)/.test(text);
 }
 
+/* R237 [§S6b]: and the note about what a slider does to the band, on the page
+ * that carries the sliders. */
+export function spreadNoteIsRendered(root = REPO_ROOT): boolean {
+  const text = readFileSync(join(root, PARAMETER_EXPLORER), 'utf8');
+  return /sliderSpreadNote\(\)/.test(text);
+}
+
 export function divergenceIsRendered(root = REPO_ROOT): boolean {
   const text = readFileSync(join(root, PARAMETER_EXPLORER), 'utf8');
   return /p\.divergence/.test(text) && /divergence\.note/.test(text) &&

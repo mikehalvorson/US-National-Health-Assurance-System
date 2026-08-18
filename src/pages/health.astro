@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
 import { computeOverview } from '../lib/overview';
 import { OUTCOME_STATS, PARAM_DEFS } from '../lib/params';
-import { paramBandNote } from '../lib/scenarios';
+import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
 import { CARE_SCENARIOS, moneyRange } from '../lib/care';
 import { selfTestSummary } from '../lib/selftests';
 
@@ -160,6 +160,7 @@ const selftests = selfTestSummary();
       <div class="controls" id="controls"></div>
       <p class="scenario-desc" id="scenario-desc"></p>
       <div id="scenario-basis"></div>
+      <p class="note">{sliderSpreadNote()}</p>
       <div class="controls-foot">
         <button class="btn" id="reset-btn">Reset assumptions</button>
         <span class="runs-note" id="runs-note"></span>

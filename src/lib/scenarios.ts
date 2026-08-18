@@ -955,6 +955,66 @@ export function paramBandNote(): string {
     'scenarios.';
 }
 
+/* ---- R237 [AC7]: the band collapses where the model is least certain -----
+ * A slider does not slide a fixed band along. It re-centres the band on the
+ * new mode and rebuilds the spread in PROPORTION to it, so driving a mode
+ * toward zero shrinks the uncertainty toward zero with it. At exactly zero the
+ * distribution becomes a point mass and the parameter drops out of the Monte
+ * Carlo entirely, with nothing saying so.
+ *
+ * The row offers two remedies: hold the spread above an absolute floor, or
+ * state on the control that the band is proportional. This takes the second,
+ * for two reasons.
+ *
+ * A floor would be an invented number. Every number in this repository is
+ * sourced and graded, and there is no evidence anywhere for how wide the band
+ * around a lever set to zero ought to be.
+ *
+ * And for four of the five, a zero band is the honest answer rather than a
+ * missing one. Setting drugPriceCut to 0 does not mean "an uncertain amount of
+ * price reduction near zero", it means there is no price reduction, and there
+ * is nothing left to be uncertain about. The same reads correctly for
+ * providerAdminSavings, ltcWageFloor and wagePassThrough.
+ *
+ * utilIncrease is the exception and it is worth naming. Setting it to 0 asserts
+ * that universal coverage induces exactly no additional utilization, which is a
+ * strong claim to make with no band around it. A floor would not fix that
+ * either: the reader who drags the slider to zero has asserted the point
+ * estimate, and the honest response is to tell them what they just did to the
+ * uncertainty, which is what the note does.
+ * ------------------------------------------------------------------------ */
+export const SPREAD_COLLAPSE_DECLARED = [
+  'utilIncrease', 'drugPriceCut', 'providerAdminSavings', 'ltcWageFloor',
+  'wagePassThrough'
+];
+
+/* Every adjustable parameter, at both ends of its own slider, reporting the
+ * ids whose band closes to nothing. Measured rather than reasoned about: the
+ * collapse needs a slider end that lands exactly on zero, and which
+ * parameters those are is a property of the catalog, not of the arithmetic. */
+export function collapsingSliderParameters(): string[] {
+  const collapsing: string[] = [];
+  for (const p of PARAM_DEFS) {
+    if (!p.adjustable) continue;
+    for (const at of [p.sliderMin, p.sliderMax]) {
+      if (typeof at !== 'number') continue;
+      const eff = effectiveParams(BASE_SCENARIO_ID, { [p.id]: at })[p.id];
+      if (eff && eff.high - eff.low < 1e-9 && !collapsing.includes(p.id)) {
+        collapsing.push(p.id);
+      }
+    }
+  }
+  return collapsing;
+}
+
+export function sliderSpreadNote(): string {
+  return 'Moving a slider moves the whole range, not just the middle of it: ' +
+    'the band above and below is rebuilt in proportion to wherever you put ' +
+    'the control. Setting one of these to zero therefore removes its ' +
+    'uncertainty as well as its effect, which is the right answer for a lever ' +
+    'that is switched off and a strong claim for one that is merely small.';
+}
+
 /* Structural knobs for a scenario (ramp delays, shocks, MOE multipliers) */
 export function scenarioStructural(scenarioId: string): ScenarioStructural {
   const scn = SCENARIOS_BY_ID[scenarioId] || SCENARIOS_BY_ID["SCN-BASE"];

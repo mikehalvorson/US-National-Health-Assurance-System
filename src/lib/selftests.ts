@@ -10,11 +10,13 @@ import {
 import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
-  bandCounts, BASE_SCENARIO_ID, catalogShapeProblems, effectiveParams,
-  naturalCeiling, OVERRIDES_BEYOND_SLIDER, paramBandNote, provenanceProblems,
+  bandCounts, BASE_SCENARIO_ID, catalogShapeProblems,
+  collapsingSliderParameters, effectiveParams, naturalCeiling,
+  OVERRIDES_BEYOND_SLIDER, paramBandNote, provenanceProblems,
   provenanceGradeCounts, scenarioStructural, SCENARIOS as MODEL_SCENARIOS,
-  SIGNED_PATH_FIELDS, STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS,
-  unknownOverrideKeys, unknownStructuralKeys
+  SIGNED_PATH_FIELDS, sliderSpreadNote, SPREAD_COLLAPSE_DECLARED,
+  STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS, unknownOverrideKeys,
+  unknownStructuralKeys
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -53,6 +55,7 @@ import {
 } from './fmea';
 import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
+  spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
   displayOnlyDatasetsInEngine,
   divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
@@ -1369,6 +1372,31 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !unread.length,
           note: unread.join(', ') || STRUCTURAL_KNOBS.length +
             ' knobs declared, each read in ' + ENGINE_FILE
+        };
+      }),
+      /* R237 [§S6b, AC7]: the band is proportional to wherever the slider is
+         put, so it closes to nothing at zero and the parameter silently leaves
+         the ensemble. The row allows either an absolute floor or a statement
+         on the control; this is the statement, because a floor would be a
+         number with no evidence behind it. The set that can collapse is held
+         in both directions, so a parameter that gains a zero slider end is
+         either added to the list or fails the build. */
+      runGuarded('Every parameter whose band can close to nothing is declared', () => {
+        const measured = collapsingSliderParameters();
+        const undeclared = measured.filter((m) => !SPREAD_COLLAPSE_DECLARED.includes(m));
+        const stale = SPREAD_COLLAPSE_DECLARED.filter((d) => !measured.includes(d));
+        const problems = undeclared.map((u) => u + ' collapses and is not declared')
+          .concat(stale.map((s) => s + ' is declared and does not collapse'));
+        if (!spreadNoteIsRendered()) problems.push('no page tells the reader');
+        if (!sliderSpreadNote().includes('proportion')) {
+          problems.push('the note never says the band is proportional');
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || measured.length + ' of ' +
+            PARAM_DEFS.filter((p) => p.adjustable).length +
+            ' adjustable parameters reach a zero-width band at a slider end: ' +
+            measured.join(', ')
         };
       }),
       /* R141 [§S6b, AP4]: 52 magnitudes and no way to say where any of them
