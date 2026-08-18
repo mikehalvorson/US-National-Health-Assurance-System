@@ -108,6 +108,43 @@ export const ECON: TaxEcon = {
   growthRates: { gdp: 0.019, wages: 0.012, top: TOP_CAPITAL_REAL_GROWTH }
 };
 
+/* ---- The wealth-tax base, carried to the model's base year ---------------
+ * R37 [§S5]. `research/06` gives an explicit instruction: "scale the 2021
+ * letter's billionaire base up accordingly (roughly +50-60%) if modeling
+ * current-year revenue", on the basis of about $6-7T of US billionaire wealth
+ * by mid-2025. The base was never carried forward. It sat at the February
+ * 2021 letter's figure - $351B gross, 15% avoidance, ~$298B net - in a slot
+ * the file's own header declares to be the 2024 economy, while `WEALTH_DIST`
+ * three definitions below runs on Fed DFA 2026:Q1.
+ *
+ * DISCREPANCY with §AQ1, which declared this closed. What §AQ1 found is that
+ * the instrument compounds at the sourced 4.0% top-capital rate rather than at
+ * GDP, and that is true and should not be undone. But that rate governs the
+ * path FROM the base year; it does nothing about the base itself being three
+ * years stale. The two are independent, and only one of them was fixed.
+ *
+ * Carried forward here at the instrument's own declared rate over its own
+ * declared vintage gap - three years, Feb 2021 to the 2024 base year - which
+ * uses nothing that is not already in this file:
+ *
+ *     298 x 1.04^3 = 335.6, rounded to the published 300 -> 337
+ *
+ * NOT the +50-60% research/06 names, and the reason is worth recording. That
+ * figure is about the BILLIONAIRE tranche specifically, whose Forbes-measured
+ * wealth roughly doubled over the period; this instrument's base is the much
+ * broader $10.97T above $50M plus $3.28T above $1B, and applying a
+ * billionaire-tranche multiple to the whole base would overstate it. The
+ * conservative internally-consistent scaling is used instead, and it leaves
+ * the model still conservative against its own research file - which is the
+ * direction §V1 says this error runs.
+ * ------------------------------------------------------------------------ */
+export const WEALTH_BASE_VINTAGE = 2021;
+export const WEALTH_REV_VINTAGE_VALUE = 300;
+export const WEALTH_REV_2024 = Math.round(
+  WEALTH_REV_VINTAGE_VALUE *
+  Math.pow(1 + TOP_CAPITAL_REAL_GROWTH, 2024 - WEALTH_BASE_VINTAGE)
+);
+
 /* ---- Tax instruments -----------------------------------------------------
  * rev1x - $B/yr at default setting (scale=1), 2024 economy (annualized from
  * the cited 10-year scores). kind 'scale' (slider, linear) or 'toggle'.
@@ -136,7 +173,16 @@ export const INSTRUMENTS: TaxInstrument[] = (function () {
       incidence: { q1: 0, q2: 0, q3: 0.038, q4: 0.112, d9: 0.123, p9199: 0.335,
         t9950: 0.088, t9970: 0.055, t9990: 0.092, t9999: 0.101, t10000: 0.056 },
       phaseStart: 2029, phaseYears: 4,
-      source: "Computed: CBO 2022 group incomes × 75% taxable share; cross-checked vs CBO Option 45 (+1pt all rates ≈ $118B/yr)", confidence: "medium"
+      source: "Computed: CBO 2022 group incomes × 75% taxable share; cross-checked vs CBO Option 45 (+1pt all rates ≈ $118B/yr)", confidence: "medium",
+      /* R39 + R208 [§S5]: the largest instrument in the menu, the only major
+         one without an official score, and the balancer in `goal-top` - so it
+         absorbs every residual gap the others leave. The band comes from the
+         one assumption the estimate is actually built on: ±5 points on the
+         75% taxable share, which is ±6.7% on the revenue. It is not a
+         confidence interval and does not pretend to be one; getting a scored
+         estimate is the real answer and remains open. */
+      revBand: { low: Math.round(527 * 70 / 75), high: Math.round(527 * 80 / 75),
+        basis: "±5 points on the 75% taxable share the derivation rests on (70% to 80%). Not a published interval: no official score of this instrument exists, and obtaining one is the open item." }
     },
     {
       id: "payroll", label: "NHA payroll contribution (uncapped)",
@@ -145,7 +191,12 @@ export const INSTRUMENTS: TaxInstrument[] = (function () {
       defaultNote: "default 4.0pp; slider is a multiple (max 12pp)",
       incidence: byCol("wageShare"),
       phaseStart: 2031, phaseYears: 4,
-      source: "CBO Options 2025–2034, Option 61 (payroll surtax on all earnings: $1,281.5B/10yr per point)", confidence: "high"
+      source: "CBO Options 2025–2034, Option 61 (payroll surtax on all earnings: $1,281.5B/10yr per point)", confidence: "high",
+      /* R39 [§S5]: the other balancer. CBO publishes this as a point estimate
+         against a scored 10-year window and attaches no interval to it, so a
+         band here would be invented rather than sourced. Declared absent with
+         the reason instead of quietly having none. */
+      revBandAbsent: "CBO Option 61 is an official point estimate with no published interval; inventing a band around a scored figure would be less honest than stating there is none."
     },
     {
       id: "sscap", label: "Tax earnings above the SS cap ($250k donut)",
@@ -176,8 +227,8 @@ export const INSTRUMENTS: TaxInstrument[] = (function () {
     },
     {
       id: "wealth", label: "Extreme-wealth tax",
-      desc: "2% above $50M + 4% additional above $1B, at 85% collection efficiency. Saez–Zucman base: $10.97T above $50M, $3.28T above $1B (~100k households); gross ≈ $351B/yr.",
-      kind: "scale", default: 1.0, scaleMax: 1.5, rev1x: 300, growth: "top",
+      desc: "2% above $50M + 4% additional above $1B, at 85% collection efficiency. Saez–Zucman base: $10.97T above $50M, $3.28T above $1B (~100k households); gross ≈ $351B/yr in the February 2021 letter, carried forward to the model's 2024 base year at the same top-capital rate the instrument compounds at.",
+      kind: "scale", default: 1.0, scaleMax: 1.5, rev1x: WEALTH_REV_2024, growth: "top",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
         t9950: 0, t9970: 0, t9990: 0.10, t9999: 0.45, t10000: 0.45 },
       phaseStart: 2028, phaseYears: 2,
@@ -408,6 +459,44 @@ export const PRESIDENTS: PresidentEntry[] = [
  * aggregates (US billionaires ~$5.5-7T), constrained to DFA band totals.
  * avgWealth = wealth / households. Median household net worth ~$205k
  * (SCF 2022, inflated). Bands medium-high; interior splits medium.        */
+/* ---- Dataset vintages, declared -----------------------------------------
+ * R38 [§S5]. `research/06`'s cross-cutting flag 4 warns that the inputs span
+ * CY2022, FY2025, CY2024 and 2026:Q1 and must be deflated consistently. Most
+ * of that was honoured - CBO's 2022 incomes are inflated to 2024$ by the PCE
+ * factor 1.064, and `ECON.baseYear` is 2024 - but `WEALTH_DIST` carries
+ * 2026:Q1 NOMINAL levels inside a 2024$ model with no deflation note. If it
+ * is display-only that is defensible; it was not labelled as such, and
+ * nothing stopped a later join.
+ *
+ * Both halves are declared here rather than left to a comment: the data year,
+ * the dollar year, and whether the dataset participates in computation. Two
+ * checks hold it. A computing dataset must be denominated in the model's own
+ * base year, and a display-only dataset must not be reachable from the
+ * revenue engine - which is the "later join" the row is actually about, and
+ * which a label alone cannot prevent.
+ * ------------------------------------------------------------------------ */
+export interface DatasetVintage {
+  id: string;
+  dataYear: number;
+  dollarYear: number;
+  computes: boolean;
+  note: string;
+}
+export const DATASET_VINTAGES: DatasetVintage[] = [
+  { id: 'GROUPS', dataYear: 2022, dollarYear: 2024, computes: true,
+    note: "CBO Distribution of Household Income 2022, inflated to 2024$ by the PCE factor 1.064." },
+  { id: 'ECON', dataYear: 2024, dollarYear: 2024, computes: true,
+    note: "Medicare taxable earnings 2024; growth rates are real, so they carry no dollar year of their own." },
+  { id: 'INSTRUMENTS', dataYear: 2024, dollarYear: 2024, computes: true,
+    note: "Scores annualized from 10-year windows and stated at 2024 scale. The wealth instrument's Feb 2021 base is carried forward to 2024 (R37); the rest are already scored against a 2025-2034 window." },
+  { id: 'WEALTH_DIST', dataYear: 2026, dollarYear: 2026, computes: false,
+    note: "Fed Distributional Financial Accounts 2026:Q1, NOMINAL. Display only - it drives the inequality chart and nothing else. It is not deflated to 2024$ and must not enter a revenue calculation without being deflated first." },
+  { id: 'TOP_RATE_HISTORY', dataYear: 2025, dollarYear: 2025, computes: false,
+    note: "IRS SOI historical Table 23. Statutory rates, not dollars; display only." },
+  { id: 'PRESIDENTS', dataYear: 2025, dollarYear: 2025, computes: false,
+    note: "Era labels for the rate chart. No dollars; display only." }
+];
+
 export const WEALTH_DIST: WealthDist = {
   totalT: 174.0, medianHH: 205000,
   groups: [

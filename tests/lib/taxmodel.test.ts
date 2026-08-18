@@ -59,9 +59,9 @@ test('phase-in ramps from 0 to full', () => {
 
 test('every tax self-test invariant passes', () => {
   /* R43 replaced one and left the count at 7; R144/R42/R36/R44 [§S5] added
-     four. Pinning the count is what makes a silently dropped invariant a
-     failure rather than a smaller green number. */
-  expect(TAX_SELFTESTS.length).toBe(11);
+     four and R38/R37/R39 three more. Pinning the count is what makes a
+     silently dropped invariant a failure rather than a smaller green number. */
+  expect(TAX_SELFTESTS.length).toBe(14);
   const failing = TAX_SELFTESTS.filter((t) => !t.run()).map((t) => t.name);
   expect(failing).toEqual([]);
 });

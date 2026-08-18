@@ -138,6 +138,46 @@ export function baselineSplitCopies(root = REPO_ROOT): CodeReference[] {
   return out;
 }
 
+/* R38 [§S5]: a display-only dataset must stay out of the revenue engine.
+ *
+ * `WEALTH_DIST` carries Fed DFA 2026:Q1 NOMINAL levels inside a 2024$ model.
+ * The row's concern is not the label - it is that "nothing currently prevents
+ * a later join". A label cannot prevent one; an import check can. Every
+ * dataset `taxparams.ts` declares as `computes: false` is scanned for here,
+ * and finding one named inside the engine fails the build.
+ *
+ * `taxmodel.ts` is the whole revenue engine, so its import list is the seam.
+ * The display layer (`tax-client.ts`, `tax-charts.ts`) may import whatever it
+ * likes; that is what display-only means.
+ *
+ * The IMPORT LIST, not the file text. The first version scanned the whole
+ * masked source and reported all three display-only datasets, because the
+ * vintage self-test in that file names them in a string array. Importing a
+ * dataset is what makes a join possible; naming it in a check is the opposite
+ * of a join. */
+export const REVENUE_ENGINE = 'src/lib/taxmodel.ts';
+const TAXPARAMS_IMPORT = /import\s*\{([^}]*)\}\s*from\s*'\.\/taxparams'/g;
+
+export function engineImportsFromParams(root = REPO_ROOT): string[] {
+  const masked = maskComments(readFileSync(join(root, REVENUE_ENGINE), 'utf8'));
+  const names: string[] = [];
+  for (const m of masked.matchAll(TAXPARAMS_IMPORT)) {
+    m[1].split(',').forEach((raw) => {
+      const name = raw.trim().split(/\s+as\s+/)[0].trim();
+      if (name) names.push(name);
+    });
+  }
+  return names;
+}
+
+export function displayOnlyDatasetsInEngine(
+  displayOnly: string[],
+  root = REPO_ROOT
+): string[] {
+  const imported = new Set(engineImportsFromParams(root));
+  return displayOnly.filter((id) => imported.has(id));
+}
+
 /* R253 [§S5]: the transition envelope, derived rather than typed.
  *
  * One quantity was stated three ways: the page typed "$1.2-$2.0 trillion" in

@@ -123,6 +123,23 @@ function buildInstrumentControls(): void {
     row.appendChild(phaseLab); row.appendChild(phase);
     card.appendChild(row);
 
+    /* R39 + R208 [§S5]: the balancer's uncertainty, on the instrument card
+       rather than in a parameter file nobody opens. `surtax` is the largest
+       instrument in the menu, the only major one with no official score, and
+       the balancer in the flagship scenario, so it absorbs the package's
+       residual gap - which is precisely what a reader needs told. */
+    const balancerIds = new Set(SCENARIOS.filter(function (sc) { return sc.balancer; })
+      .map(function (sc) { return sc.balancer as string; }));
+    if (balancerIds.has(ins.id)) {
+      const band = document.createElement('span');
+      band.className = 'instrument-band';
+      band.textContent = ins.revBand
+        ? 'Auto-balances the package. Revenue band ' + money(ins.revBand.low) +
+          ' to ' + money(ins.revBand.high) + '/yr at scale 1: ' + ins.revBand.basis
+        : 'Auto-balances the package. ' + (ins.revBandAbsent || '');
+      card.appendChild(band);
+    }
+
     function updateRev(): void {
       /* R42 [§S5]: the per-instrument figure is net of the overlap deduction,
          because the total tile below it is. Showing gross here would leave the

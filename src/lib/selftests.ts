@@ -10,7 +10,7 @@ import {
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { classGrowth, TAX_SELFTESTS } from './taxmodel';
-import { INSTRUMENTS as TAX_INSTRUMENTS } from './taxparams';
+import { DATASET_VINTAGES, INSTRUMENTS as TAX_INSTRUMENTS } from './taxparams';
 import {
   REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
   staleRelevanceFallbacks, undeclaredRelevanceFallbacks
@@ -40,11 +40,11 @@ import {
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
-  baselineSplitCopies, ENRICHERS, guardedGlobalListeners, manifestDrift, PARSER_HOME,
-  parserImplementations, readmeAdvertisedTestCount, readmeDeployDrift,
-  retiredTreeCodeReferences, retiredTreeTargets, routeDrift, SPLIT_HOME,
-  statedChapterCountDrift, typedEnvelopeLiterals, undeclaredEnrichers,
-  unregisteredSelfTestSurfaces
+  baselineSplitCopies, displayOnlyDatasetsInEngine, ENRICHERS, guardedGlobalListeners,
+  manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
+  readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, REVENUE_ENGINE,
+  routeDrift, SPLIT_HOME, statedChapterCountDrift, typedEnvelopeLiterals,
+  undeclaredEnrichers, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
 import {
@@ -1155,6 +1155,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: ok
             ? 'parseNum defined once, in ' + PARSER_HOME
             : 'defined in: ' + (found.join(', ') || 'nowhere')
+        };
+      }),
+      /* R38 [§S5]: a display-only dataset stays out of the revenue engine.
+         The row's real concern is that nothing prevented a later join, and a
+         label cannot prevent one. WEALTH_DIST carries 2026:Q1 NOMINAL levels
+         inside a 2024$ model, so a join would mix dollar years silently. */
+      runGuarded('No display-only dataset is reachable from the revenue engine', () => {
+        const displayOnly = DATASET_VINTAGES.filter((v) => !v.computes).map((v) => v.id);
+        const found = displayOnlyDatasetsInEngine(displayOnly);
+        return {
+          ok: !found.length && displayOnly.length > 0,
+          note: found.length
+            ? found.join(', ') + ' named in ' + REVENUE_ENGINE
+            : displayOnly.length + ' display-only datasets, none in ' + REVENUE_ENGINE
         };
       }),
       /* R253 [§S5]: the envelope is derived, and the page does not type it. */

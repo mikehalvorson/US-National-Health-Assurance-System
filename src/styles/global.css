@@ -1199,6 +1199,9 @@ footer.site a { color: var(--text-muted); }
 .workstream-item b { display: block; font-size: 12.5px; }
 .workstream-item span { display: block; color: var(--text-secondary); font-size: 11.5px; }
 .workstream-meta { color: var(--text-muted); font-size: 10.5px; margin-top: 3px; }
+.instrument-band {
+  display: block; color: var(--text-muted); font-size: 10.5px; margin-top: 4px;
+}
 .rollout-source { color: var(--text-muted); font-size: 12px; margin-top: 18px; }
 
 /* ---- Data view ---- */

@@ -43,6 +43,12 @@ export interface TaxInstrument {
   phaseYears: number;
   source: string;
   confidence: string;
+  /* R39 + R208 [§S5]: a balancer absorbs the package's residual gap, so it
+     carries the package's residual risk and has to say how much. `revBand`
+     where the evidence supports one, `revBandAbsent` where it does not - a
+     declared reason rather than a silent blank, the §S4 pattern. */
+  revBand?: { low: number; high: number; basis: string };
+  revBandAbsent?: string;
 }
 
 /* ---- Params: a funding program (NHA.TAX.PROGRAMS entry) ------------------- */

@@ -18,7 +18,10 @@
  * compute, distribution, solveScenario, and their private helpers (growth,
  * classGrowth, ramp), plus the seven NHA.SELFTESTS tax invariants.
  * ========================================================================= */
-import { GROUPS, ECON, INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS } from './taxparams';
+import {
+  DATASET_VINTAGES, GROUPS, ECON, INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS,
+  WEALTH_BASE_VINTAGE, WEALTH_REV_VINTAGE_VALUE
+} from './taxparams';
 import type {
   TaxInstrument,
   TaxProgram,
@@ -464,6 +467,65 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
           return !!ins && ins.kind === 'scale' &&
             typeof ins.scaleMax === 'number' && !family.has(ins.id);
         });
+    }
+  },
+
+  {
+    /* R38 [§S5]: every dataset in the file declares its vintage and whether it
+       participates in computation, and a computing one is denominated in the
+       model's own base year. `WEALTH_DIST` is the reason: 2026:Q1 nominal
+       levels inside a 2024$ model, unlabelled. */
+    name: "Tax: every dataset declares its vintage and whether it computes",
+    run: function () {
+      const declared = new Set(DATASET_VINTAGES.map(function (v) { return v.id; }));
+      const required = ['GROUPS', 'ECON', 'INSTRUMENTS', 'WEALTH_DIST',
+        'TOP_RATE_HISTORY', 'PRESIDENTS'];
+      if (!required.every(function (id) { return declared.has(id); })) return false;
+      return DATASET_VINTAGES.every(function (v) {
+        if (!v.note || v.note.length < 20) return false;
+        return v.computes ? v.dollarYear === ECON.baseYear : true;
+      });
+    }
+  },
+
+  {
+    /* R37 [§S5]: the wealth base is carried from its own cited vintage to the
+       model's base year, at the rate the instrument itself compounds at. The
+       check re-derives it rather than pinning the literal, so changing the
+       growth class or the vintage moves the base with it. */
+    name: "Tax: the wealth-tax base is carried from its cited vintage to the base year",
+    run: function () {
+      const w = INSTRUMENTS.filter(function (i) { return i.id === 'wealth'; })[0];
+      const expected = Math.round(
+        WEALTH_REV_VINTAGE_VALUE *
+        Math.pow(1 + ECON.growthRates[w.growth || 'gdp'], ECON.baseYear - WEALTH_BASE_VINTAGE)
+      );
+      return w.rev1x === expected && WEALTH_BASE_VINTAGE < ECON.baseYear &&
+        w.rev1x > WEALTH_REV_VINTAGE_VALUE;
+    }
+  },
+
+  {
+    /* R39 + R208 [§S5]: a balancer absorbs whatever gap the rest of the
+       package leaves, so it carries the package's residual risk. Each one
+       must state its uncertainty - a band where the evidence supports one, or
+       an explicit reason there is none. `surtax` is the case that matters:
+       $527B at scale 1, the largest instrument in the menu, an in-house
+       derivation graded medium, and the balancer in the flagship scenario. */
+    name: "Tax: every balancer states its revenue uncertainty",
+    run: function () {
+      const ids = new Set(SCENARIOS.filter(function (sc) { return sc.balancer; })
+        .map(function (sc) { return sc.balancer as string; }));
+      return Array.from(ids).every(function (id) {
+        const ins = INSTRUMENTS.filter(function (i) { return i.id === id; })[0];
+        if (!ins) return false;
+        const band = ins.revBand;
+        if (band) {
+          return band.low < ins.rev1x && band.high > ins.rev1x &&
+            !!band.basis && band.basis.length > 30;
+        }
+        return !!ins.revBandAbsent && ins.revBandAbsent.length > 30;
+      });
     }
   },
 
