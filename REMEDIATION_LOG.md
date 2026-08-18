@@ -1416,3 +1416,247 @@ Both were narrowed to the seam that actually matters — the import list, and th
 
 **A check that has never failed has not been tested.** Five of nineteen would have shipped
 green and useless.
+
+## P7 — §S6a Cost engine, offsets & headline parameters · 2026-08-18 · branch `nha-remediation`
+STATUS: complete — all 11 implementable rows landed across 7 commits, plus the twelfth
+(`R11`, document-only) and one new finding fixed
+
+**Entry gate:** `## P1` and `## P2` both `STATUS: complete` ✅ · the `## P0` entry records all
+five headline figures ✅ · `check_audit_docs.py` 35/35 exit 0, tree clean ✅ · **part 2 run in
+this session, not reported from P6**: broke self-test 1's tolerance, `astro build` failed with
+`Self-tests failed: 1 of 107`, restored, tree clean ✅
+
+### LANDED
+
+| Commit | Rows |
+|---|---|
+| `f7c505f` | `R21` + `R128` + `R32` — the engine's constants, and the reshuffle that hid their effect |
+| `2647553` | `R27` + `R134` + `R33` — publicAdminRate reaches the evidence it cites |
+| `c5ae6d0` | `R26` — the $4.75T figure has a basis, and the framework wrote it down |
+| `026749f` | `R127` — the assertions go, not another guard |
+| `e8777d2` | `R126` — the wage pass-through, exercised across the seam it spans |
+| `d5d873f` | `R22` + `R25` — the mature year, the missing engine tests, and how big the ensemble should be |
+| `23f048c` | `R11` — the offset architecture, written down and held to the code |
+
+### HEADLINE FIGURES
+
+2024 dollars, `SCN-BASE`. **Before is P0's baseline at 600 draws; after is 1,500 draws**, which
+is itself one of the changes.
+
+| Figure | Before | After | Change |
+|---|---|---|---|
+| Mature-year total (`matureToday`) | **$5.38T/yr** | **$5.44T/yr** | +1.15% |
+| 2041 total | $9.39T/yr | $9.45T/yr | +0.64% |
+| New revenue required (mature) | **$3.42T/yr** | **$3.50T/yr** | **+2.15%** |
+| Per capita | $26,133 | $26,315 | +0.70% |
+| NHE / GDP at maturity | 23.6% | 23.7% | +0.41% |
+| Federal increase (mature) | $4.71T/yr | $4.77T/yr | +1.28% |
+| Coverage ratio (see below) | 0.7853 | 0.7853 | +0.008% |
+
+**The new-revenue requirement moved, as the P6 handoff predicted it would here and only here.**
+
+**Published rollout targets: 727, none moved. Criticality ranking: 1,037 records, no position
+moved, no RPN changed.** 28 interim cells changed below display precision on four metrics
+(`KPP-C1`, `C2`, `C3`, `C8`); every one renders the same text before and after.
+
+### COVERAGE RATIO — settled, since P3 and P7 were both told to and neither had
+
+**It is `coverage` in `taxmodel.ts`: revenue over need, on the default package at 2041.** Three
+quantities were candidates and exactly one is actually named coverage in the code, which
+settles it. Its value is **0.7853 before and after** (+0.008%, the sponsor-share rounding).
+
+The `## P0` entry named two others, and both are worth keeping distinct:
+
+- `pubShare` at 2041 = **0.9306**, unchanged and structurally unmovable by §S6a: it is
+  `coverage ramp x (1 - residualPrivateShare/100)` and this section owns neither term.
+- `coverageDemandShare` = **0.32**, which is an input parameter, not a ratio the model produces.
+
+### PUBLICADMINRATE
+
+**1.5 / 2.2 / 3.2 at `confidence: high` → 1.5 / 2.2 / 6.0 at `confidence: medium`.** The mean of
+the triangular moves 2.30% → 3.23%.
+
+The distribution stopped at 3.2% while its own `source` string cited "Urban/RAND cross-checks
+5-6% fully loaded", so it excluded evidence it named in the same object. research/05
+`CP-GOV-008` recommends 2-6% and calls the spread "a meaningful and defensible modeling
+uncertainty band, not noise to be collapsed to one number". The high is that ceiling now. The
+low stays at 1.5%, CBO's aggressive case, which the same file names as the best case: keeping it
+means the range spans everything the evidence names rather than only its unfavourable half. The
+mode stays at 2.2%, where the analyst put it and for the reason the analyst gave.
+
+**Effect, measured as a paired comparison** — the same 1,500 draws, the same per-parameter
+streams, one parameter changed, nothing else re-drawn:
+
+| Figure | Effect of the widening alone |
+|---|---|
+| Mature-year total | +0.84% |
+| New revenue | **+2.19%** |
+| Per capita | +0.74% |
+| NHE/GDP | +0.86% |
+| Federal increase | +1.82% |
+| Mature-year p10-p90 band | **+7.1%** |
+| New-revenue p10-p90 band | **+8.2%** |
+
+The bands widen more than the centres move, which is the row's actual point: the conservative
+case is reachable now, and a reader can see what it costs.
+
+`providerPaymentFactor` diverges the opposite way and is untouched, per `§Q3`: its own cited
+source implies about 0.39 if every payer moved to Medicare rates and it implements 0.85-1.00,
+deliberately, because the framework is capacity-first. **That divergence is now declared rather
+than left to cancel silently against the admin one.**
+
+### CONSTANTS: 5 of 10 sourced, 5 became graded assumptions, and 2 more were found
+
+| Constant | Outcome |
+|---|---|
+| `0.32` `0.16` `0.18` `0.27` sponsor shares | **Sourced.** Derived from `MONEYFLOW`, which is the CMS NHE sponsor table. The engine divides now rather than restating. |
+| `88` low-value pool | **Sourced and sampled.** `lowValuePool`, triangular 75.7 / 88.45 / 101.2 from `CP-DX-007`, `confidence: medium`. |
+| `0.75` state MOE fraction | Graded assumption, `low`, with the comparator: the money-flow map names 62% as state Medicaid plus state employee premiums, so 0.75 also assumes about $100B of public-health and facilities spending moves. |
+| `0.5` OOP share of residual | Graded assumption, `low`. Today's comparable ratio is 26%. |
+| `0.6` / `0.4` embedded-drug split | Graded assumption, `low`. Output-neutral by construction, now checked rather than asserted. |
+| `0.012` program input growth | Graded assumption, `low`. Compounds to +25% by 2042; the health-cost rate would give +89%. |
+
+Two beyond the row's ten, both registered here:
+
+- **`0.28`, the wage tax feedback rate.** This is `R124`, which is **`§S11b`'s row** — registered
+  early because R21's own check cannot go green with an unregistered literal in the engine.
+  Graded `medium` against the CBO paper `wagePassThrough` already cites. **`§S11b` still owns
+  whether it gets a distribution.**
+- 🆕 **`0.02`, the correlated-draw quantile clamp.** Not in any row. 21 tagged parameters have
+  their sampling quantile clamped to `[0.02, 0.98]`; staying inside the unit interval needs
+  `[0, 1]`, and the extra 2% removes the outer tail of every one of them, so published bands are
+  narrower than the declared low and high imply. Registered `low`. It narrows bands and moves no
+  central estimate, which is why nobody had noticed.
+
+### $4.75T: DERIVED
+
+**The framework answers it in its own quality catalog.** `KPP-C2` calculates per-capita system
+cost as *"CP-TOT-001 total-system cost / covered population"* and states its target as *"to be
+reconciled with $4.75T total system cost and current population denominator"*. The claim is
+total system cost, all payers, at maturity, in real 2024 dollars — the first of research/01's
+three candidates, and `matureToday` is the quantity the model computes to be comparable with it.
+
+research/01 calls this the single most important open question in the repository and it has been
+open through every pass, because everyone looked for the answer in the prose.
+
+Settling what it means does not make it reproducible, and the two questions were being answered
+as one. On its own basis **the model centers 14.7% above it**, and the claim sits **below the
+10th percentile of every scenario in the catalog**, including the optimistic one, whose central
+estimate ($5.03T) does land inside the claim's stated $4.3T-$5.25T range.
+
+The figure is kept, given its basis, and published as a third line on the benchmark chart with
+the comparison computed rather than typed. **`BenchmarkRow` now requires a `basis` field.**
+
+One coincidence, recorded so nobody rediscovers it as a finding: the model's mature federal
+increase is $4.77T/yr, within a fraction of a percent of the claim. That is the *second*
+candidate reading, on a different accounting basis, and Urban and Mercatus put that quantity at
+$3.2-3.4T/yr. The match is arithmetic, not evidence.
+
+### DISCREPANCY
+
+- **D51. `R32`'s arithmetic.** The row says research/03's *"more recent framing: more than $100
+  billion annually"* is *"above the top of the range being averaged"*. It is above the midpoint,
+  not above the top: the range is $75.7-101.2B. The band is therefore not extended past its
+  published high. The row's substance holds; its arithmetic does not.
+- **D52. `R134(b)` is wrong, and the code wins.** The row says a user can drag `publicAdminRate`
+  to 6% "yet every percentile band and headline range comes from a triangular capped at 3.2%".
+  A slider does not read a mode off a frozen band: it re-centres the band on the new mode and
+  rebuilds the spread proportionally, so dragging to 6% gives roughly 4.1 / 6.0 / 8.7. The
+  control and the distribution never disagreed. **Its proposed test — "no adjustable parameter's
+  sliderMax exceeds its distribution high" — would fail on all twelve adjustable parameters and
+  is the wrong rule**: exploring past the sampled band is what the slider is for. Not
+  implemented. The sweep it asked for found a real defect instead; see NEW FINDINGS.
+- **D53. `R26`'s premise.** The row says the $4.75T figure "is currently rendered as a comparison
+  line on a public-facing chart". It was rendered nowhere: `FRAMEWORK_CLAIM` was exported by
+  `params.ts` and imported by nothing. The only place a reader met the claim was a note that had
+  gone stale — it said the model "reaches it only under the optimistic scenario", and no scenario
+  reaches it.
+- **D54. `R22`'s scope.** The row names one hardcoded mature-year index. The scan written to
+  enforce the fix found **nine, across six modules, in three spellings**.
+- **D55. `R127`'s scope.** The row names the `scaleMax` casts. The audit it asks for found
+  **seven sites**, one of them live on a public control.
+
+### NEW FINDINGS
+
+- 🛑 **Monte Carlo draws were position-dependent, so adding a parameter moved every published
+  percentile.** Found by measurement: `R32` added one parameter and the mature-year total moved
+  $5.38T → $5.42T. It was not the parameter — pinning the new distribution to the constant it
+  replaced, so the arithmetic was identical, moved the figure by exactly as much. One shared
+  stream drew z and then one number per parameter in declaration order, so inserting a parameter
+  shifted every draw after it, in that run and in all 599 that followed. **Fixed**: one stream
+  per parameter, seeded from the run seed and the parameter id. **This is why every measurement
+  in this entry is a paired comparison and can be trusted; before it, no section adding a
+  parameter could tell its own effect from a reshuffle.**
+- 🛑 **A slider could push a percentage past 100.** `R63` [§S5] gave every parameter a natural
+  domain from its unit and clamped the scenario `mult` path; the slider path was left open and
+  reaches further, because re-centring scales the spread by the new mode. `employerCapture` at
+  its slider maximum produced a high of **120%** of employer spend, `wagePassThrough` **136%**,
+  `wealthCollectionEff` **104%**, all reachable by dragging a control to its end and all fed to
+  the Monte Carlo. Clamped, and both slider ends of every bounded adjustable parameter are now
+  swept. **§S6b (P8) owns sliders and bounds** and should know this is done.
+- 🛑 **`input.step` could be `NaN` on a live control.** `health-client.ts` computed the slider
+  step through two `as number` assertions on optional fields; an adjustable parameter declaring
+  neither would render `min="undefined"` and `step="NaN"` with nothing reporting it. Exactly
+  X4's shape, on a surface a user touches. Fixed, with a check that every adjustable parameter
+  declares bounds containing its mode.
+- ⚠️ **Two pages publish "new revenue needed" from different statistics of the same model.** The
+  healthcare chapter's tile is the ensemble median ($3.50T). The tax chapter's need path is the
+  **mode run** ($3.38T), because `buildHealthPath` reads `mc.modePath`. They were 1.4% apart
+  before this section and are **3.6% apart after**, because widening a distribution moves its
+  median away from its mode. Neither is wrong; they are different statistics with the same name
+  on two pages. **Nobody's row.** Fixing it means choosing which statistic to publish, which
+  moves numbers on both surfaces, so it belongs to a section that owns both.
+- ⚠️ **`KPP-C8`'s breaching-scenario count is an ensemble statistic, not a property.** `R143`
+  measured "12 of 20 scenarios breach the 5% cap". Re-drawing the same model with per-parameter
+  streams, no economics changed, gives **10 of 20**. `tests/lib/kappa.test.ts` asserted
+  `breaching.length > SCENARIOS.length / 2`, which was asserting a property of the seed. Pinned
+  to the measured count with the reasoning in the test.
+- ⚠️ **600 draws was not enough for the centre, let alone the tails.** Measured across seven
+  seeds: at 600 the hero figure spans 0.72%, new revenue 2.44%. Raised to 1,500 (0.56% and
+  1.37%), which is where the curve bends; 3,000 was tried and reverted after measuring the
+  build, because it bought nothing on the tail and cost 17 seconds a build. **At 12,000 draws
+  the hero still moves 0.25%, which is $13B on $5.4T: the dashboard publishes three significant
+  figures and the ensemble supports two.** That is a display question and is written into
+  `params.ts` rather than solved by adding zeroes.
+- ⚠️ **`wealthTaxPotential`'s label still overstates its scope** — P6 left this for §S6a and it
+  is not fixed. The label reads "Extreme-wealth **+ high-income** tax package gross potential"
+  while its source is purely the Saez-Zucman wealth tax. Left alone deliberately: correcting the
+  label without correcting the value would be cosmetic, and correcting the value needs the
+  high-income half sourced, which is `P25`'s job.
+- ⚠️ **`README.md` advertised "600 Monte Carlo draws over 27 sourced parameter distributions"**
+  and both numbers were wrong before this section touched them: 31 parameters, not 27. Now
+  1,500 and 32. `R136` (§S11b) filed the count; it is corrected here as a side effect rather
+  than claimed.
+
+### GATES AND COUNTS
+
+- **Self-tests 107 → 126.** README bumped in the same edit every time; the drift gate fired on
+  schedule whenever it was not.
+- **19 new checks, and all 19 were watched failing**, by breaking the code and rebuilding, then
+  restoring from bytes read before the break. The pass is scripted in the session scratchpad and
+  reports `build failed / named its check / restored` per break. Two were caught being wrong
+  *while being written* rather than after: the engine-literal scan fired on the `88` and the
+  quantile clamp before it was finished, and the mature-year scan found five sites its author
+  did not know about.
+- `astro check`: **0 errors, 0 warnings, 1 hint.** The count fell from 2 because R126's test
+  uses the `GROUPS` import that was flagged unused. The remaining hint is `equations.ts`'s
+  unreachable `return NaN`, pre-existing and outside this section.
+- `pnpm test`: 57 files, **372 tests**, all green. `vitest.config.ts` gains
+  `testTimeout: 30000`: several tests run the whole self-test summary, which is heavier with a
+  1,500-draw ensemble, and they were failing as timeouts rather than as anything real.
+- Build time 12.4s → 18.0s, from the draw count.
+- `tests/lib/taxmodel.test.ts` still pins `TAX_SELFTESTS.length` at 15; nothing here added a tax
+  invariant, so it is untouched.
+
+### THE MEASUREMENT DISCIPLINE THAT THIS SECTION RAN ON
+
+Every published movement in this entry was isolated by pinning the changed thing to its old
+value and re-running, rather than by reasoning about what should have moved. That is what
+caught the shared random stream: the hero figure moved by the same amount whether the new
+parameter varied or was frozen at the constant it replaced, which is only possible if the
+parameter was not the cause.
+
+The technique is cheap and it is the only reason the `publicAdminRate` numbers in this entry can
+be stated as that parameter's effect rather than as this session's effect. **Any later section
+that reports a movement below 0.7% on the hero figure or 1.4% on new revenue is reporting the
+ensemble drawing different numbers**, and the self-test that measures it is now in the build.
