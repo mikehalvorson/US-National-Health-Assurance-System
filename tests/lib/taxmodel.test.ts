@@ -22,6 +22,40 @@ test('distribution burden reconciles with total revenue within 0.5% (identity, n
   expect(Math.abs(sumTax - total) / total).toBeLessThan(0.005);
 });
 
+/* R126 [§S6a]: every distribution() call in this file passed three arguments,
+   so `wageGainB` defaulted to zero and the wage pass-through was never
+   exercised here. It is the mechanism that reduces apparent household burden
+   while its other half reduces the new-revenue requirement, and it crosses the
+   seam between the two engines. The self-test harness holds the cross-engine
+   reconciliation; this holds the function's own behaviour. */
+test('R126: distribution allocates a non-zero wageGainB by wage share', () => {
+  const s = defaultSettings();
+  const year = 2041;
+  const wageGainB = 284;
+  const withWage = distribution(s, year, 0, wageGainB);
+  const without = distribution(s, year, 0);
+
+  /* the whole of it lands, and only by wage share */
+  const allocated = withWage.reduce((a, r) => a + r.wageB, 0);
+  expect(allocated).toBeCloseTo(wageGainB, 9);
+  expect(GROUPS.reduce((a, g) => a + g.wageShare, 0)).toBeCloseTo(1, 9);
+
+  withWage.forEach((r, i) => {
+    expect(r.wageB).toBeCloseTo(wageGainB * r.group.wageShare, 9);
+    /* it reduces net burden, never raises it */
+    expect(r.netPerHH).toBeLessThanOrEqual(without[i].netPerHH);
+    /* and the per-household figure is the group's own share over its own
+       household count, not an average smeared across the population */
+    /* dollars per household, so six decimals is a millionth of a cent; nine
+       is below the float's own resolution at this magnitude */
+    expect(without[i].netPerHH - r.netPerHH).toBeCloseTo(
+      wageGainB * r.group.wageShare * 1e9 / (r.group.hhM * 1e6), 6);
+  });
+
+  /* the three-argument call is the one that was silently testing nothing */
+  expect(without.every((r) => r.wageB === 0)).toBe(true);
+});
+
 test('revenue is linear in a scale instrument setting', () => {
   const s1 = defaultSettings();
   const s2 = defaultSettings();

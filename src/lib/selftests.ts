@@ -13,8 +13,8 @@ import {
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
-import { classGrowth, TAX_SELFTESTS } from './taxmodel';
-import { DATASET_VINTAGES, INSTRUMENTS as TAX_INSTRUMENTS } from './taxparams';
+import { classGrowth, defaultSettings, distribution, TAX_SELFTESTS } from './taxmodel';
+import { DATASET_VINTAGES, GROUPS as TAX_GROUPS, INSTRUMENTS as TAX_INSTRUMENTS } from './taxparams';
 import {
   REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
   staleRelevanceFallbacks, undeclaredRelevanceFallbacks
@@ -397,6 +397,81 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
     /* shape 2: {name, run}[] pushed onto a shared array */
     surface: 'taxmodel.ts',
     rows: () => TAX_SELFTESTS.map((t) => runGuarded(t.name, () => ({ ok: !!t.run() })))
+  },
+  {
+    /* R126 [§S6a]: the wage pass-through spans both engines and was tested in
+       neither. model.ts self-test 8 checks the feedback arithmetic in
+       isolation; taxmodel.ts's reconciliation test calls
+       `distribution(s, year, 0)` with three arguments, so `wageGainB` is
+       undefined and the parameter defaults to zero. The mechanism reduces the
+       new-revenue requirement on one side and household burden on the other -
+       it flatters the plan in both directions at once - and nothing exercised
+       the seam it crosses. This is where the two sides meet, so this is where
+       the check lives; neither file owns it. */
+    surface: 'wage-passthrough',
+    rows: () => {
+      const YEAR = 2041;
+      const mc = runOverviewMc('SCN-BASE', null);
+      const d = mc.modePath.detail[YEAR - START_YEAR];
+      const wageB = d.wageGain * DEFLATOR_2023_TO_2024;
+      const reliefB = d.householdRelief * DEFLATOR_2023_TO_2024;
+      const settings = defaultSettings();
+      const withWage = distribution(settings, YEAR, reliefB, wageB);
+      const without = distribution(settings, YEAR, reliefB, 0);
+      return [
+        /* the first half of the row: it is exercised at all, and with a value
+           the model actually produces rather than a number invented here. A
+           check that ran with wageGainB = 0 would pass and prove nothing. */
+        runGuarded('The wage pass-through is exercised with the value the model produces', () => {
+          const allocated = withWage.reduce((a, r) => a + r.wageB, 0);
+          const shares = TAX_GROUPS.reduce((a, g) => a + g.wageShare, 0);
+          const problems: string[] = [];
+          if (!(wageB > 0)) problems.push('the model produces no wage gain at ' + YEAR);
+          if (Math.abs(shares - 1) > 1e-9) {
+            problems.push('wage shares sum to ' + shares.toFixed(6) + ', not 1');
+          }
+          if (Math.abs(allocated - wageB) > 1e-6) {
+            problems.push('allocated ' + allocated.toFixed(3) + ' of ' + wageB.toFixed(3));
+          }
+          return {
+            ok: !problems.length,
+            note: problems.join('; ') || '$' + wageB.toFixed(1) + 'B at ' + YEAR +
+              ', allocated across ' + TAX_GROUPS.length + ' groups by wage share'
+          };
+        }),
+        /* the second half: net household impact reconciles with the health
+           model's wageGain. Every household is better off by its own share of
+           the pass-through and by no more, and the totals agree across the
+           seam to the dollar. */
+        runGuarded('Net household impact reconciles with the health model wage gain', () => {
+          const problems: string[] = [];
+          let reliefTotalB = 0;
+          withWage.forEach((r, i) => {
+            const base = without[i];
+            const shifted = (base.netPerHH - r.netPerHH) * r.group.hhM * 1e6 / 1e9;
+            reliefTotalB += shifted;
+            const own = wageB * r.group.wageShare;
+            if (Math.abs(shifted - own) > 1e-6) {
+              problems.push(r.group.id + ' moved ' + shifted.toFixed(3) +
+                ' against a share of ' + own.toFixed(3));
+            }
+            if (r.netPerHH > base.netPerHH + 1e-9) {
+              problems.push(r.group.id + ' is worse off with the pass-through');
+            }
+          });
+          if (Math.abs(reliefTotalB - wageB) > 1e-6) {
+            problems.push('total moved ' + reliefTotalB.toFixed(3) +
+              ' against a wage gain of ' + wageB.toFixed(3));
+          }
+          return {
+            ok: !problems.length,
+            note: problems.slice(0, 3).join('; ') ||
+              'household burden falls by $' + reliefTotalB.toFixed(1) +
+              'B, the whole of the wage gain, spread by wage share'
+          };
+        })
+      ];
+    }
   },
   {
     /* shape 3: bare predicates taking the catalog (R153, R206) */
