@@ -9,7 +9,9 @@
  * ========================================================================= */
 import { runMonteCarlo } from './model';
 import type { MonteCarloResult } from './model-types';
-import { DEFLATOR_2023_TO_2024 } from './params';
+import {
+  DEFLATOR_2023_TO_2024, MATURE_INDEX, MONTE_CARLO_DRAWS, MONTE_CARLO_SEED
+} from './params';
 import { money, moneyShort, pct, perCap } from './format';
 
 export interface OverviewTile {
@@ -33,13 +35,14 @@ function bandTxt(p10: number, p90: number, fmt: (v: number) => string): string {
   return fmt(p10) + " – " + fmt(p90) + " (10th–90th pct)";
 }
 
-/* Run the Overview Monte Carlo once (600 runs, seed 42) so the text render
-   and the path chart can share a single result. */
+/* Run the Overview Monte Carlo once so the text render and the path chart can
+   share a single result. R25 [§S6a]: the draw count and the seed are declared
+   in params.ts with the measurement that chose them. */
 export function runOverviewMc(
   scenario: string,
   sliders: Record<string, number> | null
 ): MonteCarloResult {
-  return runMonteCarlo(scenario, sliders, 600, 42);
+  return runMonteCarlo(scenario, sliders, MONTE_CARLO_DRAWS, MONTE_CARLO_SEED);
 }
 
 /* computeOverview split so callers holding an mc (e.g. the client, which also
@@ -61,7 +64,7 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
 
   /* 2041 pair: NHA steady state next to the same-year status quo */
   const ss = mc.steady.total;
-  const baseMature = mc.baseline[mc.years.length - 2] * DEF; // 2041
+  const baseMature = mc.baseline[MATURE_INDEX] * DEF;
   const delta = ss.p50 * DEF - baseMature;
   const nha2041 = money(ss.p50 * DEF) + "/yr";
   const hero2041Range =
@@ -75,7 +78,7 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
      Households sponsor 27% of NHE (CMS); ~141M households by 2041. */
   const famNow = 0.27 * 5300, fam2041 = 0.27 * baseMature;
   const hhNow = 132.2, hh2041 = 141;
-  const d41 = mc.modePath.detail[mc.years.length - 2];
+  const d41 = mc.modePath.detail[MATURE_INDEX];
   const kppPerHH = 0.05 * d41.newRevenue * DEF * 1e9 / (hh2041 * 1e6);
   const familyNote =
     "Where that growth lands on families: households sponsor about 27% of " +
@@ -92,7 +95,7 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
     "is the Taxes & Financing tab.";
 
   /* ---- renderTiles (app.js:183-210) ---- */
-  const lastIdx = mc.years.length - 2; // 2041
+  const lastIdx = MATURE_INDEX;
   const tBaseMature = mc.baseline[lastIdx] * DEF;
   const deltaVsBase = mc.steady.total.p50 * DEF - tBaseMature;
   const tiles: OverviewTile[] = [

@@ -5,7 +5,7 @@
  * plus the identity error (baseline + adds - subs - nheNha), which the old
  * self-test footer recorded as NHA._bridgeIdentityError.
  * ========================================================================= */
-import { BASE2023 } from './params';
+import { BASE2023, MATURE_INDEX } from './params';
 import { buildRamps, baselineCategorySplit } from './model';
 import { scenarioStructural } from './scenarios';
 import type { MonteCarloResult } from './model-types';
@@ -16,7 +16,7 @@ export function bridgeSteps(mc: MonteCarloResult):
   const B = BASE2023, p = mc.modeParams;
   const structural = scenarioStructural(mc.scenarioId);
   const ramps = buildRamps(structural);
-  const t = mc.years.length - 2; // 2041, transition fully wound down
+  const t = MATURE_INDEX; // R22 [§S6a]: the mature year, declared once
   const d = mc.modePath.detail[t];
   const G = d.nheBase / B.nheTotal;
 

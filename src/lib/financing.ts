@@ -3,12 +3,13 @@
  * (lines 313-342). Derives the mature-year (2041) public-cost waterfall from a
  * Monte Carlo result. No DOM; returns a FinancingSpec for renderFinancingChart.
  * ========================================================================= */
+import { MATURE_INDEX } from './params';
 import type { MonteCarloResult } from './model-types';
 import type { FinancingSpec } from './financing-chart';
 
 /* app.js:313-333 */
 export function financingSpec(mc: MonteCarloResult, _DEF: number): FinancingSpec {
-  const t = mc.years.length - 2; // 2041
+  const t = MATURE_INDEX; // R22 [§S6a]: the mature year, declared once
   const d = mc.modePath.detail[t];
   const need = d.pubCost;
   const fedUse = Math.min(d.fedRedirect, need);
@@ -32,7 +33,7 @@ export function financingSpec(mc: MonteCarloResult, _DEF: number): FinancingSpec
 
 /* app.js:335-342 */
 export function financingNote(mc: MonteCarloResult, _DEF: number): string {
-  const t = mc.years.length - 2;
+  const t = MATURE_INDEX;
   const d = mc.modePath.detail[t];
   const need = d.pubCost;
   const fedUse = Math.min(d.fedRedirect, need);

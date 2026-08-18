@@ -6,7 +6,7 @@
  * ========================================================================= */
 import { money, moneyShort } from './format';
 import { bridgeSteps } from './bridge';
-import { MONEYFLOW } from './params';
+import { MATURE_INDEX, MONEYFLOW } from './params';
 import type { MonteCarloResult } from './model-types';
 
 export interface TableData {
@@ -65,7 +65,7 @@ export function bridgeTableData(mc: MonteCarloResult, DEF: number): TableData {
 
 /* app.js:344-363 */
 export function financingTableData(mc: MonteCarloResult, DEF: number): TableData {
-  const t = mc.years.length - 2; // 2041
+  const t = MATURE_INDEX;
   const d = mc.modePath.detail[t];
   const need = d.pubCost;
   const fedUse = Math.min(d.fedRedirect, need);

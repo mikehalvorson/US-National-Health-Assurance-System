@@ -42,6 +42,8 @@ import {
   START_YEAR,
   END_YEAR,
   PRE_YEARS,
+  MATURE_INDEX,
+  MATURE_YEARS_FROM_BASE,
   AGE_STRUCTURE,
   PARAM_DEFS,
   TOP_CAPITAL_REAL_GROWTH,
@@ -482,7 +484,8 @@ export function matureAtScale(
 ): MatureAtScaleResult {
   const B = BASE2023;
   const ramps = buildRamps(structural);
-  const t = (END_YEAR - START_YEAR + 1) - 2; // 2041: fully mature, transition wound down
+  /* R22 [§S6a]: the mature year, from params.ts, not recomputed here. */
+  const t = MATURE_INDEX;
 
   const g = p.baselineRealGrowth / 100;
   const G = Math.pow(1 + g, yearsFrom2023);
@@ -691,8 +694,8 @@ export function selfTest(): SelfTestResult[] {
   /* 5b. matureAtScale mirrors runPath exactly (guards formula divergence):
    *     at 18 years from 2023 (= 2041) it must reproduce the path value,
    *     since transition outlays are zero by then. */
-  const d2041 = modePath.detail[2041 - START_YEAR];
-  const mas = matureAtScale(modeP, {}, 18);
+  const d2041 = modePath.detail[MATURE_INDEX];
+  const mas = matureAtScale(modeP, {}, MATURE_YEARS_FROM_BASE);
   const masErr = Math.abs(mas.nheNha - d2041.nheNha) / d2041.nheNha;
   check("Mature-at-scale computation matches the 2041 path value",
     masErr < 0.001, "diff=" + (100 * masErr).toFixed(4) + "%");
@@ -708,9 +711,9 @@ export function selfTest(): SelfTestResult[] {
     const sp = sampleParams(eff, null);
     const struct = scenarioStructural(sc.id);
     const path = runPath(sp, struct);
-    const row = path.detail[2041 - START_YEAR];
+    const row = path.detail[MATURE_INDEX];
     if (row.shock !== 0) return;
-    const m = matureAtScale(sp, struct, 18);
+    const m = matureAtScale(sp, struct, MATURE_YEARS_FROM_BASE);
     const err = Math.abs(m.nheNha - row.nheNha) / row.nheNha;
     masScenarios += 1;
     if (err > masWorst) { masWorst = err; masWorstId = sc.id; }
@@ -784,6 +787,33 @@ export function selfTest(): SelfTestResult[] {
     domainBreaches.length ? domainBreaches.slice(0, 5).join(', ')
       : SCENARIOS.length + " scenarios x " + PARAM_DEFS.length + " parameters");
 
+  /* 5f. R25 [§S6a]: pubShare is bounded. It is the share of system cost the
+   *     public program carries, so it cannot be negative or exceed 1, and
+   *     every financing line in the engine multiplies by it. Nothing checked
+   *     it. Swept over every scenario at the three corners of the declared
+   *     parameter space, the same shape as 5d, because the value is a product
+   *     of a ramp and a share and either can be moved by a scenario. */
+  const shareBreaches: string[] = [];
+  SCENARIOS.forEach(function (sc) {
+    const eff = effectiveParams(sc.id, null);
+    const struct = scenarioStructural(sc.id);
+    corners.forEach(function (corner) {
+      const cp: Record<string, number> = {};
+      PARAM_DEFS.forEach(function (def) { cp[def.id] = corner[1](eff[def.id]); });
+      runPath(cp as unknown as SampledParams, struct).detail.forEach(function (d) {
+        if (!(d.pubShare >= 0 && d.pubShare <= 1)) {
+          shareBreaches.push(sc.id + '/all-' + corner[0] + '@' + d.year +
+            '=' + d.pubShare.toFixed(3));
+        }
+      });
+    });
+  });
+  check("The public share of system cost stays between 0 and 1",
+    shareBreaches.length === 0,
+    shareBreaches.slice(0, 4).join(', ') ||
+      SCENARIOS.length + " scenarios x 3 corners x " +
+      (END_YEAR - START_YEAR + 1) + " years");
+
   /* 6. Percentile bands ordered p10 ≤ p50 ≤ p90 (small MC run) */
   const mc = runMonteCarlo("SCN-BASE", null, 60, 7);
   const ordered = mc.yearBands.every(function (b) {
@@ -803,8 +833,8 @@ export function selfTest(): SelfTestResult[] {
   /* 8. Wage pass-through feedback lowers the new-revenue requirement */
   const pw0 = sampleParams(effective, null); pw0.wagePassThrough = 0;
   const pw9 = sampleParams(effective, null); pw9.wagePassThrough = 95;
-  const d0 = runPath(pw0, {}).detail[2041 - START_YEAR];
-  const d9 = runPath(pw9, {}).detail[2041 - START_YEAR];
+  const d0 = runPath(pw0, {}).detail[MATURE_INDEX];
+  const d9 = runPath(pw9, {}).detail[MATURE_INDEX];
   check("Wage pass-through: feedback = the registered marginal rate on the wage gain",
     d0.newRevenue > d9.newRevenue &&
     Math.abs(d9.taxFeedback - WAGE_TAX_FEEDBACK_RATE * d9.wageGain) < 0.01 &&

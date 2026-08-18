@@ -91,6 +91,67 @@ export const START_YEAR = 2027;
 export const END_YEAR = 2042;
 export const PRE_YEARS = 4; // 2023 -> 2027 growth applied before Year 1
 
+/* ---- The mature year, stated once ---------------------------------------
+ * R22 [§S6a]. The year the model reports its mature system from was computed
+ * four different ways in six places: `mc.years.length - 2` in bridge.ts and
+ * financing.ts, `(END_YEAR - START_YEAR + 1) - 2` inside matureAtScale, and
+ * `2041 - START_YEAR` in four self-tests. The row filed the third of those.
+ * They agree today. Moving END_YEAR would have moved some and not others, and
+ * the self-tests comparing the two would have compared different years while
+ * still passing, because each side would be reading its own.
+ *
+ * It is the second-to-last year on purpose: the last year of the path is the
+ * end of the window rather than a steady state, and transition outlays and IT
+ * capital have both wound down by the year before it.
+ * ------------------------------------------------------------------------ */
+export const BASE_YEAR = START_YEAR - PRE_YEARS;
+export const MATURE_YEAR = END_YEAR - 1;
+export const MATURE_INDEX = MATURE_YEAR - START_YEAR;
+export const MATURE_YEARS_FROM_BASE = MATURE_YEAR - BASE_YEAR;
+
+/* ---- The ensemble's size, and what it buys -------------------------------
+ * R25 [§S6a] asks whether 600 draws is enough for the tails. Measured, by
+ * running the same model at seven seeds and taking the spread of the
+ * published central estimate as a share of its own midpoint:
+ *
+ *     draws   mature-year p50   p90 tail   new revenue p50   ms/run
+ *       600        0.72%          1.00%        2.44%           18
+ *     1,500        0.56%          0.40%        1.37%           36
+ *     3,000        0.49%          0.47%        1.21%           79
+ *     6,000        0.42%          0.34%        0.86%          160
+ *    12,000        0.25%          0.20%        0.71%        1,355
+ *
+ * 1,500 is the choice, because that is where the curve bends. Going from 600
+ * to 1,500 more than halves the tail spread the row asks about, from 1.00% to
+ * 0.40%, and cuts the new-revenue spread from 2.44% to 1.37%, for 36ms. Going
+ * on to 3,000 buys nothing measurable on the tail and costs another 43ms per
+ * run and, measured, 17 seconds of build time, because every self-test that
+ * runs the ensemble pays it too. 6,000 doubles the wait after every slider
+ * drag; 12,000 leaves the page slower than the interaction it is answering.
+ *
+ * 36ms also sits well inside the 160ms debounce the sliders already impose, so
+ * a reader dragging a control still sees the result land in one beat.
+ *
+ * What no draw count fixes: at 12,000 the hero figure still moves 0.25% across
+ * seeds, which is $13B on $5.4T. The dashboard publishes it to three
+ * significant figures and the ensemble supports two. That is a display
+ * question rather than a sampling one, and it is stated here rather than
+ * solved by adding zeroes.
+ *
+ * The seeds and the tolerance are declared so the claim above is checked
+ * rather than asserted: a change to the sampling that makes the ensemble less
+ * reproducible fails the build.
+ * ------------------------------------------------------------------------ */
+export const MONTE_CARLO_DRAWS = 1500;
+export const MONTE_CARLO_SEED = 42;
+export const SEED_STABILITY = {
+  seeds: [42, 43, 7, 99, 12345, 2024, 555],
+  /* Measured at these seeds and this draw count: hero 0.56%, p90 tail 0.40%.
+     The tolerance is a little above the larger of the two, so the check fails
+     on a real loss of reproducibility rather than on the third decimal. */
+  tolerancePct: 0.7
+};
+
 /* ---- The calendar anchor, stated once ------------------------------------
  * R256 [§S2]: the phase years ARE calendar-anchored, and the repository
  * behaved as though they were long before it said so. model.ts computes

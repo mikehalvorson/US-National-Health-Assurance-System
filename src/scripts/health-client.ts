@@ -23,7 +23,7 @@ import { renderDataTable, pathTableData, bridgeTableData, financingTableData } f
 import type { TableData } from '../lib/overview-tables';
 import { growthDecompNote } from '../lib/growth-decomp';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
-import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
+import { MATURE_INDEX, PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 import { money } from '../lib/format';
 
 /* How many positions a parameter slider offers between its declared bounds. */
@@ -142,7 +142,9 @@ function initHealth(): void {
 
     const hh = $('household-calc');
     if (hh) {
-      householdNumbers = { newRevenueB: mc.modePath.detail[mc.years.length - 2].newRevenue * DEF };
+      householdNumbers = {
+        newRevenueB: mc.modePath.detail[MATURE_INDEX].newRevenue * DEF
+      };
       if (!householdRerender) {
         householdRerender = renderHouseholdCalc(hh, () => householdNumbers);
       } else {

@@ -51,10 +51,10 @@ the methodology as superseded by the model's computed projections):
 `src/` contains the **interactive public dashboard**: an Astro static site
 that builds to plain HTML/JS/SVG with no runtime dependencies and no server,
 implementing the national-aggregate simulation specified in BUILD-BRIEF.md.
-It runs 600 Monte Carlo draws over 27 sourced parameter distributions in
+It runs 1,500 Monte Carlo draws over 32 sourced parameter distributions in
 ~15ms in the browser, covers the framework's Phase 0–8 rollout (2027–2042)
 and all 19 stress scenarios. It validates itself with
-122 built-in integrity tests, shown in the page footer and enforced by the
+125 built-in integrity tests, shown in the page footer and enforced by the
 build gate.
 
 <!-- R155: the count above is checked against selfTestSummary().total by a

@@ -8,6 +8,7 @@ import {
   PROGRAM_INPUT_REAL_GROWTH, runPath, sampleParams, selfTest
 } from './model';
 import { runOverviewMc } from './overview';
+import { runMonteCarlo } from './model';
 import {
   effectiveParams, naturalCeiling, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
 } from './scenarios';
@@ -45,7 +46,8 @@ import {
 } from './fmea';
 import {
   ALLOWED_ASSERTIONS, baselineSplitCopies, displayOnlyDatasetsInEngine,
-  divergenceIsRendered, ENGINE_FILE, ENRICHERS, primitiveAssertions,
+  divergenceIsRendered, ENGINE_FILE, ENRICHERS, matureYearDerivations,
+  MATURE_YEAR_HOME, primitiveAssertions,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
@@ -56,8 +58,9 @@ import { TABS } from './tabs';
 import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
-  FRAMEWORK_CLAIM, PARAM_DEFS, PARAMS_BY_ID, RAMPS, RAMP_MILESTONES,
-  RESEARCH_RECOMMENDATIONS, SPONSOR_SHARE, START_YEAR, transitionEnvelope
+  FRAMEWORK_CLAIM, MATURE_INDEX, MATURE_YEAR, MONTE_CARLO_DRAWS, PARAM_DEFS,
+  PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS, SEED_STABILITY,
+  SPONSOR_SHARE, START_YEAR, transitionEnvelope
 } from './params';
 import {
   EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
@@ -317,7 +320,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         const bad: string[] = [];
         for (const sc of MODEL_SCENARIOS) {
           const mc = runOverviewMc(sc.id, null);
-          const d = mc.modePath.detail[mc.years.length - 2];
+          const d = mc.modePath.detail[MATURE_INDEX];
           const oneTime = d.trans + d.itcap + d.shock;
           if (Math.abs(oneTime) > 1e-9) bad.push(sc.id + '=' + oneTime.toFixed(1));
         }
@@ -410,9 +413,9 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
        the check lives; neither file owns it. */
     surface: 'wage-passthrough',
     rows: () => {
-      const YEAR = 2041;
+      const YEAR = MATURE_YEAR;
       const mc = runOverviewMc('SCN-BASE', null);
-      const d = mc.modePath.detail[YEAR - START_YEAR];
+      const d = mc.modePath.detail[MATURE_INDEX];
       const wageB = d.wageGain * DEFLATOR_2023_TO_2024;
       const reliefB = d.householdRelief * DEFLATOR_2023_TO_2024;
       const settings = defaultSettings();
@@ -912,6 +915,47 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          reaches it from the registry or from a parameter, so after the fix it
          is not a literal at all. This is what stops the eleventh magic number,
          and it reports the line so the failure names the offender. */
+      /* R25 [§S6a]: how reproducible the published figures are, checked rather
+         than assumed. The same model at seven seeds, and the spread of the
+         central estimate as a share of its own midpoint. This is the check
+         that says what a movement in a later section has to beat before it
+         means anything: below this tolerance, a "change" is the ensemble
+         drawing different numbers. */
+      runGuarded('The ensemble reproduces its published figures across seeds', () => {
+        const runs = SEED_STABILITY.seeds.map(
+          (s) => runMonteCarlo('SCN-BASE', null, MONTE_CARLO_DRAWS, s));
+        const spread = (f: (m: (typeof runs)[0]) => number) => {
+          const v = runs.map(f);
+          const lo = Math.min(...v), hi = Math.max(...v);
+          return 100 * (hi - lo) / ((hi + lo) / 2);
+        };
+        const hero = spread((m) => m.steady.matureToday.p50);
+        const tail = spread((m) => m.steady.matureToday.p90);
+        const over = [
+          hero > SEED_STABILITY.tolerancePct ? 'hero ' + hero.toFixed(2) + '%' : '',
+          tail > SEED_STABILITY.tolerancePct ? 'p90 tail ' + tail.toFixed(2) + '%' : ''
+        ].filter(Boolean);
+        return {
+          ok: !over.length,
+          note: over.length
+            ? over.join(', ') + ' against a declared ' +
+              SEED_STABILITY.tolerancePct + '%'
+            : MONTE_CARLO_DRAWS + ' draws x ' + SEED_STABILITY.seeds.length +
+              ' seeds: hero ' + hero.toFixed(2) + '%, p90 tail ' + tail.toFixed(2) +
+              '%, tolerance ' + SEED_STABILITY.tolerancePct + '%'
+        };
+      }),
+      /* R22 [§S6a]: and nothing works out the mature year for itself. */
+      runGuarded('The mature year is derived in one place', () => {
+        const stray = matureYearDerivations();
+        return {
+          ok: !stray.length,
+          note: stray.length
+            ? stray.map((s) => s.file + ':' + s.line).join(', ')
+            : 'index ' + MATURE_INDEX + ' = ' + MATURE_YEAR + ', from ' +
+              MATURE_YEAR_HOME
+        };
+      }),
       /* R127 [§S6a]: and no new one arrives. Each allowed assertion carries a
          reason; anything else fails the build where it was typed. */
       runGuarded('No primitive type assertion outside the declared list', () => {
@@ -954,7 +998,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          actually performed against the map, not the constant against itself:
          a share is recovered back out of a computed path row. */
       runGuarded("The engine's sponsor shares are the money-flow map's", () => {
-        const t = 2041 - START_YEAR;
+        const t = MATURE_INDEX;
         const p = sampleParams(effectiveParams('SCN-BASE', null), null);
         const d = runPath(p, {}).detail[t];
         const covR = RAMPS.coverage[t];

@@ -748,6 +748,35 @@ export function unreadEngineConstants(ids: string[], root = REPO_ROOT): string[]
   return ids.filter((id) => !masked.includes("engineConstant('" + id + "')"));
 }
 
+/* R22 [§S6a]: the mature year, computed anywhere but params.ts.
+ *
+ * Six places derived the same index in three different ways, and they agreed.
+ * The failure mode is not that they disagree today, it is that moving END_YEAR
+ * moves some of them: the self-tests comparing matureAtScale against the path
+ * row would then compare different years and still pass, because each side
+ * would be reading its own. So the derivations are what is banned, not the
+ * literal - a comment naming 2041 is fine and is masked anyway. */
+export const MATURE_YEAR_HOME = 'src/lib/params.ts';
+export const MATURE_YEAR_DERIVATION =
+  /years\.length\s*-\s*2|END_YEAR\s*-\s*START_YEAR\s*\+\s*1\)\s*-\s*2|204[0-9]\s*-\s*START_YEAR/g;
+
+export function matureYearDerivations(root = REPO_ROOT): CodeReference[] {
+  const out: CodeReference[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/')) continue;
+    if (!rel.endsWith('.ts') && !rel.endsWith('.astro')) continue;
+    if (rel === MATURE_YEAR_HOME) continue;
+    const lines = maskComments(readFileSync(join(root, rel), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      if (MATURE_YEAR_DERIVATION.test(line)) {
+        out.push({ file: rel, line: i + 1, text: line.trim() });
+      }
+      MATURE_YEAR_DERIVATION.lastIndex = 0;
+    });
+  }
+  return out;
+}
+
 /* R127 [§S6a]: a primitive type assertion is a claim the compiler stops
  * checking, and X4 is what that costs. `Math.min(v, ins.scaleMax as number)`
  * on an optional field silently produced NaN for a toggle balancer, and the
