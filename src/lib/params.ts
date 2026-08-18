@@ -766,10 +766,25 @@ export interface OffsetPairing {
   ramp: keyof typeof RAMPS;
   delivers: string;
   why: string;
+  /* R11 [§S6a]: the mechanism this offset is the one home of, and the base it
+     acts on. `HANDOFF.md` constraint 4 asked for a demonstration that no
+     saving is counted twice; the engine has always had the property and the
+     document was never written. research/offset_architecture.md is that
+     document, and these two fields are what holds it to the code: it names
+     every offset the engine produces and no others, and no two offsets may
+     claim the same mechanism. */
+  mechanism: string;
+  scope: string;
 }
+
+/* The document that explains the architecture these pairings implement.
+   Checked to exist, and checked to name every mechanism below. */
+export const OFFSET_ARCHITECTURE_DOC = 'research/offset_architecture.md';
 export const OFFSET_RAMPS: OffsetPairing[] = [
   {
     id: 'offProvAdmin', ramp: 'coverage',
+    mechanism: 'provider billing and revenue cycle',
+    scope: 'hospital + clinical spend',
     delivers: 'provider-side billing and collections savings',
     why: 'A practice stops maintaining multi-payer billing only as its payer mix ' +
       'consolidates onto the public rail, so the saving tracks coverage share and ' +
@@ -777,6 +792,8 @@ export const OFFSET_RAMPS: OffsetPairing[] = [
   },
   {
     id: 'offCareModel', ramp: 'units',
+    mechanism: 'avoided emergency and inpatient activity',
+    scope: 'avoided emergency and inpatient activity',
     delivers: 'ED diversion and avoidable admissions',
     why: 'The diversion has to have somewhere to divert to. Both halves of this ' +
       'term depend on a staffed diagnostic-treatment unit being reachable, which ' +
@@ -784,6 +801,8 @@ export const OFFSET_RAMPS: OffsetPairing[] = [
   },
   {
     id: 'offLowValue', ramp: 'infra',
+    mechanism: 'low-value and duplicate care not ordered',
+    scope: 'the declared national low-value-care pool',
     delivers: 'reduction in the low-value-care pool',
     why: 'Low-value care is captured by measurement and decision support at the ' +
       'point of order - appropriateness criteria in the shared record, and the ' +
@@ -795,6 +814,8 @@ export const OFFSET_RAMPS: OffsetPairing[] = [
   },
   {
     id: 'offExtraction', ramp: 'hospitals',
+    mechanism: 'related-party extraction recovered',
+    scope: 'hospital budgets',
     delivers: 'related-party extraction recovered',
     why: 'Extraction is recovered by the budget agreement that replaces ' +
       'fee-for-service billing at a hospital, so it arrives with the ' +

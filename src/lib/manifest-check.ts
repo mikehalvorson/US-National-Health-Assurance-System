@@ -748,6 +748,22 @@ export function unreadEngineConstants(ids: string[], root = REPO_ROOT): string[]
   return ids.filter((id) => !masked.includes("engineConstant('" + id + "')"));
 }
 
+/* R11 [§S6a]: the offset architecture document, held to the engine.
+ *
+ * A document that describes code is a claim with no test attached, and this one
+ * describes the property HANDOFF.md's constraint 4 asks for: that no savings
+ * mechanism is counted twice. So it is read, and every mechanism the engine
+ * declares has to appear in it. A fifth offset added without a paragraph fails
+ * the build, which is the only way a document like this stays true. */
+export function mechanismsMissingFromDoc(
+  mechanisms: string[],
+  doc: string,
+  root = REPO_ROOT
+): string[] {
+  const text = readFileSync(join(root, doc), 'utf8').toLowerCase();
+  return mechanisms.filter((m) => !text.includes(m.toLowerCase()));
+}
+
 /* R22 [§S6a]: the mature year, computed anywhere but params.ts.
  *
  * Six places derived the same index in three different ways, and they agreed.

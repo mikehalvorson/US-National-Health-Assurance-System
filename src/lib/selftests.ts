@@ -47,7 +47,7 @@ import {
 import {
   ALLOWED_ASSERTIONS, baselineSplitCopies, displayOnlyDatasetsInEngine,
   divergenceIsRendered, ENGINE_FILE, ENRICHERS, matureYearDerivations,
-  MATURE_YEAR_HOME, primitiveAssertions,
+  MATURE_YEAR_HOME, mechanismsMissingFromDoc, primitiveAssertions,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
@@ -58,7 +58,8 @@ import { TABS } from './tabs';
 import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
-  FRAMEWORK_CLAIM, MATURE_INDEX, MATURE_YEAR, MONTE_CARLO_DRAWS, PARAM_DEFS,
+  FRAMEWORK_CLAIM, MATURE_INDEX, MATURE_YEAR, MONTE_CARLO_DRAWS,
+  OFFSET_ARCHITECTURE_DOC, PARAM_DEFS,
   PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS, SEED_STABILITY,
   SPONSOR_SHARE, START_YEAR, transitionEnvelope
 } from './params';
@@ -908,6 +909,33 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !problems.length,
           note: problems.join(' | ') || produced.length + ' offsets, each paired: ' +
             OFFSET_RAMPS.map((o) => o.id.replace(/^off/, '') + '->' + o.ramp).join(', ')
+        };
+      }),
+      /* R11 [§S6a]: the disjointness the architecture claims, as a check.
+         Not that the offsets draw on non-overlapping dollars - three of the
+         four touch hospital spend - but that each names one mechanism, no
+         mechanism is claimed twice, and the document that explains the
+         architecture names all of them. That is what "one home per mechanism"
+         means and it is what constraint 4 actually asks for. */
+      runGuarded('Each offset is the only home of its mechanism', () => {
+        const problems: string[] = [];
+        const seen = new Map<string, string>();
+        for (const o of OFFSET_RAMPS) {
+          if (!o.mechanism.trim()) problems.push(o.id + ' claims no mechanism');
+          if (!o.scope.trim()) problems.push(o.id + ' declares no scope');
+          const owner = seen.get(o.mechanism);
+          if (owner) problems.push(o.mechanism + ' is claimed by ' + owner + ' and ' + o.id);
+          else seen.set(o.mechanism, o.id);
+        }
+        const undocumented = mechanismsMissingFromDoc(
+          OFFSET_RAMPS.map((o) => o.mechanism), OFFSET_ARCHITECTURE_DOC);
+        if (undocumented.length) {
+          problems.push('not in ' + OFFSET_ARCHITECTURE_DOC + ': ' + undocumented.join('; '));
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || seen.size + ' mechanisms, one offset each, ' +
+            'all described in ' + OFFSET_ARCHITECTURE_DOC
         };
       }),
       /* R21 [§S6a]: the engine may type a structural number - an index, a
