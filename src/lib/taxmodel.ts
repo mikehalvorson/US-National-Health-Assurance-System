@@ -18,7 +18,7 @@
  * compute, distribution, solveScenario, and their private helpers (growth,
  * classGrowth, ramp), plus the seven NHA.SELFTESTS tax invariants.
  * ========================================================================= */
-import { GROUPS, ECON, INSTRUMENTS, PROGRAMS, SCENARIOS } from './taxparams';
+import { GROUPS, ECON, INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS } from './taxparams';
 import type {
   TaxInstrument,
   TaxProgram,
@@ -76,14 +76,84 @@ export function instrumentRevenue(ins: TaxInstrument, st: InstrumentSetting, yea
          classGrowth(ins.growth, year);
 }
 
+/* ---- Instrument overlap at the top of the distribution -----------------
+ * R144 + R42 [§S5]. The model of the overlap - which instruments, and how
+ * much - is declared as OVERLAP in taxparams.ts, with the reasoning and the
+ * grade. This is the part that applies it.
+ *
+ * `topShare` is the share of an instrument's incidence landing on the top
+ * 0.1%. The family is everything above the declared threshold; the family
+ * member raising the most in that year is the anchor and keeps its revenue
+ * whole; the rest are cut by `rate` on the part of their revenue that lands
+ * on the shared base.
+ *
+ * The result is a per-instrument FACTOR rather than a lump deduction, so the
+ * stacked revenue chart, `totalRev` and the distributional table all move
+ * together. A lump would have left the stack overshooting the line it is
+ * drawn against, and `distribution` allocating tax the package never raised.
+ * ---------------------------------------------------------------------- */
+export function topShare(ins: TaxInstrument): number {
+  return OVERLAP.top01Bands.reduce(function (a, k) {
+    return a + (ins.incidence[k] || 0);
+  }, 0);
+}
+
+export function overlapFamily(): TaxInstrument[] {
+  return INSTRUMENTS.filter(function (ins) {
+    return topShare(ins) > OVERLAP.top01Threshold;
+  });
+}
+
+/* Every instrument's revenue multiplier for one year, given the whole
+   package. 1 for anything outside the family and for the anchor. */
+export function overlapFactors(
+  settings: TaxSettings,
+  year: number,
+  rate: number = OVERLAP.rate.mode
+): Record<string, number> {
+  const factors: Record<string, number> = {};
+  INSTRUMENTS.forEach(function (ins) { factors[ins.id] = 1; });
+
+  const active = overlapFamily()
+    .map(function (ins) {
+      return { ins: ins, rev: instrumentRevenue(ins, settings.instruments[ins.id], year) };
+    })
+    .filter(function (x) { return x.rev > 0; });
+  if (active.length < 2) return factors;
+
+  let anchor = active[0];
+  active.forEach(function (x) { if (x.rev > anchor.rev) anchor = x; });
+  active.forEach(function (x) {
+    if (x.ins.id === anchor.ins.id) return;
+    factors[x.ins.id] = 1 - rate * topShare(x.ins);
+  });
+  return factors;
+}
+
+/* Revenue for one instrument in one year, net of its share of the overlap. */
+export function netInstrumentRevenue(
+  ins: TaxInstrument,
+  st: InstrumentSetting,
+  year: number,
+  factors: Record<string, number>
+): number {
+  return instrumentRevenue(ins, st, year) * (factors[ins.id] ?? 1);
+}
+
 /* Full computation over the horizon */
 export function compute(settings: TaxSettings, programs: TaxProgram[]): ComputeResult {
   const byInstrument: Record<string, number[]> = {}; // id -> [per year]
   const totalRev = YEARS.map(function () { return 0; });
+  /* R42 [§S5]: the deduction is applied here, before totalRev accumulates,
+     and reported as its own series so the page can state what it removed. */
+  const factorsByYear = YEARS.map(function (yr) { return overlapFactors(settings, yr); });
+  const overlapDeduction = YEARS.map(function () { return 0; });
   INSTRUMENTS.forEach(function (ins) {
     const st = settings.instruments[ins.id];
     byInstrument[ins.id] = YEARS.map(function (yr, i) {
-      const r = instrumentRevenue(ins, st, yr);
+      const gross = instrumentRevenue(ins, st, yr);
+      const r = gross * (factorsByYear[i][ins.id] ?? 1);
+      overlapDeduction[i] += gross - r;
       totalRev[i] += r;
       return r;
     });
@@ -100,7 +170,7 @@ export function compute(settings: TaxSettings, programs: TaxProgram[]): ComputeR
   });
 
   return { years: YEARS, byInstrument: byInstrument, totalRev: totalRev,
-           need: need, coverage: coverage };
+           need: need, coverage: coverage, overlapDeduction: overlapDeduction };
 }
 
 /* ---- Distribution at one year ----
@@ -117,6 +187,9 @@ export function distribution(
   wageGainB?: number
 ): DistributionRow[] {
   const rows: DistributionRow[] = [];
+  /* R42 [§S5]: the same netting compute() applies. Allocating gross revenue
+     here would show the top bands paying tax the package does not raise. */
+  const factors = overlapFactors(settings, year);
   GROUPS.forEach(function (grp) {
     /* incomes grow with each band's own base class: the top bands'
        incomes compound at the capital rate, everyone else at GDP */
@@ -124,7 +197,7 @@ export function distribution(
     let taxB = 0;
     INSTRUMENTS.forEach(function (ins) {
       const st = settings.instruments[ins.id];
-      const rev = instrumentRevenue(ins, st, year);
+      const rev = netInstrumentRevenue(ins, st, year, factors);
       taxB += rev * (ins.incidence[grp.id] || 0);
     });
     const reliefB = (healthReliefB || 0) * grp.healthRelief;
@@ -166,6 +239,42 @@ export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSett
   });
   if (!scn.balancer) return s;
 
+  /* R44 [§S5]: the solver reads `ins.scaleMax`, which exists only on
+     kind:'scale' instruments. On a toggle balancer `v > undefined` is false
+     and `Math.min(v, undefined)` is NaN, so revenue became NaN silently -
+     every downstream chart and tile rendering "NaN" with no error anywhere.
+     Ten of the sixteen instruments have no scaleMax.
+
+     R42 adds a second requirement the solver equally depends on and equally
+     never stated: it solves LINEARLY, taking revenue at balancer 0 and 1 and
+     interpolating. The overlap deduction is a function of which family member
+     is largest, so a balancer inside the overlap family makes revenue
+     non-linear in its own setting and the interpolation is simply wrong.
+     `wealth` is scale-kind with a scaleMax and sits in the family, so this is
+     reachable by naming one plausible instrument.
+
+     Both throw rather than degrade, following R46's precedent in this file:
+     a balancer that cannot be solved is a broken scenario definition, not a
+     value to guess at. */
+  const balIns = INSTRUMENTS.filter(function (i) { return i.id === scn.balancer; })[0];
+  if (!balIns) {
+    throw new Error('Scenario ' + scn.id + ' names unknown balancer ' + scn.balancer);
+  }
+  if (balIns.kind !== 'scale' || typeof balIns.scaleMax !== 'number') {
+    throw new Error(
+      'Scenario ' + scn.id + ' balancer ' + balIns.id + ' is kind "' + balIns.kind +
+      '" with scaleMax ' + String(balIns.scaleMax) +
+      '; the linear solver needs a scale instrument with a numeric scaleMax'
+    );
+  }
+  if (overlapFamily().some(function (i) { return i.id === balIns.id; })) {
+    throw new Error(
+      'Scenario ' + scn.id + ' balancer ' + balIns.id + ' is in the overlap family ' +
+      '(top-0.1% incidence ' + topShare(balIns).toFixed(2) + '); revenue is not ' +
+      'linear in its setting, so the linear solve would be wrong'
+    );
+  }
+
   const bal = s.instruments[scn.balancer];
   const baseVal = bal.value;
   bal.enabled = true;
@@ -183,9 +292,8 @@ export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSett
   const needCum = (sum(c0.need) - sum(c0.totalRev)) / (uCum || 1);
   const v = Math.max(need41, needCum, baseVal, 0);
 
-  const ins = INSTRUMENTS.filter(function (i) { return i.id === scn.balancer; })[0];
-  const clamped = v > (ins.scaleMax as number);
-  bal.value = Math.min(v, ins.scaleMax as number);
+  const clamped = v > (balIns.scaleMax as number);
+  bal.value = Math.min(v, balIns.scaleMax as number);
   s._balanced = { id: scn.balancer, value: bal.value, clamped: clamped };
   return s;
 }
@@ -244,6 +352,118 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
       return INSTRUMENTS.every(function (ins) {
         return Object.keys(ins.incidence).every(function (k) { return ids.has(k); });
       });
+    }
+  },
+
+  {
+    /* R144 [§S5]: the overlap family is derived from incidence, so the only
+       thing that can go wrong is the threshold landing in a crowd. This holds
+       the gap open. `enforce` at 0.23 and `inherit` at 0.35 are the two
+       nearest neighbours today, both clear of the 0.30 +/- 0.05 band. */
+    name: "Tax: the overlap threshold separates the instruments cleanly",
+    run: function () {
+      const lo = OVERLAP.top01Threshold - OVERLAP.top01Margin;
+      const hi = OVERLAP.top01Threshold + OVERLAP.top01Margin;
+      return INSTRUMENTS.every(function (ins) {
+        const s = topShare(ins);
+        return s <= lo || s >= hi;
+      }) && overlapFamily().length >= 2;
+    }
+  },
+
+  {
+    /* R42 + R36 [§S5]: the assertion both rows ask for. Every shipped
+       scenario that turns on two or more family instruments must raise less
+       than their naive sum - which is what the engine did before, in all
+       three of them. */
+    name: "Tax: no scenario sums a declared-overlapping set naively",
+    run: function () {
+      const yr = 2041;
+      return SCENARIOS.every(function (scn) {
+        const s = scn.balancer ? solveScenario(scn, PROGRAMS) : defaultSettings();
+        if (!scn.balancer) {
+          Object.keys(scn.settings || {}).forEach(function (id) {
+            const o = scn.settings[id], st = s.instruments[id];
+            if (!st) return;
+            if (o.value != null) { st.value = o.value; st.enabled = o.value > 0 || o.enabled === true; }
+            if (o.enabled != null) { st.enabled = o.enabled; if (o.enabled && st.value <= 0) st.value = 1; }
+          });
+        }
+        const fam = overlapFamily().filter(function (ins) {
+          return instrumentRevenue(ins, s.instruments[ins.id], yr) > 0;
+        });
+        if (fam.length < 2) return true;
+        const factors = overlapFactors(s, yr);
+        let gross = 0, net = 0;
+        fam.forEach(function (ins) {
+          const g = instrumentRevenue(ins, s.instruments[ins.id], yr);
+          gross += g;
+          net += g * factors[ins.id];
+        });
+        return net < gross;
+      });
+    }
+  },
+
+  {
+    /* R42 [§S5]: turning an instrument ON must never lower the package total.
+       The deduction reassigns which family member counts in full, so this is
+       the property the anchor rule exists to guarantee, and the one that
+       breaks first if that rule is changed.
+
+       Every subset of the family is tried, not just the shipped package: the
+       first version of this check enabled one instrument at a time from the
+       defaults, and inverting the anchor rule to pick the SMALLEST member
+       still passed it, because the defaults never put the new instrument at
+       the bottom. Over all 64 subsets it fails immediately - {wealth} plus
+       capgains would drop the total from $701B to $442B. */
+    name: "Tax: enabling any instrument never lowers total revenue",
+    run: function () {
+      const yr = 2041;
+      const fam = overlapFamily();
+      function totalOf(onIds: Set<string>): number {
+        const s = defaultSettings();
+        INSTRUMENTS.forEach(function (ins) {
+          const on = onIds.has(ins.id);
+          s.instruments[ins.id].enabled = on;
+          s.instruments[ins.id].value = on ? Math.max(1, s.instruments[ins.id].value) : 0;
+        });
+        const f = overlapFactors(s, yr);
+        let t = 0;
+        INSTRUMENTS.forEach(function (ins) {
+          t += instrumentRevenue(ins, s.instruments[ins.id], yr) * f[ins.id];
+        });
+        return t;
+      }
+      for (let mask = 0; mask < (1 << fam.length); mask++) {
+        const on = new Set<string>();
+        fam.forEach(function (ins, bit) { if (mask & (1 << bit)) on.add(ins.id); });
+        const before = totalOf(on);
+        if (!(before >= 0)) return false;
+        for (let bit = 0; bit < fam.length; bit++) {
+          if (mask & (1 << bit)) continue;
+          const plus = new Set(on);
+          plus.add(fam[bit].id);
+          if (totalOf(plus) < before - 1e-9) return false;
+        }
+      }
+      return true;
+    }
+  },
+
+  {
+    /* R44 [§S5]: every scenario balancer must be solvable by the linear
+       solver - scale-kind with a numeric scaleMax (or NaN revenue), and
+       outside the overlap family (or the interpolation is wrong). */
+    name: "Tax: every scenario balancer is scale-type and outside the overlap family",
+    run: function () {
+      const family = new Set(overlapFamily().map(function (i) { return i.id; }));
+      return SCENARIOS.filter(function (sc) { return sc.balancer; })
+        .every(function (sc) {
+          const ins = INSTRUMENTS.filter(function (i) { return i.id === sc.balancer; })[0];
+          return !!ins && ins.kind === 'scale' &&
+            typeof ins.scaleMax === 'number' && !family.has(ins.id);
+        });
     }
   },
 

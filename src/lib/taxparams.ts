@@ -200,7 +200,7 @@ export const INSTRUMENTS: TaxInstrument[] = (function () {
     },
     {
       id: "bmin", label: "Billionaire minimum income tax (25% incl. unrealized gains)",
-      desc: "A 25% minimum rate on total income including unrealized gains, for households worth over $100M (roughly the top 0.01–0.02%). Ends 'buy, borrow, die'. Overlaps the wealth tax and the capital-gains reform; running all three at once overstates combined revenue, so treat them as alternatives plus toppers, not a simple sum.",
+      desc: "A 25% minimum rate on total income including unrealized gains, for households worth over $100M (roughly the top 0.01–0.02%). Ends 'buy, borrow, die'. All of its incidence lands on the top 0.1%, the same base the wealth tax, estate restoration, millionaires surtax, capital-gains reform and inheritance tax reach, so those revenues are not additive: the model nets them rather than summing them, and this instrument carries the largest deduction of the six.",
       kind: "toggle", default: true, rev1x: 50, growth: "top",
       incidence: { q1: 0, q2: 0, q3: 0, q4: 0, d9: 0, p9199: 0,
         t9950: 0, t9970: 0, t9990: 0, t9999: 0.35, t10000: 0.65 },
@@ -269,6 +269,66 @@ export const INSTRUMENTS: TaxInstrument[] = (function () {
     }
   ];
 })();
+
+/* ---- Instrument overlap at the top of the distribution -------------------
+ * R144 + R42 + R36 [§S5]. `bmin`'s own description has always warned that it
+ * "overlaps the wealth tax and the capital-gains reform; running all three at
+ * once overstates combined revenue, so treat them as alternatives plus
+ * toppers, not a simple sum." All three shipped goal scenarios enabled all
+ * three anyway, the engine summed them with no deduction, and the balancer
+ * then solved against that inflated total - so the required surtax or payroll
+ * rate came out LOWER than the parameters imply. A warning in a description
+ * field is not a control.
+ *
+ * Two decisions are separated here, because they have very different
+ * evidential standing.
+ *
+ * 1. WHICH instruments overlap is DERIVED, not listed. An instrument joins
+ *    the family when more than TOP01_THRESHOLD of its incidence lands on the
+ *    top 0.1% (the t9999 and t10000 bands). The warning named three; six
+ *    qualify - `bmin` 1.00, `wealth` 0.90, `estate` 0.50, `msurtax` 0.42,
+ *    `capgains` 0.40, `inherit` 0.35 - and the next instrument down is
+ *    `enforce` at 0.23. The threshold sits in that gap, and a self-test holds
+ *    the gap open: if any instrument's share lands within TOP01_MARGIN of the
+ *    threshold, the classification has stopped being obvious and the build
+ *    fails rather than guessing.
+ *
+ * 2. HOW MUCH they overlap is a judgment, and is graded as one. Within the
+ *    family the largest instrument in a given year is the anchor: it claims
+ *    the shared base first and its revenue is untouched. Every other family
+ *    member keeps the part of its revenue that lands outside the top 0.1%,
+ *    and the part that lands inside is cut by `rate`. That is the arithmetic
+ *    form of "alternatives plus toppers".
+ *
+ * `rate` is a framework judgment with no published estimate behind it. The
+ * central 0.50 is the midpoint of what the instrument pairs imply on their
+ * own terms: `estate` and `inherit` tax the two ends of one transfer and are
+ * near-substitutes (high); `wealth` (a levy on the stock) and `bmin` (a
+ * minimum on the flow of appreciation) are two ways at the same gains, and a
+ * real design would credit one against the other (high); the Greenbook
+ * credits `bmin` prepayments against later realization, so `capgains`
+ * overlaps it heavily at the very top (high); `msurtax` rides realized income
+ * whose base the others partly pre-empt (moderate). The low/high are carried
+ * so the UI can state the band rather than a false point estimate.
+ * ------------------------------------------------------------------------ */
+export interface OverlapModel {
+  top01Bands: string[];
+  top01Threshold: number;
+  top01Margin: number;
+  rate: { low: number; mode: number; high: number };
+  source: string;
+  confidence: string;
+  note: string;
+}
+export const OVERLAP: OverlapModel = {
+  top01Bands: ['t9999', 't10000'],
+  top01Threshold: 0.30,
+  top01Margin: 0.05,
+  rate: { low: 0.30, mode: 0.50, high: 0.75 },
+  source: "Framework judgment. No published estimate of cross-instrument base overlap at the top 0.1% exists; the band spans what the instrument pairs imply on their own terms (estate/inherit near-substitutes; wealth/bmin two routes to the same appreciation; Greenbook credits bmin against later realization).",
+  confidence: "low",
+  note: "Instruments concentrated on the top 0.1% tax overlapping slices of one base, so their revenues are not additive. The largest counts in full; the rest are cut on the part that lands there."
+};
 
 /* ---- Funding programs ------------------------------------------------------
  * The extensible half: anything that needs money is a program with a

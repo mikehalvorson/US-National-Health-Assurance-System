@@ -8,8 +8,11 @@
    instrument host's dataset.wired guard. */
 import { runOverviewMc } from '../lib/overview';
 import { DEFLATOR_2023_TO_2024 } from '../lib/params';
-import { defaultSettings, instrumentRevenue, compute, distribution, solveScenario } from '../lib/taxmodel';
-import { INSTRUMENTS, PROGRAMS, SCENARIOS, WEALTH_DIST, makeCustomProgram } from '../lib/taxparams';
+import {
+  defaultSettings, instrumentRevenue, compute, distribution, overlapFactors, overlapFamily,
+  solveScenario, topShare
+} from '../lib/taxmodel';
+import { INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS, WEALTH_DIST, makeCustomProgram } from '../lib/taxparams';
 import { money } from '../lib/format';
 import {
   renderRevenueNeedChart, renderNetImpactChart, renderRateCurve,
@@ -121,8 +124,17 @@ function buildInstrumentControls(): void {
     card.appendChild(row);
 
     function updateRev(): void {
-      const r = instrumentRevenue(ins, st, distYear);
-      rev.textContent = st.enabled && st.value > 0 ? money(r) + '/yr' : 'off';
+      /* R42 [§S5]: the per-instrument figure is net of the overlap deduction,
+         because the total tile below it is. Showing gross here would leave the
+         sixteen cards adding up to more than the package raises, which is the
+         reading error the deduction exists to stop. */
+      const factors = overlapFactors(settings, distYear);
+      const gross = instrumentRevenue(ins, st, distYear);
+      const f = factors[ins.id] ?? 1;
+      if (!st.enabled || st.value <= 0) { rev.textContent = 'off'; return; }
+      rev.textContent = f < 1
+        ? money(gross * f) + '/yr (net of overlap)'
+        : money(gross) + '/yr';
     }
     card._updateRev = updateRev;
     updateRev();
@@ -213,6 +225,13 @@ function refresh(): void {
     [
       { label: 'Revenue in ' + distYear, value: money(comp.totalRev[i]) + '/yr',
         range: 'all instruments, phased as scheduled' },
+      /* R42 + R36 + BL1 [§S5]: the overlap adjustment, stated where the
+         instruments are summed. It used to live only inside one instrument's
+         description while the engine summed them anyway. */
+      { label: 'Top-0.1% overlap deduction', value: '-' + money(comp.overlapDeduction[i]) + '/yr',
+        range: comp.overlapDeduction[i] > 0
+          ? overlapFamily().length + ' instruments land on the same base'
+          : 'fewer than two overlapping instruments active' },
       { label: 'Funding need in ' + distYear, value: money(comp.need[i]) + '/yr',
         range: progs.filter(function (p) { return p.enabled; }).length + ' program(s)' },
       { label: 'Coverage in ' + distYear,
@@ -230,6 +249,26 @@ function refresh(): void {
       tl.appendChild(l); tl.appendChild(v); tl.appendChild(r);
       tiles.appendChild(tl);
     });
+  }
+
+  /* R36 + R144 [§S5]: the overlap stated in the instrument panel itself, with
+     the derived family and the graded band, rather than only in one
+     instrument's description field. */
+  const overlapNote = $('tax-overlap-note');
+  if (overlapNote) {
+    const fam = overlapFamily();
+    overlapNote.textContent =
+      'Overlapping instruments: ' + fam.length + ' of the ' + INSTRUMENTS.length +
+      ' instruments send more than ' + Math.round(100 * OVERLAP.top01Threshold) +
+      '% of their incidence to the top 0.1% (' +
+      fam.map(function (ins) {
+        return ins.label + ' ' + Math.round(100 * topShare(ins)) + '%';
+      }).join(', ') + '). ' + OVERLAP.note +
+      ' The share treated as overlapping is ' + Math.round(100 * OVERLAP.rate.mode) +
+      '%, a framework judgment graded ' + OVERLAP.confidence + ', with ' +
+      Math.round(100 * OVERLAP.rate.low) + '% to ' + Math.round(100 * OVERLAP.rate.high) +
+      '% as the plausible range; in ' + distYear + ' that removes ' +
+      money(comp.overlapDeduction[i]) + '/yr from the package total.';
   }
 
   const reliefB = nhaEnabled ? healthRelief(distYear) : 0;

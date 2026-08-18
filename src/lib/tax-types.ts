@@ -150,4 +150,8 @@ export interface ComputeResult {
   totalRev: number[];
   need: number[];
   coverage: number[];
+  /* R42 [§S5]: revenue removed by the top-0.1% overlap deduction, per year.
+     byInstrument is already net of it; this is what was taken out, so the
+     page can state the adjustment where the instruments are summed. */
+  overlapDeduction: number[];
 }

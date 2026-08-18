@@ -137,6 +137,7 @@ import ChapterNav from '../components/ChapterNav.astro';
     </div>
     <p class="scenario-desc" id="tax-scenario-desc"></p>
     <div class="tax-controls" id="tax-instruments"></div>
+    <p class="note" id="tax-overlap-note"></p>
     <p class="note">None of the goal scenarios uses the consumption tax:
       a VAT is regressive (the bottom quintile consumes about twice its
       income), so it stays out of every preset. It remains available above
@@ -186,8 +187,11 @@ import ChapterNav from '../components/ChapterNav.astro';
       broken into five bands, down to the 13,200 households of the top
       0.01%, because that is where the wealth actually sits; the
       millionaire surtax, billionaire minimum tax, wealth tax, estate
-      restoration, and capital-gains reform in the package above land
-      almost entirely on those bands. Bars left of zero
+      restoration, inheritance tax, and capital-gains reform in the package
+      above land almost entirely on those bands, which is also why their
+      revenues are not added together: they reach one base, so the model
+      nets them and reports the deduction on the revenue tiles above.
+      Bars left of zero
       mean a group's total annual costs go <em>down</em>. View in
       <label style="display:inline">
         year <select id="dist-year" aria-label="Distribution year"></select>

@@ -1,10 +1,12 @@
 import { expect, test } from 'vitest';
 import {
   compute, distribution, solveScenario, defaultSettings,
-  instrumentRevenue, TAX_SELFTESTS,
+  instrumentRevenue, overlapFactors, overlapFamily, topShare, TAX_SELFTESTS,
   classGrowth,
 } from '../../src/lib/taxmodel';
-import { PROGRAMS, INSTRUMENTS, SCENARIOS, ECON, GROUPS } from '../../src/lib/taxparams';
+import {
+  PROGRAMS, INSTRUMENTS, OVERLAP, SCENARIOS, ECON, GROUPS
+} from '../../src/lib/taxparams';
 
 /* R43 [§S0]: kept as a smoke check, and labelled for what it is. Both sides
    are sums over the same instrumentRevenue calls, so this identity holds by
@@ -55,10 +57,92 @@ test('phase-in ramps from 0 to full', () => {
   expect(Math.abs(full - ins.rev1x)).toBeLessThan(1);
 });
 
-test('all seven tax self-test invariants pass', () => {
-  expect(TAX_SELFTESTS.length).toBe(7); // R43 replaced one; count unchanged
+test('every tax self-test invariant passes', () => {
+  /* R43 replaced one and left the count at 7; R144/R42/R36/R44 [§S5] added
+     four. Pinning the count is what makes a silently dropped invariant a
+     failure rather than a smaller green number. */
+  expect(TAX_SELFTESTS.length).toBe(11);
   const failing = TAX_SELFTESTS.filter((t) => !t.run()).map((t) => t.name);
   expect(failing).toEqual([]);
+});
+
+/* R144 + R42 [§S5] — the overlap deduction, anchored on hand arithmetic
+   rather than on whatever the engine happens to produce.
+
+   The family is derived from incidence, so these are measurements of the
+   shipped incidence vectors, not choices: bmin 1.00, wealth 0.90, estate
+   0.50, msurtax 0.42, capgains 0.40, inherit 0.35. `enforce` at 0.23 is the
+   nearest instrument outside it. */
+test('R144: the overlap family is derived from incidence, and is the six', () => {
+  expect(overlapFamily().map((i) => i.id).sort())
+    .toEqual(['bmin', 'capgains', 'estate', 'inherit', 'msurtax', 'wealth']);
+  const byId: Record<string, number> = {};
+  INSTRUMENTS.forEach((i) => { byId[i.id] = topShare(i); });
+  expect(byId.bmin).toBeCloseTo(1.00, 10);
+  expect(byId.wealth).toBeCloseTo(0.90, 10);
+  expect(byId.inherit).toBeCloseTo(0.35, 10);
+  /* the first instrument NOT in the family, and the gap the threshold sits in */
+  expect(byId.enforce).toBeCloseTo(0.23, 10);
+  expect(OVERLAP.top01Threshold).toBeGreaterThan(byId.enforce);
+  expect(OVERLAP.top01Threshold).toBeLessThan(byId.inherit);
+});
+
+test('R42: the deduction equals rate x the non-anchor revenue on the shared base', () => {
+  const s = defaultSettings();
+  s.instruments.inherit.enabled = true;
+  s.instruments.inherit.value = 1;
+  const year = 2041;
+  const factors = overlapFactors(s, year);
+  const fam = overlapFamily();
+  const gross: Record<string, number> = {};
+  fam.forEach((ins) => { gross[ins.id] = instrumentRevenue(ins, s.instruments[ins.id], year); });
+
+  /* wealth raises the most, so it is the anchor and keeps its revenue whole */
+  const anchor = fam.reduce((a, b) => (gross[b.id] > gross[a.id] ? b : a));
+  expect(anchor.id).toBe('wealth');
+  expect(factors.wealth).toBe(1);
+
+  let expected = 0;
+  fam.forEach((ins) => {
+    if (ins.id === anchor.id) return;
+    expect(factors[ins.id]).toBeCloseTo(1 - OVERLAP.rate.mode * topShare(ins), 12);
+    expected += gross[ins.id] * OVERLAP.rate.mode * topShare(ins);
+  });
+
+  const c = compute(s, PROGRAMS);
+  expect(c.overlapDeduction[c.years.indexOf(year)]).toBeCloseTo(expected, 6);
+  /* and it is a real reduction, not a rounding artefact */
+  expect(expected).toBeGreaterThan(50);
+});
+
+test('R42: netting moves the balancer up, in every goal scenario', () => {
+  /* The whole point of the row: the balancer solved against an inflated
+     total, so the required rate came out too low. Compare the shipped solve
+     against the same solve with the deduction switched off. */
+  SCENARIOS.filter((sc) => sc.balancer).forEach((sc) => {
+    const netted = solveScenario(sc, PROGRAMS)._balanced!.value;
+    const saved = OVERLAP.rate.mode;
+    (OVERLAP.rate as { mode: number }).mode = 0;
+    const naive = solveScenario(sc, PROGRAMS)._balanced!.value;
+    (OVERLAP.rate as { mode: number }).mode = saved;
+    expect(netted).toBeGreaterThan(naive);
+  });
+});
+
+test('R44: a toggle balancer throws instead of silently producing NaN', () => {
+  const bad = { id: 'x', name: 'x', balancer: 'bmin', desc: '', settings: {} };
+  expect(() => solveScenario(bad, PROGRAMS)).toThrow(/scaleMax/);
+});
+
+test('R44: a balancer inside the overlap family throws, because the solve is linear', () => {
+  /* `wealth` is scale-kind with a numeric scaleMax, so it passes the first
+     guard and would have been solved by linear interpolation against a
+     revenue curve that is not linear in its own setting. */
+  const w = INSTRUMENTS.filter((i) => i.id === 'wealth')[0];
+  expect(w.kind).toBe('scale');
+  expect(typeof w.scaleMax).toBe('number');
+  const bad = { id: 'x', name: 'x', balancer: 'wealth', desc: '', settings: {} };
+  expect(() => solveScenario(bad, PROGRAMS)).toThrow(/overlap family/);
 });
 
 /* R46 [§S0] — the phase-in self-test divided by ECON.realGrowth while the
