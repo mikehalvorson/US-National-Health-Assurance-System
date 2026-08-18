@@ -29,7 +29,7 @@ export function benchmarkChartRows(mc: MonteCarloResult, DEF: number): Benchmark
        imported by nothing, and discussed in prose that no longer matched
        what the model produced. */
     {
-      label: "Framework's own claim", note: 'stated range, real 2024$',
+      label: "The plan's stated figure", note: 'stated range, real 2024$',
       lo: FRAMEWORK_CLAIM.low, hi: FRAMEWORK_CLAIM.high, mid: FRAMEWORK_CLAIM.mode,
       color: 'var(--series-7)', basis: FRAMEWORK_CLAIM.basis
     }
@@ -115,7 +115,7 @@ export function benchmarkText(mc: MonteCarloResult, DEF: number): BenchmarkText 
   const claimMoney = (b: number) =>
     '$' + (b / 1000).toFixed(2).replace(/0$/, '').replace(/\.$/, '') + 'T';
   const frameworkClaimResult =
-    "The framework's own figure of " + claimMoney(FRAMEWORK_CLAIM.mode) +
+    "The plan's own stated figure of " + claimMoney(FRAMEWORK_CLAIM.mode) +
     ' per year, range ' + claimMoney(FRAMEWORK_CLAIM.low) + ' to ' +
     claimMoney(FRAMEWORK_CLAIM.high) + ', is on the same basis as this chart: ' +
     FRAMEWORK_CLAIM.basis.toLowerCase() + '. ' + FRAMEWORK_CLAIM.basisSource +

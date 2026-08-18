@@ -210,9 +210,12 @@ export const CALENDAR_ANCHOR_DENIAL = 'do not assign a calendar start date';
 export const FRAMEWORK_CLAIM = {
   mode: 4750, low: 4300, high: 5250,
   basis: 'Total national health expenditure at maturity, all payers, real 2024 dollars',
-  basisSource: "The framework's own catalog: KPP-C2 calculates per-capita system " +
-    'cost as "CP-TOT-001 total-system cost / covered population" and names ' +
-    '$4.75T as the total system cost it is to be reconciled with.',
+  /* Rendered on the Health tab, so it states the basis plainly and leaves the
+     catalog identifiers to the comment above: rule 2 keeps those codes inside
+     the Data and Quality tabs, whose subject is the catalog itself. */
+  basisSource: "That is the plan's own accounting basis for the figure: its " +
+    'cost catalog defines per-capita system cost as total system cost over ' +
+    'covered population, and names this figure as that total.',
   comparableWith: 'matureToday'
 };
 
@@ -356,11 +359,11 @@ export const PARAM_DEFS: ParamDef[] = [
         'commercial payers pay about 254% of Medicare, and moving every payer ' +
         'to Medicare rates would imply a payment factor near 0.39. The range ' +
         'here tops out at no change at all and bottoms at an 8% reduction ' +
-        'from the mode. That is a deliberate choice and the framework states ' +
-        "it: it is capacity-first and does not assume aggressive rate " +
-        'compression. It is declared because it leans the opposite way to ' +
-        'publicAdminRate, so the two used to offset in the headline with ' +
-        'neither one visible.'
+        'from the mode. That is a deliberate choice: the plan builds capacity ' +
+        'first and does not assume aggressive rate compression. It is ' +
+        'declared because it leans the opposite way to the administrative ' +
+        'rate, so the two used to offset in the headline with neither one ' +
+        'visible.'
     }
   },
   {
@@ -388,7 +391,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "New public system administrative cost rate (claims, enrollment, operations)",
     low: 1.5, mode: 2.2, high: 6.0,
     confidence: "medium",
-    source: "R27 [§S6a]: the distribution stopped at 3.2% while this string cited Urban/RAND at 5-6%, so it excluded evidence it named in its own object and no draw in 600 could reach the conservative case. research/05 CP-GOV-008 recommends 2-6% as the plausible band and calls the spread 'a meaningful and defensible modeling uncertainty band, not noise to be collapsed to one number'. The high is that band's ceiling now. The low stays at 1.5%, CBO's aggressive case, which the same file names as the best-case scenario: keeping it means the sampled range spans everything the evidence names rather than only its unfavourable half. The mode stays at 2.2%, above CBO, for the framework's heavier oversight and appeals architecture. Grade cut from high to medium: a mode set by analyst judgement is a derivation, and the research grades the underlying question MEDIUM-HIGH but contested, calling it the most politically disputed number in single-payer modeling. Sources: CBO single-payer analysis 1.5-2.0%; Taiwan NHI 1.07% best-in-class; Urban/RAND cross-checks 5-6% fully loaded.",
+    source: "CBO single-payer analysis: 1.5-2.0%; Taiwan NHI 1.07%, best in class; Urban and RAND cross-checks 5-6% fully loaded. The plausible band for this ratio is 2-6%, and the spread is itself a defensible modelling uncertainty rather than noise to be collapsed to one number, so the sampled range spans everything the evidence names: 1.5% is the aggressive case and 6% the conservative one. The mode sits above CBO for a heavier oversight and appeals architecture, which is a judgement rather than a scored estimate, so this is graded medium; the underlying question is contested and is the most politically disputed number in single-payer modelling.",
     url: "https://www.cbo.gov/publication/56811",
     adjustable: true, sliderMin: 1.0, sliderMax: 6.0
   },
@@ -1077,7 +1080,20 @@ export const ENGINE_STRUCTURAL_LITERALS: StructuralLiteral[] = [
   { value: 15, why: 'mulberry32 bit shift' },
   { value: 61, why: 'mulberry32 mixing constant' },
   { value: 42, why: 'default RNG seed, so a run without one is still reproducible' },
-  { value: 4294967296, why: 'mulberry32 divisor, 2^32' },
+  { value: 4294967296, why: 'mulberry32 divisor, 2^32' }
+];
+
+/* And the literals a module-scope DECLARATION in the engine may hold, which is
+   a different question from what a formula may hold. Found by review: the scan
+   above starts at the first sampling function, so declarations above it were
+   invisible - and a named constant at module scope is the right home for a
+   structural value, not a loophole. The lists are deliberately not the same.
+   0.5 belongs here as a band level and never inside an engine formula, where
+   it used to be the out-of-pocket share of residual private spend. */
+export const ENGINE_DECLARATION_LITERALS: StructuralLiteral[] = [
+  { value: 0.1, why: 'the 10th percentile band level' },
+  { value: 0.5, why: 'the median band level' },
+  { value: 0.9, why: 'the 90th percentile band level' },
   { value: 2166136261, why: "FNV-1a's offset basis, in the per-parameter stream hash" },
   { value: 16777619, why: "FNV-1a's prime, in the same hash" }
 ];

@@ -15,7 +15,10 @@ import {
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
 import { classGrowth, defaultSettings, distribution, TAX_SELFTESTS } from './taxmodel';
-import { DATASET_VINTAGES, GROUPS as TAX_GROUPS, INSTRUMENTS as TAX_INSTRUMENTS } from './taxparams';
+import {
+  DATASET_VINTAGES, GROUPS as TAX_GROUPS, INSTRUMENTS as TAX_INSTRUMENTS,
+  SCENARIOS as TAX_SCENARIOS
+} from './taxparams';
 import {
   REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
   staleRelevanceFallbacks, undeclaredRelevanceFallbacks
@@ -46,8 +49,9 @@ import {
 } from './fmea';
 import {
   ALLOWED_ASSERTIONS, baselineSplitCopies, displayOnlyDatasetsInEngine,
-  divergenceIsRendered, ENGINE_FILE, ENRICHERS, matureYearDerivations,
-  MATURE_YEAR_HOME, mechanismsMissingFromDoc, primitiveAssertions,
+  divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
+  matureYearDerivations, MATURE_YEAR_HOME, mechanismsMissingFromDoc,
+  primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
@@ -58,8 +62,8 @@ import { TABS } from './tabs';
 import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
-  FRAMEWORK_CLAIM, MATURE_INDEX, MATURE_YEAR, MONTE_CARLO_DRAWS,
-  OFFSET_ARCHITECTURE_DOC, PARAM_DEFS,
+  ENGINE_DECLARATION_LITERALS, FRAMEWORK_CLAIM, MATURE_INDEX, MATURE_YEAR,
+  MONTE_CARLO_DRAWS, OFFSET_ARCHITECTURE_DOC, PARAM_DEFS,
   PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS, SEED_STABILITY,
   SPONSOR_SHARE, START_YEAR, transitionEnvelope
 } from './params';
@@ -943,6 +947,70 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          reaches it from the registry or from a parameter, so after the fix it
          is not a literal at all. This is what stops the eleventh magic number,
          and it reports the line so the failure names the offender. */
+      /* R127 [§S6a], second declared test, added after review: the first held
+         that no assertion suppresses the compile error. This holds the property
+         the assertion was asserting, over the real scenario catalog rather than
+         over two fabricated cases: every balancer a shipped scenario names is a
+         scale instrument with a numeric scaleMax. The guard in solveScenario
+         throws on the failure; this reports it by name at build time instead of
+         at the moment a reader picks the scenario. */
+      runGuarded('Every scenario balancer is scale-kind with a numeric scaleMax', () => {
+        const bad: string[] = [];
+        let named = 0;
+        for (const sc of TAX_SCENARIOS) {
+          if (!sc.balancer) continue;
+          named += 1;
+          const ins = TAX_INSTRUMENTS.filter((i) => i.id === sc.balancer)[0];
+          if (!ins) { bad.push(sc.id + ' names unknown balancer ' + sc.balancer); continue; }
+          if (ins.kind !== 'scale') bad.push(sc.id + '/' + ins.id + ' is kind ' + ins.kind);
+          else if (typeof ins.scaleMax !== 'number') {
+            bad.push(sc.id + '/' + ins.id + ' has no numeric scaleMax');
+          }
+        }
+        return {
+          ok: !bad.length,
+          note: bad.join(', ') || named + ' of ' + TAX_SCENARIOS.length +
+            ' scenarios name a balancer, each scale-kind with a numeric ceiling'
+        };
+      }),
+      /* R134 [§S6a], second declared test, added after review: no parameter
+         graded `high` may have a mode set by analyst judgement. `high` is
+         reserved here for an official statistic or a scored estimate; a mode
+         the analyst placed is a derivation, which the convention grades
+         `medium`. This is the rule publicAdminRate broke, and nothing would
+         have caught the next one. */
+      runGuarded('No parameter graded high has a mode set by judgement', () => {
+        const MARKERS = ['mode set', 'derived', 'assumption', 'analyst', 'judgement'];
+        const bad: string[] = [];
+        for (const p of PARAM_DEFS) {
+          if (p.confidence !== 'high') continue;
+          const src = (p.source || '').toLowerCase();
+          const hit = MARKERS.filter((m) => src.includes(m));
+          if (hit.length) bad.push(p.id + ' (' + hit.join(', ') + ')');
+        }
+        return {
+          ok: !bad.length,
+          note: bad.join(', ') || PARAM_DEFS.filter((p) => p.confidence === 'high').length +
+            ' parameters graded high, none with a judgement-set mode'
+        };
+      }),
+      /* R21 [§S6a], after review: the literal scan starts at the first sampling
+         function, so module-scope declarations above it were invisible to it.
+         A named constant there is the right home for a structural value and the
+         wrong place to hide a model quantity, so the declarations are scanned
+         against their own list. */
+      runGuarded('The engine declares no module-scope number outside its list', () => {
+        const stray = undeclaredEngineDeclarations(
+          ENGINE_DECLARATION_LITERALS.map((s) => s.value));
+        return {
+          ok: !stray.length,
+          note: stray.length
+            ? stray.slice(0, 4).map((s) => ENGINE_FILE + ':' + s.line + ' = ' + s.value)
+              .join(', ')
+            : ENGINE_DECLARATION_LITERALS.length + ' declaration values, above ' +
+              'the engine span'
+        };
+      }),
       /* R25 [§S6a]: how reproducible the published figures are, checked rather
          than assumed. The same model at seven seeds, and the spread of the
          central estimate as a share of its own midpoint. This is the check
@@ -1082,8 +1150,10 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               ' against a recommended ' + rec.low + '-' + rec.high + ' and says nothing');
             continue;
           }
-          if (p.divergence.note.trim().length < 80) {
-            problems.push(rec.id + ' declares a divergence with no reasoning');
+          if (!divergenceNamesRecommendation(
+            p.divergence.note, p.divergence.recommended)) {
+            problems.push(rec.id + ' declares a divergence whose note never names ' +
+              p.divergence.recommended);
           }
           declared.push(rec.id + ' ' + p.divergence.leans);
         }
@@ -1187,7 +1257,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             : rows.length + ' lines, each with a stated basis'
         };
       }),
-      runGuarded("The framework's claim is drawn from the declared constant", () => {
+      runGuarded("The stated figure is drawn from the declared constant", () => {
         const rows = benchmarkChartRows(runOverviewMc('SCN-BASE', null),
           DEFLATOR_2023_TO_2024);
         const claim = rows.filter((r) => r.mid === FRAMEWORK_CLAIM.mode)[0];
@@ -1199,8 +1269,19 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           if (claim.basis !== FRAMEWORK_CLAIM.basis) problems.push('basis restated');
         }
         if (!FRAMEWORK_CLAIM.basisSource.trim()) problems.push('basis has no source');
-        if (FRAMEWORK_CLAIM.comparableWith !== 'matureToday') {
-          problems.push('names a comparator the chart does not draw');
+        /* Review: this asserted the field equalled its own literal value, which
+           is the check checking itself. What the field claims is that the chart's
+           model row is THAT band of the ensemble, so that is what is compared. */
+        const mc = runOverviewMc('SCN-BASE', null);
+        const named = (mc.steady as unknown as Record<string, PercentileBand>)[
+          FRAMEWORK_CLAIM.comparableWith];
+        const modelRow = rows[0];
+        if (!named) {
+          problems.push('comparableWith names no band the model publishes: ' +
+            FRAMEWORK_CLAIM.comparableWith);
+        } else if (Math.abs(named.p50 * DEFLATOR_2023_TO_2024 - (modelRow.mid || 0)) > 1e-6) {
+          problems.push('the chart draws a different quantity from the one ' +
+            FRAMEWORK_CLAIM.comparableWith + ' names');
         }
         return {
           ok: !problems.length,

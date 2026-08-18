@@ -1540,9 +1540,11 @@ research/01 calls this the single most important open question in the repository
 open through every pass, because everyone looked for the answer in the prose.
 
 Settling what it means does not make it reproducible, and the two questions were being answered
-as one. On its own basis **the model centers 14.7% above it**, and the claim sits **below the
+as one. On its own basis **the model centers 14.6% above it**, and the claim sits **below the
 10th percentile of every scenario in the catalog**, including the optimistic one, whose central
-estimate ($5.03T) does land inside the claim's stated $4.3T-$5.25T range.
+estimate ($5.03T) does land inside the claim's stated $4.3T-$5.25T range. (14.7% at the draw
+count in force when that was first measured; the figure is computed on the page, so it followed
+the ensemble when R25 changed it, and the sentence recording it did not until review.)
 
 The figure is kept, given its basis, and published as a third line on the benchmark chart with
 the comparison computed rather than typed. **`BenchmarkRow` now requires a `basis` field.**
@@ -1628,11 +1630,112 @@ $3.2-3.4T/yr. The match is arithmetic, not evidence.
   1,500 and 32. `R136` (§S11b) filed the count; it is corrected here as a side effect rather
   than claimed.
 
+### MUST STILL PASS: V20 ✅ · V25 ⚠️ WITH A STATED READING
+
+The section brief requires both and the entry did not say so until review.
+
+**`V20` (MONEYFLOW reconciles) — passes, and is now stronger than it was.** The engine no
+longer restates the map's sponsor shares, it divides them, and a self-test recovers all four
+back out of a computed 2041 path row and compares them against `MONEYFLOW`. A ribbon total that
+stopped reconciling would move the engine with it.
+
+**`V25` (both engines are faithful ports of `docs/js/*.js`) — holds on the reading this campaign
+has used since P2, and would not hold on a literal one.** `docs/` is the retired tree: P2
+retargeted every row off it, `README.md` no longer deploys it, and three build gates now fail on
+a reference to it. `V25`'s substance is *"why R1-R111's defects are real while their paths are
+wrong"* - it certified that the audit's findings reproduce in `src/`, which is what makes the
+backlog actionable. That is intact: every §K finding this section touched reproduced before it
+was fixed.
+
+Literally, it no longer holds, and this section is where it stopped: `docs/js/model.js` draws
+every parameter from one shared stream and `src/lib/model.ts` draws each from its own, so the
+same seed gives different numbers. **The port is no longer bit-faithful and cannot be, because
+the shared stream was the defect.** Recorded here rather than left for a later section to
+discover as a surprise.
+
+### CONTRADICTIONS
+
+Two, both between a row's declared test and what the row's own text asks for.
+
+- **`R11` declares `C_offsets component categories are pairwise disjoint by declared scope`.
+  The scopes are not disjoint and cannot be** - three of the four offsets act on hospital
+  spend. What is disjoint is the mechanism: each offset is the only home of one, which is what
+  `HANDOFF.md` constraint 4 actually asks for and what `§K1` verified. The shipped check holds
+  mechanism uniqueness and requires every mechanism to appear in
+  `research/offset_architecture.md`, and the document says plainly that scope disjointness is
+  not the claim. **The row's test as written cannot be satisfied by any correct engine.**
+- **`R134` declares `no adjustable parameter's sliderMax exceeds its distribution high`, which
+  would fail on all twelve adjustable parameters** and would forbid the thing sliders are for.
+  Recorded as `D52`, not implemented. Its second declared test - no parameter graded `high` with
+  a mode set by analyst judgement - is implemented and shipped.
+
+### CODE REVIEW, and what it changed
+
+Run after the section, before this entry was final, as two parallel axes against `eecf2dc`.
+Every finding below was verified against the code before acting on it.
+
+**Standards axis - five breaches of `CONVENTIONS.md` rule 2, all in text a reader sees.** The
+rule bans "the framework says / calls for / specifies / assumes" and confines KPP/TPP/CP codes
+to the Data and Quality tabs. §S6a put catalog codes on the Health tab and rewrote one note
+*away* from compliance:
+
+| Where | What it said | Fixed to |
+|---|---|---|
+| `health.astro` label | "The framework's own figure" | "The plan's own stated figure" |
+| `health.astro` note | "the framework asserts a mature total system cost ... settled by the framework's own catalog" | "the plan states ... settled by the plan's own cost catalog" |
+| `FRAMEWORK_CLAIM.basisSource` (rendered) | named `KPP-C2` and `CP-TOT-001` on the Health tab | states the basis plainly; the codes stay in the comment above it |
+| `publicAdminRate.source` (rendered) | opened `"R27 [§S6a]: the distribution stopped at 3.2%..."` and claimed "no draw in 600 could reach", stale since R25 | plain sourced prose, no row number, no stale draw count |
+| `providerPaymentFactor.divergence.note` (rendered) | "the framework states it: it is capacity-first" | "the plan builds capacity first" |
+
+A sixth was found by reading the rendered page rather than the diff: **self-test names render in
+the footer's integrity panel**, so rule 2 applies to them too, and one was called *"The
+framework's claim is drawn from the declared constant"*. Renamed.
+
+**Two stale numbers the section left behind**, both introduced by its own later commits:
+`README.md`'s "~15ms in the browser" (the draw count made it ~36ms) and its second parameter
+count at line 72, still 27 where line 54 had been corrected to 32. And `equations.ts` still
+carried R143's *"12 of the 20 scenarios still breach"* in a comment, which this section's own
+re-draw took to 10 - fixed in the test and not in the prose until review.
+
+**Spec axis - three declared tests had not shipped**, and two that had were checking something
+adjacent to what they claimed:
+
+- `R127`'s second: *"every scenario balancer is scale-type with a defined scaleMax"*. Shipped
+  against two fabricated scenarios; now runs over the real catalog.
+- `R134`'s second: *"no parameter graded high has a mode set by analyst judgement"*. Not written.
+  Now shipped, and it is the rule `publicAdminRate` broke.
+- `R33`'s check tested `note.trim().length >= 80` - a check on effort, not content. It now
+  requires the note to name the number it diverges from.
+- `R26`'s check asserted `comparableWith === 'matureToday'`, which is the check checking itself.
+  It now reads that band off the ensemble and compares it against what the chart draws.
+
+**And a hole in this section's own headline check.** The engine-literal scan began at the first
+sampling function, so **every module-scope declaration above it was invisible to it** - which is
+where the next magic number would go, and where two of the structural entries it declared were
+already sitting unread. The span starts at the first engine function now, and module-scope
+declarations are scanned against their own list, because a named constant at module scope is the
+right home for a structural value and the wrong place to hide a model quantity.
+
+Three new checks, **each watched failing**, plus two strengthened ones re-proven the same way.
+Self-tests **126 → 129**. No published number moved: mature-year total, 2041 total, new revenue,
+per capita, NHE/GDP and `pubShare` are identical before and after the review, 727 published
+targets unmoved, 1,037 criticality positions unmoved.
+
+**One finding left alone, deliberately.** `health.astro` carries "KPP-A3 allows ≤0.5% billing
+exceptions" in reader prose - a rule-2 breach that predates this section and belongs to whoever
+owns that paragraph. Named here and in the prompt file rather than fixed silently in a diff that
+has nothing else to do with it.
+
+**Judgement calls accepted rather than acted on**, recorded so the next reviewer does not re-file
+them: `sponsorShare()` is a middle man for one caller and is kept because it throws by name on
+an unknown sponsor; `selftests.ts` is accumulating unrelated surfaces (divergent change) and
+splitting it is a §S0 harness decision, not a §S6a one.
+
 ### GATES AND COUNTS
 
-- **Self-tests 107 → 126.** README bumped in the same edit every time; the drift gate fired on
+- **Self-tests 107 → 129**, the last three added by the code review. README bumped in the same edit every time; the drift gate fired on
   schedule whenever it was not.
-- **19 new checks, and all 19 were watched failing**, by breaking the code and rebuilding, then
+- **22 new checks, and all 22 were watched failing**, by breaking the code and rebuilding, then
   restoring from bytes read before the break. The pass is scripted in the session scratchpad and
   reports `build failed / named its check / restored` per break. Two were caught being wrong
   *while being written* rather than after: the engine-literal scan fired on the `88` and the

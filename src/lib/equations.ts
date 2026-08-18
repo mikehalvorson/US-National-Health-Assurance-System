@@ -1625,8 +1625,13 @@ export function equationSelfTests(Q: QualityData): { ok: boolean; messages: stri
        BASE CASE met its target, and R143 walked straight into the hole: moving
        the healthcare model's wealth base onto the sourced top-capital rate
        took KPP-C8 from about 5.9% to 4.64% on SCN-BASE, so the check demanded
-       the gap be deleted - while 12 of the 20 scenarios still breach the 5%
-       cap, the worst at 15.6%. Deleting a true disclosure on the strength of
+       the gap be deleted - while 10 of the 20 scenarios still breach the 5%
+       cap. R143 measured 12; P7 re-drew the same model with one random stream
+       per parameter and got 10, with no economics changed, which is the
+       measurement saying that the COUNT is a statistic of the ensemble rather
+       than a property of the framework. What survives re-drawing is that the
+       base case is inside the cap and that scenarios outside it exist.
+       Deleting a true disclosure on the strength of
        one favourable scenario is the exact failure this check exists to
        prevent, pointed the other way.
        A gap is stale only when it has closed everywhere. */

@@ -52,9 +52,9 @@ the methodology as superseded by the model's computed projections):
 that builds to plain HTML/JS/SVG with no runtime dependencies and no server,
 implementing the national-aggregate simulation specified in BUILD-BRIEF.md.
 It runs 1,500 Monte Carlo draws over 32 sourced parameter distributions in
-~15ms in the browser, covers the framework's Phase 0–8 rollout (2027–2042)
+~36ms in the browser, covers the Phase 0–8 rollout (2027–2042)
 and all 19 stress scenarios. It validates itself with
-126 built-in integrity tests, shown in the page footer and enforced by the
+129 built-in integrity tests, shown in the page footer and enforced by the
 build gate.
 
 <!-- R155: the count above is checked against selfTestSummary().total by a
@@ -69,7 +69,7 @@ src/pages/*.astro      the 14 chapters, one route each; index.astro is the
 src/layouts/           BaseLayout.astro: the shell every page renders into
 src/components/        SiteHeader, SiteFooter, TabNav, ChapterNav
 src/styles/global.css  theme (light + dark), validated chart palette
-src/lib/params.ts      the parameter base: 27 distributions, each with
+src/lib/params.ts      the parameter base: 32 distributions, each with
                         source citation + confidence grade, plus CMS 2023
                         calibration constants and phase-ramp schedules
 src/lib/scenarios.ts   the 19-scenario catalog as parameter overrides

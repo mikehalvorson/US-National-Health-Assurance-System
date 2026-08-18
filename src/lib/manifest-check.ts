@@ -125,17 +125,7 @@ export const SPLIT_LITERAL_SOURCE =
 const SPLIT_LITERAL = new RegExp(SPLIT_LITERAL_SOURCE, 'g');
 
 export function baselineSplitCopies(root = REPO_ROOT): CodeReference[] {
-  const out: CodeReference[] = [];
-  for (const rel of enumerateSourceFiles(root)) {
-    if (!rel.startsWith('src/') || !rel.endsWith('.ts')) continue;
-    if (rel === SPLIT_HOME) continue;
-    const lines = maskComments(readFileSync(join(root, rel), 'utf8')).split('\n');
-    lines.forEach((line, i) => {
-      if (SPLIT_LITERAL.test(line)) out.push({ file: rel, line: i + 1, text: line.trim() });
-      SPLIT_LITERAL.lastIndex = 0;
-    });
-  }
-  return out;
+  return scanSourceLines(SPLIT_LITERAL, { skip: [SPLIT_HOME] }, root);
 }
 
 /* R38 [§S5]: a display-only dataset must stay out of the revenue engine.
@@ -527,6 +517,32 @@ const RETIRED_TREE_REFERENCE = /docs\/[A-Za-z0-9_.-]/g;
 
 export interface CodeReference { file: string; line: number; text: string }
 
+/* R21 [§S6a], after review: four source scans had copied the same eight lines -
+   walk the tree, keep src/*.ts and *.astro, mask comments, test a global regex
+   per line, reset lastIndex, push a CodeReference. The copies drifted in what
+   they skipped, which is the part that matters. One scanner, and each caller
+   says only what it is looking for and where it is allowed to be. */
+export function scanSourceLines(
+  pattern: RegExp,
+  options: { skip?: string[]; only?: string } = {},
+  root = REPO_ROOT
+): CodeReference[] {
+  const skip = new Set(options.skip || []);
+  const files = options.only ? [options.only] : enumerateSourceFiles(root);
+  const out: CodeReference[] = [];
+  for (const rel of files) {
+    if (!rel.startsWith('src/')) continue;
+    if (!rel.endsWith('.ts') && !rel.endsWith('.astro')) continue;
+    if (skip.has(rel)) continue;
+    const lines = maskComments(readFileSync(join(root, rel), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      if (pattern.test(line)) out.push({ file: rel, line: i + 1, text: line.trim() });
+      pattern.lastIndex = 0;
+    });
+  }
+  return out;
+}
+
 export function maskComments(text: string): string {
   const out = text.split('');
   let i = 0;
@@ -703,7 +719,11 @@ export function routeDrift(routes: string[] = pageRoutes(), tabs = TABS): RouteD
  * value typed back into a formula is exactly the duplication the registry
  * exists to remove, so it fails too. */
 export const ENGINE_FILE = 'src/lib/model.ts';
-export const ENGINE_SPAN_START = 'export function sampleParams';
+/* Review moved this earlier. It used to start at sampleParams, which left the
+   ramp and sampling helpers above it unscanned along with the constants block.
+   It starts at the first engine function now, so everything that computes is
+   inside the span and only the declarations sit above it. */
+export const ENGINE_SPAN_START = 'export function rampsAt';
 export const ENGINE_SPAN_END = 'export function selfTest';
 
 /* Preceded by neither a word character nor a dot, so `d.pubCost` and
@@ -737,6 +757,35 @@ export function unregisteredEngineLiterals(
 ): EngineLiteral[] {
   const allowed = new Set(structural);
   return engineLiterals(root).filter((l) => !allowed.has(l.value));
+}
+
+/* Found by review: the span above starts at the first sampling function, so
+   every module-scope declaration ABOVE it was invisible to the check - which is
+   exactly where a magic number would go to escape it. Module scope is the
+   declared home for a named constant, so declaring one there is right; what was
+   missing is that the value has to be declared too.
+   The two lists are deliberately different. A quantile of 0.5 is a perfectly
+   good band level to declare at module scope and is never a legitimate bare
+   number inside an engine formula, where it used to be the OOP share. */
+export function undeclaredEngineDeclarations(
+  declaration: number[],
+  root = REPO_ROOT
+): EngineLiteral[] {
+  const masked = maskComments(readFileSync(join(root, ENGINE_FILE), 'utf8'));
+  const lines = masked.split('\n');
+  const spanStart = lines.findIndex((l) => l.includes(ENGINE_SPAN_START));
+  const allowed = new Set(declaration);
+  const out: EngineLiteral[] = [];
+  for (let i = 0; i < spanStart; i += 1) {
+    if (/^import|^\s*[A-Za-z_$][\w$]*,?$|from '/.test(lines[i])) continue;
+    for (const m of lines[i].matchAll(ENGINE_NUMBER)) {
+      const value = Number(m[1]);
+      if (!allowed.has(value)) {
+        out.push({ line: i + 1, value: value, text: lines[i].trim() });
+      }
+    }
+  }
+  return out;
 }
 
 /* And the other direction: a constant in the registry that the engine does not
@@ -777,20 +826,7 @@ export const MATURE_YEAR_DERIVATION =
   /years\.length\s*-\s*2|END_YEAR\s*-\s*START_YEAR\s*\+\s*1\)\s*-\s*2|204[0-9]\s*-\s*START_YEAR/g;
 
 export function matureYearDerivations(root = REPO_ROOT): CodeReference[] {
-  const out: CodeReference[] = [];
-  for (const rel of enumerateSourceFiles(root)) {
-    if (!rel.startsWith('src/')) continue;
-    if (!rel.endsWith('.ts') && !rel.endsWith('.astro')) continue;
-    if (rel === MATURE_YEAR_HOME) continue;
-    const lines = maskComments(readFileSync(join(root, rel), 'utf8')).split('\n');
-    lines.forEach((line, i) => {
-      if (MATURE_YEAR_DERIVATION.test(line)) {
-        out.push({ file: rel, line: i + 1, text: line.trim() });
-      }
-      MATURE_YEAR_DERIVATION.lastIndex = 0;
-    });
-  }
-  return out;
+  return scanSourceLines(MATURE_YEAR_DERIVATION, { skip: [MATURE_YEAR_HOME] }, root);
 }
 
 /* R127 [§S6a]: a primitive type assertion is a claim the compiler stops
@@ -821,21 +857,8 @@ export const ALLOWED_ASSERTIONS: AllowedAssertion[] = [
 ];
 
 export function primitiveAssertions(root = REPO_ROOT): CodeReference[] {
-  const allowed = new Set(ALLOWED_ASSERTIONS.map((a) => a.file));
-  const out: CodeReference[] = [];
-  for (const rel of enumerateSourceFiles(root)) {
-    if (!rel.startsWith('src/')) continue;
-    if (!rel.endsWith('.ts') && !rel.endsWith('.astro')) continue;
-    if (allowed.has(rel)) continue;
-    const lines = maskComments(readFileSync(join(root, rel), 'utf8')).split('\n');
-    lines.forEach((line, i) => {
-      if (PRIMITIVE_ASSERTION.test(line)) {
-        out.push({ file: rel, line: i + 1, text: line.trim() });
-      }
-      PRIMITIVE_ASSERTION.lastIndex = 0;
-    });
-  }
-  return out;
+  return scanSourceLines(
+    PRIMITIVE_ASSERTION, { skip: ALLOWED_ASSERTIONS.map((a) => a.file) }, root);
 }
 
 /* R33 [§S6a]: a divergence from a research recommendation is only disclosed if
@@ -844,6 +867,21 @@ export function primitiveAssertions(root = REPO_ROOT): CodeReference[] {
    rendering it would be the same silence in a new place, so the page that
    renders the table is scanned for it. */
 export const PARAMETER_EXPLORER = 'src/pages/health.astro';
+
+/* Review: the divergence check tested `note.length >= 80`, which is a check on
+   effort rather than on content. A note that does not name the number it
+   diverges from is not a disclosure, and that is checkable. */
+export function divergenceNamesRecommendation(
+  note: string,
+  recommended: string
+): boolean {
+  /* The headline number, not every number in the phrasing: a recommendation
+     written as "about 0.39, which is 1 / 2.54" is named by a note that says
+     0.39. Requiring all three would fail a note that explains itself in
+     percentages, which is what a reader wants. */
+  const digits = recommended.match(/[\d.]+/g) || [];
+  return digits.length > 0 && note.includes(digits[0]);
+}
 
 export function divergenceIsRendered(root = REPO_ROOT): boolean {
   const text = readFileSync(join(root, PARAMETER_EXPLORER), 'utf8');
