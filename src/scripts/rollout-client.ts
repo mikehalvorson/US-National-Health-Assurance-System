@@ -3,7 +3,8 @@
    Port of docs/js/rollout.js:278-560. Runs on astro:page-load; idempotent
    via the timeline's dataset.wired guard. */
 import {
-  PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS, UNIT_BUILDOUT_STEPS
+  PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS, WORKSTREAM_COST_NOTE,
+  WORKSTREAM_GATE, WORKSTREAM_OWNER, UNIT_BUILDOUT_STEPS
 } from '../lib/rollout';
 
 function renderTimeline(): void {
@@ -289,18 +290,31 @@ function renderWorkstreams(): void {
     item.className = 'workstream-item';
     const id = document.createElement('div');
     id.className = 'workstream-id';
-    id.textContent = stream[0];
+    id.textContent = stream.id;
     const body = document.createElement('div');
     const b = document.createElement('b');
-    b.textContent = stream[1];
+    b.textContent = stream.title;
     const span = document.createElement('span');
-    span.textContent = stream[2];
+    span.textContent = stream.boundary;
     body.appendChild(b);
     body.appendChild(span);
+    /* R253 [§S5]: the page demands a costed work package, deliverable, owner,
+       gate, contingency and transfer of every dollar. Four of those are
+       carried per workstream or per set and are printed here; the fifth, the
+       dollar allocation, is open by the framework's own decision and says so
+       rather than showing a blank. */
+    const meta = document.createElement('span');
+    meta.className = 'workstream-meta';
+    meta.textContent = 'Cost families: ' + stream.cpAllocation +
+      ' · Owner: ' + WORKSTREAM_OWNER + ' · ' + WORKSTREAM_GATE +
+      ' · Transfers to: ' + stream.exit;
+    body.appendChild(meta);
     item.appendChild(id);
     item.appendChild(body);
     host.appendChild(item);
   });
+  const note = document.getElementById('rollout-workstream-note');
+  if (note) note.textContent = WORKSTREAM_COST_NOTE;
 }
 
 function initRollout(): void {

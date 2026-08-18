@@ -5,8 +5,10 @@
    (608-641) minus the DOM. Runs at build time; pure. */
 import { runPath, sampleParams, selfTest } from './model';
 import { runOverviewMc } from './overview';
-import { effectiveParams, scenarioStructural } from './scenarios';
-import { bridgeSteps } from './bridge';
+import {
+  effectiveParams, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
+} from './scenarios';
+import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { TAX_SELFTESTS } from './taxmodel';
 import {
   REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
@@ -40,11 +42,17 @@ import {
   baselineSplitCopies, ENRICHERS, guardedGlobalListeners, manifestDrift, PARSER_HOME,
   parserImplementations, readmeAdvertisedTestCount, readmeDeployDrift,
   retiredTreeCodeReferences, retiredTreeTargets, routeDrift, SPLIT_HOME,
-  statedChapterCountDrift, undeclaredEnrichers, unregisteredSelfTestSurfaces
+  statedChapterCountDrift, typedEnvelopeLiterals, undeclaredEnrichers,
+  unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
-import { AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
-import { EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES } from './rollout';
+import {
+  AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR, transitionEnvelope
+} from './params';
+import {
+  EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
+  WORKSTREAM_COST_NOTE, WORKSTREAM_GATE, WORKSTREAM_OWNER
+} from './rollout';
 import {
   benefitStartDrift, calendarAnchorDenials, calendarConverterSplit, calendarYearOf,
   expansionSpanDisagreements,
@@ -274,10 +282,62 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
   },
   {
     surface: 'bridge.ts',
-    rows: () => [runGuarded('Bridge decomposition matches engine total exactly', () => {
-      const identityError = bridgeSteps(runOverviewMc('SCN-BASE', null)).identityError;
-      return { ok: identityError < 0.01, note: 'err=' + identityError.toExponential(1) };
-    })]
+    rows: () => [
+      runGuarded('Bridge decomposition matches engine total exactly', () => {
+        const identityError = bridgeSteps(runOverviewMc('SCN-BASE', null)).identityError;
+        return { ok: identityError < 0.01, note: 'err=' + identityError.toExponential(1) };
+      }),
+      /* R156 [§S5]: the bridge draws one mature year and the branch that was
+         supposed to carry one-time cost could never fire, because transition
+         and IT capital are both zero by then. Keeping the mature-year framing
+         means that zero is an ASSUMPTION, so it is checked: if any scenario
+         ever puts one-time cost in the bridge's own year, the framing is wrong
+         and the build says so rather than the chart quietly dropping it. */
+      runGuarded('The bridge year carries no one-time cost, in any scenario', () => {
+        const bad: string[] = [];
+        for (const sc of MODEL_SCENARIOS) {
+          const mc = runOverviewMc(sc.id, null);
+          const d = mc.modePath.detail[mc.years.length - 2];
+          const oneTime = d.trans + d.itcap + d.shock;
+          if (Math.abs(oneTime) > 1e-9) bad.push(sc.id + '=' + oneTime.toFixed(1));
+        }
+        return {
+          ok: !bad.length,
+          note: bad.length
+            ? 'one-time cost at the bridge year: ' + bad.join(', ')
+            : MODEL_SCENARIOS.length + ' scenarios, all zero at 2041'
+        };
+      }),
+      /* R156 [§S5]: and the quantity it excludes is stated, non-zero, and
+         equal to what the engine actually spends. A silently-zero exclusion
+         note would read as "nothing was left out". */
+      runGuarded('The bridge states the one-time cost it excludes', () => {
+        const mc = runOverviewMc('SCN-BASE', null);
+        const b = bridgeSteps(mc);
+        const pathSum = mc.modePath.detail.reduce(
+          (a, r) => a + r.trans + r.itcap + r.shock, 0);
+        const ok = b.excludedOneTime > 0 &&
+          Math.abs(b.excludedOneTime - pathSum) < 1e-9 &&
+          BRIDGE_EXCLUSION_NOTE.length > 40 && BRIDGE_IDENTITY_NOTE.length > 40;
+        return { ok, note: 'excluded $' + b.excludedOneTime.toFixed(0) + 'B (2023$)' };
+      }),
+      /* R253 [§S5]: the page demands a costed work package, deliverable,
+         owner, gate, contingency and transfer of every dollar, and carried
+         none of them. Four are data now; the fifth is a declared open state
+         rather than a blank, and this holds it to that. */
+      runGuarded('Every transition workstream carries its framework fields', () => {
+        const bad = WORKSTREAMS.filter((w) =>
+          !w.cpAllocation || !w.exit || !w.boundary || w.cost !== 'allocation-open');
+        return {
+          ok: !bad.length && WORKSTREAMS.length === 13 &&
+            !!WORKSTREAM_OWNER && !!WORKSTREAM_GATE && WORKSTREAM_COST_NOTE.length > 40,
+          note: bad.length
+            ? 'incomplete: ' + bad.map((w) => w.id).join(', ')
+            : WORKSTREAMS.length + ' workstreams, owner ' + WORKSTREAM_OWNER +
+              ', ' + WORKSTREAM_GATE + ', dollar allocation open by OI-052'
+        };
+      })
+    ]
   },
   {
     /* shape 2: {name, run}[] pushed onto a shared array */
@@ -1049,6 +1109,18 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: ok
             ? 'parseNum defined once, in ' + PARSER_HOME
             : 'defined in: ' + (found.join(', ') || 'nowhere')
+        };
+      }),
+      /* R253 [§S5]: the envelope is derived, and the page does not type it. */
+      runGuarded('The rollout page types no transition-envelope figure', () => {
+        const typed = typedEnvelopeLiterals();
+        const env = transitionEnvelope();
+        return {
+          ok: !typed.length,
+          note: typed.length
+            ? typed.map((c) => c.file + ':' + c.line + ' "' + c.text + '"').join(', ')
+            : 'derived: $' + (env.low / 1000).toFixed(1) + 'T-$' + (env.high / 1000).toFixed(1) +
+              'T, central $' + (env.mode / 1000).toFixed(1) + 'T, from ' + env.parts.join(' + ')
         };
       }),
       /* R157 [§S5]: the baseline PHC category split, defined once. */

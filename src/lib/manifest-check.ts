@@ -138,6 +138,33 @@ export function baselineSplitCopies(root = REPO_ROOT): CodeReference[] {
   return out;
 }
 
+/* R253 [§S5]: the transition envelope, derived rather than typed.
+ *
+ * One quantity was stated three ways: the page typed "$1.2-$2.0 trillion" in
+ * prose and "$1.2T-$2.0T" again in a display tile, `params.ts` carried
+ * $1.0-2.2T plus $0.06-0.18T of IT capital, and the cost bridge excluded the
+ * whole thing. The page now renders `transitionEnvelope()`. This keeps it
+ * that way: a trillion-scale dollar literal written into the rollout page is
+ * a fourth copy of a number the parameters already answer.
+ *
+ * The framework's own controlled envelope is still shown, but it is read from
+ * `transitionEnvelope().frameworkLow/High` in params.ts, so there is exactly
+ * one place either figure lives. */
+export const ENVELOPE_PAGE = 'src/pages/rollout.astro';
+export const ENVELOPE_LITERAL_SOURCE = String.raw`\$\d+(?:\.\d+)?\s*(?:T\b|trillion)`;
+const ENVELOPE_LITERAL = new RegExp(ENVELOPE_LITERAL_SOURCE, 'g');
+
+export function typedEnvelopeLiterals(root = REPO_ROOT): CodeReference[] {
+  const out: CodeReference[] = [];
+  const lines = readFileSync(join(root, ENVELOPE_PAGE), 'utf8').split('\n');
+  lines.forEach((line, i) => {
+    for (const m of line.matchAll(ENVELOPE_LITERAL)) {
+      out.push({ file: ENVELOPE_PAGE, line: i + 1, text: m[0] });
+    }
+  });
+  return out;
+}
+
 /* R229 [§S3]: the import-time enricher convention, enforced.
  *
  * The convention itself is written at the top of quality.ts, where the

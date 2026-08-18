@@ -402,6 +402,45 @@ export const PARAM_DEFS: ParamDef[] = [
 export const PARAMS_BY_ID: Record<string, ParamDef> = {};
 PARAM_DEFS.forEach(function (p) { PARAMS_BY_ID[p.id] = p; });
 
+/* ---- The transition envelope, derived -----------------------------------
+ * R253 [§S5]. One quantity was stated three ways and none of the three knew
+ * about the others: `rollout.astro` typed "$1.2-$2.0 trillion" in prose and
+ * again in a display tile; `params.ts` carries `transitionTotal` at
+ * $1,000-2,200B with $1,500B central plus `itCapital` at $60-180B with $100B
+ * central; and the cost-bridge chart excluded the whole thing through a
+ * branch that could never fire (R156). The page's band was narrower than the
+ * model's on both ends and its caption claimed to cover "infrastructure"
+ * while leaving IT capital out of the envelope entirely.
+ *
+ * The published figure is now computed from the two parameters rather than
+ * typed. The framework's own controlled envelope - Table D6B-14, $1.2T-$2.0T
+ * over 10-12 years - is carried alongside as the anchor it is, not deleted:
+ * the model's range is wider on both ends because it prices IT capital
+ * separately and holds a wider band on transition protection.
+ * ------------------------------------------------------------------------ */
+export interface TransitionEnvelope {
+  low: number; mode: number; high: number;
+  parts: string[];
+  frameworkLow: number; frameworkHigh: number;
+}
+export function transitionEnvelope(): TransitionEnvelope {
+  const ids = ['transitionTotal', 'itCapital'];
+  const parts = ids.map(function (id) {
+    const p = PARAMS_BY_ID[id];
+    if (!p) throw new Error('Transition envelope names unknown parameter ' + id);
+    return p;
+  });
+  return {
+    low: parts.reduce(function (a, p) { return a + p.low; }, 0),
+    mode: parts.reduce(function (a, p) { return a + p.mode; }, 0),
+    high: parts.reduce(function (a, p) { return a + p.high; }, 0),
+    parts: ids,
+    /* Framework Table D6B-14, the controlled position this is measured
+       against. Display only; never a target. */
+    frameworkLow: 1200, frameworkHigh: 2000
+  };
+}
+
 /* ---- Phase ramps ---------------------------------------------------------
  * ZERO-BASED year index 0..15. Index 0 is Year 1 is 2027, the enactment
  * year, matching model.ts's `year = START_YEAR + t` and every other reader.

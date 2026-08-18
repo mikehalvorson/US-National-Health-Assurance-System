@@ -430,18 +430,107 @@ export const AGENCIES: AgencyGroup[] = [
   }
 ];
 
-export const WORKSTREAMS: [string, string, string][] = [
-  ["TW-01", "Unit network buildout", "Sites, design, construction, equipment, startup, training, mobile and rural readiness"],
-  ["TW-02", "Information mesh", "Identity, registries, claims and records, cyber, interfaces, cleaning, and migration"],
-  ["TW-03", "Public manufacturing", "Facilities, equipment, validation, suppliers, inventory, and launch"],
-  ["TW-04", "Hospital stabilization", "Conversion corridors, service-line and workforce continuity, reconciliation"],
-  ["TW-05", "Provider liquidity", "Reserve authority, provisional payments, complaints, recovery, and reconciliation"],
-  ["TW-06", "Workforce transition", "Income bridges, assessment, training, placement, retention, and appeals"],
-  ["TW-07", "Education expansion", "Faculty, sites, slots, scholarships, residencies, fellowships, and hubs"],
-  ["TW-08", "State compacts", "Planning, systems, staffing, data, grants, reconciliation, and federal fallback"],
-  ["TW-09", "Tribal and rural transition", "Direct compacts, data governance, facilities, workforce, transport, and continuity"],
-  ["TW-10", "Pharmacy continuity", "Medication bridges, emergency fills, onboarding, payment, formulary, and supply conversion"],
-  ["TW-11", "Legacy payer wind-down", "Runout, authorizations, appeals, liabilities, records, contracts, and closure"],
-  ["TW-12", "Legitimacy and safety startup", "Rights, ombudsman, appeals, injury learning, accessibility, trust, and remediation"],
-  ["TW-13", "Adaptation startup", "Scorekeeping, Formula Registry, gate evidence, legal contingency, red team, and repair"]
+/* ---- Transition workstreams ---------------------------------------------
+ * R253 [§S5]. `rollout.astro` requires of every dollar a "costed work
+ * package, deliverable, owner, gate, contingency, and transfer into mature
+ * operations" - and these records were thirteen [id, title, description]
+ * triples carrying none of them.
+ *
+ * Two of the five were simply dropped in the port. Framework Table D6B-15
+ * ("Costed transition and implementation workstreams") is a five-column
+ * table: ID, Workstream, CP allocation, Included transition boundary,
+ * Exit/transfer. The port kept the first two and the boundary (as
+ * `description`) and dropped `CP allocation` and `Exit/transfer`. Both are
+ * restored verbatim below - the CP allocation IS the costed-work-package
+ * pointer, and the exit IS the transfer into mature operations.
+ *
+ * Owner and gate are assigned to the whole set, not per workstream, and the
+ * framework says so: conclusion 64-C06 reads "NHTCA; TW-01-13; Gate 8". They
+ * are stated once as WORKSTREAM_OWNER / WORKSTREAM_GATE rather than copied
+ * thirteen times.
+ *
+ * The per-workstream DOLLAR allocation does not exist, and that is the
+ * framework's own position rather than a gap in this port: Table D6B-14's
+ * last row reads "Phase/domain allocation | Open | Cost-loaded integrated
+ * schedule required under OI-052". So `cost` is a declared state - the §S4
+ * pattern, a field that says why a number is absent instead of leaving a
+ * silent blank - and the page prints the reason where it prints the
+ * requirement.
+ * ------------------------------------------------------------------------ */
+export type WorkstreamCostState = 'allocation-open';
+
+export interface Workstream {
+  id: string;
+  title: string;
+  /* Table D6B-15 "Included transition boundary": what the package delivers. */
+  boundary: string;
+  /* Table D6B-15 "CP allocation": the cost families the package draws on. */
+  cpAllocation: string;
+  /* Table D6B-15 "Exit/transfer": where the capability goes when service-ready. */
+  exit: string;
+  cost: WorkstreamCostState;
+}
+
+/* Framework conclusion 64-C06: "NHTCA; TW-01-13; Gate 8". */
+export const WORKSTREAM_OWNER = 'NHTCA';
+export const WORKSTREAM_GATE = 'Gate 8';
+export const WORKSTREAM_COST_NOTE =
+  'Per-workstream dollar allocation is open by design, not missing: the ' +
+  'framework fixes the cumulative envelope and requires a cost-loaded ' +
+  'integrated schedule (OI-052) before phase and domain shares are set. Each ' +
+  'package names the cost families it draws on instead.';
+
+export const WORKSTREAMS: Workstream[] = [
+  { id: "TW-01", title: "Unit network buildout",
+    boundary: "Sites, design, construction, equipment, startup, training, mobile and rural readiness",
+    cpAllocation: "CP-UNIT capital/startup; CP-TRN where uniquely transitional",
+    exit: "MC-03 after service-ready transfer", cost: 'allocation-open' },
+  { id: "TW-02", title: "Information mesh",
+    boundary: "Identity, registries, claims and records, cyber, interfaces, cleaning, and migration",
+    cpAllocation: "CP-IT; CP-TRN-010 for legacy migration",
+    exit: "MC-11 recurring operation", cost: 'allocation-open' },
+  { id: "TW-03", title: "Public manufacturing",
+    boundary: "Facilities, equipment, validation, suppliers, inventory, and launch",
+    cpAllocation: "CP-RX/CP-DX capital/startup",
+    exit: "MC-05/06 mature production", cost: 'allocation-open' },
+  { id: "TW-04", title: "Hospital stabilization",
+    boundary: "Conversion corridors, service-line and workforce continuity, reconciliation",
+    cpAllocation: "CP-TRN-007",
+    exit: "Close after certified global-budget/public-service operation", cost: 'allocation-open' },
+  { id: "TW-05", title: "Provider liquidity",
+    boundary: "Reserve authority, provisional payments, complaints, recovery, and reconciliation",
+    cpAllocation: "CP-TRN-005/006",
+    exit: "Authority/balance/outlay tracked separately", cost: 'allocation-open' },
+  { id: "TW-06", title: "Workforce transition",
+    boundary: "Income bridges, assessment, training, placement, retention, and appeals",
+    cpAllocation: "CP-TRN-016/017; CP-EDU",
+    exit: "Enduring education to MC-14; placement support sunsets", cost: 'allocation-open' },
+  { id: "TW-07", title: "Education expansion",
+    boundary: "Faculty, sites, slots, scholarships, residencies, fellowships, and hubs",
+    cpAllocation: "CP-EDU capital/startup",
+    exit: "MC-14 recurring pipeline after capacity established", cost: 'allocation-open' },
+  { id: "TW-08", title: "State compacts",
+    boundary: "Planning, systems, staffing, data, grants, reconciliation, and federal fallback",
+    cpAllocation: "CP-TRN-011",
+    exit: "Enduring regional administration to operating categories", cost: 'allocation-open' },
+  { id: "TW-09", title: "Tribal and rural transition",
+    boundary: "Direct compacts, data governance, facilities, workforce, transport, and continuity",
+    cpAllocation: "CP-TRN-012/013",
+    exit: "Enduring services transfer with sovereignty/federal duties preserved", cost: 'allocation-open' },
+  { id: "TW-10", title: "Pharmacy continuity",
+    boundary: "Medication bridges, emergency fills, onboarding, payment, formulary, and supply conversion",
+    cpAllocation: "CP-TRN-004/008",
+    exit: "MC-05 after continuity certification", cost: 'allocation-open' },
+  { id: "TW-11", title: "Legacy payer wind-down",
+    boundary: "Runout, authorizations, appeals, liabilities, records, contracts, and closure",
+    cpAllocation: "CP-TRN-009/010",
+    exit: "Named durable custodian for retained duties", cost: 'allocation-open' },
+  { id: "TW-12", title: "Legitimacy and safety startup",
+    boundary: "Rights, ombudsman, appeals, injury learning, accessibility, trust, and remediation",
+    cpAllocation: "CP-GOV/IT; CP-TRN-018/020",
+    exit: "Tagged subset of MC-12 after P6", cost: 'allocation-open' },
+  { id: "TW-13", title: "Adaptation startup",
+    boundary: "Scorekeeping, Formula Registry, gate evidence, legal contingency, red team, and repair",
+    cpAllocation: "CP-GOV/IT",
+    exit: "MC-12 mature operation", cost: 'allocation-open' }
 ];

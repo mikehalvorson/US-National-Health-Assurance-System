@@ -16,7 +16,7 @@ import type { HouseholdModelNumbers } from '../lib/household';
 import { renderFinancingChart } from '../lib/financing-chart';
 import { financingSpec, financingNote } from '../lib/financing';
 import { renderBridgeChart } from '../lib/bridge-chart';
-import { bridgeSteps } from '../lib/bridge';
+import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from '../lib/bridge';
 import { renderBenchmarkChart } from '../lib/benchmark-chart';
 import { benchmarkChartRows, benchmarkText } from '../lib/benchmarks';
 import { renderDataTable, pathTableData, bridgeTableData, financingTableData } from '../lib/overview-tables';
@@ -24,6 +24,7 @@ import type { TableData } from '../lib/overview-tables';
 import { growthDecompNote } from '../lib/growth-decomp';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
 import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
+import { money } from '../lib/format';
 
 interface State {
   scenario: string;
@@ -99,7 +100,17 @@ function initHealth(): void {
     const finNote = $('financing-note');
     if (finNote) finNote.textContent = financingNote(mc, DEF);
     const bridgeHost = $('bridge-chart');
-    if (bridgeHost) renderBridgeChart(bridgeHost, bridgeSteps(mc).steps, DEF);
+    const bridge = bridgeSteps(mc);
+    if (bridgeHost) renderBridgeChart(bridgeHost, bridge.steps, DEF);
+    /* R156 + R239 [§S5]: what the bridge leaves out and what its exact close
+       does and does not prove, both stated on the chart rather than left for
+       a reader to infer from a step that is not there. */
+    const bridgeNote = $('bridge-note');
+    if (bridgeNote) {
+      bridgeNote.textContent = BRIDGE_EXCLUSION_NOTE + ' On the central run that ' +
+        'excluded quantity is ' + money(bridge.excludedOneTime * DEF) +
+        ' in total across 2027 to 2042. ' + BRIDGE_IDENTITY_NOTE;
+    }
     const benchHost = $('benchmark-nhe');
     if (benchHost) {
       renderBenchmarkChart(benchHost, benchmarkChartRows(mc, DEF), {

@@ -6,7 +6,25 @@ import ChapterNav from '../components/ChapterNav.astro';
    restate any milestone year of its own. */
 import { ROLLOUT_HEADLINES } from '../lib/rollout';
 /* R256 [§S2]: the calendar anchor is stated in params.ts and referenced here. */
-import { CALENDAR_ANCHOR_NOTE } from '../lib/params';
+/* R253 + R156 [§S5]: the envelope is computed from transitionTotal and
+   itCapital rather than typed, and the cost bridge's exclusion is named here,
+   where the envelope is displayed. */
+import { CALENDAR_ANCHOR_NOTE, transitionEnvelope } from '../lib/params';
+
+const ENV = transitionEnvelope();
+const t = (b: number) => '$' + (b / 1000).toFixed(1) + 'T';
+const ENVELOPE_RANGE = t(ENV.low) + '–' + t(ENV.high);
+const ENVELOPE_MODE = t(ENV.mode);
+const ENVELOPE_NOTE =
+  'Derived from the model’s own transition-protection and information-mesh ' +
+  'capital parameters (' + t(ENV.low) + '–' + t(ENV.high) + ', central ' +
+  t(ENV.mode) + '), not typed. The framework’s controlled envelope is ' +
+  t(ENV.frameworkLow) + '–' + t(ENV.frameworkHigh) + '; the model is wider on ' +
+  'both ends because it prices the information mesh separately and holds a ' +
+  'wider band on transition protection. This spending is cumulative, so it is ' +
+  'not in the cost-bridge chart on the healthcare chapter, which decomposes a ' +
+  'single mature year (2041) by which point transition outlays have wound ' +
+  'down to zero.';
 ---
 <BaseLayout title="National Health Assurance: Phased Rollout">
   <main>
@@ -95,20 +113,23 @@ import { CALENDAR_ANCHOR_NOTE } from '../lib/params';
 
   <section class="card">
     <h2>Protected transition work</h2>
-    <p class="desc">The plan assumes $1.2–$2.0 trillion of incremental
-      transition and implementation cost over 10–12 years, but explicitly
-      does not invent phase shares or straight-line the total. Every dollar
+    <p class="desc">Incremental transition and implementation cost runs over
+      10–12 years and is not straight-lined: the model carries an annual
+      outlay profile, and the envelope below is the total of it. Every dollar
       must attach to a costed work package, deliverable, owner, gate,
       contingency, and transfer into mature operations.</p>
     <div class="transition-envelope" aria-label="Transition cost envelope">
-      <div class="transition-envelope-value">$1.2T–$2.0T</div>
+      <div class="transition-envelope-value">{ENVELOPE_RANGE}</div>
       <div>
-        <b>Cumulative transition envelope</b>
+        <b>Cumulative transition envelope, central estimate {ENVELOPE_MODE}</b>
         <span>continuity, infrastructure, capacity, migration, stabilization,
-          workforce, and wind-down, not mature annual operating cost</span>
+          workforce, and wind-down, plus the information-mesh build-out
+          capital, and not mature annual operating cost</span>
       </div>
     </div>
+    <p class="note">{ENVELOPE_NOTE}</p>
     <div id="rollout-workstreams" class="workstream-grid"></div>
+    <p class="note" id="rollout-workstream-note"></p>
     <p class="note">A gate hold cannot cut mandatory care, medication,
       provider-payment, appeal, or continuity fallbacks. It changes the pace
       or scope of new deployment and triggers repair.</p>
