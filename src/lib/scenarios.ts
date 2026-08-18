@@ -248,6 +248,76 @@ export const SIGNED_PATH_FIELDS: { field: string; why: string }[] = [
   }
 ];
 
+/* ---- R60 [AC4]: an override key that names no parameter ------------------
+ * `effectiveParams` iterates PARAM_DEFS and looks up scn.overrides[p.id], so
+ * an override keyed to a parameter that does not exist is never read at all.
+ * No error, no warning, no effect: the scenario runs and quietly does less
+ * than its own description says. It is the repo's dominant defect class, the
+ * same shape as the CP-ID collisions and the medication tag vocabulary.
+ *
+ * There is no live typo and there never has been one. What there is not is a
+ * guard, and the exact way one arrives is already written down: three
+ * scenarios override `unitsCost`, which a later section replaces with five
+ * per-type parameters. After that rework those three keys name nothing, are
+ * silently ignored, and SCN-UNIT-UNDER keeps running while no longer
+ * stressing unit cost at all - which is the one thing its name promises.
+ *
+ * Taking the catalog and the id list as arguments rather than reading the
+ * module's own is what makes the mechanism testable: a self-test can hand it
+ * a catalog with a bad key and watch it caught, which is not possible for a
+ * guard that can only read the shipped catalog.
+ * ------------------------------------------------------------------------ */
+export function unknownOverrideKeys(
+  scenarios: Scenario[],
+  knownIds: string[]
+): string[] {
+  const known = new Set(knownIds);
+  const unknown: string[] = [];
+  for (const s of scenarios) {
+    for (const key of Object.keys(s.overrides)) {
+      if (!known.has(key)) unknown.push(s.id + ' overrides ' + key);
+    }
+  }
+  return unknown;
+}
+
+/* The structural knobs, as data. ScenarioStructural is a type and types do
+ * not survive to runtime, so a scenario setting a knob the engine never reads
+ * is the same silence in the other direction: declared, set, and doing
+ * nothing. The engine is read for each of these, and a scenario setting
+ * anything outside the list is refused. */
+export const STRUCTURAL_KNOBS = [
+  'unitsRampMult', 'costShareDelayYears', 'coverageDelayYears',
+  'stateMoeMult', 'shock'
+];
+
+export function unknownStructuralKeys(scenarios: Scenario[]): string[] {
+  const known = new Set(STRUCTURAL_KNOBS);
+  const unknown: string[] = [];
+  for (const s of scenarios) {
+    for (const key of Object.keys(s.structural || {})) {
+      if (!known.has(key)) unknown.push(s.id + ' sets ' + key);
+    }
+  }
+  return unknown;
+}
+
+/* Refused at module load, so a rename fails the build in the commit that
+ * makes it rather than in whatever section next reads the numbers. */
+(function refuseUnresolvableOverrides(): void {
+  const badParams = unknownOverrideKeys(
+    SCENARIOS, PARAM_DEFS.map(function (p) { return p.id; }));
+  const badKnobs = unknownStructuralKeys(SCENARIOS);
+  if (badParams.length || badKnobs.length) {
+    throw new Error(
+      'A scenario names something that does not exist, so it is read by ' +
+      'nothing and the scenario does less than it says. ' +
+      badParams.concat(badKnobs).join('; ') +
+      '. Point the override at a live parameter id or a declared structural ' +
+      'knob, or remove it.');
+  }
+})();
+
 /* The catalog's shape, checkable without running the model: the declared
  * stress count, one base case, unique ids, and the naming the page's own
  * option list depends on. */

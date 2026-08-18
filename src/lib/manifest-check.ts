@@ -797,6 +797,15 @@ export function unreadEngineConstants(ids: string[], root = REPO_ROOT): string[]
   return ids.filter((id) => !masked.includes("engineConstant('" + id + "')"));
 }
 
+/* R60 [§S6b]: a structural knob a scenario can set and the engine never reads
+ * is the silent-failure class in its other direction. Same shape as
+ * unreadEngineConstants above, and the same reason: a declaration nothing
+ * consumes reads as a working control. */
+export function unreadStructuralKnobs(names: string[], root = REPO_ROOT): string[] {
+  const masked = maskComments(readFileSync(join(root, ENGINE_FILE), 'utf8'));
+  return names.filter((n) => !masked.includes('s.' + n));
+}
+
 /* R11 [§S6a]: the offset architecture document, held to the engine.
  *
  * A document that describes code is a claim with no test attached, and this one

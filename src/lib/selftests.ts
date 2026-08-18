@@ -12,7 +12,8 @@ import { runMonteCarlo } from './model';
 import {
   BASE_SCENARIO_ID, catalogShapeProblems, effectiveParams, naturalCeiling,
   scenarioStructural, SCENARIOS as MODEL_SCENARIOS, SIGNED_PATH_FIELDS,
-  STRESS_SCENARIO_COUNT
+  STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS, unknownOverrideKeys,
+  unknownStructuralKeys
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -57,7 +58,8 @@ import {
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
-  typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers, unreadEngineConstants,
+  typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
+  unreadEngineConstants, unreadStructuralKnobs,
   unregisteredEngineLiterals, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
@@ -1314,6 +1316,56 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
        on was never run by anything. */
     surface: 'scenarios.ts',
     rows: () => [
+      /* R60 [§S6b, AC4]: the guard that refuses an unresolvable key runs at
+         module load, which means a build that reaches this row has already
+         passed it. So the row holds the mechanism instead of the outcome: a
+         fabricated catalog with a key that names nothing has to be caught,
+         and the shipped one has to be clean. Asserting only the second would
+         be a check that passes whether or not the validator works.
+
+         The two halves are not symmetric, and finding that out is worth
+         recording. `structural` is a typed interface, so a bad knob on a
+         scenario literal is a compile error - and it became a BUILD error
+         only in this section, when the build started running astro check.
+         `overrides` is Record<string, ScenarioOverride>, so every string key
+         type-checks and the compiler can never help: for override keys the
+         runtime guard is the only thing there is. The probe below is built
+         through a widened shape for exactly that reason, since a literal
+         carrying the bad knob would not compile. */
+      runGuarded('An override naming no parameter or knob is refused', () => {
+        const ids = PARAM_DEFS.map((p) => p.id);
+        const live = unknownOverrideKeys(MODEL_SCENARIOS, ids)
+          .concat(unknownStructuralKeys(MODEL_SCENARIOS));
+        const probe = [{
+          id: 'SCN-PROBE', name: 'probe', desc: 'probe',
+          overrides: { thisParameterDoesNotExist: [1, 2, 3] },
+          structural: { thisKnobDoesNotExist: 1 }
+        }] as unknown as typeof MODEL_SCENARIOS;
+        const caught = unknownOverrideKeys(probe, ids)
+          .concat(unknownStructuralKeys(probe));
+        const problems: string[] = [];
+        if (live.length) problems.push('live catalog: ' + live.join(', '));
+        if (caught.length !== 2) {
+          problems.push('the validator caught ' + caught.length + ' of 2 probes');
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || MODEL_SCENARIOS.reduce(
+            (n, s) => n + Object.keys(s.overrides).length, 0) +
+            ' override keys and every structural knob resolve; both probes caught'
+        };
+      }),
+      /* And the other direction: a knob a scenario can set that the engine
+         never reads is a control that does nothing, which is the same silence
+         wearing the opposite coat. */
+      runGuarded('Every structural knob is read by the engine', () => {
+        const unread = unreadStructuralKnobs(STRUCTURAL_KNOBS);
+        return {
+          ok: !unread.length,
+          note: unread.join(', ') || STRUCTURAL_KNOBS.length +
+            ' knobs declared, each read in ' + ENGINE_FILE
+        };
+      }),
       runGuarded('The catalog holds one base case and its declared stress set', () => {
         const problems = catalogShapeProblems();
         return {
