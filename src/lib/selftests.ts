@@ -12,6 +12,7 @@ import {
   effectiveParams, naturalCeiling, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
+import { benchmarkChartRows, benchmarkText } from './benchmarks';
 import { classGrowth, TAX_SELFTESTS } from './taxmodel';
 import { DATASET_VINTAGES, INSTRUMENTS as TAX_INSTRUMENTS } from './taxparams';
 import {
@@ -55,8 +56,8 @@ import { TABS } from './tabs';
 import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
-  PARAM_DEFS, PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS,
-  SPONSOR_SHARE, START_YEAR, transitionEnvelope
+  FRAMEWORK_CLAIM, PARAM_DEFS, PARAMS_BY_ID, RAMPS, RAMP_MILESTONES,
+  RESEARCH_RECOMMENDATIONS, SPONSOR_SHARE, START_YEAR, transitionEnvelope
 } from './params';
 import {
   EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
@@ -982,6 +983,62 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             before.toFixed(1) + ' -> ' + after.toFixed(1) +
             ', program input growth ' + (100 * PROGRAM_INPUT_REAL_GROWTH).toFixed(1) + '%/yr'
         };
+      })
+    ]
+  },
+  {
+    /* R26 [§S6a]: the $4.75T figure. research/01 calls deriving what it
+       represents the single most important open question in the repository,
+       and it stayed open because everyone looked for the answer in prose. The
+       framework's own catalog states it: KPP-C2 computes per-capita system
+       cost from total-system cost and names $4.75T as that total. So the claim
+       has a basis, the chart carries it, and these hold both. */
+    surface: 'benchmarks.ts',
+    rows: () => [
+      runGuarded('Every benchmark line declares its accounting basis', () => {
+        const rows = benchmarkChartRows(runOverviewMc('SCN-BASE', null),
+          DEFLATOR_2023_TO_2024);
+        const thin = rows.filter((r) => !r.basis || r.basis.trim().length < 20);
+        return {
+          ok: !thin.length,
+          note: thin.length
+            ? 'no basis: ' + thin.map((r) => r.label).join(', ')
+            : rows.length + ' lines, each with a stated basis'
+        };
+      }),
+      runGuarded("The framework's claim is drawn from the declared constant", () => {
+        const rows = benchmarkChartRows(runOverviewMc('SCN-BASE', null),
+          DEFLATOR_2023_TO_2024);
+        const claim = rows.filter((r) => r.mid === FRAMEWORK_CLAIM.mode)[0];
+        const problems: string[] = [];
+        if (!claim) problems.push('no row carries the claim');
+        else {
+          if (claim.lo !== FRAMEWORK_CLAIM.low) problems.push('low typed, not read');
+          if (claim.hi !== FRAMEWORK_CLAIM.high) problems.push('high typed, not read');
+          if (claim.basis !== FRAMEWORK_CLAIM.basis) problems.push('basis restated');
+        }
+        if (!FRAMEWORK_CLAIM.basisSource.trim()) problems.push('basis has no source');
+        if (FRAMEWORK_CLAIM.comparableWith !== 'matureToday') {
+          problems.push('names a comparator the chart does not draw');
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(', ') || 'basis: ' + FRAMEWORK_CLAIM.basis
+        };
+      }),
+      /* And the readout says which way the comparison came out, computed from
+         the model rather than typed on the page. The prose it replaced had
+         gone stale: it said the model reached the claim under the optimistic
+         scenario, and by then no scenario did. */
+      runGuarded("The claim readout states the measured gap", () => {
+        const mc = runOverviewMc('SCN-BASE', null);
+        const text = benchmarkText(mc, DEFLATOR_2023_TO_2024).frameworkClaimResult;
+        const mid = mc.steady.matureToday.p50 * DEFLATOR_2023_TO_2024;
+        const pct = Math.abs(100 * (mid / FRAMEWORK_CLAIM.mode - 1)).toFixed(1);
+        const ok = text.includes(pct + '%') &&
+          text.includes(FRAMEWORK_CLAIM.basis.toLowerCase()) &&
+          /never a target/.test(text);
+        return { ok: ok, note: ok ? 'model is ' + pct + '% from the claim' : text.slice(0, 120) };
       })
     ]
   },

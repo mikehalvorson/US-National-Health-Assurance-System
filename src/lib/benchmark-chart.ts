@@ -13,6 +13,11 @@ export interface BenchmarkRow {
   mid?: number;
   color: string;
   note?: string;
+  /* R26 [§S6a]: what the row's dollars MEAN. Two lines on one axis that
+     answer different accounting questions are not a comparison, and the
+     framework's own claim went years without anyone able to state which
+     question it answered. Required, so a new row cannot arrive without one. */
+  basis: string;
 }
 
 export interface BenchmarkOpts {

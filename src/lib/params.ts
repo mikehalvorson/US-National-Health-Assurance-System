@@ -119,9 +119,41 @@ export const CALENDAR_ANCHOR_NOTE =
    the rest of the site publishes calendar dates. */
 export const CALENDAR_ANCHOR_DENIAL = 'do not assign a calendar start date';
 
-/* Framework's own claim, for comparison display only (never a target).
- * Stated in real 2024 dollars. */
-export const FRAMEWORK_CLAIM = { mode: 4750, low: 4300, high: 5250 };
+/* ---- The framework's own $4.75T claim, on a declared basis --------------
+ * R26 [§S6a]. research/01 says no source it found reproduces the number and
+ * calls deriving what it represents the single most important open question,
+ * naming three candidate readings: total system NHE, net new federal spending,
+ * or net new revenue. It has stood open through every pass since.
+ *
+ * The framework answers it, in its own quality catalog rather than in its
+ * prose. KPP-C2 computes per-capita system cost as "CP-TOT-001 total-system
+ * cost / covered population" and states its target as "to be reconciled with
+ * $4.75T total system cost and current population denominator". The claim is
+ * therefore total system cost, all payers, at maturity, in real 2024 dollars -
+ * the first of the three candidates, and the model's `matureToday` is the
+ * quantity computed to be comparable with it.
+ *
+ * That settles what it means. It does not make it reproducible: on that basis
+ * the model lands about 15% above it, and the claim sits below the 10th
+ * percentile of every scenario in the catalog. The comparison is published
+ * with its basis attached and computed from this constant, so it cannot go
+ * stale, and the number is never a target.
+ *
+ * One coincidence, named so nobody rediscovers it as a finding: the model's
+ * mature federal increase is currently within a fraction of a percent of
+ * $4.75T. That is the second candidate reading, and it is a different
+ * accounting basis from the one the catalog states; the literature puts that
+ * quantity at $3.2-3.4T/yr (Urban and Mercatus), so the match is arithmetic,
+ * not evidence.
+ * ------------------------------------------------------------------------ */
+export const FRAMEWORK_CLAIM = {
+  mode: 4750, low: 4300, high: 5250,
+  basis: 'Total national health expenditure at maturity, all payers, real 2024 dollars',
+  basisSource: "The framework's own catalog: KPP-C2 calculates per-capita system " +
+    'cost as "CP-TOT-001 total-system cost / covered population" and names ' +
+    '$4.75T as the total system cost it is to be reconciled with.',
+  comparableWith: 'matureToday'
+};
 
 /* ---- Household denominators, declared ------------------------------------
  * R84 [§S5]. Two per-household calculators divided by different numbers:

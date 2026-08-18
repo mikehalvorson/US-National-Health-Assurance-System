@@ -119,6 +119,7 @@ function initHealth(): void {
     }
     const bt = benchmarkText(mc, DEF);
     set('benchmark-nhe-result', bt.nheResult);
+    set('benchmark-claim-result', bt.frameworkClaimResult);
     set('benchmark-fed-model', bt.fedModel);
     set('benchmark-fed-model-range', bt.fedModelRange);
     set('benchmark-fed-result', bt.fedResult);
