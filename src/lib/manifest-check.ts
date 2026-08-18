@@ -682,3 +682,68 @@ export function routeDrift(routes: string[] = pageRoutes(), tabs = TABS): RouteD
       .filter((p) => !built.has(p))
   };
 }
+
+/* R21 [§S6a]: a numeric literal inside an engine function is a parameter that
+ * got away.
+ *
+ * Ten of them sat in model.ts with no source and no grade, which made their
+ * uncertainty zero rather than wide - the Monte Carlo varied everything around
+ * them and never them. Sourcing the ten is a one-time fix; this is what stops
+ * the eleventh.
+ *
+ * The span is the engine proper: from the first sampling function to the start
+ * of selfTest(), which is test code and holds tolerances, seeds and expected
+ * values by the dozen. Comments are masked, so the explanations in that file
+ * do not trip it.
+ *
+ * Every literal in that span must be declared structural in params.ts, with a
+ * reason. Model quantities are read from the registry or from a parameter, so
+ * after the fix they are not literals at all and cannot appear here. That is
+ * why this check does not compare against the registry's VALUES: a registered
+ * value typed back into a formula is exactly the duplication the registry
+ * exists to remove, so it fails too. */
+export const ENGINE_FILE = 'src/lib/model.ts';
+export const ENGINE_SPAN_START = 'export function sampleParams';
+export const ENGINE_SPAN_END = 'export function selfTest';
+
+/* Preceded by neither a word character nor a dot, so `d.pubCost` and
+   `p10` are not read as numbers, and property names like `p50:` are skipped
+   by the same rule. Exponent forms are matched whole. */
+const ENGINE_NUMBER = /(?<![\w.])(\d+\.?\d*(?:e-?\d+)?)/g;
+
+export interface EngineLiteral { line: number; value: number; text: string }
+
+export function engineLiterals(root = REPO_ROOT): EngineLiteral[] {
+  const masked = maskComments(readFileSync(join(root, ENGINE_FILE), 'utf8'));
+  const lines = masked.split('\n');
+  const start = lines.findIndex((l) => l.includes(ENGINE_SPAN_START));
+  const end = lines.findIndex((l) => l.includes(ENGINE_SPAN_END));
+  if (start < 0 || end < 0 || end <= start) {
+    throw new Error('model.ts no longer has an engine span between ' +
+      ENGINE_SPAN_START + ' and ' + ENGINE_SPAN_END);
+  }
+  const out: EngineLiteral[] = [];
+  for (let i = start; i < end; i += 1) {
+    for (const m of lines[i].matchAll(ENGINE_NUMBER)) {
+      out.push({ line: i + 1, value: Number(m[1]), text: lines[i].trim() });
+    }
+  }
+  return out;
+}
+
+export function unregisteredEngineLiterals(
+  structural: number[],
+  root = REPO_ROOT
+): EngineLiteral[] {
+  const allowed = new Set(structural);
+  return engineLiterals(root).filter((l) => !allowed.has(l.value));
+}
+
+/* And the other direction: a constant in the registry that the engine does not
+   read is documentation for code that is gone. `usedBy` names the expression,
+   which is prose; the identifier is what proves the wiring, so that is what is
+   searched for. */
+export function unreadEngineConstants(ids: string[], root = REPO_ROOT): string[] {
+  const masked = maskComments(readFileSync(join(root, ENGINE_FILE), 'utf8'));
+  return ids.filter((id) => !masked.includes("engineConstant('" + id + "')"));
+}

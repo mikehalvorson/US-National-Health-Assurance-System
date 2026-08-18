@@ -246,6 +246,12 @@ const CP_FAMILY_MODEL_INPUTS: Record<string, string[]> = {
   'CP-UNIT': ['unitsCost'],                             // cUnits
   'CP-LTC':  ['ltcExpansion', 'ltcWageFloor'],          // cLtc + cLtcAides
   'CP-RX':   ['drugPriceCut', 'embeddedDrugSpend'],     // cDrugs
+  /* R32 [§S6a] gave the low-value-care pool a distribution, and its source is
+     CP-DX-007. It is claimed by CP-OFF rather than here on purpose: this map
+     asks which sampled parameters carry a family's COST line, and diagnostics
+     cost still reaches the engine only inside otherPhc0. The pool sizes an
+     offset, next to the capture rate it multiplies. CP-DX stays unassessable
+     because that is still true of its cost, not because nothing was added. */
   'CP-DX':   [],                                        // no parameterised line
   'CP-BH':   ['bhExpansion'],                           // cBh
   'CP-DVH':  ['dvhExpansion'],                          // cDvh
@@ -257,7 +263,8 @@ const CP_FAMILY_MODEL_INPUTS: Record<string, string[]> = {
   'CP-EDU':  ['workforceEdu'],                          // cWf
   'CP-TRN':  ['transitionTotal', 'itCapital'],          // trans + itcap
   'CP-FIN':  ['employerCapture', 'wagePassThrough', 'wealthTaxPotential', 'wealthCollectionEff'],
-  'CP-OFF':  ['providerAdminSavings', 'careModelSavings', 'lowValueCapture', 'extractionSavings']
+  'CP-OFF':  ['providerAdminSavings', 'careModelSavings', 'lowValueCapture',
+              'lowValuePool', 'extractionSavings']
 };
 /* Parameters that shape demand or the public/private split across every
    ledger at once, so no single family's calibration confidence is theirs. */

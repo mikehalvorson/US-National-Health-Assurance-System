@@ -329,8 +329,17 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Share of low-value/duplicate-testing spend eliminated",
     low: 15, mode: 30, high: 45,
     confidence: "medium",
-    source: "Low-value services $75.7–101.2B/yr (JAMA/Choosing Wisely, research/03); capture via records mesh + protocol stewardship. Applied to an $88B midpoint pool.",
+    source: "Capture via records mesh + protocol stewardship, applied to the lowValuePool parameter rather than to a fixed pool: the pool is how much low-value care there is to find, this is the share a records mesh and protocol stewardship actually remove, and they are separate uncertainties.",
     url: "",
+    adjustable: false
+  },
+  {
+    id: "lowValuePool", group: "Care model", unit: "$B/yr (2023)",
+    label: "Low-value and duplicate-testing spending pool the capture rate applies to",
+    low: 75.7, mode: 88.45, high: 101.2,
+    confidence: "medium",
+    source: "Low-value services $75.7-101.2B/yr, the overtreatment category of the JAMA 2019 waste synthesis (Shrank et al.), applying the Institute of Medicine waste taxonomy. The engine carried the midpoint of that range as a literal 88, so a $25.5B-wide published range contributed no uncertainty at all while the capture rate applied to it varied 15-45%. Sampled now, at the midpoint of its own range. The same source records a more recent framing of 'more than $100 billion annually', which lands at the top of this band rather than above it, so the band is not extended past its published high.",
+    url: "https://lowninstitute.org/lown-issues/low-value-care/",
     adjustable: false
   },
   {
@@ -715,6 +724,206 @@ export const MONEYFLOW = {
     { from: "oth",   to: "other",    value: 341, note: "philanthropy, investment income, workers' comp" }
   ]
 };
+
+/* ---- Sponsor shares, read from the money-flow map -----------------------
+ * R21 [§S6a]. The engine restated all four of MONEYFLOW's sponsor shares as
+ * literals - 0.32 federal, 0.16 state/local, 0.18 employer, 0.27 household -
+ * so the financing block and the money-flow chart carried the same four
+ * numbers with nothing linking them. They agree to the rounding and that is
+ * the whole problem: 1557/4866.5 = 0.3199, 779/4866.5 = 0.1601,
+ * 876/4866.5 = 0.1800, 1314/4866.5 = 0.2700, so a correction to a sponsor
+ * total would have moved the chart and left the engine where it was.
+ *
+ * The engine divides rather than restating. The rounding that was baked into
+ * the four literals goes with it, which moves published output slightly: that
+ * movement is the measurement of how far the two had already drifted.
+ * ------------------------------------------------------------------------ */
+export function sponsorShare(id: string): number {
+  const s = MONEYFLOW.sources.filter(function (x) { return x.id === id; })[0];
+  if (!s) throw new Error('MONEYFLOW declares no sponsor ' + id);
+  return s.value / MONEYFLOW.total;
+}
+export const SPONSOR_SHARE = {
+  household: sponsorShare('hh'),
+  employer: sponsorShare('emp'),
+  federal: sponsorShare('fed'),
+  stateLocal: sponsorShare('state'),
+  otherPrivate: sponsorShare('oth')
+};
+
+/* ---- The engine's own constants -----------------------------------------
+ * R21 [§S6a]. Ten load-bearing numbers sat inside model.ts with no parameter,
+ * no source and no confidence grade, which meant their uncertainty was not
+ * wide or narrow - it was absent. Four were the sponsor shares above and are
+ * now derived. The rest are here.
+ *
+ * A constant in this registry is NOT a parameter: it does not vary across the
+ * Monte Carlo draws, and `sampled: false` says so out loud rather than leaving
+ * a reader to infer it from the absence of a distribution. Where a value is an
+ * analyst assumption with no source, it is graded `low` and `basis` says what
+ * would have to be measured to move it - the same honesty convention the
+ * parameter base uses. Where the repo's own data can name a comparator for the
+ * assumption, `basis` gives that comparator and the direction the assumption
+ * leans, because "no source" and "no way to check it" are different claims.
+ *
+ * The engine reads these; nothing restates them. Two self-tests hold that: one
+ * fails the build on a numeric literal inside the engine that is neither
+ * structural nor registered here, and one fails it on a registered constant
+ * the engine never reads, so the registry cannot fill up with documentation
+ * for code that no longer exists.
+ * ------------------------------------------------------------------------ */
+export interface EngineConstant {
+  id: string;
+  value: number;
+  unit: string;
+  usedBy: string;
+  basis: string;
+  url: string;
+  confidence: 'high' | 'medium' | 'low';
+  sampled: boolean;
+}
+
+export const ENGINE_CONSTANTS: EngineConstant[] = [
+  {
+    id: 'stateMoeFraction', value: 0.75,
+    unit: 'share of the state/local sponsor share',
+    usedBy: 'stateMoe',
+    basis: 'ASSUMPTION. How much of current state and local health spending a ' +
+      'maintenance-of-effort provision redirects into the public program. The ' +
+      'money-flow map names what is there to redirect: of the $779B state and ' +
+      'local sponsors carry, $314B is the state Medicaid share and $169B is ' +
+      'state and local employee premiums, together 62% of the total. 0.75 ' +
+      'therefore also assumes about $100B of state and local public-health and ' +
+      'facilities spending moves. That is a design choice about what the ' +
+      'provision covers, not a measured quantity. It raises the state ' +
+      'contribution, so it lowers the new-revenue requirement.',
+    url: '', confidence: 'low', sampled: false
+  },
+  {
+    id: 'oopShareOfResidual', value: 0.5,
+    unit: 'share of residual private spend',
+    usedBy: 'householdRelief',
+    basis: 'ASSUMPTION. Of the private spending that survives at maturity - ' +
+      'supplemental and substitute plans, plus care the benefit does not ' +
+      'cover - the share households pay directly instead of through a premium. ' +
+      'Today the comparable ratio is lower: out-of-pocket $505.7B against ' +
+      'private insurance $1,464.6B is 26% of the two together. The residual ' +
+      'under NHA is a different mix, weighted toward uncovered care that is ' +
+      'paid at the counter, which is the argument for a higher share; nothing ' +
+      'measures it. It is subtracted from household relief, so setting it too ' +
+      'high understates the relief rather than flattering it.',
+    url: '', confidence: 'low', sampled: false
+  },
+  {
+    id: 'embeddedDrugHospitalShare', value: 0.6,
+    unit: 'share of embedded drug spend',
+    usedBy: 'baselineCategorySplit',
+    basis: 'ASSUMPTION. Provider-administered drugs are booked inside the ' +
+      'hospital and physician categories rather than in retail drugs (MedPAC ' +
+      'July 2024 Data Book, Section 10), so embeddedDrugSpend is taken out of ' +
+      'those two before the drug price factor is applied to the drug base. No ' +
+      'source splits that total between the two settings. The split is ' +
+      'output-neutral by construction: both categories carry the same payment ' +
+      'factor and the same utilization term, so their sum does not depend on ' +
+      'it and only the decomposition rows move. A self-test pins that, which ' +
+      'is why an unsourced constant is tolerable here and would not be ' +
+      'anywhere else.',
+    url: 'https://www.medpac.gov/wp-content/uploads/2024/07/July2024_MedPAC_DataBook_Sec10_SEC.pdf',
+    confidence: 'low', sampled: false
+  },
+  {
+    id: 'embeddedDrugClinicShare', value: 0.4,
+    unit: 'share of embedded drug spend',
+    usedBy: 'baselineCategorySplit',
+    basis: 'ASSUMPTION. The remainder of embeddedDrugHospitalShare, and it has ' +
+      'to be the remainder: the two shares sum to 1 so the split nets to zero ' +
+      'across the four baseline categories, which is what makes the cost ' +
+      'bridge identity exact. A self-test holds the sum.',
+    url: 'https://www.medpac.gov/wp-content/uploads/2024/07/July2024_MedPAC_DataBook_Sec10_SEC.pdf',
+    confidence: 'low', sampled: false
+  },
+  {
+    id: 'programInputRealGrowth', value: 0.012,
+    unit: 'real growth per year',
+    usedBy: 'runPath and matureAtScale, as Gw',
+    basis: 'ASSUMPTION. The expansions that are program payrolls rather than ' +
+      'health services - the direct-care wage floor, the unit network, public ' +
+      'R&D, the workforce pipeline and IT operations - are grown at a real ' +
+      'input-cost rate instead of the health-cost rate, which is ' +
+      'baselineRealGrowth at 3.4% central. Nothing in the repo sources the ' +
+      '1.2%. It compounds from 2023, so it is worth more than its size ' +
+      'suggests: by 2042 it has raised those lines 25% before any ramp. Using ' +
+      'the health-cost rate instead would raise them 89%, so the choice of the ' +
+      'lower rate is the conservative one for those lines and the optimistic ' +
+      'one for total cost.',
+    url: '', confidence: 'low', sampled: false
+  },
+  {
+    id: 'correlatedDrawQuantileClamp', value: 0.02,
+    unit: 'quantile, applied at both ends',
+    usedBy: 'sampleParams',
+    basis: 'ASSUMPTION, and one R21 did not name. Each run draws a systemic ' +
+      'factor z, and a parameter tagged in PARAM_CORR has its sampling ' +
+      'quantile shifted by CORR_WEIGHT x sign x z. That shift can push the ' +
+      'quantile outside [0,1], where the triangular inverse is undefined, so ' +
+      'it is clamped - but it is clamped to [0.02, 0.98] rather than to ' +
+      '[0, 1]. Staying inside the unit interval needs the second; the first ' +
+      'also removes the outer 2% of the range of every tagged parameter, so ' +
+      'the reported p10 and p90 sit inside what the declared low and high ' +
+      'imply. 21 of the parameters are tagged and only those are clamped. ' +
+      'Nothing sources the 2%. It narrows published bands and moves no ' +
+      'central estimate, which is why it went unnoticed.',
+    url: '', confidence: 'low', sampled: false
+  },
+  {
+    id: 'wageTaxFeedbackRate', value: 0.28,
+    unit: 'average marginal federal rate',
+    usedBy: 'taxFeedback',
+    basis: 'The rate applied to wages employers pass through once the health ' +
+      'contribution replaces premiums, returning revenue to the federal ' +
+      'government. The pass-through convention and this rate both come from ' +
+      "CBO's review of who bears employer premiums (Carloni, CBO Working " +
+      'Paper 2021-06), which the wagePassThrough parameter already cites; the ' +
+      'rate itself was documented in a code comment and in that source string ' +
+      'and registered nowhere. Registered here at the grade of its source. It ' +
+      'is fixed, so this term contributes no uncertainty while the ' +
+      'pass-through share it multiplies contributes plenty; whether it should ' +
+      'be sampled is R124, and §S11b owns that.',
+    url: 'https://www.cbo.gov/publication/57089',
+    confidence: 'medium', sampled: false
+  }
+];
+
+export const ENGINE_CONSTANTS_BY_ID: Record<string, EngineConstant> = {};
+ENGINE_CONSTANTS.forEach(function (c) { ENGINE_CONSTANTS_BY_ID[c.id] = c; });
+
+export function engineConstant(id: string): number {
+  const c = ENGINE_CONSTANTS_BY_ID[id];
+  if (!c) throw new Error('No engine constant registered as ' + id);
+  return c.value;
+}
+
+/* The literals the engine may still type inline, and why each one is not a
+   model quantity. Anything else in an engine function fails the build. */
+export interface StructuralLiteral { value: number; why: string }
+export const ENGINE_STRUCTURAL_LITERALS: StructuralLiteral[] = [
+  { value: 0, why: 'identity, ramp default, and loop start' },
+  { value: 1, why: 'identity, and 1 - share complements' },
+  { value: 2, why: 'index arithmetic into the year array' },
+  { value: 3, why: 'the steady state is the mean of the final three years' },
+  { value: 10, why: 'the ten-year federal window the comparators use' },
+  { value: 100, why: 'percent to share' },
+  { value: 1000, why: '$B over population in millions gives $ per person' },
+  { value: 2030, why: "CBO's comparator year, named because it is a calendar year" },
+  { value: 7, why: 'mulberry32 bit shift' },
+  { value: 14, why: 'mulberry32 bit shift' },
+  { value: 15, why: 'mulberry32 bit shift' },
+  { value: 61, why: 'mulberry32 mixing constant' },
+  { value: 42, why: 'default RNG seed, so a run without one is still reproducible' },
+  { value: 4294967296, why: 'mulberry32 divisor, 2^32' },
+  { value: 2166136261, why: "FNV-1a's offset basis, in the per-parameter stream hash" },
+  { value: 16777619, why: "FNV-1a's prime, in the same hash" }
+];
 
 /* ---- "What's wrong, by the numbers" - sourced problem statistics --------
  * Every figure traces to the research files in the repo (research/01–06). */

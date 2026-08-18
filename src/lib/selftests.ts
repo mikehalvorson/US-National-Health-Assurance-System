@@ -3,7 +3,10 @@
    (bridgeSteps().identityError), and the tax invariants (TAX_SELFTESTS,
    {name,run}) into one flat list. Port of docs/js/app.js renderSelfTests
    (608-641) minus the DOM. Runs at build time; pure. */
-import { runPath, sampleParams, selfTest } from './model';
+import {
+  baselineCategorySplit, EMBEDDED_DRUG_CLINIC_SHARE, EMBEDDED_DRUG_HOSPITAL_SHARE,
+  PROGRAM_INPUT_REAL_GROWTH, runPath, sampleParams, selfTest
+} from './model';
 import { runOverviewMc } from './overview';
 import {
   effectiveParams, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
@@ -40,16 +43,18 @@ import {
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
-  baselineSplitCopies, displayOnlyDatasetsInEngine, ENRICHERS, guardedGlobalListeners,
-  manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
-  readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, REVENUE_ENGINE,
-  routeDrift, SPLIT_HOME, statedChapterCountDrift, typedEnvelopeLiterals, typedHouseholdCounts,
-  undeclaredEnrichers, unregisteredSelfTestSurfaces
+  baselineSplitCopies, displayOnlyDatasetsInEngine, ENGINE_FILE, ENRICHERS,
+  guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
+  readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
+  retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
+  typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers, unreadEngineConstants,
+  unregisteredEngineLiterals, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
 import {
-  AGE_STRUCTURE, DEFLATOR_2023_TO_2024, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR,
-  transitionEnvelope
+  AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
+  ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS, RAMPS,
+  RAMP_MILESTONES, SPONSOR_SHARE, START_YEAR, transitionEnvelope
 } from './params';
 import {
   EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
@@ -822,6 +827,91 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !problems.length,
           note: problems.join(' | ') || produced.length + ' offsets, each paired: ' +
             OFFSET_RAMPS.map((o) => o.id.replace(/^off/, '') + '->' + o.ramp).join(', ')
+        };
+      }),
+      /* R21 [§S6a]: the engine may type a structural number - an index, a
+         percent conversion, a bit shift - and nothing else. A model quantity
+         reaches it from the registry or from a parameter, so after the fix it
+         is not a literal at all. This is what stops the eleventh magic number,
+         and it reports the line so the failure names the offender. */
+      runGuarded('The engine types no number that is not declared structural', () => {
+        const stray = unregisteredEngineLiterals(
+          ENGINE_STRUCTURAL_LITERALS.map((s) => s.value));
+        return {
+          ok: !stray.length,
+          note: stray.length
+            ? stray.slice(0, 4).map((s) => ENGINE_FILE + ':' + s.line + ' = ' + s.value)
+              .join(', ') + (stray.length > 4 ? ' (+' + (stray.length - 4) + ' more)' : '')
+            : ENGINE_STRUCTURAL_LITERALS.length + ' structural values declared, ' +
+              ENGINE_CONSTANTS.length + ' constants registered'
+        };
+      }),
+      /* And the other direction. A registry that documents a constant the
+         engine stopped reading is worse than no registry: it reads as
+         provenance for arithmetic that is no longer there. */
+      runGuarded('Every registered engine constant is read by the engine', () => {
+        const unread = unreadEngineConstants(ENGINE_CONSTANTS.map((c) => c.id));
+        const ungraded = ENGINE_CONSTANTS.filter((c) => !c.basis.trim() || !c.confidence);
+        return {
+          ok: !unread.length && !ungraded.length,
+          note: unread.length || ungraded.length
+            ? 'unread: ' + (unread.join(', ') || 'none') + '; ungraded: ' +
+              (ungraded.map((c) => c.id).join(', ') || 'none')
+            : ENGINE_CONSTANTS.length + ' constants, all read and graded'
+        };
+      }),
+      /* R21 [§S6a]: the four sponsor shares the engine used to restate. It
+         divides MONEYFLOW now, so this holds the arithmetic the engine
+         actually performed against the map, not the constant against itself:
+         a share is recovered back out of a computed path row. */
+      runGuarded("The engine's sponsor shares are the money-flow map's", () => {
+        const t = 2041 - START_YEAR;
+        const p = sampleParams(effectiveParams('SCN-BASE', null), null);
+        const d = runPath(p, {}).detail[t];
+        const covR = RAMPS.coverage[t];
+        const recovered: Record<string, number> = {
+          fed: d.fedRedirect / (d.nheBase * covR),
+          state: d.stateMoe / (d.nheBase * covR * engineConstant('stateMoeFraction')),
+          emp: d.empContrib / (d.nheBase * covR * (p.employerCapture / 100)),
+          hh: (d.householdRelief + d.nheNha * (p.residualPrivateShare / 100) *
+            engineConstant('oopShareOfResidual')) / (d.nheBase * covR)
+        };
+        const bad: string[] = [];
+        for (const src of MONEYFLOW.sources) {
+          const want = src.value / MONEYFLOW.total;
+          const got = recovered[src.id];
+          if (got === undefined) continue;
+          if (Math.abs(got - want) > 1e-9) {
+            bad.push(src.id + ' engine ' + got.toFixed(6) + ' vs map ' + want.toFixed(6));
+          }
+        }
+        return {
+          ok: !bad.length,
+          note: bad.join(', ') || Object.keys(recovered).length +
+            ' shares recovered from the 2041 path row, all equal to MONEYFLOW: ' +
+            'fed ' + SPONSOR_SHARE.federal.toFixed(4) + ', state ' +
+            SPONSOR_SHARE.stateLocal.toFixed(4) + ', emp ' +
+            SPONSOR_SHARE.employer.toFixed(4) + ', hh ' + SPONSOR_SHARE.household.toFixed(4)
+        };
+      }),
+      /* R21 [§S6a]: the embedded-drug split is graded `low` on the strength of
+         being unable to move a published number, so that claim is the thing to
+         check. The two shares sum to 1, which is what makes the transfer net
+         to zero across the categories: hospital and clinical give up exactly
+         what the drug base takes on. Both then carry the same payment factor
+         and the same utilization term, so their sum is untouched too. */
+      runGuarded('The embedded-drug split nets to zero across the categories', () => {
+        const e = 250;
+        const split = baselineCategorySplit(e);
+        const shares = EMBEDDED_DRUG_HOSPITAL_SHARE + EMBEDDED_DRUG_CLINIC_SHARE;
+        const before = BASE2023.hospital + BASE2023.physician + BASE2023.otherProf +
+          BASE2023.rxRetail;
+        const after = split.hosp0 + split.clin0 + split.drug0;
+        return {
+          ok: Math.abs(shares - 1) < 1e-12 && Math.abs(after - before) < 1e-9,
+          note: 'shares sum ' + shares.toFixed(12) + ', categories ' +
+            before.toFixed(1) + ' -> ' + after.toFixed(1) +
+            ', program input growth ' + (100 * PROGRAM_INPUT_REAL_GROWTH).toFixed(1) + '%/yr'
         };
       })
     ]

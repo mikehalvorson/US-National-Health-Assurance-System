@@ -40,6 +40,7 @@ export interface SampledParams {
   governanceRate: number;
   careModelSavings: number;
   lowValueCapture: number;
+  lowValuePool: number;
   extractionSavings: number;
   ltcExpansion: number;
   ltcWageFloor: number;

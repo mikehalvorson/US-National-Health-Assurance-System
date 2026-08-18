@@ -45,6 +45,8 @@ import {
   AGE_STRUCTURE,
   PARAM_DEFS,
   TOP_CAPITAL_REAL_GROWTH,
+  SPONSOR_SHARE,
+  engineConstant,
 } from './params';
 import {
   effectiveParams, naturalCeiling, scenarioStructural, SCENARIOS
@@ -60,6 +62,35 @@ import type {
   PercentileBand,
   SelfTestResult,
 } from './model-types';
+
+/* ---- The engine's constants, read not typed (R21 [§S6a]) ----------------
+ * Every number below was a literal inside a formula in this file, with no
+ * parameter, no source and no grade. They are declared in params.ts now, with
+ * a basis and a confidence apiece, and resolved here once so the arithmetic
+ * reads the same as it did. The four sponsor shares are not here because they
+ * are not constants: they are MONEYFLOW's own shares, divided.
+ *
+ * A self-test fails the build on a numeric literal in an engine function that
+ * is neither one of these nor declared structural, so the next magic number
+ * cannot arrive quietly. */
+/* FNV-1a's published constants. They are the hash, not a model quantity. */
+const FNV_OFFSET_BASIS = 2166136261;
+const FNV_PRIME = 16777619;
+
+const STATE_MOE_FRACTION = engineConstant('stateMoeFraction');
+const OOP_SHARE_OF_RESIDUAL = engineConstant('oopShareOfResidual');
+const WAGE_TAX_FEEDBACK_RATE = engineConstant('wageTaxFeedbackRate');
+const CORRELATED_DRAW_QUANTILE_CLAMP = engineConstant('correlatedDrawQuantileClamp');
+/* R128 [§S6a]: runPath declared `const gWage = 0.012` and matureAtScale wrote
+   `Math.pow(1 + 0.012, ...)` as its own literal, so the two mirrors of the
+   same arithmetic could drift with one edit and self-test 5b ran only under
+   `{}` structural. One constant, both call sites. */
+export const PROGRAM_INPUT_REAL_GROWTH = engineConstant('programInputRealGrowth');
+
+/* The percentile levels the bands are cut at. Named at module scope rather
+   than typed into bandsOf, so a bare 0.5 inside an engine function is always
+   a model quantity that has escaped the registry. */
+const BAND_QUANTILES = { p10: 0.10, p50: 0.50, p90: 0.90 };
 
 /* ---- Declared offset pairings (R203 [§S2]) ------------------------------
  * Which capability delivers each explicit offset is a modelling claim, so it
@@ -103,24 +134,70 @@ function triangular(lo: number, mo: number, hi: number, rand: () => number): num
     : hi - Math.sqrt((1 - u) * (hi - lo) * (hi - mo));
 }
 
-/* Sample a full parameter set: {id: value}. mode-only if rand === null.
+/* ---- One sampling stream per parameter ----------------------------------
+ * Found by measurement in §S6a, not filed as a row. R32 added one parameter
+ * and the published mature-year total moved from $5.38T to $5.42T. It was not
+ * the parameter: pinning the new distribution to the constant it replaced,
+ * so the arithmetic was identical, moved the figure by exactly as much.
+ *
+ * The cause was one shared random stream. Every run drew its systemic factor
+ * and then one number per parameter, in PARAM_DEFS order, from a single
+ * sequence - so inserting a parameter anywhere shifted every draw after it,
+ * in that run and in all 599 that followed. A published percentile therefore
+ * depended on how many parameters existed and where in the file they sat.
+ *
+ * That is not sampling error a reader can reason about: it means no section
+ * that adds a parameter can tell its own effect from a reshuffle, and this
+ * campaign has fourteen sections still to run. Each parameter now draws from
+ * its own stream, seeded from the run seed and the parameter's identifier, so
+ * a draw depends on the parameter and the seed and nothing else. The systemic
+ * factor z keeps the master stream, one draw per run, which no parameter count
+ * can move.
+ *
+ * Everything published moves once, and the movement is resampling, not
+ * economics. It is measured and reported rather than smoothed over.
+ * ------------------------------------------------------------------------ */
+function hashId(id: string): number {
+  /* FNV-1a, 32-bit. Any deterministic mixing hash does; this one is short,
+     has no dependencies, and separates ids that differ in one character. */
+  let h = FNV_OFFSET_BASIS;
+  for (let i = 0; i < id.length; i++) {
+    h = Math.imul(h ^ id.charCodeAt(i), FNV_PRIME) >>> 0;
+  }
+  return h >>> 0;
+}
+
+export function parameterStreams(ids: string[], seed: number): (id: string) => number {
+  const streams: Record<string, () => number> = {};
+  ids.forEach(function (id) { streams[id] = makeRng((seed ^ hashId(id)) >>> 0); });
+  return function (id: string): number {
+    const s = streams[id];
+    if (!s) throw new Error('No sampling stream for parameter ' + id);
+    return s();
+  };
+}
+
+/* Sample a full parameter set: {id: value}. mode-only if draw === null.
+ * `draw` takes the parameter id, because which stream a draw comes from is
+ * the parameter's business and not the loop's position.
  * z (optional, in [-1,1]) is the run's systemic factor: parameters tagged
  * in PARAM_CORR have their sampling quantile shifted by
  * CORR_WEIGHT x sign x z, so cost-side surprises and savings-side
  * disappointments arrive together (see params.ts).                        */
 export function sampleParams(
   effective: Record<string, Triangular>,
-  rand: (() => number) | null,
+  draw: ((id: string) => number) | null,
   z?: number
 ): SampledParams {
   const out: Record<string, number> = {};
   Object.keys(effective).forEach(function (id) {
     const e = effective[id];
-    if (!rand) { out[id] = e.mode; return; }
-    let u = rand();
+    if (!draw) { out[id] = e.mode; return; }
+    let u = draw(id);
     const s = z != null ? (PARAM_CORR[id] || 0) : 0;
     if (s !== 0 && z != null) {
-      u = Math.min(0.98, Math.max(0.02, u + CORR_WEIGHT * s * z));
+      const clamp = CORRELATED_DRAW_QUANTILE_CLAMP;
+      u = Math.min(1 - clamp, Math.max(clamp, u + CORR_WEIGHT * s * z));
     }
     out[id] = triangular(e.low, e.mode, e.high, function () { return u; });
   });
@@ -176,8 +253,8 @@ export function buildRamps(structural: ScenarioStructural): BuiltRamps {
  * double-counts. It nets to zero across the four categories by construction,
  * which is why the bridge identity is exact.
  * ------------------------------------------------------------------------ */
-export const EMBEDDED_DRUG_HOSPITAL_SHARE = 0.6;
-export const EMBEDDED_DRUG_CLINIC_SHARE = 0.4;
+export const EMBEDDED_DRUG_HOSPITAL_SHARE = engineConstant('embeddedDrugHospitalShare');
+export const EMBEDDED_DRUG_CLINIC_SHARE = engineConstant('embeddedDrugClinicShare');
 
 export interface BaselineSplit {
   hosp0: number; clin0: number; drug0: number; other0: number; admin0: number;
@@ -207,7 +284,7 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
   const g = p.baselineRealGrowth / 100;
   const gGdp = p.gdpRealGrowth / 100;
   const gPop = p.popGrowth / 100;
-  const gWage = 0.012; // real input-cost growth for program-based expansions
+  const gWage = PROGRAM_INPUT_REAL_GROWTH;
 
   /* Baseline PHC categories (2023 $B) - drugs pulled out with embedded share */
   const split = baselineCategorySplit(p.embeddedDrugSpend);
@@ -293,7 +370,9 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
     const offProvAdmin  = (p.providerAdminSavings / 100) * (cHosp + cClin) *
       offsetRamp('offProvAdmin', rampNow);
     const offCareModel  = p.careModelSavings * G * offsetRamp('offCareModel', rampNow);
-    const offLowValue   = (p.lowValueCapture / 100) * 88 * G *
+    /* R32 [§S6a]: the pool is a parameter now, not the midpoint of a
+       published range typed in as a literal. */
+    const offLowValue   = (p.lowValueCapture / 100) * p.lowValuePool * G *
       offsetRamp('offLowValue', rampNow);
     const offExtraction = p.extractionSavings * G * offsetRamp('offExtraction', rampNow);
     const offsets = offProvAdmin + offCareModel + offLowValue + offExtraction;
@@ -304,15 +383,18 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
 
     /* ---------- Financing ---------- */
     const pubCost = (nheNha - trans - itcap - shock) * pubShare + trans + itcap + shock;
-    const fedRedirect = 0.32 * nheBase * covR;
-    const stateMoe = 0.16 * nheBase * covR * 0.75 * stateMoeMult;
-    const empContrib = 0.18 * nheBase * (p.employerCapture / 100) * covR;
+    const fedRedirect = SPONSOR_SHARE.federal * nheBase * covR;
+    const stateMoe = SPONSOR_SHARE.stateLocal * nheBase * covR *
+      STATE_MOE_FRACTION * stateMoeMult;
+    const empContrib = SPONSOR_SHARE.employer * nheBase *
+      (p.employerCapture / 100) * covR;
     /* Wage pass-through: employers' net premium savings (what EHAC doesn't
        capture) flow to wages per CBO convention; those wages are taxed at
        ~28% average marginal federal rate, feeding revenue back. */
-    const empRelief = Math.max(0, 0.18 * nheBase * covR * (1 - p.employerCapture / 100));
+    const empRelief = Math.max(0, SPONSOR_SHARE.employer * nheBase * covR *
+      (1 - p.employerCapture / 100));
     const wageGain = empRelief * ((p.wagePassThrough || 0) / 100);
-    const taxFeedback = wageGain * 0.28;
+    const taxFeedback = wageGain * WAGE_TAX_FEEDBACK_RATE;
     /* R23 [§S5]: "Clamp both or neither, and surface when it binds."
        Neither, and the reason is a measurement.
        `newRevenue` carried `Math.max(0, ...)` under a comment implying the
@@ -345,8 +427,8 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
        matching the tax model, which treats it as a fixed class rate. */
     const Gtop = Math.pow(1 + TOP_CAPITAL_REAL_GROWTH, PRE_YEARS + t);
     const wealthRevenue = p.wealthTaxPotential * (p.wealthCollectionEff / 100) * Gtop;
-    const householdRelief = 0.27 * nheBase * covR -
-      (nheNha * (p.residualPrivateShare / 100) * 0.5); // half of residual is OOP
+    const householdRelief = SPONSOR_SHARE.household * nheBase * covR -
+      (nheNha * (p.residualPrivateShare / 100) * OOP_SHARE_OF_RESIDUAL);
     const householdReliefNegative = householdRelief < 0;
 
     out.years.push(year);
@@ -404,7 +486,7 @@ export function matureAtScale(
 
   const g = p.baselineRealGrowth / 100;
   const G = Math.pow(1 + g, yearsFrom2023);
-  const Gw = Math.pow(1 + 0.012, yearsFrom2023);
+  const Gw = Math.pow(1 + PROGRAM_INPUT_REAL_GROWTH, yearsFrom2023);
 
   const split = baselineCategorySplit(p.embeddedDrugSpend);
   const hospBase0 = split.hosp0, clinBase0 = split.clin0;
@@ -440,7 +522,8 @@ export function matureAtScale(
   const offsets = (p.providerAdminSavings / 100) * (cHosp + cClin) *
                   offsetRamp('offProvAdmin', rampNow) +
                 p.careModelSavings * G * offsetRamp('offCareModel', rampNow) +
-                (p.lowValueCapture / 100) * 88 * G * offsetRamp('offLowValue', rampNow) +
+                (p.lowValueCapture / 100) * p.lowValuePool * G *
+                  offsetRamp('offLowValue', rampNow) +
                 p.extractionSavings * G * offsetRamp('offExtraction', rampNow);
 
   const nheNha = cHosp + cClin + cDrugs + cOtherPhc + cExpansions +
@@ -459,7 +542,11 @@ export function runMonteCarlo(
 ): MonteCarloResult {
   const effective = effectiveParams(scenarioId, sliderModes);
   const structural = scenarioStructural(scenarioId);
+  /* The master stream draws z, once per run. Parameters draw from their own,
+     so a run's parameter values do not depend on how many parameters there
+     are or on the order they are declared in. */
   const rand = makeRng(seed || 42);
+  const draw = parameterStreams(Object.keys(effective), seed || 42);
   const nYears = END_YEAR - START_YEAR + 1;
 
   const nhaRuns: number[][] = [];      // [run][year]
@@ -470,7 +557,7 @@ export function runMonteCarlo(
   for (let r = 0; r < nRuns; r++) {
     /* one systemic optimism/pessimism factor per run (triangular on [-1,1]) */
     const z = triangular(-1, 0, 1, rand);
-    const p = sampleParams(effective, rand, z);
+    const p = sampleParams(effective, draw, z);
     const path = runPath(p, structural);
     nhaRuns.push(path.nha);
     matureToday.push(matureAtScale(p, structural, 1).nheNha); // 2024 scale
@@ -486,7 +573,7 @@ export function runMonteCarlo(
     steadyPerCap.push(ssMean(function (d) { return d.nheNha * 1000 / d.pop; })); // $B→$ per person (B/M = thousands)
     steadyGdpPct.push(ssMean(function (d) { return 100 * d.nheNha / d.gdp; }));
     steadyFedInc.push(ssMean(function (d) {
-      return (d.pubCost - d.stateMoe) - 0.32 * d.nheBase;
+      return (d.pubCost - d.stateMoe) - SPONSOR_SHARE.federal * d.nheBase;
     }));
     /* 2030 NHE delta (CBO comparator year) */
     const i2030 = 2030 - START_YEAR;
@@ -495,7 +582,7 @@ export function runMonteCarlo(
     let sum10 = 0;
     for (let y = 0; y < 10; y++) {
       const d10 = path.detail[y];
-      sum10 += (d10.pubCost - d10.stateMoe) - 0.32 * d10.nheBase;
+      sum10 += (d10.pubCost - d10.stateMoe) - SPONSOR_SHARE.federal * d10.nheBase;
     }
     tenYearFedInc.push(sum10 / 10);
   }
@@ -506,7 +593,11 @@ export function runMonteCarlo(
     return lo === hi ? a[lo] : a[lo] + (a[hi] - a[lo]) * (i - lo);
   }
   function bandsOf(arr: number[]): PercentileBand {
-    return { p10: pct(arr, 0.10), p50: pct(arr, 0.50), p90: pct(arr, 0.90) };
+    return {
+      p10: pct(arr, BAND_QUANTILES.p10),
+      p50: pct(arr, BAND_QUANTILES.p50),
+      p90: pct(arr, BAND_QUANTILES.p90)
+    };
   }
 
   /* per-year bands for the path chart */
@@ -714,11 +805,38 @@ export function selfTest(): SelfTestResult[] {
   const pw9 = sampleParams(effective, null); pw9.wagePassThrough = 95;
   const d0 = runPath(pw0, {}).detail[2041 - START_YEAR];
   const d9 = runPath(pw9, {}).detail[2041 - START_YEAR];
-  check("Wage pass-through: feedback = 28% of wage gain and reduces new revenue",
+  check("Wage pass-through: feedback = the registered marginal rate on the wage gain",
     d0.newRevenue > d9.newRevenue &&
-    Math.abs(d9.taxFeedback - 0.28 * d9.wageGain) < 0.01 &&
+    Math.abs(d9.taxFeedback - WAGE_TAX_FEEDBACK_RATE * d9.wageGain) < 0.01 &&
     d0.wageGain === 0,
     "newRev " + d0.newRevenue.toFixed(0) + "→" + d9.newRevenue.toFixed(0));
+
+  /* 10. Sampling depends on the parameter and the seed, and on nothing else.
+   *     This is the check for the defect R32 exposed: under one shared stream
+   *     a parameter's draw depended on how many parameters were declared ahead
+   *     of it, so inserting one moved every published percentile without any
+   *     economics changing. Two ways of restating the same parameter set must
+   *     now give the same numbers: the declaration order reversed, and one
+   *     extra parameter inserted at the front. */
+  const effIds = Object.keys(effective);
+  const asDeclared = sampleParams(effective, parameterStreams(effIds, 42), 0.5);
+  const reversedSet: Record<string, Triangular> = {};
+  effIds.slice().reverse().forEach(function (id) { reversedSet[id] = effective[id]; });
+  const reversed = sampleParams(
+    reversedSet, parameterStreams(Object.keys(reversedSet), 42), 0.5);
+  const widerSet: Record<string, Triangular> = { __probe: { low: 0, mode: 1, high: 2 } };
+  effIds.forEach(function (id) { widerSet[id] = effective[id]; });
+  const widened = sampleParams(
+    widerSet, parameterStreams(Object.keys(widerSet), 42), 0.5);
+  const orderDrift = effIds.filter(function (id) {
+    return asDeclared[id] !== reversed[id] || asDeclared[id] !== widened[id];
+  });
+  check("Sampling ignores parameter order and parameter count",
+    orderDrift.length === 0,
+    orderDrift.length
+      ? orderDrift.length + " of " + effIds.length + " parameters re-drew: " +
+        orderDrift.slice(0, 3).join(', ')
+      : effIds.length + " parameters, identical reversed and with one inserted");
 
   /* 9. Age-structure shares sum to 1 in both years */
   let s24 = 0, s41 = 0;

@@ -172,7 +172,15 @@ describe('R231: maturity closure says what it means', () => {
     expect(base).toBeLessThan(5);
     expect(base).toBeGreaterThan(4);
     const breaching = breachingScenarios(p, meta);
-    expect(breaching.length).toBeGreaterThan(SCENARIOS.length / 2);
+    /* R143 measured "12 of 20 scenarios breach". Re-drawing the same model
+       with one random stream per parameter, and no economics changed at all,
+       gives 10 of 20 - so the COUNT is a statistic of the ensemble rather than
+       a property of the framework, and "more than half" was a claim about the
+       seed. What survives re-drawing is that the base case sits inside the cap
+       and that scenarios outside it exist, the pessimistic one among them.
+       The count is pinned exactly instead, so a real move is visible and a
+       reseed is not mistaken for one. */
+    expect(breaching.length).toBe(10);
     expect(breaching).toContain('SCN-PESS');
     expect(p.documentedGap).toBeTruthy();
   });

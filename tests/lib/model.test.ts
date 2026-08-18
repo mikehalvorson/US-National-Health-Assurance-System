@@ -93,7 +93,8 @@ test('R203: every offset equals its declared ramp times its own scope', () => {
     expect(d.offProvAdmin).toBeCloseTo(
       (p.providerAdminSavings / 100) * (d.cHosp + d.cClin) * ramps.coverage[t], 9);
     expect(d.offCareModel).toBeCloseTo(p.careModelSavings * G * ramps.units[t], 9);
-    expect(d.offLowValue).toBeCloseTo((p.lowValueCapture / 100) * 88 * G * ramps.infra[t], 9);
+    expect(d.offLowValue).toBeCloseTo(
+      (p.lowValueCapture / 100) * p.lowValuePool * G * ramps.infra[t], 9);
     expect(d.offExtraction).toBeCloseTo(p.extractionSavings * G * ramps.hospitals[t], 9);
   });
 });
