@@ -397,7 +397,14 @@ const selftests = selfTestSummary();
                   <td class="num">{(+p.high.toFixed(2)).toLocaleString('en-US')}</td>
                   <td>{p.unit}</td>
                   <td><span class={"conf " + p.confidence}>{p.confidence}</span></td>
-                  <td>{p.source} {p.url && (<a href={p.url} target="_blank" rel="noopener">[link]</a>)}</td>
+                  <td>{p.source} {p.url && (<a href={p.url} target="_blank" rel="noopener">[link]</a>)}
+                    {p.divergence && (
+                      <div class="divergence">
+                        <b>Diverges from the research recommendation ({p.divergence.leans}).</b>
+                        {' '}Recommended: {p.divergence.recommended}. {p.divergence.note}
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

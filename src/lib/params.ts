@@ -255,7 +255,20 @@ export const PARAM_DEFS: ParamDef[] = [
     confidence: "medium",
     source: "Commercial insurers pay ~254% of Medicare (RAND Hospital Price Transparency); global budgets blend rates down while Medicaid rates rise. Framework is 'capacity-first', so compression is modest vs. CBO's Medicare-rate options. 1.0 = no net rate change.",
     url: "https://www.rand.org/health-care/projects/price-transparency.html",
-    adjustable: true, sliderMin: 0.75, sliderMax: 1.10
+    adjustable: true, sliderMin: 0.75, sliderMax: 1.10,
+    divergence: {
+      recommended: 'about 0.39, which is 1 / 2.54',
+      leans: 'conservative',
+      note: 'The source this parameter cites is the same RAND finding that ' +
+        'commercial payers pay about 254% of Medicare, and moving every payer ' +
+        'to Medicare rates would imply a payment factor near 0.39. The range ' +
+        'here tops out at no change at all and bottoms at an 8% reduction ' +
+        'from the mode. That is a deliberate choice and the framework states ' +
+        "it: it is capacity-first and does not assume aggressive rate " +
+        'compression. It is declared because it leans the opposite way to ' +
+        'publicAdminRate, so the two used to offset in the headline with ' +
+        'neither one visible.'
+    }
   },
   {
     id: "drugPriceCut", group: "Payment", unit: "%",
@@ -280,9 +293,9 @@ export const PARAM_DEFS: ParamDef[] = [
   {
     id: "publicAdminRate", group: "Administration", unit: "% of public spend",
     label: "New public system administrative cost rate (claims, enrollment, operations)",
-    low: 1.5, mode: 2.2, high: 3.2,
-    confidence: "high",
-    source: "CBO single-payer analysis: 1.5–2.0%; Taiwan NHI 1.07% (best-in-class); Urban/RAND cross-checks 5–6% fully loaded. Mode set above CBO to reflect the framework's heavier oversight/appeals architecture.",
+    low: 1.5, mode: 2.2, high: 6.0,
+    confidence: "medium",
+    source: "R27 [§S6a]: the distribution stopped at 3.2% while this string cited Urban/RAND at 5-6%, so it excluded evidence it named in its own object and no draw in 600 could reach the conservative case. research/05 CP-GOV-008 recommends 2-6% as the plausible band and calls the spread 'a meaningful and defensible modeling uncertainty band, not noise to be collapsed to one number'. The high is that band's ceiling now. The low stays at 1.5%, CBO's aggressive case, which the same file names as the best-case scenario: keeping it means the sampled range spans everything the evidence names rather than only its unfavourable half. The mode stays at 2.2%, above CBO, for the framework's heavier oversight and appeals architecture. Grade cut from high to medium: a mode set by analyst judgement is a derivation, and the research grades the underlying question MEDIUM-HIGH but contested, calling it the most politically disputed number in single-payer modeling. Sources: CBO single-payer analysis 1.5-2.0%; Taiwan NHI 1.07% best-in-class; Urban/RAND cross-checks 5-6% fully loaded.",
     url: "https://www.cbo.gov/publication/56811",
     adjustable: true, sliderMin: 1.0, sliderMax: 6.0
   },
@@ -502,6 +515,36 @@ export const PARAM_DEFS: ParamDef[] = [
     source: "Framework KPP-C7 targets ≥92%; Saez–Zucman assume 85%; critics argue much lower. Applied to gross potential above.",
     url: "",
     adjustable: true, sliderMin: 40, sliderMax: 95
+  }
+];
+
+/* ---- What the research files recommend, as data (R33 [§S6a]) ------------
+ * A parameter whose implemented range does not contain the range its own
+ * research file recommends is not necessarily wrong - the framework makes
+ * policy choices its sources do not - but the gap has to be visible. Two of
+ * them ran in opposite directions, so they partly cancelled in the headline
+ * and a reader could see neither.
+ *
+ * Declared here rather than left in prose so a self-test can hold the pair:
+ * either the declared range contains the recommendation, or the parameter
+ * carries a divergence note saying which way it leans and why. Adding a
+ * recommendation without doing one or the other fails the build.
+ * ------------------------------------------------------------------------ */
+export interface ResearchRecommendation {
+  id: string;
+  low: number;
+  high: number;
+  file: string;
+  parameterId: string;
+}
+export const RESEARCH_RECOMMENDATIONS: ResearchRecommendation[] = [
+  {
+    id: 'publicAdminRate', low: 2, high: 6,
+    file: 'research/05_it_governance_rd_transition.md', parameterId: 'CP-GOV-008'
+  },
+  {
+    id: 'providerPaymentFactor', low: 0.39, high: 0.39,
+    file: 'research/03_drugs_pharmacy_diagnostics_devices.md', parameterId: 'CP-RX-015 / CP-DX-011'
   }
 ];
 

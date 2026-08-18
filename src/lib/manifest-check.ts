@@ -747,3 +747,16 @@ export function unreadEngineConstants(ids: string[], root = REPO_ROOT): string[]
   const masked = maskComments(readFileSync(join(root, ENGINE_FILE), 'utf8'));
   return ids.filter((id) => !masked.includes("engineConstant('" + id + "')"));
 }
+
+/* R33 [§S6a]: a divergence from a research recommendation is only disclosed if
+   a reader can see it, and the only place a reader meets a parameter whole is
+   the full parameter table. Declaring the note in params.ts and never
+   rendering it would be the same silence in a new place, so the page that
+   renders the table is scanned for it. */
+export const PARAMETER_EXPLORER = 'src/pages/health.astro';
+
+export function divergenceIsRendered(root = REPO_ROOT): boolean {
+  const text = readFileSync(join(root, PARAMETER_EXPLORER), 'utf8');
+  return /p\.divergence/.test(text) && /divergence\.note/.test(text) &&
+    /divergence\.recommended/.test(text);
+}

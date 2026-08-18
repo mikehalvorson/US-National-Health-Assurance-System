@@ -275,14 +275,24 @@ export function effectiveParams(
         hi = clampTo(hi * ov.mult, cap);
       }
     }
-    /* User slider: shift mode, scale low/high to preserve relative spread */
+    /* User slider: shift mode, scale low/high to preserve relative spread.
+       R134 [§S6a]: and then clamp to the same natural domain `mult` is held
+       to. R63 closed the scenario path and left this one open, so the check it
+       added swept scenarios only. A slider does not scale a band, it re-centres
+       it and rebuilds the spread proportionally, which is why the effect is
+       larger: employerCapture at its slider maximum of 100 produced a high of
+       120% of employer spend, wagePassThrough produced 136%, and
+       wealthCollectionEff produced 104%. All three are percentages of a whole
+       and none of them can exceed it. The clamp binds only at the extreme; a
+       slider left anywhere sensible never reaches it. */
     if (sliderModes && typeof sliderModes[p.id] === "number" && isFinite(sliderModes[p.id])) {
       const newMode = sliderModes[p.id];
       const loSpread = mo !== 0 ? (mo - lo) / Math.abs(mo) : 0;
       const hiSpread = mo !== 0 ? (hi - mo) / Math.abs(mo) : 0;
-      lo = newMode - loSpread * Math.abs(newMode);
-      hi = newMode + hiSpread * Math.abs(newMode);
-      mo = newMode;
+      const cap = naturalCeiling(p);
+      lo = clampTo(newMode - loSpread * Math.abs(newMode), cap);
+      hi = clampTo(newMode + hiSpread * Math.abs(newMode), cap);
+      mo = clampTo(newMode, cap);
     }
     out[p.id] = { low: lo, mode: mo, high: hi };
   });

@@ -17,6 +17,18 @@ export interface ParamDef extends Triangular {
   adjustable?: boolean;
   sliderMin?: number;
   sliderMax?: number;
+  /* R33 [§S6a]: set when the declared range does NOT contain the range this
+     parameter's own research file recommends. The divergence may be entirely
+     defensible - providerPaymentFactor's is - but it has to be visible, and
+     it has to say which way it leans, because two divergences leaning
+     opposite ways cancel in the headline and neither shows. */
+  divergence?: ParamDivergence;
+}
+
+export interface ParamDivergence {
+  recommended: string;
+  leans: 'optimistic' | 'conservative';
+  note: string;
 }
 
 /* ---- Engine: sampled parameters ------------------------------------------

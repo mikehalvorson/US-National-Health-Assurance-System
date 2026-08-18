@@ -9,7 +9,7 @@ import {
 } from './model';
 import { runOverviewMc } from './overview';
 import {
-  effectiveParams, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
+  effectiveParams, naturalCeiling, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { classGrowth, TAX_SELFTESTS } from './taxmodel';
@@ -43,7 +43,8 @@ import {
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
-  baselineSplitCopies, displayOnlyDatasetsInEngine, ENGINE_FILE, ENRICHERS,
+  baselineSplitCopies, displayOnlyDatasetsInEngine, divergenceIsRendered,
+  ENGINE_FILE, ENRICHERS,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
@@ -53,8 +54,9 @@ import {
 import { TABS } from './tabs';
 import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
-  ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS, RAMPS,
-  RAMP_MILESTONES, SPONSOR_SHARE, START_YEAR, transitionEnvelope
+  ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
+  PARAM_DEFS, PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS,
+  SPONSOR_SHARE, START_YEAR, transitionEnvelope
 } from './params';
 import {
   EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
@@ -900,6 +902,73 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          to zero across the categories: hospital and clinical give up exactly
          what the drug base takes on. Both then carry the same payment factor
          and the same utilization term, so their sum is untouched too. */
+      /* R27 + R33 [§S6a]: every parameter whose own research file recommends a
+         range either covers that range or says out loud that it does not, and
+         which way it leans. publicAdminRate used to fail the first half
+         silently: 1.5-3.2 against a recommended 2-6, with the 5-6% it cited in
+         its own source string unreachable by any draw. */
+      runGuarded('Every parameter covers its research recommendation or declares the gap', () => {
+        const problems: string[] = [];
+        const declared: string[] = [];
+        for (const rec of RESEARCH_RECOMMENDATIONS) {
+          const p = PARAMS_BY_ID[rec.id];
+          if (!p) { problems.push(rec.id + ' has no parameter'); continue; }
+          const covers = p.low <= rec.low + 1e-9 && p.high >= rec.high - 1e-9;
+          if (covers) {
+            if (p.divergence) problems.push(rec.id + ' declares a divergence it does not have');
+            continue;
+          }
+          if (!p.divergence) {
+            problems.push(rec.id + ' implements ' + p.low + '-' + p.high +
+              ' against a recommended ' + rec.low + '-' + rec.high + ' and says nothing');
+            continue;
+          }
+          if (p.divergence.note.trim().length < 80) {
+            problems.push(rec.id + ' declares a divergence with no reasoning');
+          }
+          declared.push(rec.id + ' ' + p.divergence.leans);
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || RESEARCH_RECOMMENDATIONS.length +
+            ' recommendations checked, declared divergences: ' +
+            (declared.join(', ') || 'none')
+        };
+      }),
+      /* R33 [§S6a]: and the note reaches a reader. */
+      runGuarded('The parameter explorer renders the divergence notes', () => ({
+        ok: divergenceIsRendered(),
+        note: PARAM_DEFS.filter((p) => p.divergence).length +
+          ' parameters carry a divergence note'
+      })),
+      /* R134 [§S6a]: a slider cannot push a parameter out of its own domain.
+         R63 closed this for scenario `mult` and swept scenarios only; the
+         slider path re-centres the band and rebuilds the spread, which reaches
+         further. Both slider ends of every adjustable parameter are swept. */
+      runGuarded('No slider position pushes a parameter out of its domain', () => {
+        const breaches: string[] = [];
+        for (const def of PARAM_DEFS) {
+          if (!def.adjustable) continue;
+          const cap = naturalCeiling(def);
+          if (cap == null) continue;
+          for (const at of [def.sliderMin, def.sliderMax]) {
+            if (typeof at !== 'number') continue;
+            const eff = effectiveParams('SCN-BASE', { [def.id]: at })[def.id];
+            const worst = Math.max(eff.low, eff.mode, eff.high);
+            const least = Math.min(eff.low, eff.mode, eff.high);
+            if (worst > cap + 1e-9 || least < -1e-9) {
+              breaches.push(def.id + '@' + at + ' -> ' + least.toFixed(1) + '..' +
+                worst.toFixed(1) + ' (domain 0..' + cap + ')');
+            }
+          }
+        }
+        const swept = PARAM_DEFS.filter((p) => p.adjustable && naturalCeiling(p) != null);
+        return {
+          ok: !breaches.length,
+          note: breaches.slice(0, 4).join(', ') ||
+            swept.length + ' bounded adjustable parameters, both slider ends'
+        };
+      }),
       runGuarded('The embedded-drug split nets to zero across the categories', () => {
         const e = 250;
         const split = baselineCategorySplit(e);

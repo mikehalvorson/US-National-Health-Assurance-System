@@ -59,7 +59,11 @@ test('R63: a multiplier cannot push a bounded share past its natural ceiling', (
     expect(eff.lowValueCapture.high).toBe(100);
     /* and a share well under its ceiling is left alone: publicAdminRate's
        high is 3.2% of public spend, so x2 is 6.4 and nothing is clamped */
-    expect(eff.publicAdminRate.high).toBeCloseTo(6.4, 10);
+    /* R27 [§S6a] widened publicAdminRate's high from 3.2 to 6.0, so the
+       probe's mult of 2 now reaches 12 rather than 6.4. Still under the 100%
+       ceiling, so still the case this assertion is here to show: a percentage
+       parameter that is nowhere near its domain limit is not clamped. */
+    expect(eff.publicAdminRate.high).toBeCloseTo(12, 10);
     /* nothing in the model is meaningfully negative either */
     expect(Math.min(eff.wealthCollectionEff.low, eff.employerCapture.low)).toBeGreaterThan(0);
   } finally {
