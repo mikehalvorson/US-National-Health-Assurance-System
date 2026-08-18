@@ -1763,3 +1763,223 @@ The technique is cheap and it is the only reason the `publicAdminRate` numbers i
 be stated as that parameter's effect rather than as this session's effect. **Any later section
 that reports a movement below 0.7% on the hero figure or 1.4% on new revenue is reporting the
 ensemble drawing different numbers**, and the self-test that measures it is now in the build.
+
+---
+
+## P8 — §S6b Scenarios, bounds & sliders · 2026-08-18 · branch `nha-remediation`
+STATUS: complete — all 7 rows landed across 6 commits (`R59` folded into `R139` as superseded),
+plus 2 new findings fixed
+
+**Entry gate:** `## P7` (`§S6a`) `STATUS: complete` ✅ · `publicAdminRate`'s distribution
+verified in the code at `low: 1.5, mode: 2.2, high: 6.0` ✅ · `check_audit_docs.py` 35/35 exit 0,
+`astro build` passes, tree clean ✅ · **part 2 run in this session:** removed the slider domain
+clamp in `scenarios.ts`, the build failed on `No slider position pushes a parameter out of its
+domain (employerCapture@100 -> 80.0..120.0 (domain 0..100), wagePassThrough@100 -> ...)`,
+restored from bytes read before the break, tree clean ✅
+
+### LANDED
+
+| Commit | Rows |
+|---|---|
+| `baea2dc` | `R61` — the stress catalog, executed |
+| `47fa4cf` | new finding — the build never type-checked, and two type errors had already shipped |
+| `798162d` | `R60` — an override that names nothing now fails the build |
+| `cb2eb56` | `R139` + `R59` — what the bands are, and the one bound that stopped holding |
+| `a4823e3` | `R141` — fifty-two magnitudes that now say where they came from |
+| `8307b64` | `R237` — the band that closes exactly where the model is least certain |
+| `944c080` | `R142` — the same slider position is not the same uncertainty |
+| `4798e28` | new finding — a control that stops at 6% builds a band reaching 16.4% |
+
+### THE EXIT PROTOCOL FIELDS
+
+- **UNKNOWN KEYS: 0.** All 52 override keys and all 9 structural knob settings resolve. There is
+  no live typo and there never was one; there was no guard, and now there is.
+- **OVERRIDES SOURCED: 52 of 52**, plus 7 structural blocks. Graded **50 low, 2 medium, 0 high**.
+- **SCENARIOS WITH TESTS: 20 of 20** (see `DISCREPANCY D60` — it was never 0 of 19).
+- **CONTRADICTIONS:** two, both between the audit and the live code, both resolved for the code.
+  See `D56` and `D57`.
+
+### HEADLINE FIGURES — nothing moved, and that is the correct answer
+
+2024 dollars, `SCN-BASE`, paired comparison at identical seeds, `preP8` → `postP8`.
+
+| Figure | Before | After | Change |
+|---|---|---|---|
+| Mature-year total (`matureToday`) | $5,305.35 | $5,305.35 | **+0.000%** |
+| 2041 total | $9,210.96 | $9,210.96 | **+0.000%** |
+| New revenue required | $3,409.35 | $3,409.35 | **+0.000%** |
+| Per capita | $25,648.52 | $25,648.52 | **+0.000%** |
+| NHE / GDP at maturity | 23.6965% | 23.6965% | **+0.000%** |
+| Federal increase | $4,648.47 | $4,648.47 | **+0.000%** |
+
+**727 published targets unchanged. 1,170 interim cells unchanged. 0 of 1,037 criticality
+positions moved, 0 RPN changed.** An intermediate `midP8` label was dumped after `R141`, which
+rewrote all 52 overrides into a new shape, and that comparison is separately 0.000% on every
+figure.
+
+**The section's Report asks for "any scenario whose corrected bounds change its output
+materially." There is none, and the reason is the finding rather than an absence of one: no
+bound was corrected, because `R139` supersedes `R59` precisely to stop a constraint being
+invented that the model does not have.** The noise floor (0.56% hero, 1.37% new revenue) never
+came into it; every figure is bit-identical.
+
+### DISCREPANCIES
+
+**`D56` — "all 52 of 52 overrides fall outside their base `low`/`high`" is now 51 of 52.**
+`§AP1` measured 52 of 52 and used it to withdraw `AC2`'s "scenarios violate declared bounds"
+framing. `§S6a` then widened `publicAdminRate` from `high: 3.2` to `high: 6.0`, which brought
+`SCN-PESS`'s `[2.5, 3.5, 4.5]` inside the base band. **The reframing survives at 51 of 52; the
+arithmetic behind it does not.** The rendered note says 51 of 52 because it is assembled from
+the catalog rather than stating a number.
+
+🛑 **`D57` — "no override exceeds its `sliderMax`" is FALSE, and it is the one that mattered.**
+This was `AP1`'s better finding: a real constraint the catalog respected silently, which `R139`
+asks be written down. `§S6a`'s same widening put `SCN-STATE-RESIST`'s `publicAdminRate` at
+`{ mult: 1.15 }` × a base high of 6.0 = **6.9% against a slider ceiling of 6%**. So **`R139`'s
+own declared test, `no scenario override exceeds its parameter's sliderMax`, would fail the
+build on the tree as it stands.**
+
+The constraint was being respected by coincidence and broke the moment an unrelated parameter
+was re-ranged, which is what a rule that was never a rule looks like. It is the same reasoning
+`AP1` used to withdraw `AC2`, run in the other direction. **6.9% is not clamped:** a slider
+ceiling is the top of what a control exposes, not a limit on what a stress case may explore, and
+clamping would quietly weaken a scenario to protect a UI bound. It is declared in
+`OVERRIDES_BEYOND_SLIDER` with its reason, and the check holds the declared set equal to the
+measured one in both directions, so a new one fails the build until somebody writes down why and
+a stale entry fails it too.
+
+**`D58` — "of 31 parameters, only 13 carry `sliderMin`/`sliderMax`" is 13 of 32.** `§S6a` added
+`lowValuePool`. The other 19 have no bound but the natural domain of their unit.
+
+**`D59` — `AC2`/`R59`'s "sixteen parameters carry `adjustable: false`" is 19 of 32.**
+
+**`D60` — `AC5`'s "19 of 20 scenarios have zero test coverage" is stale, and this row's scope
+shrinks because of it.** `§S6a` added three checks that already sweep every scenario:
+mature-at-scale for all 20, the natural-domain sweep over 20 × 32 parameters, and `pubShare`
+over 20 scenarios × 3 corners × 16 years. **`R61`'s fourth declared assertion, shares in
+`[0,1]`, was therefore written and then deleted:** the version in `model.ts` check 5f reaches
+strictly further than the mode-path sweep drafted here, and adding a weaker copy would have
+raised the test count while covering nothing. The reason is recorded in `selftests.ts` where the
+check would have stood.
+
+**`D61` — the P8 prompt's "scenarios have test coverage (there is currently **none**)" is
+wrong.** `tests/lib/scenarios.test.ts` has existed since `§S5`'s `R63` and carries 5 tests,
+including the constructed-breach probe for the `mult` clamp.
+
+🛑 **`D62` — the P8 handoff's "`astro check`: 0 errors, 0 warnings, 1 hint" is wrong.** Measured
+against `6242d23` before this section touched anything: **2 errors.** This became the section's
+first new finding.
+
+**`D63` — `AP2`'s "ten of 31 parameters are never stress-tested" is 11 of 32.** The eleventh is
+`lowValuePool`, added by `§S6a` and touched by no scenario. The other ten are `AP2`'s list
+unchanged, `wagePassThrough` among them. **`R140` (`§S7`) owns this and its figure needs
+updating.**
+
+**`D64` — `AC7`/`R237` named `utilIncrease` as the parameter whose band collapses at zero.
+Measured, it is five of thirteen:** `utilIncrease`, `drugPriceCut`, `providerAdminSavings`,
+`ltcWageFloor`, `wagePassThrough`. All five declare `sliderMin: 0` and all five produce
+`[0, 0, 0]` there.
+
+### NEW FINDINGS
+
+🛑 **1. The build never type-checked, and two type errors had already shipped.** Not in any row.
+Astro compiles TypeScript through esbuild, which strips types without checking them, so
+`astro build` has never been able to see a type error; `pnpm check` is a separate script that
+neither the build nor the deploy workflow runs. **Every gate this repo has built sat behind a
+build blind to the whole class.** The two that shipped, both from `§S6a`'s code review, both
+green in every build since: `selftests.ts` used `PercentileBand` in two places and imported it
+in none, and `manifest-check.ts` read `digits[0]` as a `string` where
+`noUncheckedIndexedAccess` types it `string | undefined`. Both fixed; `build` now runs
+`astro check` first, at about 15 seconds against a 9.5-second build. Recorded in `README.md`,
+`AGENTS.md` and `.agent-kb/CONVENTIONS.md` — the last two are **gitignored**, which is why the
+note a contributor can actually reach is the one in `README.md`.
+
+**2. A control that stops at 6% builds a band reaching 16.4%.** Not in any row; found while
+measuring `R142`. Because the band is rebuilt in proportion to the mode, a control at its
+maximum builds a band running past the maximum itself. **Eleven of thirteen adjustable
+parameters do it.** Not a defect and not clamped: the relative spread *is* the model's
+uncertainty, and holding the band in absolute terms while the mode moves would claim the same
+confidence about a 30% induced-demand estimate as about a 10% one. `R134` settled the
+neighbouring question the same way. What was missing is that nobody could see it and nothing
+held it; both are now true.
+
+**3. `ScenarioStructural` was doing two jobs.** Surfaced by `R60`'s own guard refusing `why` as
+an unknown knob an hour after it was written: correct behaviour on a wrong premise. The engine's
+argument type and the scenario's declaration are different things, and requiring provenance on
+the former made it required of nine call sites whose only message was `{}`, "no structural
+adjustment". Split into `ScenarioStructural` and `ScenarioStructuralDecl`.
+
+**4. The rule behind `AP6`, which `AP6` did not state.** At a fixed slider position the band
+differs from the base case for **22 of 33** scenario-parameter pairs and is **identical for
+11**, and the split is exactly the kind of override: a `to:` override reshapes the triple so the
+relative spread changes, a `mult` override scales all three points so it does not. This is more
+useful than the three examples `AP6` recorded, because it tells a reader which comparisons are
+safe.
+
+### TWO CHECKS THAT WERE WRONG WHEN WRITTEN, AND HOW THAT SURFACED
+
+Both were caught by their own break-and-restore, which is the argument for running one on every
+check rather than on the ones that look risky.
+
+- **The provenance render check asked only that SOME `.why` appeared in the picker source.** It
+  passed with the per-override reason deleted, because the structural block's own `why`
+  satisfied it. A render check a deletion cannot fail is not a render check. It now names each
+  of the four reads separately.
+- **The slider-reach metric was algebraically blind to its own purpose.** Measuring the band
+  high against the parameter's declared high reads naturally and reduces to `sliderMax / mode`,
+  which contains no `high` at all and therefore cannot see a base band widen. That is the exact
+  movement the check exists to catch. The break written to prove it passed while tripping an
+  unrelated check, which is how the hole surfaced. Measuring against the slider ceiling gives
+  `high / mode`, the band's own relative width. **The corrected check fires on `§S6a`'s
+  `publicAdminRate` widening, which took it from 1.45 to 2.73 with nothing anywhere noticing.**
+
+### COUNTS AND GATES
+
+- **Self-tests 129 → 141**, twelve added. README bumped in the same edit each time; the drift
+  gate fired whenever it was not.
+- **17 new or touched checks, all 17 watched failing**, by breaking the code, rebuilding, and
+  restoring from bytes read before the break. The scripted pass is
+  `baseline-P8/prove_p8.py` and reports `build failed / named its check / restored` per break,
+  then `git status`. Final run: 17 of 17, tree clean.
+- Two changes to P7's `prove2.py` that both cost a run: it invokes `npm run build` rather than
+  `npx astro build`, because a type break has to be provable now; and **failure is read off the
+  process exit code, not off the string `Self-tests failed`** — a guard that throws at module
+  load kills the build during SSR evaluation and never reaches the self-test summary, so the
+  string test reported a failing build as passing.
+- `astro check`: **0 errors, 0 warnings, 1 hint** — genuinely, and now enforced. The hint is
+  `equations.ts`'s unreachable `return NaN`, pre-existing and outside this section.
+- `pnpm test`: 57 files, **372 tests**, all green. `tests/lib/scenarios.test.ts`'s probe was
+  updated to the provenance shape; no test was added, because every invariant this section
+  produced belongs in the build gate rather than in vitest.
+- Build 9.2s → 10.3s from `R61`'s 20 ensembles, then to about 25s once `astro check` joined it.
+- `tests/lib/taxmodel.test.ts` still pins `TAX_SELFTESTS.length` at 15, untouched.
+
+### WHAT THIS SECTION CHANGED FOR A READER
+
+Three statements now render that did not exist before, all assembled from the catalog rather
+than typed, so none of them can drift from what they describe:
+
+- **Above the full parameter table:** what `low` and `high` are, that 51 of 52 scenario
+  adjustments sit outside them by design, and that the enforced bound comes from the unit.
+- **Under the sliders:** that the band is rebuilt in proportion to the control, that it closes
+  to nothing at zero, that it depends on the active scenario in 22 of 33 cases, and that at a
+  control's maximum it reaches about 2.7 times the top of the control itself.
+- **Next to the scenario picker:** whether the scenario's magnitudes are sourced or assumed, and
+  every adjustment it makes with its own grade badge and its own reason.
+
+Verified in the browser, not inferred from the diff: the picker across `SCN-BASE`,
+`SCN-PANDEMIC` and `SCN-PESS`, the singular and plural forms, the grade badges, and zero em
+dashes in the rendered text.
+
+### FOR THE NEXT SECTION
+
+- **`§S7` (P9) / `R140`** — its "ten of 31 parameters are never stress-tested" is **11 of 32**.
+  `lowValuePool` is the addition. `wagePassThrough` is still the one that matters.
+- **Adding a scenario or an override now costs more, on purpose.** Every override needs a `why`
+  of at least 40 characters and a grade; a `medium` grade must name a figure; a scenario
+  declaring `sourced` may carry no `low`-graded override; a structural block needs its own
+  reason. The type refuses the rest.
+- **`unitsCost` is still a live parameter and three scenarios still override it.** `AC6`'s
+  migration hazard is unchanged, except that it is no longer silent: after the per-type rework
+  those three keys will fail the build at module load rather than being ignored.
+- **The audit-document repo still has no remote.** Asked in P5, P6, P7 and now P8.
