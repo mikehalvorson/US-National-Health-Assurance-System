@@ -748,6 +748,51 @@ export function unreadEngineConstants(ids: string[], root = REPO_ROOT): string[]
   return ids.filter((id) => !masked.includes("engineConstant('" + id + "')"));
 }
 
+/* R127 [§S6a]: a primitive type assertion is a claim the compiler stops
+ * checking, and X4 is what that costs. `Math.min(v, ins.scaleMax as number)`
+ * on an optional field silently produced NaN for a toggle balancer, and the
+ * assertion is precisely what suppressed the error that would have caught it -
+ * added, by the port, during a migration TO a typed language.
+ *
+ * Only `as <primitive>` is scanned. Structural casts through `as unknown as`
+ * are a different animal: they are how this codebase reaches DOM interfaces
+ * that its lib target types loosely, and they assert a shape rather than the
+ * presence of a value. Every remaining one is declared below with its reason,
+ * so a new assertion has to be argued for rather than typed.
+ *
+ * Comments are masked, so the paragraph above and the ones in taxmodel.ts do
+ * not trip it. */
+export const PRIMITIVE_ASSERTION =
+  /\bas\s+(number|string|boolean)\b(?!\s*\[)/g;
+
+export interface AllowedAssertion { file: string; why: string }
+export const ALLOWED_ASSERTIONS: AllowedAssertion[] = [
+  {
+    file: 'src/lib/params.ts',
+    why: 'BASE2023.investmentResidual is declared 0 and filled by the IIFE ' +
+      'below it, so the annotation widens a literal type rather than ' +
+      'asserting a value is present.'
+  }
+];
+
+export function primitiveAssertions(root = REPO_ROOT): CodeReference[] {
+  const allowed = new Set(ALLOWED_ASSERTIONS.map((a) => a.file));
+  const out: CodeReference[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/')) continue;
+    if (!rel.endsWith('.ts') && !rel.endsWith('.astro')) continue;
+    if (allowed.has(rel)) continue;
+    const lines = maskComments(readFileSync(join(root, rel), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      if (PRIMITIVE_ASSERTION.test(line)) {
+        out.push({ file: rel, line: i + 1, text: line.trim() });
+      }
+      PRIMITIVE_ASSERTION.lastIndex = 0;
+    });
+  }
+  return out;
+}
+
 /* R33 [§S6a]: a divergence from a research recommendation is only disclosed if
    a reader can see it, and the only place a reader meets a parameter whole is
    the full parameter table. Declaring the note in params.ts and never

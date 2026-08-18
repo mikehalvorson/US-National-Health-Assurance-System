@@ -9,8 +9,8 @@
 import { runOverviewMc } from '../lib/overview';
 import { DEFLATOR_2023_TO_2024 } from '../lib/params';
 import {
-  defaultSettings, instrumentRevenue, compute, distribution, overlapFactors, overlapFamily,
-  solveScenario, topShare
+  balancerIds, defaultSettings, instrumentRevenue, compute, distribution, overlapFactors,
+  overlapFamily, solveScenario, topShare
 } from '../lib/taxmodel';
 import { INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS, WEALTH_DIST, makeCustomProgram } from '../lib/taxparams';
 import { money } from '../lib/format';
@@ -128,9 +128,7 @@ function buildInstrumentControls(): void {
        instrument in the menu, the only major one with no official score, and
        the balancer in the flagship scenario, so it absorbs the package's
        residual gap - which is precisely what a reader needs told. */
-    const balancerIds = new Set(SCENARIOS.filter(function (sc) { return sc.balancer; })
-      .map(function (sc) { return sc.balancer as string; }));
-    if (balancerIds.has(ins.id)) {
+    if (balancerIds().has(ins.id)) {
       const band = document.createElement('span');
       band.className = 'instrument-band';
       band.textContent = ins.revBand

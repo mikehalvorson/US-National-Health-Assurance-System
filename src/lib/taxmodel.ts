@@ -48,10 +48,10 @@ export function defaultSettings(): TaxSettings {
   const s: TaxSettings = { instruments: {} };
   INSTRUMENTS.forEach(function (ins) {
     s.instruments[ins.id] = {
-      value: ins.kind === 'toggle' ? (ins.default ? 1 : 0) : (ins.default as number),
+      value: ins.kind === 'toggle' ? (ins.default ? 1 : 0) : scaleDefault(ins),
       phaseStart: ins.phaseStart,
       phaseYears: ins.phaseYears,
-      enabled: ins.kind === 'toggle' ? !!ins.default : (ins.default as number) > 0,
+      enabled: ins.kind === 'toggle' ? !!ins.default : scaleDefault(ins) > 0,
     };
   });
   return s;
@@ -279,10 +279,15 @@ export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSett
   if (!balIns) {
     throw new Error('Scenario ' + scn.id + ' names unknown balancer ' + scn.balancer);
   }
-  if (balIns.kind !== 'scale' || typeof balIns.scaleMax !== 'number') {
+  /* R127 [§S6a]: the ceiling is read out into a const at the guard, so the
+     guard is what narrows it and the two cannot come apart. It used to be read
+     twice at the bottom of the function through `as number`, which is an
+     assertion that the guard above ran - made in a place that cannot see it. */
+  const scaleMax = balIns.scaleMax;
+  if (balIns.kind !== 'scale' || typeof scaleMax !== 'number') {
     throw new Error(
       'Scenario ' + scn.id + ' balancer ' + balIns.id + ' is kind "' + balIns.kind +
-      '" with scaleMax ' + String(balIns.scaleMax) +
+      '" with scaleMax ' + String(scaleMax) +
       '; the linear solver needs a scale instrument with a numeric scaleMax'
     );
   }
@@ -311,10 +316,35 @@ export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSett
   const needCum = (sum(c0.need) - sum(c0.totalRev)) / (uCum || 1);
   const v = Math.max(need41, needCum, baseVal, 0);
 
-  const clamped = v > (balIns.scaleMax as number);
-  bal.value = Math.min(v, balIns.scaleMax as number);
+  const clamped = v > scaleMax;
+  bal.value = Math.min(v, scaleMax);
   s._balanced = { id: scn.balancer, value: bal.value, clamped: clamped };
   return s;
+}
+
+/* ---- R127 [§S6a]: the narrowing these used to assert past ---------------
+ * X4's defect was `Math.min(v, ins.scaleMax as number)` on an optional field:
+ * the assertion suppressed exactly the compile error that would have caught a
+ * toggle balancer, and the port carried it across a migration to a typed
+ * language. The fix the row asks for is not another runtime guard - it is to
+ * let the compiler do it, which means the value has to be narrowed somewhere a
+ * type checker can see.
+ * ------------------------------------------------------------------------ */
+export function scaleDefault(ins: TaxInstrument): number {
+  if (typeof ins.default !== 'number') {
+    throw new Error('Instrument ' + ins.id + ' is kind "' + ins.kind +
+      '" so its default must be a number, not ' + typeof ins.default);
+  }
+  return ins.default;
+}
+
+/* Every id named as a balancer by some scenario. `balancer` is optional, so
+   filtering then asserting `as string` was the same shape again: the filter
+   proves it to a reader and to nobody else. */
+export function balancerIds(): Set<string> {
+  const out = new Set<string>();
+  SCENARIOS.forEach(function (sc) { if (sc.balancer) out.add(sc.balancer); });
+  return out;
 }
 
 /* ---- Self-tests (exported for the shared self-test harness) ---- */
@@ -530,8 +560,7 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
        derivation graded medium, and the balancer in the flagship scenario. */
     name: "Tax: every balancer states its revenue uncertainty",
     run: function () {
-      const ids = new Set(SCENARIOS.filter(function (sc) { return sc.balancer; })
-        .map(function (sc) { return sc.balancer as string; }));
+      const ids = balancerIds();
       return Array.from(ids).every(function (id) {
         const ins = INSTRUMENTS.filter(function (i) { return i.id === id; })[0];
         if (!ins) return false;

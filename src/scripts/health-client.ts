@@ -26,6 +26,9 @@ import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
 import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 import { money } from '../lib/format';
 
+/* How many positions a parameter slider offers between its declared bounds. */
+const SLIDER_STEPS = 200;
+
 interface State {
   scenario: string;
   sliders: Record<string, number>;
@@ -194,9 +197,16 @@ function initHealth(): void {
       label.appendChild(valSpan);
       const input = document.createElement('input');
       input.type = 'range';
-      input.min = String(p.sliderMin);
-      input.max = String(p.sliderMax);
-      input.step = String(((p.sliderMax as number) - (p.sliderMin as number)) / 200);
+      /* R127 [§S6a]: both bounds are optional on the type, and the step was
+         computed through two assertions. An adjustable parameter that declared
+         neither produced min="undefined" and step="NaN" on a live control,
+         with nothing anywhere reporting it. A self-test requires both, and
+         this reads them once so the compiler agrees they are numbers. */
+      const lo = p.sliderMin, hi = p.sliderMax;
+      if (typeof lo !== 'number' || typeof hi !== 'number') continue;
+      input.min = String(lo);
+      input.max = String(hi);
+      input.step = String((hi - lo) / SLIDER_STEPS);
       const seeded = state.sliders[p.id] != null ? state.sliders[p.id] : eff[p.id].mode;
       input.value = String(seeded);
       valSpan.textContent = fmtSimple(seeded, p.unit ?? '');

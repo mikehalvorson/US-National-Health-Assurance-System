@@ -1213,7 +1213,7 @@ const RAMP_ARRAY: Record<RampId, keyof BuiltRamps> = {
   hosp: 'hospitals', exp: 'expansions', inf: 'infra'
 };
 function rampAt(ctx: ScnCtx, id: RampId, t: number): number {
-  const arr = ctx.ramps[RAMP_ARRAY[id]] as number[];
+  const arr = ctx.ramps[RAMP_ARRAY[id]];
   return arr[Math.min(t, arr.length - 1)] || 0;
 }
 function modelAt(ctx: ScnCtx, id: ModelId, t: number): number {

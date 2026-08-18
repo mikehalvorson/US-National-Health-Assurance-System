@@ -336,7 +336,7 @@ function renderCpChart(): void {
     item.appendChild(el('i', 'fmea-swatch fmea-cell-' + b));
     const cntKey = ('cp' + b.charAt(0).toUpperCase() + b.slice(1)) as keyof typeof F.counts;
     item.appendChild(document.createTextNode(BAND_META[b].label + ': ' +
-      (F.counts[cntKey] as number).toLocaleString('en-US')));
+      F.counts[cntKey].toLocaleString('en-US')));
     legend.appendChild(item);
   });
   left.appendChild(legend);

@@ -419,7 +419,11 @@ export function makeCustomProgram(label: string, amountB: number, start: number,
     amountB: amountB, start: start, rampYears: Math.max(0, rampYears || 0),
     need: function (year: number): number {
       if (year < start) return 0;
-      const r = this.rampYears === 0 ? 1 : Math.min(1, (year - start + 1) / (this.rampYears as number));
+      /* R127 [§S6a]: rampYears is optional on the type and always set by the
+         constructor above, which is a claim the compiler cannot check from
+         inside a method. Read it once and handle the missing case. */
+      const ramp = typeof this.rampYears === 'number' ? this.rampYears : 0;
+      const r = ramp === 0 ? 1 : Math.min(1, (year - start + 1) / ramp);
       return amountB * r;
     },
     source: "User-defined"

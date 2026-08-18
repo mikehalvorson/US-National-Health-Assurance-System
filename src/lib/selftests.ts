@@ -44,8 +44,8 @@ import {
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
-  baselineSplitCopies, displayOnlyDatasetsInEngine, divergenceIsRendered,
-  ENGINE_FILE, ENRICHERS,
+  ALLOWED_ASSERTIONS, baselineSplitCopies, displayOnlyDatasetsInEngine,
+  divergenceIsRendered, ENGINE_FILE, ENRICHERS, primitiveAssertions,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
@@ -837,6 +837,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          reaches it from the registry or from a parameter, so after the fix it
          is not a literal at all. This is what stops the eleventh magic number,
          and it reports the line so the failure names the offender. */
+      /* R127 [§S6a]: and no new one arrives. Each allowed assertion carries a
+         reason; anything else fails the build where it was typed. */
+      runGuarded('No primitive type assertion outside the declared list', () => {
+        const stray = primitiveAssertions();
+        return {
+          ok: !stray.length,
+          note: stray.length
+            ? stray.slice(0, 4).map((s) => s.file + ':' + s.line).join(', ')
+            : ALLOWED_ASSERTIONS.length + ' allowed, each with a reason'
+        };
+      }),
       runGuarded('The engine types no number that is not declared structural', () => {
         const stray = unregisteredEngineLiterals(
           ENGINE_STRUCTURAL_LITERALS.map((s) => s.value));
@@ -946,6 +957,29 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          R63 closed this for scenario `mult` and swept scenarios only; the
          slider path re-centres the band and rebuilds the spread, which reaches
          further. Both slider ends of every adjustable parameter are swept. */
+      /* R127 [§S6a]: the control whose assertions hid a defect declares its
+         own bounds, and they contain the value it opens at. Without both, the
+         slider rendered min="undefined" and step="NaN" and nothing said so. */
+      runGuarded('Every adjustable parameter declares slider bounds around its mode', () => {
+        const bad: string[] = [];
+        for (const p of PARAM_DEFS) {
+          if (!p.adjustable) continue;
+          if (typeof p.sliderMin !== 'number' || typeof p.sliderMax !== 'number') {
+            bad.push(p.id + ' declares no bounds');
+            continue;
+          }
+          if (p.sliderMin >= p.sliderMax) bad.push(p.id + ' bounds do not increase');
+          else if (p.mode < p.sliderMin || p.mode > p.sliderMax) {
+            bad.push(p.id + ' opens at ' + p.mode + ', outside ' +
+              p.sliderMin + '-' + p.sliderMax);
+          }
+        }
+        return {
+          ok: !bad.length,
+          note: bad.join(', ') ||
+            PARAM_DEFS.filter((p) => p.adjustable).length + ' adjustable parameters'
+        };
+      }),
       runGuarded('No slider position pushes a parameter out of its domain', () => {
         const breaches: string[] = [];
         for (const def of PARAM_DEFS) {
