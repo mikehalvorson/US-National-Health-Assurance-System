@@ -15,8 +15,40 @@
  *    estimate; "medium" = reputable survey/study or derived combination;
  *    "low" = analyst assumption where no direct source exists (flagged
  *    visibly in the UI).
+ *
+ * RECONCILED against research/01_macro_financing_population_offsets.md,
+ * research/02_hospital_clinical_workforce_education.md,
+ * research/03_drugs_pharmacy_diagnostics_devices.md,
+ * research/04_ltc_behavioral_dvh_ems_publichealth.md and
+ * research/05_it_governance_rd_transition.md.
+ *
+ * R41 [§S5]: `taxparams.ts` carries an explicit "RECONCILED against
+ * research/06" header, per-instrument source and confidence, named known
+ * limits, and its hazards written into the data rather than left to a reader.
+ * §W calls it the in-repo template and asks that this file be brought up to
+ * it. The header above is the first half; RECONCILED_AGAINST below makes the
+ * claim machine-checkable, so a research file this base draws on cannot be
+ * renamed or deleted without the build saying so.
+ *
+ * Known limits, in the same spirit as taxparams.ts's:
+ *  - Ten engine constants are still unregistered literals (K2/R21); §S6a owns
+ *    sourcing or grading them.
+ *  - Sixteen parameters carry an empty `url` (R135); nine are graded medium
+ *    and seven low, and §S11b owns them.
+ *  - `transitionShape` and `itCapitalShape` are outlay profiles whose
+ *    provenance no pass has confirmed either way (BS4/R254).
  * ========================================================================= */
 import type { ParamDef } from './model-types';
+
+/* R41 [§S5]: the research files this parameter base reconciles against, as
+   data. Checked to exist on disk, so the header cannot outlive them. */
+export const RECONCILED_AGAINST = [
+  'research/01_macro_financing_population_offsets.md',
+  'research/02_hospital_clinical_workforce_education.md',
+  'research/03_drugs_pharmacy_diagnostics_devices.md',
+  'research/04_ltc_behavioral_dvh_ems_publichealth.md',
+  'research/05_it_governance_rd_transition.md'
+];
 
 /* ---- Fixed calibration constants: CMS NHE 2023 (USD billions, nominal 2023) */
 export const BASE2023 = {
@@ -90,6 +122,49 @@ export const CALENDAR_ANCHOR_DENIAL = 'do not assign a calendar start date';
 /* Framework's own claim, for comparison display only (never a target).
  * Stated in real 2024 dollars. */
 export const FRAMEWORK_CLAIM = { mode: 4750, low: 4300, high: 5250 };
+
+/* ---- Household denominators, declared ------------------------------------
+ * R84 [§S5]. Two per-household calculators divided by different numbers:
+ * `care.ts` used 132.2M (Census 2024) and `taxparams.ts`'s income groups sum
+ * to 131.0M (CBO 2022). §AG5 filed it as an inconsistency to reconcile.
+ *
+ * Measured, and it is a three-way split, not two: `WEALTH_DIST` inside
+ * taxparams.ts ALSO sums to 132.2M, matching care.ts rather than the income
+ * groups in its own file. So the disagreement runs through the middle of the
+ * tax module, which is a fact §AG5 did not have.
+ *
+ * They are NOT reconciled to one number, and that is the finding rather than
+ * a shortfall. CBO's 131.0M is the household universe its own income
+ * distribution is built on; every per-group figure the tax page prints is
+ * CBO's count divided into CBO's income, and substituting a Census total
+ * would make those rows disagree with their own source. Census's 132.2M is
+ * the right denominator for a whole-population per-household figure that is
+ * not derived from CBO's table. Two different questions, two right answers.
+ *
+ * What was wrong is that neither said which it was. Each denominator is
+ * declared here with its source, its vintage and what it is for, and a
+ * self-test holds every per-household output to naming one.
+ * ------------------------------------------------------------------------ */
+export interface HouseholdDenominator {
+  id: string;
+  households: number;      /* millions */
+  source: string;
+  dataYear: number;
+  useFor: string;
+}
+export function householdDenominator(id: string): HouseholdDenominator {
+  const d = HOUSEHOLD_DENOMINATORS.filter(function (x) { return x.id === id; })[0];
+  if (!d) throw new Error('Unknown household denominator: ' + id);
+  return d;
+}
+export const HOUSEHOLD_DENOMINATORS: HouseholdDenominator[] = [
+  { id: 'census', households: 132.2, dataYear: 2024,
+    source: 'US Census Bureau, households 2024.',
+    useFor: 'Whole-population per-household figures not derived from CBO income groups: the household calculator and the KPP-C8 burden share.' },
+  { id: 'cbo', households: 131.0, dataYear: 2022,
+    source: 'CBO, The Distribution of Household Income 2022, supplemental workbook.',
+    useFor: 'Anything computed per income group, because the group incomes and the group counts come from the same CBO table and must not be mixed with another universe.' }
+];
 
 /* ---- Top-capital real growth, one number ---------------------------------
  * R143 [§S5]. Two engines grew the same wealth-tax base at two different

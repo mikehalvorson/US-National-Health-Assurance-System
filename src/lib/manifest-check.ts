@@ -178,6 +178,53 @@ export function displayOnlyDatasetsInEngine(
   return displayOnly.filter((id) => imported.has(id));
 }
 
+/* R217 [§S5]: no page types a household count.
+ *
+ * `tax.astro` wrote "the 13,200 households of the top 0.01%" in the
+ * DISTRIBUTIONAL section - the WEALTH_DIST figure, which drives the inequality
+ * chart - while describing the chart that runs on GROUPS.t10000, 12,000. Both
+ * numbers are right about their own series; the prose named the wrong one. It
+ * is the fifth household-count inconsistency the audit has found (F1, R172,
+ * R184, now this), so the fix is a rule rather than an edit.
+ *
+ * Any four-or-more-digit figure immediately followed by "household" on a page
+ * is a count that should have come from the series it describes. Astro
+ * expressions are rendered at build time, so a derived count never appears in
+ * the source as a literal and never trips this.
+ */
+/* An .astro file's leading `---` fence pair, blanked so line numbers survive. */
+export function frontmatterStripped(text: string): string {
+  if (!text.startsWith('---')) return text;
+  const end = text.indexOf('\n---', 3);
+  if (end < 0) return text;
+  const head = text.slice(0, end + 4);
+  return head.replace(/[^\n]/g, ' ') + text.slice(end + 4);
+}
+
+export const HOUSEHOLD_LITERAL_SOURCE =
+  String.raw`\b\d{1,3}(?:,\d{3})+\s+households?\b|\b\d{4,}\s+households?\b`;
+const HOUSEHOLD_LITERAL = new RegExp(HOUSEHOLD_LITERAL_SOURCE, 'g');
+
+export function typedHouseholdCounts(root = REPO_ROOT): CodeReference[] {
+  const out: CodeReference[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/pages/') || !rel.endsWith('.astro')) continue;
+    const raw = readFileSync(join(root, rel), 'utf8');
+    /* The rendered body only. An .astro file's frontmatter is TypeScript
+       between --- fences: a figure there is part of a derivation or of the
+       comment explaining one, and neither is a published count. The first
+       version scanned the whole file and reported this row's own explanatory
+       comment, which names the number it exists to stop being typed. */
+    const lines = frontmatterStripped(raw).split('\n');
+    lines.forEach((line, i) => {
+      for (const m of line.matchAll(HOUSEHOLD_LITERAL)) {
+        out.push({ file: rel, line: i + 1, text: m[0] });
+      }
+    });
+  }
+  return out;
+}
+
 /* R253 [§S5]: the transition envelope, derived rather than typed.
  *
  * One quantity was stated three ways: the page typed "$1.2-$2.0 trillion" in

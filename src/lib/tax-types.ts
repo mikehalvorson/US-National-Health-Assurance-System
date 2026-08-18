@@ -155,7 +155,9 @@ export interface ComputeResult {
   byInstrument: Record<string, number[]>;
   totalRev: number[];
   need: number[];
-  coverage: number[];
+  /* R48 [§S5]: null where there is nothing to cover - need is 0 and revenue
+     is positive, so the ratio is undefined rather than infinite. */
+  coverage: (number | null)[];
   /* R42 [§S5]: revenue removed by the top-0.1% overlap deduction, per year.
      byInstrument is already net of it; this is what was taken out, so the
      page can state the adjustment where the instruments are summed. */

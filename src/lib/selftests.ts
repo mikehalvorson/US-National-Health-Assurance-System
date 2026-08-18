@@ -43,7 +43,7 @@ import {
   baselineSplitCopies, displayOnlyDatasetsInEngine, ENRICHERS, guardedGlobalListeners,
   manifestDrift, PARSER_HOME, parserImplementations, readmeAdvertisedTestCount,
   readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets, REVENUE_ENGINE,
-  routeDrift, SPLIT_HOME, statedChapterCountDrift, typedEnvelopeLiterals,
+  routeDrift, SPLIT_HOME, statedChapterCountDrift, typedEnvelopeLiterals, typedHouseholdCounts,
   undeclaredEnrichers, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
@@ -1169,6 +1169,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: found.length
             ? found.join(', ') + ' named in ' + REVENUE_ENGINE
             : displayOnly.length + ' display-only datasets, none in ' + REVENUE_ENGINE
+        };
+      }),
+      /* R217 [§S5]: no page types a household count. Fifth inconsistency
+         of its kind in the audit, so it is a rule rather than an edit. */
+      runGuarded('No page types a household count', () => {
+        const typed = typedHouseholdCounts();
+        return {
+          ok: !typed.length,
+          note: typed.length
+            ? typed.map((c) => c.file + ':' + c.line + ' "' + c.text + '"').join(', ')
+            : 'household counts are rendered from the series they describe'
         };
       }),
       /* R253 [§S5]: the envelope is derived, and the page does not type it. */

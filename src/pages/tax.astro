@@ -1,6 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R217 [§S5]: the distributional section quoted 13,200 households for the top
+   0.01% - the WEALTH_DIST figure, which drives the INEQUALITY chart - while
+   describing the chart that runs on GROUPS.t10000, 12,000. A 10% divergence
+   inside one module, published against the wrong series. Both counts are
+   right about their own series; the prose was pointing at the other one.
+   Rendered from the series it describes, so it cannot drift again. */
+import { GROUPS, WEALTH_DIST } from '../lib/taxparams';
+
+const topBand = GROUPS.filter((g) => g.id === 't10000')[0];
+const wealthBand = WEALTH_DIST.groups.filter((g) => g.id === 'top001')[0];
+const DIST_TOP_HH = Math.round(topBand.hhM * 1e6).toLocaleString('en-US');
+const WEALTH_TOP_HH = Math.round(wealthBand.hhM * 1e6).toLocaleString('en-US');
 ---
 <BaseLayout title="National Health Assurance: Taxes & Financing">
   <main>
@@ -29,7 +41,11 @@ import ChapterNav from '../components/ChapterNav.astro';
       them.</p>
     <div class="tiles" id="inequality-tiles"></div>
     <div id="wealth-chart"></div>
-    <p class="note">Sources: Federal Reserve Distributional Financial
+    <p class="note">The wealth bands on this chart count {WEALTH_TOP_HH}
+      households in the top 0.01%, against {DIST_TOP_HH} in the burden charts
+      further down: the two run on different sources, Federal Reserve wealth
+      bands here and CBO income bands there, and neither is a restatement of
+      the other. Sources: Federal Reserve Distributional Financial
       Accounts (2026:Q1, $174.0T total household wealth) for the published
       bands; the splits inside the top 1% are derived from Saez–Zucman
       capitalization estimates and Forbes-list aggregates, constrained to
@@ -184,7 +200,7 @@ import ChapterNav from '../components/ChapterNav.astro';
     <p class="desc">The question that matters for lower-income Americans:
       new taxes <em>minus</em> the health costs this system eliminates
       (premiums, deductibles, copays), by income group. The top 1% is
-      broken into five bands, down to the 13,200 households of the top
+      broken into five bands, down to the {DIST_TOP_HH} households of the top
       0.01%, because that is where the wealth actually sits; the
       millionaire surtax, billionaire minimum tax, wealth tax, estate
       restoration, inheritance tax, and capital-gains reform in the package

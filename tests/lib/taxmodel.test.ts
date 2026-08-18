@@ -61,7 +61,7 @@ test('every tax self-test invariant passes', () => {
   /* R43 replaced one and left the count at 7; R144/R42/R36/R44 [§S5] added
      four and R38/R37/R39 three more. Pinning the count is what makes a
      silently dropped invariant a failure rather than a smaller green number. */
-  expect(TAX_SELFTESTS.length).toBe(14);
+  expect(TAX_SELFTESTS.length).toBe(15);
   const failing = TAX_SELFTESTS.filter((t) => !t.run()).map((t) => t.name);
   expect(failing).toEqual([]);
 });
@@ -127,6 +127,24 @@ test('R42: netting moves the balancer up, in every goal scenario', () => {
     (OVERLAP.rate as { mode: number }).mode = saved;
     expect(netted).toBeGreaterThan(naive);
   });
+});
+
+test('R48: coverage is a sentinel, not Infinity, when there is nothing to cover', () => {
+  /* Live today, not latent: the fallback need path is 0 in 2027 and 2028
+     while several instruments have already begun phasing in. */
+  const c = compute(defaultSettings(), PROGRAMS);
+  const i28 = c.years.indexOf(2028);
+  expect(c.need[i28]).toBe(0);
+  expect(c.totalRev[i28]).toBeGreaterThan(0);
+  expect(c.coverage[i28]).toBeNull();
+  expect(c.coverage.every((v) => v === null || Number.isFinite(v))).toBe(true);
+  /* need 0 AND revenue 0 is fully covered, which is a different answer */
+  const none = defaultSettings();
+  Object.keys(none.instruments).forEach((id) => {
+    none.instruments[id].enabled = false;
+    none.instruments[id].value = 0;
+  });
+  expect(compute(none, PROGRAMS).coverage[c.years.indexOf(2027)]).toBe(1);
 });
 
 test('R44: a toggle balancer throws instead of silently producing NaN', () => {

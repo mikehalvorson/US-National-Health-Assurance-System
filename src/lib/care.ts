@@ -3,6 +3,8 @@
    averages/typical ranges; NHA is $0 at the point of care with the phase-in
    year noted. Fidelity-critical: do not re-derive any value. */
 
+import { householdDenominator } from './params';
+
 export interface CareAmount { lo: number; hi: number; note: string }
 export interface CareNha { amount: number; fromYear: number; note: string }
 export interface CareScenario {
@@ -125,8 +127,12 @@ export interface HouseholdProfile {
   confidence: string;
 }
 
-/* docs/js/care.js:120 - Census 2024, millions of U.S. households */
-export const HOUSEHOLDS_M = 132.2;
+/* R84 [§S5]: the Census denominator, read from its declaration rather than
+   typed here. This is the right one for a whole-population per-household
+   figure; the CBO count (131.0M) is the right one for anything computed per
+   income group, and the two are not interchangeable. See
+   HOUSEHOLD_DENOMINATORS in params.ts for why. */
+export const HOUSEHOLDS_M = householdDenominator('census').households;
 
 /* docs/js/care.js:122-151 (verbatim) */
 export const HOUSEHOLD_PROFILES: HouseholdProfile[] = [

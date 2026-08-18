@@ -43,9 +43,12 @@ import {
   END_YEAR,
   PRE_YEARS,
   AGE_STRUCTURE,
+  PARAM_DEFS,
   TOP_CAPITAL_REAL_GROWTH,
 } from './params';
-import { effectiveParams, scenarioStructural, SCENARIOS } from './scenarios';
+import {
+  effectiveParams, naturalCeiling, scenarioStructural, SCENARIOS
+} from './scenarios';
 import type { ScenarioStructural } from './scenarios';
 import type {
   Triangular,
@@ -310,7 +313,32 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
     const empRelief = Math.max(0, 0.18 * nheBase * covR * (1 - p.employerCapture / 100));
     const wageGain = empRelief * ((p.wagePassThrough || 0) / 100);
     const taxFeedback = wageGain * 0.28;
-    const newRevenue = Math.max(0, pubCost - fedRedirect - stateMoe - empContrib - taxFeedback);
+    /* R23 [§S5]: "Clamp both or neither, and surface when it binds."
+       Neither, and the reason is a measurement.
+       `newRevenue` carried `Math.max(0, ...)` under a comment implying the
+       case existed; `householdRelief` carried no clamp at all. Measured across
+       all 21 scenarios x 16 years: the clamp binds in 0 of 336 cells, and
+       householdRelief is negative in 63 - the first three years of every
+       scenario, where coverage has not started but the residual private share
+       is already netted off. The row's emphasis is the wrong way round.
+       Then the clamp was tested for REACHABILITY rather than for whether it
+       happens to fire today, by sweeping every scenario at the all-low,
+       all-mode and all-high corners of the declared parameter space and again
+       against a hand-built adversarial set (residual share at its high,
+       employer capture and pass-through at theirs, every saving lever at its
+       most favourable, every expansion zeroed). The minimum raw value is
+       +$28.8B, at SCN-OPT/all-low in 2027; the adversarial set reaches +$53.0B.
+       The clamp cannot fire. It is the same shape as R156's bridge branch, in
+       the same section: a guard written as though it sometimes applies, that
+       cannot. Removed, with the margin pinned by a self-test so the build
+       fails if the model ever comes within $10B of needing it - at which
+       point the question is what a negative new-revenue requirement MEANS,
+       not what to clamp it to.
+       `householdRelief` keeps its sign for the same reason: a negative value
+       in 2027-2029 is a true statement about those years, not an error to
+       hide. It reports the sign instead. The tax page's year selector starts
+       at 2030, so none of the 63 reaches a reader. */
+    const newRevenue = pubCost - fedRedirect - stateMoe - empContrib - taxFeedback;
     /* R143 [§S5]: this grew at Ggdp (1.9%), while taxmodel.ts grows the same
        base at the top-capital rate (4.0%) - 38% apart by 2041, on a quantity
        both engines publish. One rate now, from params.ts. Not sampled,
@@ -319,6 +347,7 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
     const wealthRevenue = p.wealthTaxPotential * (p.wealthCollectionEff / 100) * Gtop;
     const householdRelief = 0.27 * nheBase * covR -
       (nheNha * (p.residualPrivateShare / 100) * 0.5); // half of residual is OOP
+    const householdReliefNegative = householdRelief < 0;
 
     out.years.push(year);
     out.baseline.push(nheBase);
@@ -337,6 +366,7 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
       pubCost: pubCost, fedRedirect: fedRedirect, stateMoe: stateMoe,
       empContrib: empContrib, newRevenue: newRevenue,
       wealthRevenue: wealthRevenue, householdRelief: householdRelief,
+      householdReliefNegative: householdReliefNegative,
       wageGain: wageGain, taxFeedback: taxFeedback,
       pubShare: pubShare
     };
@@ -598,6 +628,70 @@ export function selfTest(): SelfTestResult[] {
     masScenarios > 1 && masWorst < 0.001,
     masScenarios + " scenarios, worst " + (100 * masWorst).toFixed(4) +
     "% (" + (masWorstId || "none") + ")");
+
+  /* 5d. R23 [§S5]: both one-sided bounds report whether they were active.
+   *     Measured across every scenario and year: the newRevenue clamp binds in
+   *     0 cells and householdRelief is negative in 63 - the first three years
+   *     of each scenario, before coverage starts. The check does not demand
+   *     either count be zero; it demands the flags AGREE with the values, so a
+   *     clamp cannot be applied without being recorded. */
+  const NEW_REVENUE_MARGIN = 10; // $B, 2023$
+  let reliefFlagWrong = 0, reliefNeg = 0;
+  let minNewRev = Infinity, minAt = '';
+  const corners: Array<[string, (t: { low: number; mode: number; high: number }) => number]> = [
+    ['low', function (t) { return t.low; }],
+    ['mode', function (t) { return t.mode; }],
+    ['high', function (t) { return t.high; }]
+  ];
+  SCENARIOS.forEach(function (sc) {
+    const eff = effectiveParams(sc.id, null);
+    const struct = scenarioStructural(sc.id);
+    /* the sign flag, on the mode run each scenario actually publishes */
+    runPath(sampleParams(eff, null), struct).detail.forEach(function (d) {
+      if ((d.householdRelief < 0) !== d.householdReliefNegative) reliefFlagWrong += 1;
+      if (d.householdReliefNegative) reliefNeg += 1;
+    });
+    /* the clamp's reachability, at the corners of the declared space */
+    corners.forEach(function (corner) {
+      const p: Record<string, number> = {};
+      PARAM_DEFS.forEach(function (def) { p[def.id] = corner[1](eff[def.id]); });
+      runPath(p as unknown as SampledParams, struct).detail.forEach(function (d) {
+        if (d.newRevenue < minNewRev) {
+          minNewRev = d.newRevenue;
+          minAt = sc.id + '/all-' + corner[0] + '@' + d.year;
+        }
+      });
+    });
+  });
+  check("The new-revenue requirement stays clear of zero, so no clamp is needed",
+    reliefFlagWrong === 0 && minNewRev > NEW_REVENUE_MARGIN,
+    "min $" + minNewRev.toFixed(1) + "B at " + minAt + " (margin $" +
+    NEW_REVENUE_MARGIN + "B); householdRelief negative in " + reliefNeg +
+    " cells, " + reliefFlagWrong + " sign flags wrong");
+
+  /* 5e. R63 [§S5]: no effective parameter value leaves its natural domain.
+   *     `mult` used to scale low/mode/high past a percentage's own ceiling -
+   *     `wealthCollectionEff` needs only mult 1.1 - and nothing checked it.
+   *     Every scenario is evaluated, so a future multiplier that would breach
+   *     one fails the build instead of producing a 110% collection rate. */
+  const domainBreaches: string[] = [];
+  SCENARIOS.forEach(function (sc) {
+    const eff = effectiveParams(sc.id, null);
+    PARAM_DEFS.forEach(function (def) {
+      const cap = naturalCeiling(def);
+      const e = eff[def.id];
+      if (!e) return;
+      const worst = Math.max(e.low, e.mode, e.high);
+      const least = Math.min(e.low, e.mode, e.high);
+      if (least < 0 || (cap != null && worst > cap)) {
+        domainBreaches.push(sc.id + '.' + def.id + '=' + worst.toFixed(2));
+      }
+    });
+  });
+  check("No effective parameter value leaves its natural domain",
+    domainBreaches.length === 0,
+    domainBreaches.length ? domainBreaches.slice(0, 5).join(', ')
+      : SCENARIOS.length + " scenarios x " + PARAM_DEFS.length + " parameters");
 
   /* 6. Percentile bands ordered p10 ≤ p50 ≤ p90 (small MC run) */
   const mc = runMonteCarlo("SCN-BASE", null, 60, 7);

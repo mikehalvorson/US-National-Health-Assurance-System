@@ -100,6 +100,11 @@ export interface DetailRow {
   stateMoe: number;
   empContrib: number;
   newRevenue: number;
+  /* R23 [§S5]: `householdRelief` is deliberately unclamped - a negative
+     value in the pre-coverage years is a true statement - so it reports its
+     sign rather than hiding it. `newRevenue`'s clamp was removed: it could
+     not fire anywhere in the declared parameter space. */
+  householdReliefNegative: boolean;
   wealthRevenue: number;
   householdRelief: number;
   wageGain: number;

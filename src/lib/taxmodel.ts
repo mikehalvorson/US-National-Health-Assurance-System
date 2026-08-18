@@ -22,6 +22,11 @@ import {
   DATASET_VINTAGES, GROUPS, ECON, INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS,
   WEALTH_BASE_VINTAGE, WEALTH_REV_VINTAGE_VALUE
 } from './taxparams';
+/* R45 [§S5]: the seam test runs the healthcare model, so the engine reaches
+   for it here. Import only - no module-level call, so nothing runs a Monte
+   Carlo at import time. */
+import { runOverviewMc } from './overview';
+import { DEFLATOR_2023_TO_2024 } from './params';
 import type {
   TaxInstrument,
   TaxProgram,
@@ -168,8 +173,19 @@ export function compute(settings: TaxSettings, programs: TaxProgram[]): ComputeR
     return n;
   });
 
+  /* R48 [§S5]: `Infinity` when need is 0 and revenue positive. Not latent:
+     the fallback need path is 0 in 2027 and 2028 while several instruments
+     have already begun phasing in, so the base case produces it today, and
+     disabling every funding program in the UI produces it for all 16 years.
+     `Infinity` reaching a percentage formatter renders "Infinity%"; reaching
+     an axis scale breaks it silently.
+     `null` is the sentinel, so a consumer has to decide what to show rather
+     than formatting a value that has no meaning. The ratio is undefined when
+     there is nothing to cover - that is not the same as covering none of it,
+     which is why 0 would be the wrong answer too. */
   const coverage = YEARS.map(function (_, i) {
-    return need[i] > 0 ? totalRev[i] / need[i] : (totalRev[i] > 0 ? Infinity : 1);
+    if (need[i] > 0) return totalRev[i] / need[i];
+    return totalRev[i] > 0 ? null : 1;
   });
 
   return { years: YEARS, byInstrument: byInstrument, totalRev: totalRev,
@@ -542,7 +558,14 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
   },
 
   {
-    name: "Tax: every goal scenario meets the funding goal (fallback need path)",
+    /* R45 [§S5]: RENAMED. This was "every goal scenario meets the funding goal
+       (fallback need path)", which reads as fiscal feasibility. It is not:
+       `solveScenario` is DEFINED to set the balancer so revenue reaches 102%
+       of mature-year need, so the assertion has exactly one way to fail - the
+       balancer clamping at scaleMax. That is a real and useful check, and it
+       is solver convergence, not feasibility. The name says so now.
+       The seam it does not reach is below. */
+    name: "Tax: every goal scenario's balancer converges without clamping (fallback need path)",
     run: function () {
       return SCENARIOS.filter(function (sc) { return sc.balancer; })
         .every(function (sc) {
@@ -551,6 +574,54 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
           const i41 = c.years.indexOf(2041);
           function sum(a: number[]): number { return a.reduce(function (x, y) { return x + y; }, 0); }
           return c.totalRev[i41] >= c.need[i41] && sum(c.totalRev) >= sum(c.need);
+        });
+    }
+  },
+
+  {
+    /* R45 [§S5]: the integration seam, tested for the first time.
+       The convergence check above runs against `PROGRAMS`, whose `need` is the
+       hardcoded fallback `(year-2028) x 400` capped at 3,400 - not the live
+       healthcare model. So the two engines were never run against each other
+       in either direction, and a change to the healthcare model's financing
+       path could not fail any tax test.
+
+       This runs the same solve against the live path and checks two things
+       the fallback cannot: that the need it is solving against is the
+       healthcare model's own new-revenue requirement, deflated into the tax
+       model's 2024 dollars, and that the solved package still covers it
+       without clamping. The fallback and the live path are close - 3,400
+       against about 3,377 at 2041 - which is why nobody noticed; that
+       closeness is a property of today's parameters, not a guarantee. */
+    name: "Tax: every goal scenario solves against the LIVE healthcare need path",
+    run: function () {
+      const mc = runOverviewMc('SCN-BASE', null);
+      const years = mc.years.slice();
+      const live = mc.modePath.detail.map(function (d) {
+        return d.newRevenue * DEFLATOR_2023_TO_2024;
+      });
+      const programs: TaxProgram[] = [{
+        id: 'nha-live', label: 'National Health Assurance (live model path)',
+        builtin: true, enabled: true,
+        need: function (year: number): number {
+          const i = years.indexOf(year);
+          return i >= 0 ? live[i] : 0;
+        },
+        source: 'Live from the healthcare model, the same wiring the page uses'
+      }];
+      /* the live path must actually be live: a flat or empty path would make
+         the rest of this vacuous */
+      const i41 = years.indexOf(2041);
+      if (!(live[i41] > 1000) || !(live[i41] > live[0])) return false;
+
+      return SCENARIOS.filter(function (sc) { return sc.balancer; })
+        .every(function (sc) {
+          const s = solveScenario(sc, programs);
+          const c = compute(s, programs);
+          const j = c.years.indexOf(2041);
+          return !s._balanced!.clamped &&
+            c.totalRev[j] >= c.need[j] &&
+            isFinite(c.totalRev[j]);
         });
     }
   },

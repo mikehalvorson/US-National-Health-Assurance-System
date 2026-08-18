@@ -26,6 +26,12 @@
 /* R143 [§S5]: the top-capital rate is declared once in params.ts, because
    model.ts grows the same wealth base and used to do it at GDP. */
 import { TOP_CAPITAL_REAL_GROWTH } from './params';
+
+/* R41 [§S5]: the same declaration params.ts now carries, in the file the
+   convention came from. The header above has always said this in prose. */
+export const TAX_RECONCILED_AGAINST = [
+  'research/06_tax_distribution_financing.md'
+];
 import type {
   TaxGroup,
   TaxEcon,

@@ -220,6 +220,31 @@ export const SCENARIOS: Scenario[] = [
 export const SCENARIOS_BY_ID: Record<string, Scenario> = {};
 SCENARIOS.forEach(function (s) { SCENARIOS_BY_ID[s.id] = s; });
 
+/* ---- R63 [§S5]: the natural domain of a parameter, from its own unit ----
+ * A parameter whose unit expresses a percentage or a share of something
+ * cannot exceed 100 by construction. `mult` used to scale straight past that.
+ * Reading the ceiling off the declared unit means a new bounded parameter is
+ * covered the day it is added, with no list to remember to update.
+ *
+ * Only an upper bound, and only for percentage units. A "%/yr" growth rate is
+ * a rate of change and is not bounded at 100, so it is excluded by name; $B
+ * quantities and counts have no ceiling here at all. Negative values are
+ * clamped for every parameter, because no parameter in this model is
+ * meaningfully negative and a negative multiplier is a typo. */
+export const PERCENT_UNIT = /^%|% of\b|^share\b/;
+export const RATE_UNIT = /\/yr\b/;
+
+export function naturalCeiling(p: { unit?: string }): number | null {
+  const unit = p.unit || '';
+  if (RATE_UNIT.test(unit)) return null;
+  return PERCENT_UNIT.test(unit) ? 100 : null;
+}
+
+function clampTo(v: number, cap: number | null): number {
+  const floored = Math.max(0, v);
+  return cap == null ? floored : Math.min(floored, cap);
+}
+
 /* Apply a scenario to the parameter definitions, returning a new array of
  * effective (low, mode, high) triples keyed by id. Slider adjustments from
  * the UI are applied AFTER scenario overrides (user beats preset). */
@@ -234,7 +259,21 @@ export function effectiveParams(
     const ov = scn.overrides[p.id];
     if (ov) {
       if (Array.isArray(ov)) { lo = ov[0]; mo = ov[1]; hi = ov[2]; }
-      else if (typeof ov.mult === "number") { lo *= ov.mult; mo *= ov.mult; hi *= ov.mult; }
+      else if (typeof ov.mult === "number") {
+        /* R63 [§S5]: `mult` scaled low/mode/high blindly. A share or a
+           percentage has a natural ceiling its own unit implies, and nothing
+           enforced it: `wealthCollectionEff` needs only `mult: 1.1` to reach
+           92.4% of a 100% maximum, and `lowValueCapture`, `employerCapture`
+           and `wagePassThrough` are the same shape. No shipped scenario does
+           it today - the largest live multiplier on a bounded parameter is
+           SCN-STATE-RESIST's 1.15 on publicAdminRate - so this is latent, and
+           latent is where it should stay.
+           The domain comes from the unit, not from a hand-kept list. */
+        const cap = naturalCeiling(p);
+        lo = clampTo(lo * ov.mult, cap);
+        mo = clampTo(mo * ov.mult, cap);
+        hi = clampTo(hi * ov.mult, cap);
+      }
     }
     /* User slider: shift mode, scale low/high to preserve relative spread */
     if (sliderModes && typeof sliderModes[p.id] === "number" && isFinite(sliderModes[p.id])) {
