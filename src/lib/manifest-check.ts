@@ -880,7 +880,8 @@ export function divergenceNamesRecommendation(
      0.39. Requiring all three would fail a note that explains itself in
      percentages, which is what a reader wants. */
   const digits = recommended.match(/[\d.]+/g) || [];
-  return digits.length > 0 && note.includes(digits[0]);
+  const headline = digits[0];
+  return headline !== undefined && note.includes(headline);
 }
 
 export function divergenceIsRendered(root = REPO_ROOT): boolean {

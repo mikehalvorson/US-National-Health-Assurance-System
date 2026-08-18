@@ -61,6 +61,15 @@ build gate.
      build-time self-test, so it cannot drift again. Regenerate the figure by
      running `pnpm test`; the assertion names the correct number when it fails. -->
 
+<!-- §S6b: `pnpm build` runs `astro check` before `astro build`, and that is
+     load-bearing rather than tidy. Astro strips types through esbuild without
+     checking them, so for the whole life of this project the build could not
+     see a type error, and two shipped: a type used in two places and imported
+     in none, and an index read that is `string | undefined` under
+     `noUncheckedIndexedAccess`. Both passed every build. The check costs about
+     15 seconds against a 9.5-second build. Do not split it back out to make
+     the build faster. -->
+
 
 ```
 src/pages/*.astro      the 14 chapters, one route each; index.astro is the
