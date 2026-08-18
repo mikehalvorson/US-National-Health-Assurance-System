@@ -14,7 +14,8 @@ import {
   collapsingSliderParameters, effectiveParams, naturalCeiling,
   OVERRIDES_BEYOND_SLIDER, paramBandNote, provenanceProblems,
   provenanceGradeCounts, scenarioStructural, SCENARIOS as MODEL_SCENARIOS,
-  SIGNED_PATH_FIELDS, sliderSpreadNote, SPREAD_COLLAPSE_DECLARED,
+  SIGNED_PATH_FIELDS, sliderSpreadNote, spreadDependence,
+  SPREAD_COLLAPSE_DECLARED,
   STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS, unknownOverrideKeys,
   unknownStructuralKeys
 } from './scenarios';
@@ -1372,6 +1373,31 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !unread.length,
           note: unread.join(', ') || STRUCTURAL_KNOBS.length +
             ' knobs declared, each read in ' + ENGINE_FILE
+        };
+      }),
+      /* R142 [§S6b, AP6]: sliders rebuild the spread from the OVERRIDDEN
+         triple, so the same slider value carries different uncertainty in
+         different scenarios and the interface never said so. The rule behind
+         it is exact: reshape the triple and the band moves, scale it and the
+         band does not. Both directions are asserted, so a change to how
+         sliders rebuild spread cannot pass by making every case agree. */
+      runGuarded('Slider spread follows the scenario, by the rule it follows', () => {
+        const d = spreadDependence();
+        const problems = d.wrongWay.slice();
+        if (!d.differing.length) {
+          problems.push('no scenario changes the band at a fixed slider value');
+        }
+        if (!d.identical.length) {
+          problems.push('no scenario leaves the band unchanged');
+        }
+        if (!sliderSpreadNote().includes('depends on the scenario')) {
+          problems.push('the note never says the band depends on the scenario');
+        }
+        return {
+          ok: !problems.length,
+          note: problems.slice(0, 4).join(' | ') || d.differing.length +
+            ' reshaped overrides move the band, ' + d.identical.length +
+            ' scaled ones leave it, no exceptions'
         };
       }),
       /* R237 [§S6b, AC7]: the band is proportional to wherever the slider is

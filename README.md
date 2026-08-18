@@ -54,7 +54,7 @@ implementing the national-aggregate simulation specified in BUILD-BRIEF.md.
 It runs 1,500 Monte Carlo draws over 32 sourced parameter distributions in
 ~36ms in the browser, covers the Phase 0–8 rollout (2027–2042)
 and all 19 stress scenarios. It validates itself with
-139 built-in integrity tests, shown in the page footer and enforced by the
+140 built-in integrity tests, shown in the page footer and enforced by the
 build gate.
 
 <!-- R155: the count above is checked against selfTestSummary().total by a

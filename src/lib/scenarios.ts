@@ -1007,12 +1007,78 @@ export function collapsingSliderParameters(): string[] {
   return collapsing;
 }
 
+/* ---- R142 [AP6]: the same control means different uncertainty ------------
+ * Sliders apply AFTER scenario overrides and rebuild the spread from the
+ * OVERRIDDEN triple, so a reader comparing two scenarios at one slider value
+ * is not holding uncertainty constant. The comment in effectiveParams says
+ * "user beats preset", which describes the mode and not the band.
+ *
+ * Measured, the behaviour splits exactly along the kind of override, 33 pairs
+ * with no exceptions:
+ *
+ *   - a `to:` override reshapes the triple, so the relative spread changes and
+ *     the band at a fixed slider position moves. 22 of 33.
+ *   - a `mult` override scales all three points by the same factor, so the
+ *     relative spread is unchanged and the band at a fixed slider position is
+ *     identical to the base case. 11 of 33.
+ *
+ * That is not a coincidence to be noted, it is the arithmetic, and it is worth
+ * pinning: it is what tells a reader which comparisons are safe. If sliders
+ * ever stopped rebuilding from the overridden triple, every one of the 22
+ * would go quiet and match the base case, and nothing else in the repository
+ * would notice.
+ * ------------------------------------------------------------------------ */
+export interface SpreadDependence {
+  differing: string[];
+  identical: string[];
+  wrongWay: string[];
+}
+
+export function spreadDependence(): SpreadDependence {
+  const differing: string[] = [];
+  const identical: string[] = [];
+  const wrongWay: string[] = [];
+  for (const p of PARAM_DEFS) {
+    if (!p.adjustable) continue;
+    if (typeof p.sliderMin !== 'number' || typeof p.sliderMax !== 'number') continue;
+    /* Midway between the ends, so the natural-domain clamp is not what moves
+       it: at a slider extreme a clamped band would read as a spread change. */
+    const at = p.sliderMin + (p.sliderMax - p.sliderMin) / 2;
+    const base = effectiveParams(BASE_SCENARIO_ID, { [p.id]: at })[p.id];
+    if (!base) continue;
+    for (const s of SCENARIOS) {
+      if (s.id === BASE_SCENARIO_ID) continue;
+      const ov = s.overrides[p.id];
+      if (!ov) continue;
+      const eff = effectiveParams(s.id, { [p.id]: at })[p.id];
+      if (!eff) continue;
+      const same = Math.abs(eff.low - base.low) < 1e-9 &&
+        Math.abs(eff.high - base.high) < 1e-9;
+      const at_ = s.id + '/' + p.id;
+      if ('to' in ov) {
+        if (same) wrongWay.push(at_ + ' reshapes the triple and the band did not move');
+        else differing.push(at_);
+      } else {
+        if (same) identical.push(at_);
+        else wrongWay.push(at_ + ' only scales the triple and the band moved');
+      }
+    }
+  }
+  return { differing, identical, wrongWay };
+}
+
 export function sliderSpreadNote(): string {
+  const d = spreadDependence();
   return 'Moving a slider moves the whole range, not just the middle of it: ' +
     'the band above and below is rebuilt in proportion to wherever you put ' +
     'the control. Setting one of these to zero therefore removes its ' +
     'uncertainty as well as its effect, which is the right answer for a lever ' +
-    'that is switched off and a strong claim for one that is merely small.';
+    'that is switched off and a strong claim for one that is merely small. ' +
+    'The range a slider starts from also depends on the scenario above it, in ' +
+    d.differing.length + ' of the ' + (d.differing.length + d.identical.length) +
+    ' cases where a scenario adjusts an assumption you can also drag. Two ' +
+    'scenarios at the same slider position are therefore not being compared ' +
+    'at the same uncertainty.';
 }
 
 /* Structural knobs for a scenario (ramp delays, shocks, MOE multipliers) */
