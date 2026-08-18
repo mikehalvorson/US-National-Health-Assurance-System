@@ -37,7 +37,7 @@
  * target, so they close to within MATURITY_TOLERANCE. Four metrics miss by
  * more and are named in DOCUMENTED_GAPS rather than absorbed.
  * ========================================================================= */
-import { effectiveParams, scenarioStructural } from './scenarios';
+import { effectiveParams, scenarioStructural, SCENARIOS } from './scenarios';
 import { buildRamps, runPath } from './model';
 import type { BuiltRamps } from './model';
 import type { SampledParams, PathResult } from './model-types';
@@ -1593,6 +1593,8 @@ export function equationSelfTests(Q: QualityData): { ok: boolean; messages: stri
       if (!isFinite(v)) messages.push('non-finite: ' + d.id + ' at ' + ph);
     });
   });
+  /* R143 [§S5]: the scenario set the widened stale-exemption test reads. */
+  const SCENARIO_IDS = SCENARIOS.map(function (sc) { return sc.id; });
   /* 3. base-case maturity meets the source target, within MATURITY_TOLERANCE,
      except for the metrics whose shortfall is documented rather than hidden.
      R235: an exempt metric that now MEETS its target is reported too, so
@@ -1619,10 +1621,29 @@ export function equationSelfTests(Q: QualityData): { ok: boolean; messages: stri
     if (!ok && !exempt) {
       messages.push('maturity miss: ' + p.id + ' computed ' + v.toFixed(2) + ' vs ' + p.target);
     }
+    /* R143 [§S5] widened this. It used to retire an exemption the moment the
+       BASE CASE met its target, and R143 walked straight into the hole: moving
+       the healthcare model's wealth base onto the sourced top-capital rate
+       took KPP-C8 from about 5.9% to 4.64% on SCN-BASE, so the check demanded
+       the gap be deleted - while 12 of the 20 scenarios still breach the 5%
+       cap, the worst at 15.6%. Deleting a true disclosure on the strength of
+       one favourable scenario is the exact failure this check exists to
+       prevent, pointed the other way.
+       A gap is stale only when it has closed everywhere. */
     if (ok && exempt) {
-      messages.push('exemption no longer needed: ' + p.id + ' computed ' + v.toFixed(2) +
-        ' and now meets ' + p.target + '. Remove it from DOCUMENTED_GAPS in ' +
-        'tools/extract_quality_catalog.py and from ' + (p.documentedGapSection || 'the methodology') + '.');
+      const breaching = SCENARIO_IDS.filter(function (id) {
+        const sv = evaluateAtPhase(p.id, id, 'P8');
+        if (!isFinite(sv)) return true;
+        return meta.cmp === '<='
+          ? !(sv <= meta.num * (1 + MATURITY_TOLERANCE))
+          : !(sv >= meta.num * (1 - MATURITY_TOLERANCE));
+      });
+      if (!breaching.length) {
+        messages.push('exemption no longer needed: ' + p.id + ' computed ' + v.toFixed(2) +
+          ' and now meets ' + p.target + ' in every scenario. Remove it from ' +
+          'DOCUMENTED_GAPS in tools/extract_quality_catalog.py and from ' +
+          (p.documentedGapSection || 'the methodology') + '.');
+      }
     }
   });
   return { ok: messages.length === 0, messages: messages };

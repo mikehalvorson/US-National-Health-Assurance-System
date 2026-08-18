@@ -43,6 +43,7 @@ import {
   END_YEAR,
   PRE_YEARS,
   AGE_STRUCTURE,
+  TOP_CAPITAL_REAL_GROWTH,
 } from './params';
 import { effectiveParams, scenarioStructural, SCENARIOS } from './scenarios';
 import type { ScenarioStructural } from './scenarios';
@@ -310,7 +311,12 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
     const wageGain = empRelief * ((p.wagePassThrough || 0) / 100);
     const taxFeedback = wageGain * 0.28;
     const newRevenue = Math.max(0, pubCost - fedRedirect - stateMoe - empContrib - taxFeedback);
-    const wealthRevenue = p.wealthTaxPotential * (p.wealthCollectionEff / 100) * Ggdp;
+    /* R143 [§S5]: this grew at Ggdp (1.9%), while taxmodel.ts grows the same
+       base at the top-capital rate (4.0%) - 38% apart by 2041, on a quantity
+       both engines publish. One rate now, from params.ts. Not sampled,
+       matching the tax model, which treats it as a fixed class rate. */
+    const Gtop = Math.pow(1 + TOP_CAPITAL_REAL_GROWTH, PRE_YEARS + t);
+    const wealthRevenue = p.wealthTaxPotential * (p.wealthCollectionEff / 100) * Gtop;
     const householdRelief = 0.27 * nheBase * covR -
       (nheNha * (p.residualPrivateShare / 100) * 0.5); // half of residual is OOP
 

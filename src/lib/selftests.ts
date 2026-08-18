@@ -9,7 +9,8 @@ import {
   effectiveParams, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
-import { TAX_SELFTESTS } from './taxmodel';
+import { classGrowth, TAX_SELFTESTS } from './taxmodel';
+import { INSTRUMENTS as TAX_INSTRUMENTS } from './taxparams';
 import {
   REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
   staleRelevanceFallbacks, undeclaredRelevanceFallbacks
@@ -47,7 +48,8 @@ import {
 } from './manifest-check';
 import { TABS } from './tabs';
 import {
-  AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR, transitionEnvelope
+  AGE_STRUCTURE, DEFLATOR_2023_TO_2024, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR,
+  transitionEnvelope
 } from './params';
 import {
   EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
@@ -175,8 +177,18 @@ const KNOWN_NON_FINITE = [
    every one is a floor; TPP-10.2 and TPP-11.1 publish two each. KPP-A1
    publishes exactly one, so "all of it" is one row, which is a much weaker
    statement about the same arrangement. The list does not rank them; the note
-   the check prints carries the counts. */
-const FULLY_CLAMPED = ['KPP-A1', 'KPP-C5', 'TPP-10.2', 'TPP-11.1'];
+   the check prints carries the counts.
+
+   R143 [§S5] added the fifth, and it is the most interesting of them. KPP-C8
+   publishes five interim rows. Growing the healthcare model's wealth base at
+   the sourced top-capital rate rather than at GDP raised wealth financing
+   enough that the ordinary-taxpayer burden the equation computes now falls
+   BELOW the committed 5% cap at every interim phase - 0.0 at P0/P1/P2/P5/P6,
+   1.5 at P3, 0.1 at P4, 1.2 at P7 - so the published number is the cap in
+   every one of them. The metric reads as a flat "<=5%" trajectory while the
+   equation behind it says something much more variable, and that is worth
+   meeting here rather than inferring from a chart. */
+const FULLY_CLAMPED = ['KPP-A1', 'KPP-C5', 'KPP-C8', 'TPP-10.2', 'TPP-11.1'];
 
 export interface SelfTestRow { name: string; ok: boolean; note: string }
 export interface SelfTestReport {
@@ -338,6 +350,40 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         };
       })
     ]
+  },
+  {
+    /* R143 [§S5]: the two engines' wealth base, held to one rate class.
+       Not held to one VALUE, because they are two independently sourced
+       numbers in two dollar years: params.ts has gross $350B x 84% = $294B in
+       2023$ growing from 2023, taxparams.ts has net $300B in 2024$ growing
+       from 2024. That leaves a constant 4.4% level gap - 0.5% from the bases
+       and 3.8% from one extra year of compounding - and forcing it to zero
+       would be tuning two sourced figures to each other.
+       What must not come back is a RATE divergence, which is what the defect
+       was: the ratio used to widen from 1.00 at the base year to 1.41 by
+       2042. A constant ratio is the invariant; the level gap is bounded and
+       reported so it stays small and stays explained. */
+    surface: 'wealth-base.ts',
+    rows: () => [runGuarded('Both engines grow the wealth base at one rate', () => {
+      const mc = runOverviewMc('SCN-BASE', null);
+      const w = TAX_INSTRUMENTS.filter((i) => i.id === 'wealth')[0];
+      const ratios: number[] = [];
+      mc.years.forEach((y: number, i: number) => {
+        /* The BASE, not the revenue: `instrumentRevenue` multiplies by the
+           phase-in ramp, which is a policy schedule and halved the first
+           comparison year. The ramp is not what R143 is about. */
+        const tax = w.rev1x * classGrowth(w.growth, y);
+        const hc = mc.modePath.detail[i].wealthRevenue * DEFLATOR_2023_TO_2024;
+        if (tax > 0 && hc > 0) ratios.push(tax / hc);
+      });
+      const lo = Math.min(...ratios), hi = Math.max(...ratios);
+      const spread = hi - lo;
+      return {
+        ok: ratios.length > 10 && spread < 1e-6 && lo > 0.9 && lo < 1.1,
+        note: 'ratio ' + lo.toFixed(4) + '-' + hi.toFixed(4) + ' across ' +
+          ratios.length + ' years (spread ' + spread.toExponential(1) + ')'
+      };
+    })]
   },
   {
     /* shape 2: {name, run}[] pushed onto a shared array */

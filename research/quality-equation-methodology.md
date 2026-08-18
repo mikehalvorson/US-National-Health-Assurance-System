@@ -181,9 +181,14 @@ exemption list exists to show.
 - **KPP-C7** (wealth collection efficiency, target >= 92%): the researched
   mature collection rate is 84%, so the equation approaches 84 and the gap is
   the distance between researched practice and the controlled ambition.
-- **KPP-C8** (ordinary-taxpayer burden share, target <= 5%): the engine
-  computes about 6.5% of program cost in the base case after wealth
-  financing, household relief, and wage pass-through.
+- **KPP-C8** (ordinary-taxpayer burden share, target <= 5%): the base case
+  computes 4.6% of program cost after wealth financing, household relief, and
+  wage pass-through. That is inside the cap, and it is the only place the
+  metric is inside the cap: twelve of the twenty scenarios breach it, the
+  worst at 15.6%. The gap stays declared for that reason. It moved when the
+  healthcare model stopped growing the wealth base at GDP and adopted the
+  sourced top-capital rate the tax model already used; before that the base
+  case computed about 5.9%.
 - **TPP-W1** (role-region vacancy ceiling, target <= 8%): the error form
   closes only where its build state reaches 1, and this one averages
   infrastructure with the workforce sufficiency index, whose own controlled

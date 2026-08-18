@@ -91,6 +91,29 @@ export const CALENDAR_ANCHOR_DENIAL = 'do not assign a calendar start date';
  * Stated in real 2024 dollars. */
 export const FRAMEWORK_CLAIM = { mode: 4750, low: 4300, high: 5250 };
 
+/* ---- Top-capital real growth, one number ---------------------------------
+ * R143 [§S5]. Two engines grew the same wealth-tax base at two different
+ * rates. `taxmodel.ts` compounds the `wealth` instrument at the `top` class,
+ * 4.0% real; `model.ts` compounded `wealthRevenue` at GDP, 1.9%, simply
+ * because `Ggdp` was the growth factor already in scope. The divergence is
+ * invisible at the base year and maximal exactly where the headline figures
+ * are read: measured before the fix, the tax model's wealth base ran 38.1%
+ * above the healthcare model's at 2041 and 40.9% at 2042.
+ *
+ * It was not a disagreement anyone had: it was created by scaling one module
+ * and not the other, and it reached the reader in two places - the overview's
+ * "of which the wealth-tax package could cover N%" row, and the tax page's
+ * printed claim that "top-capital bases compound at 4% real".
+ *
+ * The tax side wins on evidence, so this is its rate, declared once and read
+ * by both. Sourced: Fed Distributional Financial Accounts, top-0.1% net worth
+ * grew at roughly 7% nominal CAGR 1989-2025, about 4.3% real; 4.0% is used as
+ * a conservative round figure. `taxparams.ts` reads it as ECON.growthRates.top
+ * and `model.ts` reads it for wealthRevenue, so the two cannot drift apart
+ * again without one edit moving both.
+ * ------------------------------------------------------------------------ */
+export const TOP_CAPITAL_REAL_GROWTH = 0.040;
+
 /* ---- Uncertain parameters ------------------------------------------------
  * Each: { id, group, label, unit, low, mode, high, confidence, source, url,
  *         adjustable (bool → gets a UI slider on the mode value),

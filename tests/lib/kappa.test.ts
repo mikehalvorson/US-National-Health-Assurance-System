@@ -17,6 +17,7 @@ import {
 import { parseNum } from '../../src/lib/phase-targets';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { GATES } from '../../src/lib/rollout';
+import { SCENARIOS } from '../../src/lib/scenarios';
 
 describe('R227: the constant traces to its source', () => {
   test('KAPPA is what the gate observation implies', () => {
@@ -84,6 +85,22 @@ describe('R227: the band is published and cannot drift', () => {
   });
 });
 
+/* R143 [§S5]: the scenarios in which a metric misses its own maturity target.
+   Shared by the two tests below so "the gap closed" means the same thing in
+   both, and the same thing it means in equations.ts. */
+function breachingScenarios(
+  p: { id: string },
+  meta: { cmp: string | null; num: number }
+): string[] {
+  return SCENARIOS.map((sc) => sc.id).filter((id) => {
+    const v = evaluateAtPhase(p.id, id, 'P8');
+    if (!isFinite(v)) return true;
+    return meta.cmp === '<='
+      ? !(v <= meta.num * (1 + MATURITY_TOLERANCE))
+      : !(v >= meta.num * (1 - MATURITY_TOLERANCE));
+  });
+}
+
 /* R231 [§S3]: the tolerance, measured rather than assumed. */
 describe('R231: maturity closure says what it means', () => {
   test('the tolerance is a named constant, not a literal', () => {
@@ -129,13 +146,35 @@ describe('R231: maturity closure says what it means', () => {
         ? v <= meta.num * (1 + MATURITY_TOLERANCE)
         : v >= meta.num * (1 - MATURITY_TOLERANCE);
       if (!ok && !p.documentedGap) missing.push(p.id);
-      if (ok && p.documentedGap) closingButExempt.push(p.id);
+      /* R143 [§S5]: "closing" means closing EVERYWHERE, matching the widened
+         check in equations.ts. This test held its own base-case-only copy of
+         the rule, so the two disagreed the moment KPP-C8 met the cap on
+         SCN-BASE while still breaching it in 12 of 20 scenarios. */
+      if (ok && p.documentedGap && !breachingScenarios(p, meta).length) {
+        closingButExempt.push(p.id);
+      }
     }
     expect(missing, 'misses the target and is not declared').toEqual([]);
     /* R235 turns the second list into a failure with its own message; here it
        is asserted so the exemption list cannot quietly outlive its reason. */
     expect(closingButExempt, 'exempt but now closing').toEqual([]);
     expect(gaps).toEqual(['KPP-C1', 'KPP-C7', 'KPP-C8', 'TPP-W1']);
+  });
+
+  /* R143 [§S5]: the measurement that keeps KPP-C8's gap declared. The base
+     case is inside the 5% cap and almost nothing else is, so a base-case-only
+     reading of "the gap closed" would have deleted a true disclosure. */
+  test('KPP-C8 meets its cap on the base case and misses it in most scenarios', () => {
+    const p = QUALITY_DATA.parameters.find((x) => x.id === 'KPP-C8')!;
+    const meta = parseNum(p.target)!;
+    expect(meta.num).toBe(5);
+    const base = evaluateAtPhase('KPP-C8', 'SCN-BASE', 'P8');
+    expect(base).toBeLessThan(5);
+    expect(base).toBeGreaterThan(4);
+    const breaching = breachingScenarios(p, meta);
+    expect(breaching.length).toBeGreaterThan(SCENARIOS.length / 2);
+    expect(breaching).toContain('SCN-PESS');
+    expect(p.documentedGap).toBeTruthy();
   });
 
   test('the closure claim in the module header is no longer "exactly"', () => {

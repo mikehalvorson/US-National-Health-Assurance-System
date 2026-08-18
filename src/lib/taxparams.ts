@@ -23,6 +23,9 @@
  * Known limits: CBO options predate the July 2025 reconciliation act
  * (OBBBA) - scores tied to the old baseline are noted per instrument.
  * ========================================================================= */
+/* R143 [§S5]: the top-capital rate is declared once in params.ts, because
+   model.ts grows the same wealth base and used to do it at GDP. */
+import { TOP_CAPITAL_REAL_GROWTH } from './params';
 import type {
   TaxGroup,
   TaxEcon,
@@ -102,7 +105,7 @@ export const ECON: TaxEcon = {
    * ~7% nominal CAGR 1989-2025, roughly 4.3% real; 4.0% used here as a
    * conservative round figure. Wages follow the healthcare model's 1.2%
    * real wage-cost growth; broad income/GDP bases grow at 1.9% (CBO).   */
-  growthRates: { gdp: 0.019, wages: 0.012, top: 0.040 }
+  growthRates: { gdp: 0.019, wages: 0.012, top: TOP_CAPITAL_REAL_GROWTH }
 };
 
 /* ---- Tax instruments -----------------------------------------------------
