@@ -44,7 +44,7 @@ import {
   PRE_YEARS,
   AGE_STRUCTURE,
 } from './params';
-import { effectiveParams, scenarioStructural } from './scenarios';
+import { effectiveParams, scenarioStructural, SCENARIOS } from './scenarios';
 import type { ScenarioStructural } from './scenarios';
 import type {
   Triangular,
@@ -159,6 +159,38 @@ export function buildRamps(structural: ScenarioStructural): BuiltRamps {
   };
 }
 
+/* ---- Baseline PHC category split (2023 $B) ------------------------------
+ * R157 [§S5]: this was written out three times - here in runPath, again in
+ * matureAtScale, and a third time in bridge.ts - each with its own copy of the
+ * 0.6/0.4 embedded-drug literals. The bridge identity catches a bridge.ts <->
+ * runPath divergence; nothing caught runPath <-> matureAtScale except
+ * self-test 5b, which runs only under `{}` structural.
+ *
+ * The 0.6/0.4 split allocates `embeddedDrugSpend` - drugs dispensed inside a
+ * hospital or clinic visit and billed as part of it - out of the two
+ * categories that carry it, so the drug base is complete and neither category
+ * double-counts. It nets to zero across the four categories by construction,
+ * which is why the bridge identity is exact.
+ * ------------------------------------------------------------------------ */
+export const EMBEDDED_DRUG_HOSPITAL_SHARE = 0.6;
+export const EMBEDDED_DRUG_CLINIC_SHARE = 0.4;
+
+export interface BaselineSplit {
+  hosp0: number; clin0: number; drug0: number; other0: number; admin0: number;
+}
+export function baselineCategorySplit(embeddedDrugSpend: number): BaselineSplit {
+  const B = BASE2023;
+  const e = embeddedDrugSpend;
+  return {
+    hosp0: B.hospital - EMBEDDED_DRUG_HOSPITAL_SHARE * e,
+    clin0: B.physician + B.otherProf - EMBEDDED_DRUG_CLINIC_SHARE * e,
+    drug0: B.rxRetail + e,
+    other0: B.dental + B.otherPersonal + B.homeHealth + B.nursing +
+            B.dme + B.nondurables,
+    admin0: B.netInsCost + B.govtAdmin
+  };
+}
+
 /* ---- One full path run for a single parameter sample -------------------
  * Returns { years[], baseline[], nha[], detail (per-year objects) }        */
 export function runPath(p: SampledParams, structural: ScenarioStructural): PathResult {
@@ -174,13 +206,10 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
   const gWage = 0.012; // real input-cost growth for program-based expansions
 
   /* Baseline PHC categories (2023 $B) - drugs pulled out with embedded share */
-  const embedded = p.embeddedDrugSpend;
-  const hospBase0 = B.hospital - 0.6 * embedded;
-  const clinBase0 = B.physician + B.otherProf - 0.4 * embedded;
-  const drugBase0 = B.rxRetail + embedded;
-  const otherPhc0 = B.dental + B.otherPersonal + B.homeHealth + B.nursing +
-                     B.dme + B.nondurables;
-  const admin0 = B.netInsCost + B.govtAdmin;
+  const split = baselineCategorySplit(p.embeddedDrugSpend);
+  const hospBase0 = split.hosp0, clinBase0 = split.clin0;
+  const drugBase0 = split.drug0, otherPhc0 = split.other0;
+  const admin0 = split.admin0;
 
   const out: PathResult = { years: [], baseline: [], nha: [], detail: [] };
 
@@ -341,13 +370,10 @@ export function matureAtScale(
   const G = Math.pow(1 + g, yearsFrom2023);
   const Gw = Math.pow(1 + 0.012, yearsFrom2023);
 
-  const embedded = p.embeddedDrugSpend;
-  const hospBase0 = B.hospital - 0.6 * embedded;
-  const clinBase0 = B.physician + B.otherProf - 0.4 * embedded;
-  const drugBase0 = B.rxRetail + embedded;
-  const otherPhc0 = B.dental + B.otherPersonal + B.homeHealth + B.nursing +
-                     B.dme + B.nondurables;
-  const admin0 = B.netInsCost + B.govtAdmin;
+  const split = baselineCategorySplit(p.embeddedDrugSpend);
+  const hospBase0 = split.hosp0, clinBase0 = split.clin0;
+  const drugBase0 = split.drug0, otherPhc0 = split.other0;
+  const admin0 = split.admin0;
 
   const covR = ramps.coverage[t] || 0, csR = ramps.costShareElim[t] || 0;
   const unitR = ramps.units[t] || 0, drugR = ramps.drugs[t] || 0;
@@ -543,6 +569,29 @@ export function selfTest(): SelfTestResult[] {
   const masErr = Math.abs(mas.nheNha - d2041.nheNha) / d2041.nheNha;
   check("Mature-at-scale computation matches the 2041 path value",
     masErr < 0.001, "diff=" + (100 * masErr).toFixed(4) + "%");
+
+  /* 5c. R157/R22 [§S5]: 5b runs one scenario under `{}` structural, so a
+   *     formula divergence that only shows under a ramp delay or a shock was
+   *     invisible. Run the same comparison for every scenario. A scenario
+   *     whose shock is still live at 2041 is excluded rather than silently
+   *     tolerated, because matureAtScale carries no shock term by design. */
+  let masScenarios = 0, masWorst = 0, masWorstId = '';
+  SCENARIOS.forEach(function (sc) {
+    const eff = effectiveParams(sc.id, null);
+    const sp = sampleParams(eff, null);
+    const struct = scenarioStructural(sc.id);
+    const path = runPath(sp, struct);
+    const row = path.detail[2041 - START_YEAR];
+    if (row.shock !== 0) return;
+    const m = matureAtScale(sp, struct, 18);
+    const err = Math.abs(m.nheNha - row.nheNha) / row.nheNha;
+    masScenarios += 1;
+    if (err > masWorst) { masWorst = err; masWorstId = sc.id; }
+  });
+  check("Mature-at-scale matches the 2041 path value for every scenario",
+    masScenarios > 1 && masWorst < 0.001,
+    masScenarios + " scenarios, worst " + (100 * masWorst).toFixed(4) +
+    "% (" + (masWorstId || "none") + ")");
 
   /* 6. Percentile bands ordered p10 ≤ p50 ≤ p90 (small MC run) */
   const mc = runMonteCarlo("SCN-BASE", null, 60, 7);

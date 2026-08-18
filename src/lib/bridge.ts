@@ -6,7 +6,7 @@
  * self-test footer recorded as NHA._bridgeIdentityError.
  * ========================================================================= */
 import { BASE2023 } from './params';
-import { buildRamps } from './model';
+import { buildRamps, baselineCategorySplit } from './model';
 import { scenarioStructural } from './scenarios';
 import type { MonteCarloResult } from './model-types';
 import type { BridgeStep } from './bridge-chart';
@@ -19,11 +19,11 @@ export function bridgeSteps(mc: MonteCarloResult): { steps: BridgeStep[]; identi
   const d = mc.modePath.detail[t];
   const G = d.nheBase / B.nheTotal;
 
-  const e = p.embeddedDrugSpend;
-  const hosp0 = B.hospital - 0.6 * e, clin0 = B.physician + B.otherProf - 0.4 * e;
-  const drug0 = B.rxRetail + e;
-  const oth0 = B.dental + B.otherPersonal + B.homeHealth + B.nursing + B.dme + B.nondurables;
-  const phcBase = (hosp0 + clin0 + drug0 + oth0) * G;
+  /* R157 [§S5]: one definition, shared with runPath and matureAtScale. */
+  const split = baselineCategorySplit(p.embeddedDrugSpend);
+  const hosp0 = split.hosp0, clin0 = split.clin0;
+  const phcBase = (hosp0 + clin0 + split.drug0 + split.other0) * G;
+  const drug0 = split.drug0;
 
   const covR = ramps.coverage[t] || 0, csR = ramps.costShareElim[t] || 0;
   const drugR = ramps.drugs[t] || 0, hospR = ramps.hospitals[t] || 0;

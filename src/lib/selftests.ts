@@ -37,9 +37,10 @@ import {
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
 import {
-  ENRICHERS, guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
-  readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences, retiredTreeTargets,
-  routeDrift, statedChapterCountDrift, undeclaredEnrichers, unregisteredSelfTestSurfaces
+  baselineSplitCopies, ENRICHERS, guardedGlobalListeners, manifestDrift, PARSER_HOME,
+  parserImplementations, readmeAdvertisedTestCount, readmeDeployDrift,
+  retiredTreeCodeReferences, retiredTreeTargets, routeDrift, SPLIT_HOME,
+  statedChapterCountDrift, undeclaredEnrichers, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
 import { AGE_STRUCTURE, OFFSET_RAMPS, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
@@ -1048,6 +1049,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: ok
             ? 'parseNum defined once, in ' + PARSER_HOME
             : 'defined in: ' + (found.join(', ') || 'nowhere')
+        };
+      }),
+      /* R157 [§S5]: the baseline PHC category split, defined once. */
+      runGuarded('The baseline category split has one definition', () => {
+        const copies = baselineSplitCopies();
+        return {
+          ok: !copies.length,
+          note: copies.length
+            ? 'split arithmetic outside ' + SPLIT_HOME + ': ' +
+              copies.map((c) => c.file + ':' + c.line).join(', ')
+            : 'defined once, in ' + SPLIT_HOME
         };
       }),
       runGuarded('File manifest matches the working tree', () => {

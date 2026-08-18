@@ -105,6 +105,39 @@ export function parserImplementations(root = REPO_ROOT): string[] {
   return out.sort();
 }
 
+/* R157 [§S5]: the baseline PHC category split, defined once.
+ *
+ * `hosp0 = B.hospital - 0.6 * e` and `clin0 = B.physician + B.otherProf -
+ * 0.4 * e` were written out in three places - runPath, matureAtScale and
+ * bridge.ts - each with its own copy of the 0.6/0.4 embedded-drug literals.
+ * The bridge identity catches a bridge.ts <-> runPath divergence; nothing
+ * caught runPath <-> matureAtScale except one self-test that runs only under
+ * `{}` structural.
+ *
+ * The split now lives in `baselineCategorySplit` and the literals are named
+ * constants. This scan makes that a rule: an arithmetic combination of
+ * `B.hospital` or `B.physician` with an embedded-drug term may appear only in
+ * model.ts, where the shared function is. Comments are masked, so the
+ * explanation above and the ones in model.ts do not trip it. */
+export const SPLIT_HOME = 'src/lib/model.ts';
+export const SPLIT_LITERAL_SOURCE =
+  String.raw`B\.hospital\s*-|B\.otherProf\s*-|B\.rxRetail\s*\+`;
+const SPLIT_LITERAL = new RegExp(SPLIT_LITERAL_SOURCE, 'g');
+
+export function baselineSplitCopies(root = REPO_ROOT): CodeReference[] {
+  const out: CodeReference[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/') || !rel.endsWith('.ts')) continue;
+    if (rel === SPLIT_HOME) continue;
+    const lines = maskComments(readFileSync(join(root, rel), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      if (SPLIT_LITERAL.test(line)) out.push({ file: rel, line: i + 1, text: line.trim() });
+      SPLIT_LITERAL.lastIndex = 0;
+    });
+  }
+  return out;
+}
+
 /* R229 [§S3]: the import-time enricher convention, enforced.
  *
  * The convention itself is written at the top of quality.ts, where the
