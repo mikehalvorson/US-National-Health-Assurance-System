@@ -10,7 +10,9 @@ import {
 import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
-  effectiveParams, naturalCeiling, scenarioStructural, SCENARIOS as MODEL_SCENARIOS
+  BASE_SCENARIO_ID, catalogShapeProblems, effectiveParams, naturalCeiling,
+  scenarioStructural, SCENARIOS as MODEL_SCENARIOS, SIGNED_PATH_FIELDS,
+  STRESS_SCENARIO_COUNT
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -59,6 +61,7 @@ import {
   unregisteredEngineLiterals, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import { TABS } from './tabs';
+import type { PercentileBand } from './model-types';
 import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
@@ -283,6 +286,73 @@ export function runGuarded(
   } catch (e) {
     return { name: name, ok: false, note: 'threw: ' + String(e) };
   }
+}
+
+/* ---- R61 [§S6b]: the whole catalog, run once -----------------------------
+ * Three checks read this sweep and the ensemble is not free, so it is
+ * memoised the way this file's filesystem reads are. Deterministic in both
+ * halves: the mode path takes no draws and runOverviewMc is seeded.
+ *
+ * Both halves are needed. The mode path is where every year of every scenario
+ * is visible field by field; the ensemble is where a stress scenario would
+ * actually break, at a draw the mode path never visits.
+ * ------------------------------------------------------------------------ */
+interface CatalogSweep {
+  nonFinite: string[];
+  negative: string[];
+  rows: number;
+}
+
+let catalogSweepMemo: CatalogSweep | null = null;
+
+function sweepCatalog(): CatalogSweep {
+  if (catalogSweepMemo) return catalogSweepMemo;
+  const signed = new Set(SIGNED_PATH_FIELDS.map((f) => f.field));
+  const nonFinite: string[] = [];
+  const negative: string[] = [];
+  let rows = 0;
+  for (const s of MODEL_SCENARIOS) {
+    const path = runPath(
+      sampleParams(effectiveParams(s.id, null), null), scenarioStructural(s.id));
+    for (const d of path.detail) {
+      rows += 1;
+      const rec = d as unknown as Record<string, number | boolean>;
+      for (const key of Object.keys(rec)) {
+        const v = rec[key];
+        if (typeof v !== 'number') continue;
+        if (!isFinite(v)) nonFinite.push(s.id + '@' + d.year + ' ' + key);
+        else if (v < 0 && !signed.has(key)) {
+          negative.push(s.id + '@' + d.year + ' ' + key + '=' + v.toFixed(2));
+        }
+      }
+    }
+    const mc = runOverviewMc(s.id, null);
+    const bands: Array<[string, PercentileBand]> = [
+      ['total', mc.steady.total], ['newRevenue', mc.steady.newRevenue],
+      ['perCapita', mc.steady.perCapita], ['gdpPct', mc.steady.gdpPct],
+      ['fedIncrease', mc.steady.fedIncrease], ['matureToday', mc.steady.matureToday]
+    ];
+    for (const pair of bands) {
+      for (const q of ['p10', 'p50', 'p90'] as const) {
+        const v = pair[1][q];
+        if (!isFinite(v)) nonFinite.push(s.id + ' steady.' + pair[0] + '.' + q);
+        else if (v < 0) {
+          negative.push(s.id + ' steady.' + pair[0] + '.' + q + '=' + v.toFixed(1));
+        }
+      }
+    }
+    for (let i = 0; i < mc.yearBands.length; i += 1) {
+      for (const q of ['p10', 'p50', 'p90'] as const) {
+        const v = mc.yearBands[i][q];
+        if (!isFinite(v)) nonFinite.push(s.id + ' yearBand[' + i + '].' + q);
+        else if (v <= 0) {
+          negative.push(s.id + ' yearBand[' + i + '].' + q + '=' + v.toFixed(1));
+        }
+      }
+    }
+  }
+  catalogSweepMemo = { nonFinite, negative, rows };
+  return catalogSweepMemo;
 }
 
 /* R24 + R206 [§S0]: one registry, one runner, one count.
@@ -1235,6 +1305,47 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ', program input growth ' + (100 * PROGRAM_INPUT_REAL_GROWTH).toFixed(1) + '%/yr'
         };
       })
+    ]
+  },
+  {
+    /* R61 [§S6b, AC5, AC8]: the stress catalog, executed. Nothing in
+       scenarios.ts pushed a self-test and the engine's Monte Carlo check ran
+       the base case alone, so the apparatus the model's robustness claims rest
+       on was never run by anything. */
+    surface: 'scenarios.ts',
+    rows: () => [
+      runGuarded('The catalog holds one base case and its declared stress set', () => {
+        const problems = catalogShapeProblems();
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || STRESS_SCENARIO_COUNT +
+            ' stress scenarios plus ' + BASE_SCENARIO_ID + ', ids unique and named'
+        };
+      }),
+      runGuarded('Every scenario runs and produces finite output', () => {
+        const sweep = sweepCatalog();
+        return {
+          ok: !sweep.nonFinite.length,
+          note: sweep.nonFinite.slice(0, 4).join(', ') ||
+            MODEL_SCENARIOS.length + ' scenarios, ' + sweep.rows +
+            ' path rows and every published band finite'
+        };
+      }),
+      runGuarded('No scenario produces a negative cost', () => {
+        const sweep = sweepCatalog();
+        return {
+          ok: !sweep.negative.length,
+          note: sweep.negative.slice(0, 4).join(', ') ||
+            'all costs and bands non-negative across ' + MODEL_SCENARIOS.length +
+            ' scenarios, ' + SIGNED_PATH_FIELDS.length + ' signed field declared: ' +
+            SIGNED_PATH_FIELDS.map((f) => f.field).join(', ')
+        };
+      })
+      /* R61's fourth declared assertion, shares in [0,1], is NOT here: model.ts
+         check 5f already sweeps pubShare over every scenario at three corners
+         of the declared parameter space and every year, which reaches strictly
+         further than a mode-path sweep would. AC5 predates it. Adding a weaker
+         copy would have raised the test count and covered nothing new. */
     ]
   },
   {

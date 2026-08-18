@@ -220,6 +220,60 @@ export const SCENARIOS: Scenario[] = [
 export const SCENARIOS_BY_ID: Record<string, Scenario> = {};
 SCENARIOS.forEach(function (s) { SCENARIOS_BY_ID[s.id] = s; });
 
+/* ---- R61 [AC5, AC8]: the catalog's declared shape ------------------------
+ * Nothing in this file pushed a self-test, and the engine's Monte Carlo check
+ * ran the base case alone, so nineteen of the twenty scenarios were executed
+ * by nothing at all. The stress catalog is what the robustness claims rest
+ * on, and none of it was checked.
+ *
+ * The stress count is stated here rather than read back off SCENARIOS.length,
+ * because a check that derives its expectation from the thing it is checking
+ * agrees with any edit. Deleting a scenario has to fail. medications.ts pins
+ * its family count the same way and for the same reason.
+ * ------------------------------------------------------------------------ */
+export const BASE_SCENARIO_ID = 'SCN-BASE';
+export const STRESS_SCENARIO_COUNT = 19;
+
+/* The path fields a run is allowed to produce negative, each with its reason.
+ * Everything else a path row carries is a cost, a quantity or a share, and a
+ * negative value in one of those is a defect. Listing the exceptions rather
+ * than the rule means a field added to the row later is swept the day it is
+ * added instead of being silently outside a hand-kept list. */
+export const SIGNED_PATH_FIELDS: { field: string; why: string }[] = [
+  {
+    field: 'householdRelief',
+    why: 'R23 [S5] left this one deliberately unclamped. In the years before ' +
+      'coverage arrives, households pay more rather than less, and a negative ' +
+      'relief figure states that plainly instead of hiding it at zero.'
+  }
+];
+
+/* The catalog's shape, checkable without running the model: the declared
+ * stress count, one base case, unique ids, and the naming the page's own
+ * option list depends on. */
+export function catalogShapeProblems(): string[] {
+  const problems: string[] = [];
+  const stress = SCENARIOS.filter(function (s) { return s.id !== BASE_SCENARIO_ID; });
+  if (stress.length !== STRESS_SCENARIO_COUNT) {
+    problems.push('catalog holds ' + stress.length + ' stress scenarios, declared ' +
+      STRESS_SCENARIO_COUNT);
+  }
+  const base = SCENARIOS.filter(function (s) { return s.id === BASE_SCENARIO_ID; });
+  if (base.length !== 1) problems.push(base.length + ' scenarios claim to be the base case');
+  else if (Object.keys(base[0].overrides).length || base[0].structural) {
+    problems.push(BASE_SCENARIO_ID + ' overrides something, so it is not a base case');
+  }
+  const seen = new Set<string>();
+  for (const s of SCENARIOS) {
+    if (seen.has(s.id)) problems.push(s.id + ' is declared twice');
+    seen.add(s.id);
+    if (!s.id.startsWith('SCN-')) problems.push(s.id + ' is not named SCN-*');
+    if (!s.name.trim()) problems.push(s.id + ' has no name');
+    if (!s.desc.trim()) problems.push(s.id + ' has no description');
+  }
+  return problems;
+}
+
 /* ---- R63 [§S5]: the natural domain of a parameter, from its own unit ----
  * A parameter whose unit expresses a percentage or a share of something
  * cannot exceed 100 by construction. `mult` used to scale straight past that.
