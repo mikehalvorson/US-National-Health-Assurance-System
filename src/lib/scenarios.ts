@@ -12,7 +12,42 @@
 import { PARAM_DEFS, PARAMS_BY_ID } from './params';
 import type { ParamDef, Triangular } from './model-types';
 
-export type ScenarioOverride = [number, number, number] | { mult: number };
+/* ---- R141 [AP4]: fifty-two magnitudes, zero citations --------------------
+ * `Scenario` had `id`, `name`, `desc`, `overrides`, `structural`, and no way
+ * to say where any number came from. params.ts grades and cites all 32 of its
+ * parameters; medications.ts was filed for exactly this omission. The stress
+ * catalog is what bounds the model's credibility and it was the only
+ * quantitative structure in the repository with no provenance convention at
+ * all.
+ *
+ * The provenance travels inside the override rather than beside it. That is
+ * the convention equations.ts already sets, where every numeric leaf is built
+ * by n(value, label) and the label cannot be separated from the number it
+ * describes. A parallel `sources` record keyed the same way would let the two
+ * drift, and the whole backlog is a record of declarations drifting from the
+ * things they declare.
+ *
+ * The honest result is not flattering and is the point: 50 of the 52 are
+ * graded `low`. A stress catalog made of analyst judgement is defensible; one
+ * that does not say so is not.
+ * ------------------------------------------------------------------------ */
+export type OverrideGrade = 'high' | 'medium' | 'low';
+
+export interface OverrideProvenance {
+  /* Why this magnitude and not another, in a sentence a reader can weigh. */
+  why: string;
+  confidence: OverrideGrade;
+}
+
+export interface OverrideTriple extends OverrideProvenance {
+  to: [number, number, number];
+}
+
+export interface OverrideMult extends OverrideProvenance {
+  mult: number;
+}
+
+export type ScenarioOverride = OverrideTriple | OverrideMult;
 
 export interface ScenarioShock {
   startYear: number;
@@ -20,6 +55,8 @@ export interface ScenarioShock {
   amountB: number;
 }
 
+/* What the engine takes: knobs, nothing else. Every one is optional, because
+ * `{}` is how a caller says a run has no structural adjustment at all. */
 export interface ScenarioStructural {
   unitsRampMult?: number;
   costShareDelayYears?: number;
@@ -28,195 +65,500 @@ export interface ScenarioStructural {
   shock?: ScenarioShock;
 }
 
+/* What a scenario declares: the same knobs, and why they are set to that.
+ * Required, so a structural block cannot exist without provenance. AP4 named
+ * SCN-PANDEMIC's $220B and SCN-CYBER's $45B specifically, and both are
+ * structural rather than parameter overrides, so provenance that stopped at
+ * `overrides` would have missed the two figures the finding was about.
+ *
+ * The split is the point. Provenance is for a reader; the engine has no
+ * business seeing it, and putting `why` on the type the engine consumes made
+ * it required of nine call sites whose only message was "no knobs". */
+export interface ScenarioStructuralDecl extends ScenarioStructural {
+  why: string;
+}
+
+/* Whether a scenario's magnitudes rest on published figures or on analyst
+ * judgement. Every stress case here is judgement; the base case is not,
+ * because it runs the sourced parameter base unaltered. */
+export type ScenarioBasis = 'sourced' | 'assumed';
+
 export interface Scenario {
   id: string;
   name: string;
   desc: string;
+  basis: ScenarioBasis;
   overrides: Record<string, ScenarioOverride>;
-  structural?: ScenarioStructural;
+  structural?: ScenarioStructuralDecl;
 }
 
 export const SCENARIOS: Scenario[] = [
   {
     id: "SCN-BASE", name: "Base case",
     desc: "All parameters at their researched central estimates.",
+    basis: 'sourced',
     overrides: {}
   },
   {
     id: "SCN-OPT", name: "Optimistic implementation",
     desc: "Savings levers hit their high ends; demand response and transition costs land low; modest rate compression succeeds.",
+    basis: 'assumed',
     overrides: {
-      drugPriceCut: [40, 50, 60],
-      providerAdminSavings: [4, 5.5, 7],
-      publicAdminRate: [1.3, 1.7, 2.2],
-      utilIncrease: [4, 7, 11],
-      providerPaymentFactor: [0.83, 0.89, 0.95],
-      transitionTotal: [800, 1150, 1500],
-      careModelSavings: [20, 35, 50]
+      drugPriceCut: {
+        to: [40, 50, 60], confidence: 'low',
+        why: 'The base band re-centred on its own high end, so negotiation ' +
+          'delivers at the top of what the parameter already contemplates ' +
+          'rather than beyond it.'
+      },
+      providerAdminSavings: {
+        to: [4, 5.5, 7], confidence: 'low',
+        why: 'Billing and prior-authorization overhead falls at the upper end ' +
+          'of the base range. An analyst-chosen bracket, not a scored estimate.'
+      },
+      publicAdminRate: {
+        to: [1.3, 1.7, 2.2], confidence: 'medium',
+        why: 'Spans the 1.5 to 2.0% the Congressional Budget Office scored for ' +
+          'a single public payer, which is the low end of the evidence this ' +
+          'parameter cites rather than a magnitude invented for the case.'
+      },
+      utilIncrease: {
+        to: [4, 7, 11], confidence: 'low',
+        why: 'Induced demand from newly covered care lands below the central ' +
+          'estimate. The size of the reduction is judgement.'
+      },
+      providerPaymentFactor: {
+        to: [0.83, 0.89, 0.95], confidence: 'low',
+        why: 'Rate compression succeeds by roughly three points against the ' +
+          'base case. The step is chosen to bracket, not measured.'
+      },
+      transitionTotal: {
+        to: [800, 1150, 1500], confidence: 'low',
+        why: 'Transition spending lands at the bottom of the declared envelope, ' +
+          'which is the optimistic corner of a range that is itself uncertain.'
+      },
+      careModelSavings: {
+        to: [20, 35, 50], confidence: 'low',
+        why: 'Team-based and preventive care deliver near the top of the base ' +
+          'range. An assumed upper bracket.'
+      }
     }
   },
   {
     id: "SCN-PESS", name: "Pessimistic implementation",
     desc: "Savings underdeliver, demand surges, payment compression fails politically, transition runs long and expensive.",
+    basis: 'assumed',
     overrides: {
-      drugPriceCut: [15, 27, 40],
-      providerAdminSavings: [1, 2.5, 4],
-      publicAdminRate: [2.5, 3.5, 4.5],
-      utilIncrease: [10, 15, 22],
-      providerPaymentFactor: [0.95, 1.0, 1.06],
-      transitionTotal: [1600, 2100, 2800],
-      careModelSavings: [5, 12, 25]
+      drugPriceCut: {
+        to: [15, 27, 40], confidence: 'low',
+        why: 'Negotiation delivers roughly half the central estimate. The ' +
+          'halving is judgement about political and legal friction, not a score.'
+      },
+      providerAdminSavings: {
+        to: [1, 2.5, 4], confidence: 'low',
+        why: 'Administrative simplification largely fails to materialize. An ' +
+          'assumed floor.'
+      },
+      publicAdminRate: {
+        to: [2.5, 3.5, 4.5], confidence: 'medium',
+        why: 'Sits inside the 2 to 6% band the evidence this parameter cites ' +
+          'names, toward the heavier-oversight end that Urban and RAND ' +
+          'cross-checks describe as fully loaded.'
+      },
+      utilIncrease: {
+        to: [10, 15, 22], confidence: 'low',
+        why: 'Pent-up demand runs well above the central estimate. The ' +
+          'magnitude brackets the base band and is not derived from a study.'
+      },
+      providerPaymentFactor: {
+        to: [0.95, 1.0, 1.06], confidence: 'low',
+        why: 'Payment compression fails and rates settle at or above today. An ' +
+          'assumed political outcome priced as a rate.'
+      },
+      transitionTotal: {
+        to: [1600, 2100, 2800], confidence: 'low',
+        why: 'Transition runs long and over budget, at roughly 1.4 times the ' +
+          'central envelope. The multiple is judgement.'
+      },
+      careModelSavings: {
+        to: [5, 12, 25], confidence: 'low',
+        why: 'Care-model change delivers a fraction of the central estimate. An ' +
+          'assumed floor.'
+      }
     }
   },
   {
     id: "SCN-UNIT-UNDER", name: "Unit network underbuilt",
     desc: "The four-unit network reaches only ~60% of its planned scale: care-model savings shrink, ED diversion misses, cost-sharing elimination is partially delayed by its phase gate.",
+    basis: 'assumed',
     overrides: {
-      unitsCost: { mult: 0.65 },
-      careModelSavings: { mult: 0.5 },
-      lowValueCapture: { mult: 0.75 }
+      unitsCost: {
+        mult: 0.65, confidence: 'low',
+        why: 'Cost tracks the underbuild: roughly 60% of the network is built, ' +
+          'so roughly 65% of the cost is incurred. The pairing is an assumption ' +
+          'about how fixed and variable unit costs split.'
+      },
+      careModelSavings: {
+        mult: 0.5, confidence: 'low',
+        why: 'Savings that depend on the unit network fall by more than the ' +
+          'build shortfall, because the missing units are assumed to be the ' +
+          'ones serving the highest-need areas.'
+      },
+      lowValueCapture: {
+        mult: 0.75, confidence: 'low',
+        why: 'Diversion of low-value utilization depends on unit capacity and ' +
+          'falls with it. The proportion is judgement.'
+      }
     },
-    structural: { unitsRampMult: 0.6, costShareDelayYears: 2 }
+    structural: {
+      unitsRampMult: 0.6, costShareDelayYears: 2,
+      why: 'The ramp is cut to the 60% the description states, and cost-sharing ' +
+        'elimination slips two years because its phase gate depends on unit ' +
+        'capacity being in place. Both are assumed consequences of the ' +
+        'underbuild rather than scheduled events.'
+    }
   },
   {
     id: "SCN-SPEC-SEVERE", name: "Severe specialist bottlenecks",
     desc: "Specialist queues collapse; bottleneck premium pay and delayed care raise clinical costs; e-consult resolution underdelivers.",
+    basis: 'assumed',
     overrides: {
-      providerPaymentFactor: [0.92, 0.98, 1.05],
-      careModelSavings: { mult: 0.7 },
-      workforceEdu: { mult: 1.3 }
+      providerPaymentFactor: {
+        to: [0.92, 0.98, 1.05], confidence: 'low',
+        why: 'Premium pay to clear specialist queues pushes effective rates to ' +
+          'roughly the levels paid today. An assumed response to scarcity.'
+      },
+      careModelSavings: {
+        mult: 0.7, confidence: 'low',
+        why: 'Electronic consultation and team-based triage underdeliver when ' +
+          'the specialists behind them are the bottleneck. The fraction is ' +
+          'judgement.'
+      },
+      workforceEdu: {
+        mult: 1.3, confidence: 'low',
+        why: 'Training spending rises to close the specialist gap faster than ' +
+          'planned. The size of the response is assumed.'
+      }
     }
   },
   {
     id: "SCN-HOSP-LOW", name: "Hospital budgets undercalibrated",
     desc: "Global budgets set too low: service-line stress forces stabilization-corridor spending and later budget corrections.",
+    basis: 'assumed',
     overrides: {
-      providerPaymentFactor: [0.82, 0.88, 0.94],
-      transitionTotal: { mult: 1.15 },
-      extractionSavings: { mult: 0.7 }
+      providerPaymentFactor: {
+        to: [0.82, 0.88, 0.94], confidence: 'low',
+        why: 'Global budgets are set roughly four points below the central ' +
+          'calibration. The step brackets the base band.'
+      },
+      transitionTotal: {
+        mult: 1.15, confidence: 'low',
+        why: 'Stabilization corridors and later corrections add to transition ' +
+          'spending. The proportion is judgement.'
+      },
+      extractionSavings: {
+        mult: 0.7, confidence: 'low',
+        why: 'Savings from reduced financial extraction shrink when budgets are ' +
+          'already tight enough to force emergency support. An assumed ' +
+          'interaction.'
+      }
     }
   },
   {
     id: "SCN-HOSP-HIGH", name: "Hospital budgets overcalibrated",
     desc: "Global budgets locked in above efficient cost; hospitals capture transition fear as permanent revenue.",
+    basis: 'assumed',
     overrides: {
-      providerPaymentFactor: [0.96, 1.02, 1.08],
-      extractionSavings: { mult: 0.6 }
+      providerPaymentFactor: {
+        to: [0.96, 1.02, 1.08], confidence: 'low',
+        why: 'Budgets lock in above the effective rates paid today. The overshoot ' +
+          'is an assumed bargaining outcome, and it is the largest single ' +
+          'upward pressure any scenario applies to hospital spending.'
+      },
+      extractionSavings: {
+        mult: 0.6, confidence: 'low',
+        why: 'Extraction savings largely fail to arrive when budgets are set ' +
+          'above efficient cost. The fraction is judgement.'
+      }
     }
   },
   {
     id: "SCN-WEALTH-LOW", name: "Wealth financing underperforms",
     desc: "Avoidance/evasion cuts extreme-wealth revenue roughly in half; the financing gap shifts to other instruments (visible in the financing panel - total cost is unchanged).",
+    basis: 'assumed',
     overrides: {
-      wealthTaxPotential: [140, 200, 270],
-      wealthCollectionEff: [55, 68, 80]
+      wealthTaxPotential: {
+        to: [140, 200, 270], confidence: 'low',
+        why: 'The base is roughly halved. Halving is a round stress figure ' +
+          'rather than an avoidance estimate, and the parameter it acts on is ' +
+          'itself among the least certain in the model.'
+      },
+      wealthCollectionEff: {
+        to: [55, 68, 80], confidence: 'low',
+        why: 'Collection efficiency falls by roughly a sixth against the base ' +
+          'band, compounding the base reduction above. Both steps are assumed.'
+      }
     }
   },
   {
     id: "SCN-EMP-FAIL", name: "Employer pass-through noncompliance",
     desc: "Employer contribution capture falls well short as firms restructure to avoid the contribution; financing gap widens.",
+    basis: 'assumed',
     overrides: {
-      employerCapture: [40, 55, 68]
+      employerCapture: {
+        to: [40, 55, 68], confidence: 'low',
+        why: 'Capture of what employers spend today falls roughly 20 points ' +
+          'below the central estimate as firms restructure. The size of the ' +
+          'behavioural response is assumed.'
+      }
     }
   },
   {
     id: "SCN-TRUST-COLLAPSE", name: "Public trust collapse",
     desc: "Delayed enrollment and care avoidance during transition, then catch-up costs; heavier ombudsman/appeals load. Access and health-outcome damage is qualitative and NOT priced here.",
+    basis: 'assumed',
     overrides: {
-      governanceRate: [0.9, 1.3, 1.8],
-      transitionTotal: { mult: 1.2 },
-      utilIncrease: [8, 12, 18]
+      governanceRate: {
+        to: [0.9, 1.3, 1.8], confidence: 'low',
+        why: 'Appeals, ombudsman and oversight load rises by roughly half. The ' +
+          'magnitude is judgement about how a trust failure shows up as cost.'
+      },
+      transitionTotal: {
+        mult: 1.2, confidence: 'low',
+        why: 'Outreach, re-enrollment and correction work extend the transition. ' +
+          'The proportion is assumed.'
+      },
+      utilIncrease: {
+        to: [8, 12, 18], confidence: 'low',
+        why: 'Deferred care returns as catch-up utilization after the collapse. ' +
+          'The rebound is priced; the access harm during the gap is not, which ' +
+          'the description says out loud.'
+      }
     },
-    structural: { coverageDelayYears: 1 }
+    structural: {
+      coverageDelayYears: 1,
+      why: 'Enrollment slips a year because take-up depends on trust. An assumed ' +
+        'delay rather than a scheduled one.'
+    }
   },
   {
     id: "SCN-AI-FAIL", name: "AI safety/equity failure",
     desc: "Unit-network AI tooling suspended after safety failures: units run human-only at higher cost and lower throughput.",
+    basis: 'assumed',
     overrides: {
-      unitsCost: { mult: 1.3 },
-      careModelSavings: { mult: 0.7 },
-      itOperating: { mult: 1.25 }
+      unitsCost: {
+        mult: 1.3, confidence: 'low',
+        why: 'Running units human-only raises their cost by roughly a third. ' +
+          'The premium is assumed, and it is the mirror of the throughput gain ' +
+          'the tooling was expected to deliver.'
+      },
+      careModelSavings: {
+        mult: 0.7, confidence: 'low',
+        why: 'Care-model savings that depend on decision support fall with it. ' +
+          'The fraction is judgement.'
+      },
+      itOperating: {
+        mult: 1.25, confidence: 'low',
+        why: 'Suspension does not remove the systems: they still run, under ' +
+          'heavier review and audit. An assumed compliance overhead.'
+      }
     }
   },
   {
     id: "SCN-CYBER", name: "Major cyber outage",
     desc: "A ransomware-scale event mid-transition: recovery spending plus permanently higher cyber operations.",
+    basis: 'assumed',
     overrides: {
-      itOperating: { mult: 1.35 }
+      itOperating: {
+        mult: 1.35, confidence: 'low',
+        why: 'Cyber operations step up permanently after a major event, by ' +
+          'roughly a third. An assumed post-incident level.'
+      }
     },
-    structural: { shock: { startYear: 6, years: 2, amountB: 45 } }
+    structural: {
+      shock: { startYear: 6, years: 2, amountB: 45 },
+      why: 'The $45B over two years is an assumed recovery cost for a ' +
+        'nationwide claims-infrastructure outage, and it is the kind of ' +
+        'magnitude the 2024 clearinghouse ransomware event put in view. It is ' +
+        'a stress figure, not a scored estimate: no published score of a ' +
+        'public-system-wide event exists to size it against.'
+    }
   },
   {
     id: "SCN-DRUG-SHORT", name: "Drug shortage crisis",
     desc: "Supply shocks force emergency procurement above negotiated prices for several years; negotiation savings partially suspended.",
+    basis: 'assumed',
     overrides: {
-      drugPriceCut: { mult: 0.7 }
+      drugPriceCut: {
+        mult: 0.7, confidence: 'low',
+        why: 'Negotiated savings are partially suspended while emergency ' +
+          'procurement runs. The fraction retained is judgement.'
+      }
     },
-    structural: { shock: { startYear: 5, years: 3, amountB: 18 } }
+    structural: {
+      shock: { startYear: 5, years: 3, amountB: 18 },
+      why: 'The $18B a year over three years is an assumed emergency ' +
+        'procurement premium, sized as a small share of annual retail ' +
+        'prescription spending rather than from a shortage-cost study.'
+    }
   },
   {
     id: "SCN-PANDEMIC", name: "Pandemic / public-health surge",
     desc: "A pandemic hits mid-transition: two years of surge utilization and emergency public-health spending.",
+    basis: 'assumed',
     overrides: {
-      emsPhExpansion: { mult: 1.3 }
+      emsPhExpansion: {
+        mult: 1.3, confidence: 'low',
+        why: 'Emergency and public-health capacity expands by roughly a third ' +
+          'during the surge. An assumed response level.'
+      }
     },
-    structural: { shock: { startYear: 7, years: 2, amountB: 220 } }
+    structural: {
+      shock: { startYear: 7, years: 2, amountB: 220 },
+      why: 'The $220B a year over two years is about 4.5% of national health ' +
+        'spending, which is the arithmetic that sizes it. The choice of 4.5% ' +
+        'is judgement: it is the order of the 2020 and 2021 federal public ' +
+        'health emergency response, not a projection of the next one.'
+    }
   },
   {
     id: "SCN-LTC-AGING", name: "High aging & LTC demand",
     desc: "Aging runs above projection: LTC demand and baseline growth both rise. Tests the plan's biggest expansion under its worst demographics.",
+    basis: 'assumed',
     overrides: {
-      ltcExpansion: [250, 330, 420],
-      ltcWageFloor: { mult: 1.3 },
-      baselineRealGrowth: [3.0, 3.8, 4.6]
+      ltcExpansion: {
+        to: [250, 330, 420], confidence: 'low',
+        why: 'Long-term-care demand runs roughly a quarter above the central ' +
+          'estimate. The step is chosen to bracket the base band under faster ' +
+          'aging, not derived from an alternative projection.'
+      },
+      ltcWageFloor: {
+        mult: 1.3, confidence: 'low',
+        why: 'Direct-care wages rise faster when demand outruns the workforce. ' +
+          'The size of the response is assumed.'
+      },
+      baselineRealGrowth: {
+        to: [3.0, 3.8, 4.6], confidence: 'low',
+        why: 'Baseline spending growth rises with the same demographics, so the ' +
+          'status quo gets more expensive too. Moving both together is what ' +
+          'keeps the comparison honest; the magnitude is judgement.'
+      }
     }
   },
   {
     id: "SCN-STATE-RESIST", name: "Hostile state noncooperation",
     desc: "Multiple states refuse compacts: federal fallback administration costs more, state maintenance-of-effort partially fails, rollout slips.",
+    basis: 'assumed',
     overrides: {
-      transitionTotal: { mult: 1.12 },
-      publicAdminRate: { mult: 1.15 }
+      transitionTotal: {
+        mult: 1.12, confidence: 'low',
+        why: 'Standing up federal fallback administration in resisting states ' +
+          'adds to transition spending. The proportion is assumed.'
+      },
+      publicAdminRate: {
+        mult: 1.15, confidence: 'low',
+        why: 'Running two administrative structures in parallel costs more than ' +
+          'one. This is the override that reaches 6.9%, above the 6% the ' +
+          'slider exposes, and it is declared as such: a fallback administration ' +
+          'running above the 5 to 6% fully-loaded figure the parameter cites is ' +
+          'the entire content of this scenario.'
+      }
     },
-    structural: { coverageDelayYears: 1, stateMoeMult: 0.75 }
+    structural: {
+      coverageDelayYears: 1, stateMoeMult: 0.75,
+      why: 'Rollout slips a year and a quarter of state maintenance-of-effort ' +
+        'fails to arrive. Both are assumed consequences of noncooperation; the ' +
+        '25% is a round stress figure, not a count of states.'
+    }
   },
   {
     id: "SCN-LEGAL", name: "Major legal invalidation",
     desc: "Courts strike the wealth-tax pillar; fallback instruments (mark-to-market, estate structures) recover only part of the revenue; rollout slips a year.",
+    basis: 'assumed',
     overrides: {
-      wealthTaxPotential: { mult: 0.5 },
-      transitionTotal: { mult: 1.08 }
+      wealthTaxPotential: {
+        mult: 0.5, confidence: 'low',
+        why: 'Half the wealth-financing base survives through fallback ' +
+          'instruments. Halving is a round stress figure rather than a reading ' +
+          'of any particular ruling.'
+      },
+      transitionTotal: {
+        mult: 1.08, confidence: 'low',
+        why: 'Litigation and re-legislation add to transition spending. The ' +
+          'proportion is assumed.'
+      }
     },
-    structural: { coverageDelayYears: 1 }
+    structural: {
+      coverageDelayYears: 1,
+      why: 'Rollout slips a year while the financing is re-legislated. An ' +
+        'assumed delay.'
+    }
   },
   {
     id: "SCN-WF-SHORT", name: "Workforce shortages exceed plan",
     desc: "Vacancies force premium pay and overtime; some induced demand goes unmet (lower spend, worse access; the access harm is qualitative, not priced).",
+    basis: 'assumed',
     overrides: {
-      providerPaymentFactor: [0.92, 0.99, 1.06],
-      workforceEdu: { mult: 1.4 },
-      utilIncrease: [4, 8, 13]
+      providerPaymentFactor: {
+        to: [0.92, 0.99, 1.06], confidence: 'low',
+        why: 'Premium pay and overtime push effective rates to roughly the levels ' +
+          'paid today. An assumed response to vacancies.'
+      },
+      workforceEdu: {
+        mult: 1.4, confidence: 'low',
+        why: 'Training and pipeline spending rise sharply to close the gap. The ' +
+          'size of the response is assumed.'
+      },
+      utilIncrease: {
+        to: [4, 8, 13], confidence: 'low',
+        why: 'Utilization comes in BELOW the central estimate because there is ' +
+          'nobody to deliver the care. That lowers spending while making access ' +
+          'worse, which is why the description says the access harm is not ' +
+          'priced. Reading this scenario as cheap would be reading it backwards.'
+      }
     }
   },
   {
     id: "SCN-BH-SURGE", name: "Behavioral health demand surge",
     desc: "Unmet-need release runs far above estimate once coverage is universal.",
+    basis: 'assumed',
     overrides: {
-      bhExpansion: [70, 110, 160]
+      bhExpansion: {
+        to: [70, 110, 160], confidence: 'low',
+        why: 'Behavioral-health demand released by universal coverage runs ' +
+          'roughly half again above the central estimate. The magnitude is ' +
+          'judgement: measured unmet need bounds it from below, and nothing ' +
+          'bounds it from above.'
+      }
     }
   },
   {
     id: "SCN-RURAL-STRESS", name: "Rural access stress",
     desc: "Rural hospital fragility worse than modeled: heavier readiness payments, EMS spending, and stabilization corridors.",
+    basis: 'assumed',
     overrides: {
-      emsPhExpansion: { mult: 1.35 },
-      transitionTotal: { mult: 1.1 },
-      extractionSavings: { mult: 0.8 },
-      unitsCost: { mult: 1.15 }
+      emsPhExpansion: {
+        mult: 1.35, confidence: 'low',
+        why: 'Emergency services carry more of the load where facilities close ' +
+          'or thin out. The proportion is assumed.'
+      },
+      transitionTotal: {
+        mult: 1.1, confidence: 'low',
+        why: 'Stabilization corridors for fragile rural facilities extend ' +
+          'transition spending. The proportion is assumed.'
+      },
+      extractionSavings: {
+        mult: 0.8, confidence: 'low',
+        why: 'There is less financial extraction to recover from facilities ' +
+          'already operating near the margin. An assumed interaction.'
+      },
+      unitsCost: {
+        mult: 1.15, confidence: 'low',
+        why: 'Units serving low-density areas cost more per person reached. The ' +
+          'premium is assumed.'
+      }
     }
   }
 ];
-
 export const SCENARIOS_BY_ID: Record<string, Scenario> = {};
 SCENARIOS.forEach(function (s) { SCENARIOS_BY_ID[s.id] = s; });
 
@@ -291,11 +633,17 @@ export const STRUCTURAL_KNOBS = [
   'stateMoeMult', 'shock'
 ];
 
+/* `why` is the block's provenance (R141), not a knob the engine reads, so it
+ * is excluded by name rather than by being added to the list above - putting
+ * it there would make the read check demand that the engine consume it. */
+export const STRUCTURAL_PROVENANCE_KEY = 'why';
+
 export function unknownStructuralKeys(scenarios: Scenario[]): string[] {
   const known = new Set(STRUCTURAL_KNOBS);
   const unknown: string[] = [];
   for (const s of scenarios) {
     for (const key of Object.keys(s.structural || {})) {
+      if (key === STRUCTURAL_PROVENANCE_KEY) continue;
       if (!known.has(key)) unknown.push(s.id + ' sets ' + key);
     }
   }
@@ -382,7 +730,7 @@ export function effectiveParams(
     let lo = p.low, mo = p.mode, hi = p.high;
     const ov = scn.overrides[p.id];
     if (ov) {
-      if (Array.isArray(ov)) { lo = ov[0]; mo = ov[1]; hi = ov[2]; }
+      if ('to' in ov) { lo = ov.to[0]; mo = ov.to[1]; hi = ov.to[2]; }
       else if (typeof ov.mult === "number") {
         /* R63 [§S5]: `mult` scaled low/mode/high blindly. A share or a
            percentage has a natural ceiling its own unit implies, and nothing
@@ -421,6 +769,65 @@ export function effectiveParams(
     out[p.id] = { low: lo, mode: mo, high: hi };
   });
   return out;
+}
+
+/* ---- R141 [AP4]: is the provenance real, or just present? ---------------
+ * A field that exists and says nothing is the same silence with a schema. So
+ * the audit asks three things a decorative entry would fail:
+ *
+ *   - every override and every structural block gives a reason;
+ *   - an override graded `medium` names a figure, because `medium` here
+ *     claims the magnitude is anchored to one and a claim with no number in
+ *     it is not anchored to anything;
+ *   - a scenario declaring `sourced` carries no override graded `low`, so a
+ *     stress case cannot describe itself as sourced while resting on
+ *     judgement.
+ *
+ * The minimum length is a floor, not the test. Content is what the other two
+ * check, because a length rule measures effort and passes anything padded.
+ * ------------------------------------------------------------------------ */
+export const PROVENANCE_MIN_CHARS = 40;
+
+export function provenanceProblems(): string[] {
+  const problems: string[] = [];
+  const hasFigure = /[0-9]/;
+  for (const s of SCENARIOS) {
+    let lowGraded = 0;
+    for (const key of Object.keys(s.overrides)) {
+      const ov = s.overrides[key];
+      if (!ov) continue;
+      const at = s.id + '/' + key;
+      if (ov.why.trim().length < PROVENANCE_MIN_CHARS) {
+        problems.push(at + ' gives no reason');
+      }
+      if (ov.confidence === 'low') lowGraded += 1;
+      if (ov.confidence === 'medium' && !hasFigure.test(ov.why)) {
+        problems.push(at + ' is graded medium and its reason names no figure');
+      }
+    }
+    if (s.structural && s.structural.why.trim().length < PROVENANCE_MIN_CHARS) {
+      problems.push(s.id + ' sets structural knobs and gives no reason');
+    }
+    if (s.basis === 'sourced' && lowGraded) {
+      problems.push(s.id + ' declares its magnitudes sourced while carrying ' +
+        lowGraded + ' graded low');
+    }
+  }
+  return problems;
+}
+
+/* The grade mix, for the note and for the report. It is not flattering and it
+ * is the finding: a stress catalog made of judgement is defensible, one that
+ * does not say so is not. */
+export function provenanceGradeCounts(): Record<OverrideGrade, number> {
+  const counts: Record<OverrideGrade, number> = { high: 0, medium: 0, low: 0 };
+  for (const s of SCENARIOS) {
+    for (const key of Object.keys(s.overrides)) {
+      const ov = s.overrides[key];
+      if (ov) counts[ov.confidence] += 1;
+    }
+  }
+  return counts;
 }
 
 /* ---- R139 [AP1, AC2, U7]: what low and high actually are ------------------
@@ -482,7 +889,7 @@ export const OVERRIDES_BEYOND_SLIDER: OverrideBeyondSlider[] = [
  * Used by the checks and by the note below; not by the engine, which reads
  * effectiveParams. */
 function overrideTriple(p: ParamDef, ov: ScenarioOverride): Triangular {
-  if (Array.isArray(ov)) return { low: ov[0], mode: ov[1], high: ov[2] };
+  if ('to' in ov) return { low: ov.to[0], mode: ov.to[1], high: ov.to[2] };
   return { low: p.low * ov.mult, mode: p.mode * ov.mult, high: p.high * ov.mult };
 }
 

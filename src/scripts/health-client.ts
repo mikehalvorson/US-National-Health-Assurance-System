@@ -23,6 +23,7 @@ import { renderDataTable, pathTableData, bridgeTableData, financingTableData } f
 import type { TableData } from '../lib/overview-tables';
 import { growthDecompNote } from '../lib/growth-decomp';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
+import type { Scenario } from '../lib/scenarios';
 import { MATURE_INDEX, PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
 import { money } from '../lib/format';
 
@@ -223,6 +224,69 @@ function initHealth(): void {
     const scn = SCENARIOS_BY_ID[state.scenario];
     const desc = $('scenario-desc');
     if (desc) desc.textContent = scn ? scn.id + ': ' + scn.desc : '';
+    renderScenarioBasis(scn);
+  }
+
+  /* R141 [§S6b]: what the scenario's numbers rest on, next to the scenario.
+     Fifty-two magnitudes shipped with no source and no grade, which is the
+     omission this repository files against every other module. Declaring the
+     provenance in scenarios.ts and showing none of it would move the silence
+     rather than end it, so each adjustment is listed with its grade and its
+     reason, collapsed by default because most readers want the scenario and
+     not the audit. */
+  function renderScenarioBasis(scn: Scenario | undefined): void {
+    const host = $('scenario-basis');
+    if (!host) return;
+    host.innerHTML = '';
+    if (!scn) return;
+
+    const head = document.createElement('p');
+    head.className = 'note';
+    head.appendChild(document.createTextNode(
+      scn.basis === 'sourced'
+        ? 'Magnitudes: the researched parameter base, unaltered. '
+        : 'Magnitudes: chosen to stress the model, not measured. '));
+    const keys = Object.keys(scn.overrides);
+    if (keys.length) {
+      head.appendChild(document.createTextNode(
+        keys.length === 1
+          ? 'The single adjustment below carries its own reason and evidence grade.'
+          : 'Each of the ' + keys.length + ' adjustments below carries its own ' +
+            'reason and evidence grade.'));
+    }
+    host.appendChild(head);
+    if (!keys.length && !scn.structural) return;
+
+    const box = document.createElement('details');
+    box.className = 'tableview';
+    const sum = document.createElement('summary');
+    sum.textContent = 'What this scenario changes, and why';
+    box.appendChild(sum);
+
+    const list = document.createElement('ul');
+    list.className = 'basis-list';
+    for (const key of keys) {
+      const ov = scn.overrides[key];
+      if (!ov) continue;
+      const p = PARAM_DEFS.filter((d) => d.id === key)[0];
+      const li = document.createElement('li');
+      const name = document.createElement('b');
+      name.textContent = (p && p.label ? p.label : key) + ' ';
+      const grade = document.createElement('span');
+      grade.className = 'conf ' + ov.confidence;
+      grade.textContent = ov.confidence;
+      li.append(name, grade, document.createTextNode(' ' + ov.why));
+      list.appendChild(li);
+    }
+    if (scn.structural) {
+      const li = document.createElement('li');
+      const name = document.createElement('b');
+      name.textContent = 'Timing and one-off spending ';
+      li.append(name, document.createTextNode(scn.structural.why));
+      list.appendChild(li);
+    }
+    box.appendChild(list);
+    host.appendChild(box);
   }
 
   const resetBtn = $('reset-btn');

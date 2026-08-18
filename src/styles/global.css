@@ -227,6 +227,13 @@ button.btn:hover { border-color: var(--accent); }
 
 /* ---- Tables (data view + methodology) ---- */
 details.tableview { margin-top: 12px; }
+/* R141: the per-adjustment provenance under the scenario picker. Sized
+   like a note, because that is what it is. */
+.basis-list { list-style: none; margin-top: 8px; font-size: 12.5px;
+  color: var(--text-secondary); }
+.basis-list li { padding: 4px 0; border-bottom: 1px solid var(--gridline); }
+.basis-list li:last-child { border-bottom: none; }
+.basis-list b { color: var(--text-primary); }
 details.tableview summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; }
 table.data {
   width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px;

@@ -893,6 +893,25 @@ export function divergenceNamesRecommendation(
   return headline !== undefined && note.includes(headline);
 }
 
+/* R141 [§S6b]: the scenario picker is where a reader chooses a stress case, so
+ * it is where the case has to say what its numbers rest on. Declaring the
+ * provenance in scenarios.ts and never showing it would repeat the omission
+ * AP4 filed, one layer further in. */
+export const SCENARIO_PICKER = 'src/scripts/health-client.ts';
+
+/* Each read is named separately. The first version of this asked only that
+ * SOME `.why` appeared in the file, and it passed with the per-override reason
+ * deleted, because the structural block's own `why` satisfied it. A render
+ * check that a deletion cannot fail is not a render check. */
+export const SCENARIO_PROVENANCE_READS = [
+  'ov.why', 'ov.confidence', 'scn.basis', 'scn.structural.why'
+];
+
+export function scenarioProvenanceNotRendered(root = REPO_ROOT): string[] {
+  const text = readFileSync(join(root, SCENARIO_PICKER), 'utf8');
+  return SCENARIO_PROVENANCE_READS.filter((r) => !text.includes(r));
+}
+
 /* R139 [§S6b]: the same shape as the divergence check below, and for the same
  * reason. Declaring what low and high mean inside params.ts and never showing
  * it is the silence AP1 filed, moved to a new address. The only place a reader

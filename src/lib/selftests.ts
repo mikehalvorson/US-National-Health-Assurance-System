@@ -11,9 +11,10 @@ import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
   bandCounts, BASE_SCENARIO_ID, catalogShapeProblems, effectiveParams,
-  naturalCeiling, OVERRIDES_BEYOND_SLIDER, paramBandNote, scenarioStructural,
-  SCENARIOS as MODEL_SCENARIOS, SIGNED_PATH_FIELDS, STRESS_SCENARIO_COUNT,
-  STRUCTURAL_KNOBS, unknownOverrideKeys, unknownStructuralKeys
+  naturalCeiling, OVERRIDES_BEYOND_SLIDER, paramBandNote, provenanceProblems,
+  provenanceGradeCounts, scenarioStructural, SCENARIOS as MODEL_SCENARIOS,
+  SIGNED_PATH_FIELDS, STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS,
+  unknownOverrideKeys, unknownStructuralKeys
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -52,6 +53,7 @@ import {
 } from './fmea';
 import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
+  scenarioProvenanceNotRendered,
   displayOnlyDatasetsInEngine,
   divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
   matureYearDerivations, MATURE_YEAR_HOME, mechanismsMissingFromDoc,
@@ -1339,8 +1341,10 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           .concat(unknownStructuralKeys(MODEL_SCENARIOS));
         const probe = [{
           id: 'SCN-PROBE', name: 'probe', desc: 'probe',
-          overrides: { thisParameterDoesNotExist: [1, 2, 3] },
-          structural: { thisKnobDoesNotExist: 1 }
+          overrides: {
+            thisParameterDoesNotExist: { to: [1, 2, 3], why: 'probe', confidence: 'low' }
+          },
+          structural: { thisKnobDoesNotExist: 1, why: 'probe' }
         }] as unknown as typeof MODEL_SCENARIOS;
         const caught = unknownOverrideKeys(probe, ids)
           .concat(unknownStructuralKeys(probe));
@@ -1365,6 +1369,42 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !unread.length,
           note: unread.join(', ') || STRUCTURAL_KNOBS.length +
             ' knobs declared, each read in ' + ENGINE_FILE
+        };
+      }),
+      /* R141 [§S6b, AP4]: 52 magnitudes and no way to say where any of them
+         came from. The provenance is checked for substance rather than
+         presence: a medium grade has to name a figure, and a scenario cannot
+         call its magnitudes sourced while resting on judgement. */
+      runGuarded('Every scenario magnitude carries a reason and a grade', () => {
+        const problems = provenanceProblems();
+        const counts = provenanceGradeCounts();
+        return {
+          ok: !problems.length,
+          note: problems.slice(0, 4).join(' | ') ||
+            (counts.high + counts.medium + counts.low) + ' overrides graded: ' +
+            counts.low + ' low, ' + counts.medium + ' medium, ' + counts.high +
+            ' high, plus ' +
+            MODEL_SCENARIOS.filter((s) => s.structural).length +
+            ' structural blocks, each with its reason'
+        };
+      }),
+      /* And it reaches the reader choosing the scenario, not only the file. */
+      runGuarded('The scenario picker shows what each magnitude rests on', () => {
+        const assumed = MODEL_SCENARIOS.filter((s) => s.basis === 'assumed').length;
+        const sourced = MODEL_SCENARIOS.filter((s) => s.basis === 'sourced').length;
+        const problems: string[] = [];
+        const unread = scenarioProvenanceNotRendered();
+        if (unread.length) {
+          problems.push('the picker never reads ' + unread.join(', '));
+        }
+        if (assumed + sourced !== MODEL_SCENARIOS.length) {
+          problems.push((MODEL_SCENARIOS.length - assumed - sourced) +
+            ' scenarios declare no basis');
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || sourced + ' sourced, ' + assumed +
+            ' assumed, all shown with the scenario'
         };
       }),
       /* R139 [§S6b, AP1]: AP1 found the catalog respecting exactly one real

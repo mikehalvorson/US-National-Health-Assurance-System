@@ -41,13 +41,19 @@ test('a slider mode overrides the mode for that parameter', () => {
  * exceed 100. */
 test('R63: a multiplier cannot push a bounded share past its natural ceiling', () => {
   const id = 'SCN-R63-PROBE';
+  /* R141 [§S6b] gave every override a `why` and a confidence grade, so a
+     constructed probe carries them too. The type is what makes that
+     unavoidable, which is the whole reason the provenance lives inside the
+     override rather than in a record beside it. */
+  const probeWhy = 'Constructed breach, not a shipped magnitude: this probe ' +
+    'exists to push a bounded share past its natural ceiling on purpose.';
   SCENARIOS_BY_ID[id] = {
-    id, name: 'R63 probe', desc: 'constructed breach',
+    id, name: 'R63 probe', desc: 'constructed breach', basis: 'assumed',
     overrides: {
-      wealthCollectionEff: { mult: 1.3 },
-      employerCapture: { mult: 1.4 },
-      lowValueCapture: { mult: 3.0 },
-      publicAdminRate: { mult: 2.0 }
+      wealthCollectionEff: { mult: 1.3, why: probeWhy, confidence: 'low' },
+      employerCapture: { mult: 1.4, why: probeWhy, confidence: 'low' },
+      lowValueCapture: { mult: 3.0, why: probeWhy, confidence: 'low' },
+      publicAdminRate: { mult: 2.0, why: probeWhy, confidence: 'low' }
     }
   } as (typeof SCENARIOS_BY_ID)[string];
   try {
