@@ -1067,8 +1067,60 @@ export function spreadDependence(): SpreadDependence {
   return { differing, identical, wrongWay };
 }
 
+/* ---- New finding [§S6b]: how far a control can actually reach -----------
+ * Found while measuring R142, not filed in any row. Because the band is
+ * rebuilt in proportion to the mode, a control dragged to its maximum builds a
+ * band reaching well past the maximum itself. Eleven of the thirteen
+ * adjustable parameters do it. The widest is publicAdminRate: a control that
+ * stops at 6% builds a band whose high is 16.4%.
+ *
+ * This is not a defect and it is not clamped. The relative spread IS the
+ * model's uncertainty about the quantity, and holding the band in absolute
+ * terms while the mode moves would claim the same confidence about a 30%
+ * induced-demand estimate as about a 10% one, which is worse than the thing it
+ * would be fixing. R134 [S6a] settled the neighbouring question the same way:
+ * exploring past the sampled band is what a slider is for.
+ *
+ * What was missing is that nobody could see it and nothing held it.
+ *
+ * The measure is the band high divided by the slider ceiling, and getting that
+ * right took two attempts. Dividing by the parameter's own declared high reads
+ * naturally and is useless: eff.high / high reduces to sliderMax / mode, which
+ * has no `high` in it at all and cannot see a base band widen. That is the
+ * exact movement this check exists to catch, so the first version of it was
+ * blind to its own purpose and passed the break that proved it. Dividing by
+ * the ceiling gives high / mode, the band's own relative width, which is what
+ * moves.
+ *
+ * And it moved, silently, one section ago: widening publicAdminRate's high
+ * from 3.2 to 6.0 took this from 1.45 to 2.73, and the band its control builds
+ * at 6% from about 8.7% to 16.4%. Nothing anywhere noticed.
+ * ------------------------------------------------------------------------ */
+export interface SliderReach {
+  id: string;
+  times: number;
+}
+
+/* Declared, so an increase has to be argued for rather than typed. */
+export const SLIDER_REACH_DECLARED: SliderReach = {
+  id: 'publicAdminRate', times: 2.727
+};
+export const SLIDER_REACH_TOLERANCE = 0.01;
+
+export function sliderBandReach(): SliderReach[] {
+  const out: SliderReach[] = [];
+  for (const p of PARAM_DEFS) {
+    if (!p.adjustable || typeof p.sliderMax !== 'number' || !p.sliderMax) continue;
+    const eff = effectiveParams(BASE_SCENARIO_ID, { [p.id]: p.sliderMax })[p.id];
+    if (!eff) continue;
+    out.push({ id: p.id, times: eff.high / p.sliderMax });
+  }
+  return out.sort(function (a, b) { return b.times - a.times; });
+}
+
 export function sliderSpreadNote(): string {
   const d = spreadDependence();
+  const reach = sliderBandReach();
   return 'Moving a slider moves the whole range, not just the middle of it: ' +
     'the band above and below is rebuilt in proportion to wherever you put ' +
     'the control. Setting one of these to zero therefore removes its ' +
@@ -1078,7 +1130,12 @@ export function sliderSpreadNote(): string {
     d.differing.length + ' of the ' + (d.differing.length + d.identical.length) +
     ' cases where a scenario adjusts an assumption you can also drag. Two ' +
     'scenarios at the same slider position are therefore not being compared ' +
-    'at the same uncertainty.';
+    'at the same uncertainty. Dragging a control to its far end widens the ' +
+    'band with it, and the band runs past the end of the control: at its ' +
+    'maximum the widest of these reaches about ' + reach[0].times.toFixed(1) +
+    ' times the highest value the control itself offers. That is the model ' +
+    'carrying its own uncertainty out to a value you asked for rather than ' +
+    'one it was calibrated on.';
 }
 
 /* Structural knobs for a scenario (ramp delays, shocks, MOE multipliers) */

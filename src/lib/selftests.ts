@@ -14,7 +14,8 @@ import {
   collapsingSliderParameters, effectiveParams, naturalCeiling,
   OVERRIDES_BEYOND_SLIDER, paramBandNote, provenanceProblems,
   provenanceGradeCounts, scenarioStructural, SCENARIOS as MODEL_SCENARIOS,
-  SIGNED_PATH_FIELDS, sliderSpreadNote, spreadDependence,
+  SIGNED_PATH_FIELDS, sliderBandReach, sliderSpreadNote,
+  SLIDER_REACH_DECLARED, SLIDER_REACH_TOLERANCE, spreadDependence,
   SPREAD_COLLAPSE_DECLARED,
   STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS, unknownOverrideKeys,
   unknownStructuralKeys
@@ -1373,6 +1374,33 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !unread.length,
           note: unread.join(', ') || STRUCTURAL_KNOBS.length +
             ' knobs declared, each read in ' + ENGINE_FILE
+        };
+      }),
+      /* New finding [§S6b], not in any row: a control at its far end builds a
+         band that is a multiple of the researched high, and the multiple grows
+         silently whenever a base band is widened. S6a widened publicAdminRate
+         and took the band its slider builds at 6% from about 8.7% to 16.4%
+         with nothing anywhere noticing. Declared and held, so the next one has
+         to be written down. */
+      runGuarded('The widest band a control can build is the declared one', () => {
+        const reach = sliderBandReach();
+        const worst = reach[0];
+        const problems: string[] = [];
+        if (!worst) problems.push('no adjustable parameter has a slider ceiling');
+        else if (worst.id !== SLIDER_REACH_DECLARED.id) {
+          problems.push('the widest is now ' + worst.id + ' at x' +
+            worst.times.toFixed(2) + ', declared ' + SLIDER_REACH_DECLARED.id);
+        } else if (Math.abs(worst.times - SLIDER_REACH_DECLARED.times) >
+            SLIDER_REACH_TOLERANCE) {
+          problems.push(worst.id + ' now reaches x' + worst.times.toFixed(2) +
+            ', declared x' + SLIDER_REACH_DECLARED.times);
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join(' | ') || reach.length +
+            ' controls, widest ' + SLIDER_REACH_DECLARED.id + ' at x' +
+            SLIDER_REACH_DECLARED.times.toFixed(2) + ', then ' +
+            reach.slice(1, 3).map((r) => r.id + ' x' + r.times.toFixed(2)).join(', ')
         };
       }),
       /* R142 [§S6b, AP6]: sliders rebuild the spread from the OVERRIDDEN
