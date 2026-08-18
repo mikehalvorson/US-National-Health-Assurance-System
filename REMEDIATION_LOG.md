@@ -1191,3 +1191,228 @@ Two of them earned it immediately. `R279` broke `R276`'s "no failure mode both c
 and denies having one" on its first build, because that check still treated `proxied` as
 score-publishing; and the duplicate-id check named all three collisions when the suffix was
 removed. A check written beside its fix restates the fix — these were written to fail first.
+
+---
+
+## P6 — §S5 Tax, financing & bridge · 2026-08-17 · branch `nha-remediation`
+STATUS: complete — all 20 recommendations landed across 6 commits
+
+### LANDED
+
+| Commit | Rows |
+|---|---|
+| `7cb560f` | `R157` — one definition of the baseline PHC category split |
+| `c9f0daa` | `R144` + `R42` + `R36` + `R44` — the top-0.1% overlap, netted |
+| `faed0b7` | `R156` + `R253` (+ `R239`) — the bridge's $1.6T exclusion, one derived envelope |
+| `9432679` | `R143` — one wealth base, one growth rate, in both engines |
+| `463b25d` | `R37` + `R38` + `R39` + `R208` — base vintage, dataset vintages, balancer uncertainty |
+| `131af90` | `R217` + `R23` + `R45` + `R48` + `R63` + `R84` + `R41` — the remaining rows |
+
+Twenty of twenty. `R239` shipped inside `faed0b7` because it is a property of the same
+function.
+
+### OVERLAP
+
+Six instruments netted, not three. The family is **derived from incidence**, not listed: an
+instrument joins when more than 30% of its incidence lands on the top 0.1% (`t9999` +
+`t10000`). Measured:
+
+```
+bmin 1.00 · wealth 0.90 · estate 0.50 · msurtax 0.42 · capgains 0.40 · inherit 0.35
+   |  gap  |
+enforce 0.23 · buyback 0.21 · ftt 0.20 · intl 0.19 · rents 0.19 · corp 0.16 ·
+surtax 0.16 · sscap 0.04 · vat 0.01 · payroll 0.01
+```
+
+The threshold sits inside a 0.12-wide gap and a self-test holds that gap open: any instrument
+landing within 0.05 of it fails the build rather than being classified by luck. `bmin`'s own
+`desc` named three; six qualify, which is `R144`'s and `§BL1`'s point.
+
+How much they overlap is a judgment and is graded as one. `OVERLAP.rate` is **0.50 central,
+0.30–0.75, confidence `low`**, with the pair-by-pair reasoning written into the parameter.
+Within the family the largest member in a year is the anchor and keeps its revenue whole; each
+other member is cut by `rate` on the part of its revenue landing on the shared base — the
+arithmetic form of the file's own *"alternatives plus toppers, not a simple sum"*.
+
+Deduction at 2041: **$119.3B/yr central**, $71.6B–$178.9B across the declared band.
+
+### NEW-REVENUE REQUIREMENT: $3.42T/yr → $3.42T/yr (unchanged)
+
+🛑 **The prompt's Report block expects this to rise. It does not, and it cannot from §S5.**
+Measured at `mc.steady.newRevenue.p50`: **3337.62 (2023$) before and after**, identical to
+twelve significant figures, = **$3.42T/yr in 2024$**, matching the `## P0` baseline exactly.
+
+The new-revenue requirement is produced entirely inside `model.ts`'s financing block from
+`pubCost`, `fedRedirect`, `stateMoe`, `empContrib` and `taxFeedback`. §S5 owns
+`taxmodel.ts`, `taxparams.ts`, `bridge.ts` and the two pages; none of its rows touches any of
+those five terms. `R143` does edit `model.ts`, but it moves `wealthRevenue`, which is not in
+the expression; `R23` edits the expression itself but only removes a clamp that never bound,
+so the value is bit-identical. The requirement is §S6a's to move.
+
+Every other headline is likewise unmoved and correctly so — mature-year total $5.38T,
+per-capita $26,133, NHE/GDP 23.6%, `pubShare` 0.9306, all identical.
+
+### SURTAX/PAYROLL RATE: rose in all three scenarios
+
+Solved against the **live** healthcare need path (what the page uses), at 2041:
+
+| Scenario | Balancer | Before | After | Change |
+|---|---|---|---|---|
+| `goal-top` | `surtax` | **+11.93pp** | **+12.29pp** | +3.0% |
+| `goal-shared` | `payroll` | **+7.50pp** | **+7.80pp** | +4.0% |
+| `goal-realist` | `payroll` | **+6.87pp** | **+7.35pp** | +7.1% |
+
+No scenario clamps at `scaleMax`, before or after, at any point in the overlap band.
+
+**The direction is the finding, and it is the sum of two corrections that point opposite
+ways.** `R42` alone takes `goal-top` to +13.24pp; `R37` then pulls it back to +12.29pp,
+because carrying the wealth base to the model's own base year raises revenue and the anchor
+rule leaves `wealth` un-deducted. Neither was chosen for its direction and neither was tuned
+back. Under the overlap band alone the `goal-top` rate spans +12.71pp to +13.90pp.
+
+### BRIDGE
+
+Kept mature-year; the unreachable branch is deleted and the exclusion is stated on both tabs.
+
+`bridgeSteps` drew at index 14 (2041), where `transitionShape[14] = 0` and
+`itCapitalShape[14] = 0` by construction and no shock scenario reaches past **2034**. `oneTime`
+was always exactly 0 and `if (Math.abs(oneTime) > 0.5)` never fired. Step count is 11 before
+and after — the branch produced nothing, which is the whole finding.
+
+Adding a cumulative stock to a column of annual flows would be a category error and would
+break the identity, which is exact *because* transition has wound down by 2041. So the excluded
+quantity is derived instead — `excludedOneTime` sums `trans + itcap + shock` across the path —
+and rendered under the bridge chart on the healthcare chapter and beside the envelope tile on
+the rollout chapter. **$1,600B (2023$) on the base case**, the midpoint of the model's own
+`transitionTotal + itCapital` range.
+
+The zero the framing depends on is now checked: if any scenario ever puts one-time cost in the
+bridge's own year, the build fails and the decision gets revisited.
+
+### ENVELOPE: $1.2T–$2.0T (typed, twice) → $1.1T–$2.4T, central $1.6T (derived)
+
+`transitionEnvelope()` sums `transitionTotal` (1000/1500/2200) and `itCapital` (60/100/180).
+The three quantities `§BS3` found are now one: the page's typed prose figure and its typed tile
+figure are both gone, and a source scan fails the build if any trillion-scale dollar literal is
+written into `rollout.astro` again. The framework's own controlled envelope — Table D6B-14's
+$1.2T–$2.0T — is carried alongside as the anchor it is, with the reason the model is wider on
+both ends stated rather than the difference being hidden.
+
+### CONTRADICTIONS
+
+**D45. `§AQ1` declares `V1`/`R37` closed and it is not.** §AQ1 found that the wealth instrument
+compounds at the sourced 4.0% top-capital rate rather than at GDP, which is true and was not
+undone. But that rate governs the path *from* the base year and does nothing about the base
+itself being three years stale: `rev1x: 300` was the February 2021 letter's figure sitting in a
+slot the file header calls the 2024 economy. Two independent things; one was fixed. Carried
+forward at the instrument's own rate over its own vintage gap — `300 × 1.04³ = 337` — **not**
+`research/06`'s "+50–60%", which is about the billionaire tranche and would overstate a base
+that also includes everything above $50M. **The code wins.**
+
+**D46. `R253` reads the missing workstream fields as a defect; the framework says two were
+dropped in the port and one is deliberately open.** Framework Table D6B-15 is a five-column
+table — ID, Workstream, CP allocation, Included transition boundary, Exit/transfer — and the
+port kept three and discarded `CP allocation` and `Exit/transfer`. Both restored verbatim; the
+CP allocation *is* the costed-work-package pointer and the exit *is* the transfer into mature
+operations. Owner and gate belong to the whole set and the framework says so (conclusion
+64-C06: *"NHTCA; TW-01–13; Gate 8"*). The per-workstream **dollar** figure does not exist and
+that is the framework's own position: Table D6B-14's last row reads *"Phase/domain allocation |
+Open | Cost-loaded integrated schedule required under OI-052"*. Inventing thirteen numbers would
+have satisfied the row's assertion and falsified the plan. `cost` is a declared
+`allocation-open` state instead, the `§S4` `probabilitySource` pattern, and the page prints the
+reason where it prints the requirement. **The code wins.**
+
+**D47. `R23`'s emphasis is the wrong way round.** The row reads as though the `newRevenue`
+clamp hides a real case. Measured across all 21 scenarios × 16 years: it binds in **0 of 336
+cells**, while the *unclamped* `householdRelief` is negative in **63** — the first three years
+of every scenario. Then the clamp was tested for reachability rather than for whether it
+happens to fire: every scenario at the all-low, all-mode and all-high corners of the declared
+parameter space, plus a hand-built adversarial set. Minimum raw value **+$28.8B**
+(`SCN-OPT`/all-low, 2027); the adversarial set reaches +$53.0B. **The clamp cannot fire.** Same
+shape as `R156`'s bridge branch, in the same section. Removed, with the margin pinned. No
+number moved.
+
+**D48. `§AQ2`'s "+44.4% by 2042" is the ratio of growth factors, not of the series.** The
+measured revenue divergence is **+38.1% at 2041 and +40.9% at 2042**; the two bases differ by
+0.5% and are anchored one year apart, which absorbs the rest. The defect is real and larger
+than most; the headline figure overstates it by about 3.5 points.
+
+**D49. `R84` is a three-way split, not two.** `care.ts` uses 132.2M (Census 2024) and
+taxparams's income groups sum to 131.0M (CBO 2022) — and `WEALTH_DIST`, inside taxparams,
+**also sums to 132.2M**. The disagreement runs through the middle of the tax module. They are
+*not* collapsed to one number: CBO's count is the universe its own income distribution is built
+on, and substituting a Census total would make every per-group row disagree with its own
+source. Each denominator is declared with its source, vintage and use instead.
+
+**D50. `§AT1`'s "latest covered year is 2035" is off by one.** The three shock scenarios run
+`startYear` 5/6/7 for 2–3 years from `START_YEAR = 2027`, so the latest covered year is
+**2034**. Immaterial to the finding, which stands.
+
+### NEW FINDINGS
+
+- 🛑 **§S3 / the maturity-closure check read one scenario, and `R143` walked into it.** Moving
+  the healthcare model's wealth base onto the sourced rate took `KPP-C8` from about 5.9% to
+  **4.64%** on `SCN-BASE`, and the check demanded the documented gap be **deleted**. Measured
+  first: **12 of the 20 scenarios still breach the 5% cap, the worst at 15.6% (`SCN-PESS`)**.
+  Deleting an honest disclosure on the strength of one favourable run is the failure the check
+  exists to prevent, pointed the other way. Widened: a gap is stale only when the metric meets
+  its target in **every** scenario. `tests/lib/kappa.test.ts` carried its own base-case-only
+  copy of the same rule and disagreed the moment this happened — two copies of one rule — so
+  both now share one helper.
+- **`KPP-C8` is the fifth fully-clamped metric.** All five of its published interim rows are
+  now the committed cap rather than the equation, which computes 0.0 at P0/P1/P2/P5/P6, 1.5 at
+  P3, 0.1 at P4 and 1.2 at P7. Added to `FULLY_CLAMPED` with the counts.
+- **`coverage` returns `Infinity` today, not latently (`R48`).** The fallback need path is 0 in
+  2027 and 2028 while instruments are already phasing in; disabling every funding program
+  produces it for all 16 years.
+- **`wealthTaxPotential`'s label overstates its scope.** It reads *"Extreme-wealth **+
+  high-income** tax package gross potential"* while its source is purely the Saez–Zucman wealth
+  tax. Left alone — `§S6a` owns `params.ts` labels — but it is why the top-capital growth class
+  is the right one for it.
+
+### PUBLISHED MOVEMENT
+
+- **One published target moved**, out of 727: `KPP-C8@P3`, `<=5.4%` → `<=5%`. Five interim
+  cells moved, all `KPP-C8`.
+- **The criticality ranking did not move**: 0 of 1,037 positions, FMEA counts identical, the
+  14 non-finite cells still 14. §S5 does not reach the risk chapter.
+- `financingNote` on the healthcare chapter: *"the extreme-wealth package covers **12%** of the
+  new-revenue requirement"* → **18%**, from `R143`. The wealth base at 2041 moves $423B → $611B
+  (2024$).
+- The tax page gains a "Top-0.1% overlap deduction" tile, a derived-family note under the
+  instrument panel, per-instrument revenue labels that read net, an uncertainty line on both
+  balancers, and a two-count reconciliation on the wealth chart.
+
+### COUNTS
+
+- Self-tests **88 → 107**. `README.md` bumped six times; the drift gate fired every time.
+- `pnpm test` 361 → **370** across 57 files. Pinned tax self-test count 7 → 15.
+- `astro check`: **0 errors, 0 warnings, 2 hints** — the same two pre-existing hints
+  (`equations.ts` unreachable `return NaN`, `tests/lib/taxmodel.test.ts` unused `GROUPS`).
+- `V20` still passes: `MONEYFLOW` reconciles and the bridge identity is still 1.819e-12.
+- `tax.astro`'s Limits block untouched.
+
+### The discipline note, and it cost three rewrites
+
+Nineteen new checks. Every one was proven against a failing state — and **three passed against
+a break the first time and had to be rewritten**, which is the whole value of the exercise:
+
+- *"enabling any instrument never lowers total revenue"* passed against a deliberately
+  **inverted anchor rule**, because enabling one instrument at a time from the defaults never
+  lands the new one at the bottom of the family. Rewritten over all 64 subsets, it fails at
+  once: `{wealth}` plus `capgains` drops the total from $701B to $442B.
+- *"clamped outputs record whether the clamp was active"* passed against the `newRevenue` flag
+  hardcoded to `false`, because the clamp never fires. That is what sent the row to a
+  reachability sweep, and the sweep is what established the clamp is dead code.
+- *"no effective parameter value leaves its natural domain"* passed with the clamp **removed**,
+  because no shipped scenario breaches. A constructed scenario in
+  `tests/lib/scenarios.test.ts` builds the breach the row names —
+  `wealthCollectionEff × 1.3 → 119.6%` — and fails immediately.
+
+Two more were wrong on their first run in a way that only a failing state shows: the
+display-only import scan reported all three datasets because a self-test *names* them in a
+string array, and the household-count scan reported this section's own explanatory comment.
+Both were narrowed to the seam that actually matters — the import list, and the rendered body.
+
+**A check that has never failed has not been tested.** Five of nineteen would have shipped
+green and useless.
