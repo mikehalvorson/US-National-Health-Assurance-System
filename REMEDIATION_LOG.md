@@ -2088,9 +2088,10 @@ not noting it was not.
 - **The audit-document repo still has no remote.** Asked in P5, P6, P7 and now P8.
 
 ## P9 — §S7 Medications & PMC · 2026-08-19 · branch `nha-remediation`
-STATUS: complete — all 12 rows landed across 9 commits (`R214`+`R296` as one, `R173`+`R204` as
+STATUS: complete — all 12 rows landed across 11 commits (`R214`+`R296` as one, `R173`+`R204` as
 one, `R174`+`R175`+`R176` as one), plus 4 new findings, plus 1 self-inflicted defect found and
-fixed by the repo's own gates
+fixed by the repo's own gates, plus a two-axis code review that found seven more after this
+entry was first drafted — three of them the same shape as defects the section had just fixed
 
 **Entry gate:** `## P7` (`§S6a`) `STATUS: complete` ✅ · `check_audit_docs.py` 35/35 exit 0,
 `astro build` passes, both trees clean ✅ · **part 2 run in this session:** changed
@@ -2124,8 +2125,10 @@ its declared stress set`, restored from the bytes read before the break, tree cl
 - **FAMILIES SOURCED: 200 of 200.** Graded **185 high, 15 medium**, across 2 declared sources.
 - **SLIDER: disclosed as independent**, and the disclosure states the measured factor. See
   `D71`, which supersedes the row's own checkable claim.
-- **CONTRADICTIONS:** five, `D68`–`D72`. Two are the audit contradicting the code, two are the
-  code contradicting itself, and one is a row whose checkable claim is unsatisfiable.
+- **CONTRADICTIONS:** twelve, `D68`–`D79`. **Five here**, of which two are the audit
+  contradicting the code, two are the code contradicting itself, and one is a row whose
+  checkable claim is unsatisfiable. **Seven more under `THE CODE REVIEW` below**, found
+  after this entry was first drafted; those are the section contradicting itself.
 
 ### HEADLINE FIGURES — nothing moved on the base case
 
@@ -2328,3 +2331,100 @@ billing exceptions" prose breach; `wealthTaxPotential`'s label; the four judgeme
 
 `astro check`: 0 errors, 0 warnings, **1 hint** (`equations.ts` unreachable `return NaN`),
 unchanged.
+
+### THE CODE REVIEW
+
+Run after this entry was first drafted, two axes in parallel, fixed point `fd007ba`
+so the diff is exactly §S7. **Seven findings landed, in `804c55e`. One was checked and
+rejected.** The section had already dumped four labels, proven 22 breaks and written the
+entry above; P8 ended the same way, and the lesson is the same one.
+
+**`D73` 🛑 — the spend-bar gate could not fail, and it shipped inside the commit whose
+subject was a tautological test.** `The spend bar labels equal the values its widths
+encode` computed `(retailPct / 100) * total` and compared it against `retail`. But
+`retailPct` **is** `retail / total * 100`, so all three conjuncts were algebraic
+identities that no data could falsify. The break written to prove it passed only because
+it perturbed `retailPct` *after* it was derived, which breaks the identity rather than
+exercising the check.
+
+This is `R52` — *"verifies that multiplication works; given a hardcoded constant it cannot
+fail"* — committed in `R296`, four commits before `R52` was fixed, in the same section.
+**Writing a check against a value the check itself derives is the shape, and knowing the
+shape by name did not prevent it.** The replacement works on the printed strings: the sum
+a reader can do on the two segments, and each printed width applied to the printed total.
+Neither is an identity, because rounding is not invertible.
+
+**`D74` 🛑 — and the labels the dead gate guarded were wrong on the rendered page.** It
+printed *"$461B plus $257B is a $717.9B drug base"*. **461 + 257 is 718.** The segments
+were rounded to whole billions and the total to one decimal. That is `BY2`'s defect, a
+label that is not the value beside it, **reintroduced by the commit that fixed `BY2`**,
+and it reached a reader. Fixed to one precision throughout: `$461.4B plus $256.5B is a
+$717.9B drug base`.
+
+**`D75` 🔴 — `DRUG_BASE_READS` defeated its own stated purpose.** `'DRUG_BASE.retail'` is
+a substring of `'DRUG_BASE.retailPct'`, and `'DRUG_BASE.nonRetail'` of
+`'DRUG_BASE.nonRetailPct'`, so an `includes` test was satisfied by the two percentages
+alone: **the two label reads the check exists to protect could both be deleted with it
+still passing.** The comment above it, copied from `SCENARIO_PROVENANCE_READS`, says
+naming each read separately is what stops a check passing with the deletion it exists to
+catch. It named them separately and then compared them with the wrong operator. Matched
+with a trailing-character guard now, and a new break (`label read deleted`) proves it.
+
+**`D76` 🔴 — a universal the same page contradicts.** `drugBaseNote()` opened *"Every
+dollar figure in this chapter is in real 2024 dollars"*, four cards below *"$449.7B ·
+retail prescription drugs in 2023"*. **Written by hand, in a sentence where every other
+figure is derived** — which is verbatim the defect P8's own review ended on, and which
+this entry quotes approvingly in the `R173` commit. Scoped to "The modelled figures in
+this chapter".
+
+**`D77` 🟡 — the $680–730B range stopped reproducing from its own terms.** Substituting
+the owned retail line into its scope sentence gives `461.4 + 212…264 = $673–725B`, not
+$680–730B. The range is `CP-RX-002`'s externally published estimate, built on the $467.0B
+figure `D68` sets aside; it never was derived from the model's base. Stated as that now,
+in both research files, explicitly not re-derived. **The endpoints are unchanged and the
+model's $717.9B still sits inside them either way.**
+
+**`D78` 🔴 — an internal row code reached readers.** `params.ts` `drugPriceCut.source`
+began *"R34: the IRA precedent this leans on…"*, and `PARAM_DEFS[].source` renders in the
+parameter table on `health.astro`. Golden rule 2 forbids surfacing internal codes in the
+UI. Confirmed in `dist/health/index.html` before the fix; 0 occurrences in either rendered
+page after it. **The habit of tagging edits with their row number is right in a commit
+message and in a comment, and wrong in a string the build prints.**
+
+**`D79` 🟡 — a cross-scale dollar comparison, published.** `drugLeverNote()` printed
+*"$287B against a 2024-scale drug base, while the model reports about $576B in 2041,
+roughly 2.0 times as much."* Golden rule 6 is *"never compare dollars across scale-years…
+'mature at 2024 scale' and '2041 steady state' are different questions."* **A published
+ratio between the two is that comparison, and explaining a comparison the house style
+forbids is not the same as not making it.** The note now says the two answer different
+questions and names only this tab's own figure. The ratio stays measured and stays gated
+by the 1.5–3.0 band, where it is developer-facing. `DRUG_LEVER_RATIO_TEXT` deleted as
+dead.
+
+**One finding checked and rejected.** The Standards axis held that `medications.ts`
+importing `params.ts` pulls the parameter base into the medications client bundle, which
+is the concern `drug-lever.ts` was split out to avoid. Probed the built chunk for `449.7`,
+`publicAdminRate`, `wagePassThrough` and `DRUG_BASE`: **all absent.** Rollup drops it.
+Plausible in principle, false in fact, so nothing changed. Recorded because the next
+reader will have the same worry.
+
+**Judgement calls accepted as-is, for whoever moves a seam here:** the declared-exception
+quartet is cloned between `scenarios.ts` and `medications.ts` with two names for one
+threshold (`PROVENANCE_MIN_CHARS` and `FAMILY_WHY_FLOOR`, both 40 and 60 respectively);
+`readFileSync(MEDICATIONS_PAGE)` appears eight times in `manifest-check.ts`;
+`ALL_DRUG_SPEND_2024` leaves the total with a second owner inside a commit titled *one
+owner*, deliberately, because the calculator is protected; and `medications-client.ts`
+carries the only `as never` in `src/`.
+
+**After the review:** 23 breaks, all fail the build and name their own check, no `SKIP`.
+Two breaks that went stale against the fixed code were repaired rather than deleted.
+`postP9` → `postP9r` is **0.000% on every figure** — none of this moved a published
+number. Build green at 155 self-tests, `astro check` 0 errors, 0 warnings, 1 pre-existing
+hint, 376 vitest assertions pass.
+
+**What the section ends on.** Three of the seven findings are the same shape: a check
+that cannot fail, a read that cannot be missed, a universal that was not measured. All
+three were written *while fixing* defects of exactly that shape, by someone who had just
+described the shape in a commit message. **Naming a failure mode does not immunise the
+next thing you write against it. The only thing that caught these was a second pass with
+a different brief.**
