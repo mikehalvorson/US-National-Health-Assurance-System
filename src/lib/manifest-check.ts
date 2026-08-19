@@ -938,3 +938,45 @@ export function divergenceIsRendered(root = REPO_ROOT): boolean {
   return /p\.divergence/.test(text) && /divergence\.note/.test(text) &&
     /divergence\.recommended/.test(text);
 }
+
+/* R296 [§S7]: the medications chapter is where the drug base meets a reader,
+ * so it is where the base has to be the model's own decomposition rather than
+ * a number typed beside it. BY2 found the spend bar captioned "Modeled
+ * all-drug spending split" with its 65% segment labelled with the CMS retail
+ * figure, which is $5.2B away from the model's retail component: close enough
+ * that nobody would notice, far enough to be the $16.9B reconciliation failure
+ * in miniature.
+ *
+ * Each read is named separately, for the reason SCENARIO_PROVENANCE_READS
+ * gives: a check that only asks whether SOME field is read passes with the
+ * deletion it exists to catch. */
+export const MEDICATIONS_PAGE = 'src/pages/medications.astro';
+
+export const DRUG_BASE_READS = [
+  'DRUG_BASE.retail', 'DRUG_BASE.nonRetail', 'DRUG_BASE.total',
+  'DRUG_BASE.retailPct', 'DRUG_BASE.nonRetailPct'
+];
+
+export function drugBaseNotRendered(root = REPO_ROOT): string[] {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  return DRUG_BASE_READS.filter((r) => !text.includes(r));
+}
+
+/* R214 [§S7]: and the other half of one owner. A hand-typed dollar total in
+ * the retail drug band is how the CMS 2024 figure got onto a segment the model
+ * produced in the first place. The band is deliberately narrow: it covers the
+ * retail prescription drug line and nothing else the chapter publishes. A
+ * derived read reaches the page as `${...}B`, which starts with a brace and
+ * cannot match. */
+export const RETAIL_BAND_LOW = 400;
+export const RETAIL_BAND_HIGH = 560;
+
+export function literalRetailTotals(root = REPO_ROOT): string[] {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  const found: string[] = [];
+  for (const m of text.matchAll(/\$(\d{3}(?:\.\d)?)B/g)) {
+    const v = Number(m[1]);
+    if (v >= RETAIL_BAND_LOW && v <= RETAIL_BAND_HIGH) found.push(m[0]);
+  }
+  return found;
+}

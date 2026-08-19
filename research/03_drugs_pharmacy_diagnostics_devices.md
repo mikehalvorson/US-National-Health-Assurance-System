@@ -10,10 +10,14 @@ Compiled 2026-07-15. All figures cited to primary or near-primary sources found 
 - **Value:** $467.0 billion (2024), up 7.9% from 2023
 - **Unit:** USD billions/year, retail (pharmacy-dispensed) only
 - **Source:** CMS, National Health Expenditure (NHE) 2024 Highlights; CMS NHE Fact Sheet. https://www.cms.gov/files/document/highlights.pdf ; https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/nhe-fact-sheet
-- **Confidence:** High - official CMS actuary data, most authoritative available. Note: retail drugs were <9% of the $5.28 trillion total NHE in 2024.
+- **Confidence:** ~~High~~ **Downgraded to Low, and not used by the model.** See the reconciliation note below.
+- **RECONCILIATION (R214, R296):** This value and its growth rate are not mutually consistent with the 2023 CMS table in `research/01_macro_financing_population_offsets.md`, which records retail prescription drugs at **$449.7 billion (2023)**. $467.0B at 7.9% above 2023 implies a 2023 base of **$432.8 billion**, $16.9 billion below the 2023 line. Holding $449.7B fixed, 7.9% growth implies a 2024 retail total near **$485 billion**; holding $467.0B fixed, the implied growth is **3.85%**, not 7.9%. The two cannot both describe the same CMS account.
+  - The same 2024 NHE table is internally inconsistent on a second line in the same way. CP-DX-001 records physician & clinical services at **$1.11 trillion (2024)**, described as having *"grew 8.1%"*, against **$978.0 billion (2023)** in `research/01`. That is 13.5% growth, not 8.1%. 8.1% applied to the 2023 NHE total of $4,866.5 billion gives $5,261 billion, which is the **$5.28 trillion** total the same entry reports, so the 8.1% appears to be the NHE total's growth rate attached to a category line.
+  - CP-DX-001's own source note records that the CMS Highlights PDF *"returned HTTP 403 on direct fetch during this research pass"* and that its figures are *"drawn from search-result excerpts."* It already asks for a human re-pull. The 2023 table in `research/01` was read whole.
+  - **Resolution:** `params.ts` `BASE2023.rxRetail = 449.7` (2023) is the single owner of this line. The Medications chapter derives its retail figure from it and states that it is a 2023-calibrated figure in real 2024 dollars, not a CMS 2024 actual. **A direct pull of the CMS NHE 2024 detail table is still open** and would settle the 2024 level and the growth rate together.
 
 ### CP-RX-002 - Total U.S. drug spending INCLUDING hospital/clinic-administered drugs
-- **Value:** Approximately $680–730 billion/year (2024 est.), i.e., retail ($467B) + provider-administered drugs embedded within hospital and physician/clinical-services NHE categories, estimated at an additional 4–5% of total NHE (~$212–264B on a $5.28T base)
+- **Value:** Approximately $680–730 billion/year (2024 est.), i.e., the retail line + provider-administered drugs embedded within hospital and physician/clinical-services NHE categories, estimated at an additional 4–5% of total NHE (~$212–264B on a $5.28T base). **The retail term is CP-RX-001's owned 2023 line, $449.7B, which is $461.4B in real 2024 dollars** (see CP-RX-001's reconciliation note); the range itself is unchanged, and the model's $717.9B base still sits inside it.
 - **Unit:** USD billions/year
 - **Source:** CMS NHE 2024 Highlights (retail figure); MedPAC July 2024 Data Book, Section 10 (Prescription Drugs), which notes provider-administered drugs are booked under hospital/physician categories, not retail drug spending. https://www.medpac.gov/wp-content/uploads/2024/07/July2024_MedPAC_DataBook_Sec10_SEC.pdf
 - **Confidence:** Medium - this is a derived/composite estimate, not a single official published line item, because CMS NHE does not publish a unified "all drug spending" total. Treat as a range; a coding agent should model retail and provider-administered drug spend as separate line items pulling from the $467B (retail) and a % of hospital/physician-services categories (~4-5%) rather than a single hard number.
@@ -169,7 +173,7 @@ Compiled 2026-07-15. All figures cited to primary or near-primary sources found 
 
 | Param | Value | Use |
 |---|---|---|
-| CP-RX-001 | $467.0B (2024) | Retail drug spend baseline |
+| CP-RX-001 | $449.7B (2023), `params.ts` `BASE2023.rxRetail` | Retail drug spend baseline. The $467.0B (2024) figure originally recorded here does not reconcile with it and is not used; see the reconciliation note under CP-RX-001. |
 | CP-RX-003 | 2.78x (avg), 4.22x (brand) | Int'l price gap for negotiation-savings modeling |
 | CP-RX-006 | $98.5B/10yr (negotiation-specific); $237B/10yr (full IRA drug package) | CBO-scored real-world precedent for govt negotiation savings |
 | CP-RX-008/009 | $2.28-6.16/vial production cost; $30/vial Civica real-world price | Public Medicines Corp calibration |

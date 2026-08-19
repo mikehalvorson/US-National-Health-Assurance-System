@@ -59,6 +59,8 @@ import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
+  DRUG_BASE_READS, drugBaseNotRendered, literalRetailTotals,
+  RETAIL_BAND_HIGH, RETAIL_BAND_LOW,
   displayOnlyDatasetsInEngine,
   divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
   matureYearDerivations, MATURE_YEAR_HOME, mechanismsMissingFromDoc,
@@ -70,6 +72,7 @@ import {
   unreadEngineConstants, unreadStructuralKnobs,
   unregisteredEngineLiterals, unregisteredSelfTestSurfaces
 } from './manifest-check';
+import { ALL_DRUG_SPEND_2024, DRUG_BASE } from './medications';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
 import {
@@ -1943,6 +1946,62 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: methodologyCountsAgree(),
           note: 'declared ' + DATA_PHASE_COUNTS.targetCount + ', data ' + d.dataRowCount +
             ', document ' + d.documentRowCount
+        };
+      })
+    ]
+  },
+  {
+    /* R214 + R296 [§S7]: one owner for the retail drug line */
+    surface: 'medications.ts',
+    rows: () => [
+      /* The drug base is not an independent number. It is the CMS line this
+         repository calibrates on, plus the modal non-retail estimate, both
+         deflated once. Reading it back out of BASE2023 is what stops a second
+         retail figure being introduced beside it, which is what BJ5 found. */
+      runGuarded('The drug base decomposes into the CMS line the model owns', () => {
+        const d = DEFLATOR_2023_TO_2024;
+        const retailOk = Math.abs(DRUG_BASE.retail - BASE2023.rxRetail * d) < 1e-9;
+        const nonOk = Math.abs(
+          DRUG_BASE.nonRetail - PARAMS_BY_ID.embeddedDrugSpend.mode * d) < 1e-9;
+        const sumOk = Math.abs(
+          DRUG_BASE.retail + DRUG_BASE.nonRetail - DRUG_BASE.total) < 1e-9;
+        /* The calculator's literal is do-not-touch (§Z, §BY4). It is held to
+           the derivation at the precision the page publishes instead. */
+        const literalOk = Math.abs(DRUG_BASE.total - ALL_DRUG_SPEND_2024) < 0.05;
+        return {
+          ok: retailOk && nonOk && sumOk && literalOk,
+          note: '$' + DRUG_BASE.retail.toFixed(1) + 'B retail + $' +
+            DRUG_BASE.nonRetail.toFixed(1) + 'B non-retail = $' +
+            DRUG_BASE.total.toFixed(1) + 'B, published as $' +
+            ALL_DRUG_SPEND_2024.toFixed(1) + 'B'
+        };
+      }),
+      /* R296 [§S7]: BY2's finding, as a rule. A segment label that is not the
+         value its width encodes is what made the model look as though it
+         decomposes into the official figure. */
+      runGuarded('The spend bar labels equal the values its widths encode', () => {
+        const fromRetailWidth = (DRUG_BASE.retailPct / 100) * DRUG_BASE.total;
+        const fromNonWidth = (DRUG_BASE.nonRetailPct / 100) * DRUG_BASE.total;
+        const ok = Math.abs(fromRetailWidth - DRUG_BASE.retail) < 0.05 &&
+          Math.abs(fromNonWidth - DRUG_BASE.nonRetail) < 0.05 &&
+          Math.abs(DRUG_BASE.retailPct + DRUG_BASE.nonRetailPct - 100) < 1e-9;
+        return {
+          ok,
+          note: DRUG_BASE.retailPct.toFixed(2) + '% = $' +
+            fromRetailWidth.toFixed(1) + 'B, labelled $' +
+            DRUG_BASE.retail.toFixed(1) + 'B'
+        };
+      }),
+      runGuarded('The chapter builds both segments from the model, not from a literal', () => {
+        const missing = drugBaseNotRendered();
+        const literals = literalRetailTotals();
+        return {
+          ok: !missing.length && !literals.length,
+          note: (missing.length ? 'unread: ' + missing.join(', ') + '. ' : '') +
+            (literals.length
+              ? 'hand-typed retail totals: ' + literals.join(', ')
+              : 'all ' + DRUG_BASE_READS.length + ' fields read, no literal in $' +
+                RETAIL_BAND_LOW + '-' + RETAIL_BAND_HIGH + 'B')
         };
       })
     ]

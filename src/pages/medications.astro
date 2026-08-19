@@ -1,6 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { DRUG_BASE } from '../lib/medications';
+
+/* R296 [§S7]: the spend bar's labels and the widths that encode them are the
+   same two numbers, read once from the model's own decomposition. The bar used
+   to be a hand-typed 65/35 split labelled with a CMS figure that is not the
+   model's retail component. */
+const retail = DRUG_BASE.retail.toFixed(0);
+const nonRetail = DRUG_BASE.nonRetail.toFixed(0);
+const drugBase = DRUG_BASE.total.toFixed(1);
+const retailWidth = DRUG_BASE.retailPct.toFixed(2);
+const nonRetailWidth = DRUG_BASE.nonRetailPct.toFixed(2);
+const retail2023 = DRUG_BASE.retail2023.toFixed(1);
 ---
 <BaseLayout title="National Health Assurance: Medications">
   <main>
@@ -91,9 +103,10 @@ import ChapterNav from '../components/ChapterNav.astro';
     <div class="medications-cost-layout">
       <div class="medications-cost-stack">
         <article>
-          <strong>$467B</strong>
-          <span>retail prescription drugs in 2024</span>
-          <small>Official CMS account, up 7.9% from 2023
+          <strong>${retail2023}B</strong>
+          <span>retail prescription drugs in 2023</span>
+          <small>Official CMS account for the last finalized year, and the
+            line the model calibrates on
             <span class="conf high">high</span></small>
         </article>
         <article>
@@ -114,12 +127,21 @@ import ChapterNav from '../components/ChapterNav.astro';
         <p>CMS reports medicines dispensed by retail and mail-order pharmacies
           as a separate category. Infused, injected, and other
           clinician-administered medicines are recorded inside hospital and
-          physician-service spending. The fiscal model uses a $717.9B
-          2024-scale drug base inside the derived range.</p>
+          physician-service spending. The fiscal model adds an estimate of that
+          second group to the retail line and states the total in real 2024
+          dollars: ${retail}B plus ${nonRetail}B is a ${drugBase}B drug base,
+          inside the derived range.</p>
         <div class="medications-spend-bar" aria-label="Modeled all-drug spending split">
-          <span style="width:65%">$467B retail</span>
-          <span style="width:35%">modeled non-retail</span>
+          <span style={`width:${retailWidth}%`}>${retail}B modeled retail</span>
+          <span style={`width:${nonRetailWidth}%`}>${nonRetail}B modeled non-retail</span>
         </div>
+        <p class="note">Both segments are the model's own. The retail segment
+          is the 2023 CMS line expressed in real 2024 dollars, which is not the
+          same quantity as a CMS total for 2024: this site calibrates every
+          figure on the last finalized CMS year and reports results in real
+          2024 dollars. Published 2024 retail figures for this line do not
+          currently reconcile with the 2023 account the model uses, so the
+          model does not carry one.</p>
         <p class="note">The international ratio is evidence of price headroom,
           not a promise that every U.S. price can fall to the comparison
           average. U.S. generic prices were already lower in the RAND study.</p>

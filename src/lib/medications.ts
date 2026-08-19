@@ -1,6 +1,7 @@
 /* Medications portfolio data, ported verbatim from docs/js/medications.js
    (FAMILIES 9-210, PHASE_META 212-217, ALL_DRUG_SPEND_2024, calcSavings).
    Fidelity-critical: do not re-derive. Each family: [id, name, form, phase, tags]. */
+import { BASE2023, DEFLATOR_2023_TO_2024, PARAMS_BY_ID } from './params';
 
 export type Family = [string, string, string, string, string[]];
 
@@ -214,6 +215,59 @@ export const PHASE_META: Record<string, string> = {
   P8: "Phase 8 · Year 12"
 };
 
+/* R214 + R296 [§S7]: one owner for the retail drug line, and both the tile and
+ * the spend bar derived from it.
+ *
+ * The page used to print "$467B retail prescription drugs in 2024 · Official
+ * CMS account, up 7.9% from 2023" three cards above the $717.9B drug base.
+ * Dividing the page's own figure by its own growth rate gives a 2023 retail
+ * base of $432.8B; the model calibrates on $449.7B. $16.9B apart, with every
+ * term on the page, and the model's component the higher of the two.
+ *
+ * The line this repository owns is BASE2023.rxRetail. Two things settle it:
+ *
+ *  - SiteHeader publishes the convention on all fourteen pages: real 2024
+ *    dollars, calibrated to CMS National Health Expenditure data for 2023, the
+ *    last finalized year. A CMS 2024 actual and a 2023-calibrated figure
+ *    deflated for display are different quantities, so the page was putting
+ *    two numbers side by side that its own header says are not comparable.
+ *  - research/03's 2024 NHE table, which is where the $467.0B came from,
+ *    records that the CMS source PDF returned HTTP 403 on direct fetch and
+ *    that its figures are drawn from search-result excerpts. It asks for a
+ *    human re-pull. The 2023 table in research/01 was read whole, and it is
+ *    the one params.ts calibrates on.
+ *
+ * So the retail component of the drug base is the 2023 line expressed in real
+ * 2024 dollars. The page says that rather than borrowing a CMS 2024 number to
+ * label a segment the model produced. */
+export const DRUG_BASE = (function () {
+  const embedded = PARAMS_BY_ID.embeddedDrugSpend;
+  const d = DEFLATOR_2023_TO_2024;
+  const retail = BASE2023.rxRetail * d;
+  const nonRetail = embedded.mode * d;
+  const total = retail + nonRetail;
+  return {
+    calibrationYear: 2023,
+    displayYear: 2024,
+    /* The owned CMS line, in its own year and its own dollars. */
+    retail2023: BASE2023.rxRetail,
+    /* The same line, and the modal non-retail estimate, in display dollars. */
+    retail, nonRetail, total,
+    retailPct: (retail / total) * 100,
+    nonRetailPct: (nonRetail / total) * 100,
+    /* R173 [§S7]: the base is modal, not fixed. embeddedDrugSpend is a
+     * distribution and the engine samples it, so the drug base the model
+     * actually runs on spans this range. */
+    low: (BASE2023.rxRetail + embedded.low) * d,
+    high: (BASE2023.rxRetail + embedded.high) * d
+  };
+})();
+
+/* The savings calculator's fixed base. §Z established this module gets
+ * non-additive attribution right and §BY4 verified every figure it produces,
+ * so the literal stays and the derivation is checked against it rather than
+ * replacing it: DRUG_BASE.total is 717.8922, which is this number at the
+ * precision the page publishes. A self-test holds the two together. */
 export const ALL_DRUG_SPEND_2024 = 717.9;
 
 export function calcSavings(share: number, reduction: number): number {
