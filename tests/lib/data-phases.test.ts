@@ -25,7 +25,13 @@ test('R54: the declared metric count equals the distinct metric IDs', () => {
 
 test('R54: the declared target count equals the per-phase target rows', () => {
   expect(dataPhaseTargetCount()).toBe(DATA_PHASE_COUNTS.targetCount);
-  expect(DATA_PHASE_COUNTS.targetCount).toBe(64); // V4: 5+6+6+7+6+7+9+7+11
+
+  /* R105 [S7]: KPP-T2 and TPP-6.3 gained P8 certification rows, so every
+     count this file pins moves by two. Derivation rule 3 names five
+     categories that get stricter early floors because a defect can
+     directly interrupt care; three were certified at maturity and these
+     two were not. */
+  expect(DATA_PHASE_COUNTS.targetCount).toBe(66); // V4 + R105: 5+6+6+7+6+7+9+7+13
 });
 
 test('R54: every metric ID conforms to the KPP/TPP pattern', () => {
@@ -38,8 +44,8 @@ test('R54: no phase target regresses away from its mature target', () => {
   expect(dataPhaseMonotonicity().regressions).toEqual([]);
 });
 
-test('R54: framework-basis entries are exactly the seventeen V5 counted', () => {
-  expect(frameworkBasisEntries().length).toBe(17); // V5
+test('R54: framework-basis entries are the seventeen V5 counted plus two from R105', () => {
+  expect(frameworkBasisEntries().length).toBe(19); // V5 + R105
 });
 
 /* R117 [§S2] — the generator validates the vocabulary of `basis` and never the
@@ -50,9 +56,9 @@ test('R117: every framework-basis target resolves to the catalog entry it claims
   expect(frameworkBasisDrift()).toEqual([]);
 });
 
-test('R117: the check reaches all seventeen claims and reads the catalog', () => {
+test('R117: the check reaches all nineteen claims and reads the catalog', () => {
   const claims = frameworkBasisClaims();
-  expect(claims.length).toBe(17); // V5
+  expect(claims.length).toBe(19); // V5 + R105
   expect(claims.every((c) => c.catalogValue !== null)).toBe(true);
   // The P3/P4 Gate 1 floor is the one the phase map used to drop (R121).
   const g1 = claims.filter((c) => c.id === 'TPP-2.1').map((c) => c.phase).sort();
@@ -77,11 +83,14 @@ test('R57: every metric that skips a phase declares which phases and why', () =>
   expect(unreasonedCoverageGaps()).toEqual([]);
 });
 
-test('R57: the uptime gap the row filed is one of the declared ten', () => {
+test('R57: the uptime gap the row filed is one of the declared twelve', () => {
   const uptime = DATA_PHASE_GAPS.find((g) => g.id === 'TPP-11.1')!;
   expect(uptime.phases).toEqual(['P4', 'P5']);
   expect(uptime.reason).toMatch(/P5 publishes no continuity measure at all/);
-  expect(measuredCoverageGaps().length).toBe(10);
+  /* R105 [S7]: 10 -> 12. Certifying KPP-T2 and TPP-6.3 at P8 creates a gap
+     for each between its single early measurement and maturity, and both are
+     declared. KPP-T2's five-phase gap is the widest any rule-3 category has. */
+  expect(measuredCoverageGaps().length).toBe(12);
 });
 
 test('R57: a metric gaining a gap is not silently absorbed', () => {

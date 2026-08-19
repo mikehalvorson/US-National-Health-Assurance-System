@@ -154,6 +154,8 @@ Assess the complete mesh against the controlled maturity targets and keep unreso
 | Mature records and exchange | `TPP-10.4` - Discharge summary availability | ≥98% structured discharge summaries within 24 hours | >=98% structured within 24 hours | Framework | Controlled maturity target from the complete TPP dictionary. |
 | Mature records and exchange | `TPP-10.5` - Record correction closure | ≥97% correction closure within the statutory timeframe | >=97% within statutory timeframe | Framework | Controlled maturity target from the complete TPP dictionary. |
 | Mature records and exchange | `TPP-10.6` - API conformance rate | ≥98% API conformance | >=98% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature care-interruption certification | `KPP-T2` - Critical medication interruption rate | ≤0.2% critical-medication interruption | <=0.2% | Framework | Controlled maturity target from the complete KPP dictionary. P2 published a 1.0% ceiling, five times this one, and nothing between P3 and P7 republished it; certifying at maturity is what closes the obligation rule 3 opens. |
+| Mature care-interruption certification | `TPP-6.3` - Unit follow-up closure | ≥99% abnormal-result follow-up closure | >=99% abnormal results | Framework | Controlled maturity target from the complete TPP dictionary. P5 published a 95% floor against this 99% obligation and no later phase restated it. |
 | Mature cyber and continuity | `TPP-11.1` - Critical system uptime | ≥99.97% critical-system uptime | >=99.97% | Framework | Controlled maturity target from the complete TPP dictionary. |
 | Mature cyber and continuity | `TPP-11.2` - Downtime continuity success | ≥98% of downtime-continuity drills passed | >=98% drills passed | Framework | Controlled maturity target from the complete TPP dictionary. |
 | Mature cyber and continuity | `TPP-11.3` - Critical vulnerability remediation | ≥99% of critical vulnerabilities remediated within 15 days | >=99% within 15 days | Framework | Controlled maturity target from the complete TPP dictionary. |
@@ -169,6 +171,7 @@ Every metric whose coverage is interrupted is listed here with the reason. The g
 | Parameter | Phases not published | Reason |
 |---|---|---|
 | `KPP-A1` | P7 | P7 extends benefits to the population P6 already converted, so its own evidence is assessment timeliness and the expanded-benefit record measures rather than a restated coverage rate. |
+| `KPP-T2` | P3 P4 P5 P6 P7 | R105: measured once at P2, where the pharmacy rail first carries medication continuity, and certified once at P8 against the controlled 0.2% ceiling. Nothing between them changes what the measure measures, so no phase republishes it and the P2 ceiling stays operative across the gap under derivation rule 2. The gap is wide and it is declared rather than defended: rule 3 calls this one of the five categories where a defect can directly interrupt care, and five phases without a published floor is the weakest coverage any rule-3 category has. |
 | `TPP-1.1` | P2 P4 P5 P6 P7 | Match accuracy is published where the matched population changes: the controlled foundation cohort at P1 and Wave I conversion at P3. P6 converts the rest of the population and publishes no identity measure, which is a gap in the register rather than a decision about identity. |
 | `TPP-10.1` | P2 P3 P4 P5 P7 | Registry verification is published when the registry's scope changes: the active pilot provider set at P1 and the national registry at P6. No phase between them republishes it. |
 | `TPP-10.2` | P4 P5 | P4 and P5 are the delivery pilots and their scale-up, and their record evidence is lab interoperability, discharge structuring and encounter completeness rather than the medication view. |
@@ -178,6 +181,7 @@ Every metric whose coverage is interrupted is listed here with the reason. The g
 | `TPP-11.2` | P2 P3 P5 P6 P7 | Exercises are published where a new class of operation is first exercised: tabletop at P0, production-like registries at P1, delivery settings at P4, and the mature drill programme at P8. |
 | `TPP-11.3` | P3 P4 P5 P6 P7 | Remediation timeliness is published at the first live rail (P2) and at maturity (P8), two points a decade apart, with no phase between them republishing it. This is the sparsest trajectory in the register. |
 | `TPP-12.4` | P1 P2 P3 P4 P5 P6 | Public reporting is published for the foundation report set (P0) and again when expanded benefits widen what must be reported (P7). The phases between them publish appeals, correction and availability evidence instead. |
+| `TPP-6.3` | P6 P7 | R105: published at P5, where scaled care first makes abnormal-result ownership explicit, and certified at P8 against the controlled 99% obligation. P6 converts the remaining population and P7 extends benefits; neither changes what closure measures, so the P5 floor stays operative across the gap. |
 
 ## Controlled sources
 

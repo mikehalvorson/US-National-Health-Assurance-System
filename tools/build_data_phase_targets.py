@@ -78,6 +78,15 @@ export const DATA_PHASE_COUNTS: { metricCount: number; targetCount: number } = {
    stays operative across the gap. */
 export const DATA_PHASE_GAPS: DataCoverageGap[] =
   (NHA_DATA_PHASES as unknown as { coverageGaps: DataCoverageGap[] }).coverageGaps;
+
+/* R105 [§S7]: derivation rule 3 names five categories that get stricter early
+   floors because a defect can directly interrupt care. The rule is prose in the
+   methodology; this is the register metric carrying each category, written by
+   the generator beside the rule itself so the two cannot drift. The generator
+   refuses to write this file if any of them has no P8 certification row, and a
+   self-test checks the same thing against the payload. */
+export const DATA_PHASE_RULE3: Record<string, string> =
+  (NHA_DATA_PHASES as unknown as { rule3Metrics: Record<string, string> }).rule3Metrics;
 '''
 
 
@@ -415,6 +424,14 @@ PHASES = [
                 ],
             },
             {
+                "section": "Mature care-interruption certification",
+                "why": "R105: derivation rule 3 names five categories that get stricter early floors because a defect can directly interrupt care. Identity, uptime and vulnerability are certified here; medication continuity and abnormal-result closure were not, and were each measured exactly once in twelve years.",
+                "metrics": [
+                    ("KPP-T2", "≤0.2% critical-medication interruption", "framework", "Controlled maturity target from the complete KPP dictionary. P2 published a 1.0% ceiling, five times this one, and nothing between P3 and P7 republished it; certifying at maturity is what closes the obligation rule 3 opens."),
+                    ("TPP-6.3", "≥99% abnormal-result follow-up closure", "framework", "Controlled maturity target from the complete TPP dictionary. P5 published a 95% floor against this 99% obligation and no later phase restated it."),
+                ],
+            },
+            {
                 "section": "Mature cyber and continuity",
                 "why": "Availability, degraded operation, and remediation are certified together.",
                 "metrics": [
@@ -446,6 +463,26 @@ PHASES = [
 # floor stays operative across the gap.  That is stated once in the methodology
 # document rather than repeated in every row here.
 DECLARED_PHASE_GAPS = {
+    "KPP-T2": (
+        ("P3", "P4", "P5", "P6", "P7"),
+        "R105: measured once at P2, where the pharmacy rail first carries "
+        "medication continuity, and certified once at P8 against the "
+        "controlled 0.2% ceiling. Nothing between them changes what the "
+        "measure measures, so no phase republishes it and the P2 ceiling "
+        "stays operative across the gap under derivation rule 2. The gap is "
+        "wide and it is declared rather than defended: rule 3 calls this one "
+        "of the five categories where a defect can directly interrupt care, "
+        "and five phases without a published floor is the weakest coverage "
+        "any rule-3 category has.",
+    ),
+    "TPP-6.3": (
+        ("P6", "P7"),
+        "R105: published at P5, where scaled care first makes abnormal-result "
+        "ownership explicit, and certified at P8 against the controlled 99% "
+        "obligation. P6 converts the remaining population and P7 extends "
+        "benefits; neither changes what closure measures, so the P5 floor "
+        "stays operative across the gap.",
+    ),
     "KPP-A1": (
         ("P7",),
         "P7 extends benefits to the population P6 already converted, so its own "
@@ -546,6 +583,19 @@ def load_quality_parameters() -> dict[str, dict]:
     return {item["id"]: item for item in catalog["parameters"]}
 
 
+# R105 [S7]: derivation rule 3 in machine-readable form. The rule names five
+# categories in prose; these are the register metrics that carry them. Written
+# beside the rule so the two cannot drift, and enforced below: a rule-3 metric
+# with no P8 certification row stops the generator.
+RULE_3_METRICS = {
+    "identity": "TPP-1.1",
+    "medication continuity": "KPP-T2",
+    "abnormal-result closure": "TPP-6.3",
+    "uptime": "TPP-11.1",
+    "vulnerability": "TPP-11.3",
+}
+
+
 def build_payload() -> dict:
     parameters = load_quality_parameters()
     used: set[str] = set()
@@ -574,6 +624,24 @@ def build_payload() -> dict:
                 )
             built["groups"].append(built_group)
         phases.append(built)
+
+    certified_at_p8 = {
+        metric["id"]
+        for phase in phases
+        if phase["id"] == "P8"
+        for group in phase["groups"]
+        for metric in group["metrics"]
+    }
+    missing_rule_3 = sorted(
+        f"{category} ({identifier})"
+        for category, identifier in RULE_3_METRICS.items()
+        if identifier not in certified_at_p8
+    )
+    if missing_rule_3:
+        raise ValueError(
+            "R105: derivation rule 3 names categories with no P8 certification "
+            "row: " + ", ".join(missing_rule_3)
+        )
 
     measured = phase_gaps(phases)
     undeclared = sorted(set(measured) - set(DECLARED_PHASE_GAPS))
@@ -608,6 +676,7 @@ def build_payload() -> dict:
             }
             for identifier in sorted(measured)
         ],
+        "rule3Metrics": dict(RULE_3_METRICS),
         "metricCount": len(used),
         "targetCount": sum(
             len(group["metrics"])

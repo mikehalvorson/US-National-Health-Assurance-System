@@ -112,7 +112,9 @@ import {
   gateFloorChecks, gateFloorCollisions, gateFloorDrift, gatePhaseDrift,
   KNOWN_UNANCHORED_FLOORS, unexplainedExemptions
 } from './gate-floors';
-import { DATA_PHASE_COUNTS, DATA_PHASE_GAPS, DATA_PHASES } from './data-phases';
+import {
+  DATA_PHASE_COUNTS, DATA_PHASE_GAPS, DATA_PHASE_RULE3, DATA_PHASES
+} from './data-phases';
 import { methodologyCountsAgree, methodologyDrift } from './methodology-check';
 import { TOOLCHAINS, toolchainDrift, toolsInManifest } from './toolchain-check';
 import {
@@ -1865,9 +1867,39 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ' (' + x.fromValue + '->' + x.toValue + ')').join(', ') || 'monotone'
         };
       }),
-      runGuarded('Data-tab framework-basis entries number seventeen', () => {
+      /* R105 [§S7]: 17 -> 19. KPP-T2 and TPP-6.3 gained P8 certification rows,
+         and both cite the controlled dictionary target, which is what a
+         framework basis means. */
+      runGuarded('Data-tab framework-basis entries number nineteen', () => {
         const n = frameworkBasisEntries().length;
-        return { ok: n === 17, note: n + ' entries carry basis: framework' };
+        return { ok: n === 19, note: n + ' entries carry basis: framework' };
+      }),
+      /* R105 [§S7]: derivation rule 3 names five categories that get stricter
+         early floors "because a defect can directly interrupt care". Three
+         were certified at maturity and two were not: medication interruption
+         was measured once, at P2, at a ceiling five times the mature one, and
+         never again through year 12; abnormal-result closure was measured
+         once, at P5. The rule is prose in the methodology, so the mapping from
+         its five categories to register metrics is carried in the payload and
+         checked here rather than read by eye. */
+      runGuarded('Every metric named in derivation rule 3 is certified at P8', () => {
+        const certified = new Set(
+          (DATA_PHASES.find((p) => p.id === 'P8')?.groups || [])
+            .flatMap((g) => g.metrics.map((m) => m.id))
+        );
+        const rule3 = DATA_PHASE_RULE3;
+        const categories = Object.keys(rule3);
+        const missing = categories.filter((c) => !certified.has(rule3[c]));
+        return {
+          ok: !missing.length && categories.length === 5,
+          note: missing.length
+            ? 'named by rule 3, not certified at P8: ' +
+              missing.map((c) => c + ' (' + rule3[c] + ')').join(', ')
+            : categories.length !== 5
+              ? 'rule 3 names five categories; the map carries ' + categories.length
+              : categories.length + ' categories, all certified: ' +
+                categories.map((c) => rule3[c]).join(', ')
+        };
       }),
       /* R57 [§S2]: TPP-11.1 uptime is tracked at P1-P3 and P6-P8 and absent at
          P4 and P5 - the phases when hospitals, laboratories and units first
