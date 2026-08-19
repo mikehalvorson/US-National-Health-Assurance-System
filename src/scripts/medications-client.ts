@@ -77,8 +77,10 @@ function renderSavings(): void {
   setText('medications-pmc-savings-copy', money(pmc));
   setText('medications-purchasing-savings', money(purchasing));
   setText('medications-total-drug-savings', money(wholePriceLever));
+  /* R204 [§S7]: the base was typed into this string as well as into the page,
+     so a change to it would have moved one and not the other. */
   setText('medications-savings-formula',
-    '$717.9B × ' + shareValue.toFixed(0) + '% × ' +
+    '$' + ALL_DRUG_SPEND_2024.toFixed(1) + 'B × ' + shareValue.toFixed(0) + '% × ' +
     reductionValue.toFixed(0) + '% = ' + money(pmc) + ' per year');
   const bar = document.getElementById('medications-pmc-share-bar');
   if (bar) bar.style.width = shareValue + '%';

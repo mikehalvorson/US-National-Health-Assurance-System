@@ -273,3 +273,36 @@ export const ALL_DRUG_SPEND_2024 = 717.9;
 export function calcSavings(share: number, reduction: number): number {
   return ALL_DRUG_SPEND_2024 * share / 100 * reduction / 100;
 }
+
+/* R173 + R204 [§S7]: the base is modal and it is dated, and the chapter says
+ * both. R173 found every savings figure on the tab computed at a point
+ * estimate against a bare constant, while the parameter underneath it is a
+ * distribution the engine samples. R204 found a 2024-scale figure driving a
+ * tab whose sibling modules calibrate on 2023, with the base year stated
+ * nowhere on the tab.
+ *
+ * Built from DRUG_BASE rather than typed beside it, for the reason P8 ended
+ * on: a reader-facing sentence written by hand, in a file where every other
+ * count was derived, said something the code did not do. The self-test holds
+ * this to the five figures it has to state, not to its wording, so it can be
+ * rewritten freely. */
+export function drugBaseNote(): string {
+  const b = DRUG_BASE;
+  return 'Every dollar figure in this chapter is in real ' + b.displayYear +
+    ' dollars, calibrated on the CMS account for ' + b.calibrationYear +
+    ', the last finalized year. The $' + b.total.toFixed(1) +
+    'B drug base is a modal value rather than a fixed one: the model samples ' +
+    'the non-retail estimate, so the base it actually runs on spans $' +
+    b.low.toFixed(1) + 'B to $' + b.high.toFixed(1) +
+    'B. The savings figures here are computed at the mode, and they move with it.';
+}
+
+/* The values the note has to state for a reader to know what the figures are.
+ * Held as data so a rewrite of the sentence cannot quietly drop one. */
+export const DRUG_BASE_NOTE_FIGURES = [
+  String(DRUG_BASE.displayYear),
+  String(DRUG_BASE.calibrationYear),
+  DRUG_BASE.total.toFixed(1),
+  DRUG_BASE.low.toFixed(1),
+  DRUG_BASE.high.toFixed(1)
+];

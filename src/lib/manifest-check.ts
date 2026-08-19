@@ -971,6 +971,14 @@ export function drugBaseNotRendered(root = REPO_ROOT): string[] {
 export const RETAIL_BAND_LOW = 400;
 export const RETAIL_BAND_HIGH = 560;
 
+/* R173 + R204 [§S7]: and the note that says the base is modal and dated has to
+ * reach the page, for the reason bandNoteIsRendered exists: declaring it in the
+ * module and never showing it is the omission, moved one layer in. */
+export function drugBaseNoteIsRendered(root = REPO_ROOT): boolean {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  return /drugBaseNote\(\)/.test(text);
+}
+
 export function literalRetailTotals(root = REPO_ROOT): string[] {
   const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
   const found: string[] = [];

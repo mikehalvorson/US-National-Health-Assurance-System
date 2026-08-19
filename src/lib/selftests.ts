@@ -59,7 +59,8 @@ import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
-  DRUG_BASE_READS, drugBaseNotRendered, literalRetailTotals,
+  DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
+  literalRetailTotals, MEDICATIONS_PAGE,
   RETAIL_BAND_HIGH, RETAIL_BAND_LOW,
   displayOnlyDatasetsInEngine,
   divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
@@ -72,7 +73,9 @@ import {
   unreadEngineConstants, unreadStructuralKnobs,
   unregisteredEngineLiterals, unregisteredSelfTestSurfaces
 } from './manifest-check';
-import { ALL_DRUG_SPEND_2024, DRUG_BASE } from './medications';
+import {
+  ALL_DRUG_SPEND_2024, DRUG_BASE, DRUG_BASE_NOTE_FIGURES, drugBaseNote
+} from './medications';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
 import {
@@ -2002,6 +2005,24 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               ? 'hand-typed retail totals: ' + literals.join(', ')
               : 'all ' + DRUG_BASE_READS.length + ' fields read, no literal in $' +
                 RETAIL_BAND_LOW + '-' + RETAIL_BAND_HIGH + 'B')
+        };
+      }),
+      /* R173 + R204 [§S7]: the note is held to the five figures a reader needs
+         in order to know what the savings figures are, not to its wording, so
+         it can be rewritten and still has to say them. */
+      runGuarded('The chapter says its base is modal and says its base year', () => {
+        const note = drugBaseNote();
+        const missing = DRUG_BASE_NOTE_FIGURES.filter((f) => !note.includes(f));
+        const rendered = drugBaseNoteIsRendered();
+        return {
+          ok: !missing.length && rendered && /modal/.test(note),
+          note: !rendered
+            ? 'the note is not rendered on ' + MEDICATIONS_PAGE
+            : missing.length
+              ? 'the note no longer states: ' + missing.join(', ')
+              : 'states ' + DRUG_BASE_NOTE_FIGURES.length + ' measured figures, $' +
+                DRUG_BASE.low.toFixed(1) + 'B to $' + DRUG_BASE.high.toFixed(1) +
+                'B around a $' + DRUG_BASE.total.toFixed(1) + 'B mode'
         };
       })
     ]

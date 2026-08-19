@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
-import { DRUG_BASE } from '../lib/medications';
+import { DRUG_BASE, drugBaseNote } from '../lib/medications';
 
 /* R296 [§S7]: the spend bar's labels and the widths that encode them are the
    same two numbers, read once from the model's own decomposition. The bar used
@@ -49,7 +49,7 @@ const retail2023 = DRUG_BASE.retail2023.toFixed(1);
       <article>
         <strong>$43B/yr</strong>
         <span>illustrative PMC-attributed purchase saving</span>
-        <small>planning midpoint <span class="conf low">low</span></small>
+        <small>modal planning midpoint <span class="conf low">low</span></small>
       </article>
     </div>
   </section>
@@ -111,7 +111,7 @@ const retail2023 = DRUG_BASE.retail2023.toFixed(1);
         </article>
         <article>
           <strong>$680–730B</strong>
-          <span>retail plus hospital and clinician-administered drugs</span>
+          <span>retail plus hospital and clinician-administered drugs in 2024</span>
           <small>Derived because CMS embeds non-retail drugs in service lines
             <span class="conf medium">medium</span></small>
         </article>
@@ -367,10 +367,12 @@ const retail2023 = DRUG_BASE.retail2023.toFixed(1);
     <span class="medications-kicker">Savings without double counting</span>
     <h2>Attribute part of the national price lever to products the PMC supplies</h2>
     <p class="desc">The fiscal model applies a 25–55% mature net price
-      reduction to the complete $717.9B drug base through national purchasing,
-      reference pricing, formulary management, and public production together.
-      This calculator identifies how much of that same saving could be
-      associated with the PMC portfolio. It does not add a new offset.</p>
+      reduction to the complete ${drugBase}B drug base through national
+      purchasing, reference pricing, formulary management, and public
+      production together. This calculator identifies how much of that same
+      saving could be associated with the PMC portfolio. It does not add a new
+      offset.</p>
+    <p class="note">{drugBaseNote()}</p>
     <div class="medications-savings-layout">
       <div class="medications-savings-controls">
         <label>
@@ -390,7 +392,7 @@ const retail2023 = DRUG_BASE.retail2023.toFixed(1);
             <span class="conf medium">medium</span></small>
         </label>
         <p id="medications-savings-formula" class="medications-savings-formula">
-          $717.9B × 15% × 40% = $43.1B per year</p>
+          ${drugBase}B × 15% × 40% = $43.1B per year</p>
       </div>
       <div class="medications-savings-result">
         <span>PMC-attributed annual purchase saving</span>
