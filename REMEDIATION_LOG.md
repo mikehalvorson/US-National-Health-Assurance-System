@@ -1768,7 +1768,8 @@ ensemble drawing different numbers**, and the self-test that measures it is now 
 
 ## P8 — §S6b Scenarios, bounds & sliders · 2026-08-18 · branch `nha-remediation`
 STATUS: complete — all 7 rows landed across 6 commits (`R59` folded into `R139` as superseded),
-plus 2 new findings fixed
+plus 2 new findings fixed, plus a two-axis code review that found the section's worst
+defect after this entry was first drafted
 
 **Entry gate:** `## P7` (`§S6a`) `STATUS: complete` ✅ · `publicAdminRate`'s distribution
 verified in the code at `low: 1.5, mode: 2.2, high: 6.0` ✅ · `check_audit_docs.py` 35/35 exit 0,
@@ -1789,6 +1790,7 @@ restored from bytes read before the break, tree clean ✅
 | `8307b64` | `R237` — the band that closes exactly where the model is least certain |
 | `944c080` | `R142` — the same slider position is not the same uncertainty |
 | `4798e28` | new finding — a control that stops at 6% builds a band reaching 16.4% |
+| `44d57ae` | code review — the sentence both axes found, and the grade that stopped at the easy half |
 
 ### THE EXIT PROTOCOL FIELDS
 
@@ -1824,6 +1826,9 @@ invented that the model does not have.** The noise floor (0.56% hero, 1.37% new 
 came into it; every figure is bit-identical.
 
 ### DISCREPANCIES
+
+**Nine here, and three more (`D65`-`D67`) under the code review below, one of which
+corrects `D58` in this section.**
 
 **`D56` — "all 52 of 52 overrides fall outside their base `low`/`high`" is now 51 of 52.**
 `§AP1` measured 52 of 52 and used it to withdraw `AC2`'s "scenarios violate declared bounds"
@@ -1937,8 +1942,10 @@ check rather than on the ones that look risky.
 
 - **Self-tests 129 → 141**, twelve added. README bumped in the same edit each time; the drift
   gate fired whenever it was not.
-- **17 new or touched checks, all 17 watched failing**, by breaking the code, rebuilding, and
-  restoring from bytes read before the break. The scripted pass is
+- **19 new or touched checks, all 19 watched failing**, by breaking the code, rebuilding, and
+  restoring from bytes read before the break. One break was wrong rather than one check:
+  grading `SCN-PANDEMIC`'s structural block `medium` passed, because its reason already names
+  $220B and 4.5%, which is the rule working. Retargeted at a reason carrying no figure. The scripted pass is
   `baseline-P8/prove_p8.py` and reports `build failed / named its check / restored` per break,
   then `git status`. Final run: 17 of 17, tree clean.
 - Two changes to P7's `prove2.py` that both cost a run: it invokes `npm run build` rather than
@@ -1970,6 +1977,102 @@ than typed, so none of them can drift from what they describe:
 Verified in the browser, not inferred from the diff: the picker across `SCN-BASE`,
 `SCN-PANDEMIC` and `SCN-PESS`, the singular and plural forms, the grade badges, and zero em
 dashes in the rendered text.
+
+### THE CODE REVIEW, RUN AFTER THE LOG ENTRY WAS DRAFTED
+
+Two axes against `6242d23`, Standards and Spec, in parallel and without sight of each
+other. **Eleven findings on Standards, four on Spec, and nothing implemented wrong** on
+the six load-bearing claims: every one reproduced by independent measurement, including
+that `OVERRIDES_BEYOND_SLIDER` is complete at exactly one and that `model.ts` check 5f
+really is a strict superset of the `R61` check this section deleted.
+
+🛑 **Both axes landed on the same sentence, from opposite directions, and it was the
+worst defect in the section.** `paramBandNote()` told a reader *"What cannot be crossed
+comes from the unit: a percentage or a share is held between 0 and 100."* Standards
+called it note/code drift: `naturalCeiling()` tests `RATE_UNIT` first and returns `null`,
+so the three `%/yr` parameters are deliberately exempt. Spec reached it from the section
+brief's *"every parameter has declared bounds"* and measured the real number.
+
+**Measured with the live `naturalCeiling()`, the 32 parameters fall in three tiers:**
+
+| Upper bound comes from | Count |
+|---|---|
+| The unit (a percentage or share, held at 100) | **12** |
+| A slider ceiling, which caps the control and not the scenario | **6** |
+| **Nothing. A floor at zero and no maximum** | **14** |
+
+**`D65` — and this corrects `D58` in this same entry.** `D58` said the 19 parameters
+without slider bounds *"have no bound but the natural domain of their unit"*, which reads
+as though the unit supplies one. For 14 of the 32 it supplies nothing: they are dollar
+amounts and growth rates, which have no natural maximum. The 14 include `bhExpansion`,
+`wealthTaxPotential`, `careModelSavings` and `extractionSavings` — **`R59`'s own four
+named examples**, which makes its sub-finding sharper than the stamp gave it credit for.
+The code is right and the sentence was wrong; the sentence is now assembled from the
+three measured tier counts.
+
+**`D66` — the prompt's Done-when clause "the slider spread cannot collapse to zero width"
+is unconditional, and this section did not make it true.** Five parameters still yield
+`[0, 0, 0]` at `sliderMin`. `R237` explicitly permits the statement branch instead of a
+floor, and the reasoning is recorded at length, so the choice is legitimate. **Recording
+it only in the row and not under `DISCREPANCY` was not**, and Order 0 asks for exactly
+this. Filed now.
+
+**`D67` — `R139`'s second declared test, "every parameter declares what its low/high
+represent", shipped as one collective page sentence rather than per parameter.**
+`params.ts` gained no field and is untouched, despite being named in the section brief's
+Files. Thirty-two copies of one sentence would be noise, so the narrowing is defensible;
+not noting it was not.
+
+### WHAT THE REVIEW CHANGED
+
+- **The band note is true now, and held to the numbers rather than to its own wording.**
+  Its check used to match three prose phrases, one of which was part of the false claim,
+  so **rewriting the note to make it truer broke the check.** It now requires the note to
+  state each of the six measured counts. A rewrite that keeps them stays green; vague
+  prose satisfies none of them.
+- **Structural blocks carried a reason and no confidence grade**, while all 52 overrides
+  carried both. CONVENTIONS rule 3 wants a grade on every number, and the two figures
+  `AP4` named by name, `SCN-PANDEMIC`'s $220B and `SCN-CYBER`'s $45B, are structural
+  rather than parameter overrides. **They were precisely the numbers that reached a
+  reader ungraded.** All seven blocks graded, and `provenanceProblems` now holds the
+  structural half to the same substance rule as the overrides.
+- **CONVENTIONS rule 4, in rendered text, five ways.** Shouting caps (`BELOW`),
+  rhetorical flourish (*"reading it backwards"*), UI self-reference (*"which is why the
+  description says"*), *"not X, not Y"* scaffolding in both note builders and the picker,
+  and a crutch cadence closing 21 of the 52 `why` strings on *"The proportion is
+  assumed"* or *"The fraction is judgement"*. The closers restated the confidence grade
+  in prose on every entry; each now says what the magnitude is anchored to instead, which
+  is shorter and carries more.
+- **A self-test name that repeated itself**, rendered in the footer integrity panel.
+- **`reach[0]` was an unguarded index** in a function the health page calls from its
+  frontmatter, while the self-test on the same value guarded it.
+- **`unreadStructuralKnobs` matched a bare substring**, so `opts.shock` would have
+  satisfied `s.shock`. The same file argues elsewhere against a check a deletion cannot
+  fail; the standard applies to its own.
+- **`R60`'s guard caught `confidence` exactly as it caught `why`.** Two special cases is
+  a set: `STRUCTURAL_PROVENANCE_KEYS` now, and a third costs nothing.
+
+### WHAT THE REVIEW RAISED AND THIS SECTION DID NOT CHANGE
+
+- **Scope, on the slider-reach tripwire.** Spec called `47fa4cf` (the type-check gate)
+  not creep, since every gate this section declares was being enforced by a build that
+  could not see a type error. It called `4798e28` half creep: the disclosure belongs to
+  `R142`/`R237`, but `SLIDER_REACH_DECLARED` at 2.727 +/- 0.01 is a standing tripwire no
+  row asked for, and it will fail the build for any later section that re-ranges an
+  adjustable parameter's `high`. **That is the intended behaviour and it is a real cost
+  on later sections, so the failure message now says what to do about it.**
+- **`collapsingSliderParameters()` samples the two slider ends, not "any slider
+  position".** Safe today because no parameter declares a negative `sliderMin`, so a zero
+  crossing can only occur at an end. Recorded rather than generalised.
+- **Four judgement-call smells, accepted under a frozen architecture and left for
+  whoever moves a seam here:** `scenarios.ts` now holds catalog data, two validators, a
+  module-load throw, four measurement sweeps and two prose builders (*Divergent
+  Change*); those four sweeps repeat the same `adjustable`/`sliderMax`/`effectiveParams`
+  loop preamble (*Duplicated Code*); `scenario + '/' + param` is built as a string in
+  three places and re-split in a fourth when an `OverrideBeyondSlider` type already
+  exists (*Primitive Obsession*); and only `unknownOverrideKeys` takes its catalog as an
+  argument, so it alone can be probed with a fabricated one while its four neighbours
+  read module state.
 
 ### FOR THE NEXT SECTION
 
