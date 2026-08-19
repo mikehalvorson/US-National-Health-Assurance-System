@@ -1505,6 +1505,51 @@ export const DRUG_BASE = (function () {
   };
 })();
 
+/* Code review [§S7]: the strings the chapter actually prints, produced once.
+ *
+ * The first version of this let the page round each segment to the nearest
+ * billion for its label and print the total to one decimal, so the page read
+ * "$461B plus $257B is a $717.9B drug base": 461 + 257 = 718. That is BY2's
+ * defect in a new place, made by the commit that fixed BY2 - a label that is
+ * not the value beside it - and it reached the rendered page.
+ *
+ * One decimal on all three is what makes the sentence add up, because the
+ * segments are exact halves of the total by construction. The check below is
+ * on these STRINGS rather than on the numbers: `retailPct / 100 * total` is
+ * algebraically `retail`, so a check written that way is an identity that
+ * cannot fail, which is the tautology R52 was filed for. What can fail is the
+ * arithmetic a reader does on what is printed. */
+export const DRUG_BASE_LABELS = {
+  retail: DRUG_BASE.retail.toFixed(1),
+  nonRetail: DRUG_BASE.nonRetail.toFixed(1),
+  total: DRUG_BASE.total.toFixed(1),
+  retailWidth: DRUG_BASE.retailPct.toFixed(2),
+  nonRetailWidth: DRUG_BASE.nonRetailPct.toFixed(2)
+};
+
+/* Does the sum a reader can do on the printed segments give the printed total,
+ * and does each printed width, applied to the printed total, give the segment
+ * printed beside it? Both are answered on the rendered precision. */
+export function spendBarArithmetic(labels = DRUG_BASE_LABELS): {
+  labelSum: number; printedTotal: number; sumAgrees: boolean;
+  retailFromWidth: number; nonRetailFromWidth: number; widthsAgree: boolean;
+} {
+  const retail = Number(labels.retail);
+  const nonRetail = Number(labels.nonRetail);
+  const printedTotal = Number(labels.total);
+  const labelSum = +(retail + nonRetail).toFixed(1);
+  const retailFromWidth = +(printedTotal * Number(labels.retailWidth) / 100).toFixed(1);
+  const nonRetailFromWidth =
+    +(printedTotal * Number(labels.nonRetailWidth) / 100).toFixed(1);
+  return {
+    labelSum, printedTotal,
+    sumAgrees: Math.abs(labelSum - printedTotal) < 0.05,
+    retailFromWidth, nonRetailFromWidth,
+    widthsAgree: Math.abs(retailFromWidth - retail) < 0.1 &&
+      Math.abs(nonRetailFromWidth - nonRetail) < 0.1
+  };
+}
+
 /* The savings calculator's fixed base. §Z established this module gets
  * non-additive attribution right and §BY4 verified every figure it produces,
  * so the literal stays and the derivation is checked against it rather than
@@ -1530,9 +1575,16 @@ export function calcSavings(share: number, reduction: number): number {
  * rewritten freely. */
 export function drugBaseNote(): string {
   const b = DRUG_BASE;
-  return 'Every dollar figure in this chapter is in real ' + b.displayYear +
+  /* Code review [§S7]: this opened "Every dollar figure in this chapter is in
+     real 2024 dollars", and the same page prints "$449.7B retail prescription
+     drugs in 2023" four cards above it. A universal the page itself
+     contradicts, written by hand in a sentence where every other figure is
+     derived, which is the exact lesson P8 ended on. Scoped to the modelled
+     figures, which is what is true. */
+  return 'The modelled figures in this chapter are in real ' + b.displayYear +
     ' dollars, calibrated on the CMS account for ' + b.calibrationYear +
-    ', the last finalized year. The $' + b.total.toFixed(1) +
+    ', the last finalized year, which is the year the retail card above states. ' +
+    'The $' + b.total.toFixed(1) +
     'B drug base is a modal value rather than a fixed one: the model samples ' +
     'the non-retail estimate, so the base it actually runs on spans $' +
     b.low.toFixed(1) + 'B to $' + b.high.toFixed(1) +

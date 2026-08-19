@@ -953,14 +953,32 @@ export function divergenceIsRendered(root = REPO_ROOT): boolean {
 export const MEDICATIONS_PAGE = 'src/pages/medications.astro';
 
 export const DRUG_BASE_READS = [
-  'DRUG_BASE.retail', 'DRUG_BASE.nonRetail', 'DRUG_BASE.total',
-  'DRUG_BASE.retailPct', 'DRUG_BASE.nonRetailPct'
+  'DRUG_BASE_LABELS.retail', 'DRUG_BASE_LABELS.nonRetail',
+  'DRUG_BASE_LABELS.total', 'DRUG_BASE_LABELS.retailWidth',
+  'DRUG_BASE_LABELS.nonRetailWidth'
 ];
+
+/* Code review [§S7]: `includes` was the wrong test, and it defeated the reason
+ * these five are named separately. `DRUG_BASE.retail` is a substring of
+ * `DRUG_BASE.retailPct`, and `DRUG_BASE.nonRetail` of `DRUG_BASE.nonRetailPct`,
+ * so a page that read only the two percentages satisfied all five entries: the
+ * two label reads this check exists to protect could be deleted and it still
+ * passed. Exactly the failure the comment above claims to avoid, one layer in.
+ * The property name has to end where the entry ends. */
+function readsField(text: string, read: string): boolean {
+  return new RegExp(read.replace('.', '\\.') + '(?![A-Za-z0-9_])').test(text);
+}
 
 export function drugBaseNotRendered(root = REPO_ROOT): string[] {
   const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
-  return DRUG_BASE_READS.filter((r) => !text.includes(r));
+  return DRUG_BASE_READS.filter((r) => !readsField(text, r));
 }
+
+/* Code review [§S7]: comments are masked, for the reason
+ * retiredTreeCodeReferences masks them: a provenance comment explaining why a
+ * figure was removed necessarily quotes the figure, and quoting it in a
+ * comment is not publishing it. The first version of this scan failed on its
+ * own fix note. */
 
 /* R214 [§S7]: and the other half of one owner. A hand-typed dollar total in
  * the retail drug band is how the CMS 2024 figure got onto a segment the model
@@ -1117,7 +1135,7 @@ export function statedStressBoundary(root = REPO_ROOT): [number, number] | null 
 }
 
 export function literalRetailTotals(root = REPO_ROOT): string[] {
-  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  const text = maskComments(readFileSync(join(root, MEDICATIONS_PAGE), 'utf8'));
   const found: string[] = [];
   for (const m of text.matchAll(/\$(\d{3}(?:\.\d)?)B/g)) {
     const v = Number(m[1]);

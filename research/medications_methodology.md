@@ -62,9 +62,16 @@ line and the growth rate together. Until then the model carries neither.
 ### Retail plus clinician-administered drugs
 
 - **Value:** Approximately $680–730 billion in 2024.
-- **Scope:** The retail line plus an estimated $212–264 billion of infused,
-  injected, and other medicines recorded inside hospital and physician-service
-  categories.
+- **Scope:** A published retail line plus an estimated $212–264 billion of
+  infused, injected, and other medicines recorded inside hospital and
+  physician-service categories.
+- **Note (code review, R214):** this range is quoted from CP-RX-002 as
+  published. It is **not** re-derived from the retail line the model owns, and
+  it should not be read as though it were: CP-RX-002 built it on a 2024 retail
+  figure of $467.0B, which the reconciliation note above sets aside. The
+  model’s own decomposition is separate and exact: $461.4B retail plus
+  $256.5B non-retail is the $717.9B base, which sits inside this range without
+  reproducing its endpoints.
 - **Source:** CMS NHE for retail spending; MedPAC, [Prescription Drugs section
   of the July 2024 Data
   Book](https://www.medpac.gov/wp-content/uploads/2024/07/July2024_MedPAC_DataBook_Sec10_SEC.pdf),

@@ -57,31 +57,44 @@ export const DRUG_LEVER = (function () {
   };
 })();
 
-/* Rounded to the precision the sentence uses, so the note and the check cannot
- * disagree about what "about twice" means. */
-export const DRUG_LEVER_RATIO_TEXT = DRUG_LEVER.ratio.toFixed(1);
+/* Code review [§S7]: this existed so the note and the check could not disagree
+ * about what "about twice" meant. The note no longer publishes the multiplier,
+ * so the only thing left reading it was itself. The ratio is still measured on
+ * DRUG_LEVER and still gated by the 1.5-3.0 band; the export is the dead half. */
 
+/* Code review [§S7]: the first version of this note printed both dollar
+ * figures side by side and stated the multiplier between them: "$287B against
+ * a 2024-scale drug base, while the model reports about $576B in 2041, roughly
+ * 2.0 times as much." Golden rule 6 is "never compare dollars across
+ * scale-years... 'mature at 2024 scale' and '2041 steady state' are different
+ * questions", and a published ratio between the two is that comparison, even
+ * with the explanation attached. Explaining a comparison the house style
+ * forbids is not the same as not making it.
+ *
+ * What the reader needs is what BY5 found missing: that moving this slider
+ * does not move the model, and that the model's drug figure is a different
+ * question rather than a different answer to this one. That is said without
+ * putting the two numbers in one sentence. The ratio stays measured and stays
+ * gated below, where it is developer-facing. */
 export function drugLeverNote(): string {
   const d = DRUG_LEVER;
   return 'This slider and the fiscal model\'s national drug-price parameter ' +
     'share a range, but they are separate controls: moving this one does not ' +
     'move the model, and moving the model does not move this one. They also ' +
-    'answer at different points in time. At the same ' + d.cut.toFixed(0) +
-    '% reduction, this tab reports $' + d.tabLever.toFixed(0) +
-    'B against a 2024-scale drug base, while the model reports about $' +
-    d.modelSaving.toFixed(0) + 'B in ' + d.matureYear +
-    ', roughly ' + DRUG_LEVER_RATIO_TEXT + ' times as much, because by then the ' +
-    'drug bill it applies to has grown. Both describe one policy, measured in ' +
-    'two different years.';
+    'answer different questions. This tab applies the ' + d.cut.toFixed(0) +
+    '% reduction to a 2024-scale drug base and reports $' +
+    d.tabLever.toFixed(0) + 'B. The model applies it to the drug bill as it ' +
+    'stands at ' + d.matureYear + ', after years of growth, and reports a ' +
+    'steady-state figure for that year. The two are not the same quantity and ' +
+    'should not be read against each other.';
 }
 
 /* The values the note has to state, held as data for the reason
  * DRUG_BASE_NOTE_FIGURES is: the sentence can be rewritten, the figures
- * cannot be dropped. */
+ * cannot be dropped. The engine's own dollar figure is deliberately not among
+ * them; see the comment above. */
 export const DRUG_LEVER_NOTE_FIGURES = [
   DRUG_LEVER.cut.toFixed(0),
   DRUG_LEVER.tabLever.toFixed(0),
-  DRUG_LEVER.modelSaving.toFixed(0),
-  String(DRUG_LEVER.matureYear),
-  DRUG_LEVER_RATIO_TEXT
+  String(DRUG_LEVER.matureYear)
 ];

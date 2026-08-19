@@ -78,7 +78,8 @@ import {
   unregisteredEngineLiterals, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import {
-  ALL_DRUG_SPEND_2024, DRUG_BASE, DRUG_BASE_NOTE_FIGURES, drugBaseNote,
+  ALL_DRUG_SPEND_2024, DRUG_BASE, DRUG_BASE_LABELS, DRUG_BASE_NOTE_FIGURES,
+  drugBaseNote, spendBarArithmetic,
   FAMILIES, FAMILY_SOURCES, FAMILY_TAGS, FAMILY_WHY_FLOOR, familyGradeCounts,
   familyPhaseCounts, PHASE_FOR_CLASS, phasePrinciple, shallowFormClassReasons,
   staleFormClassDeclarations, undeclaredFormClasses, unknownFamilyTags,
@@ -2025,17 +2026,34 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       /* R296 [§S7]: BY2's finding, as a rule. A segment label that is not the
          value its width encodes is what made the model look as though it
          decomposes into the official figure. */
+      /* Code review [§S7]: this was a tautology, and it shipped inside the
+         commit that fixed a tautology.
+
+         It computed `retailPct / 100 * total` and compared it to `retail` -
+         but `retailPct` IS `retail / total * 100`, so all three conjuncts were
+         algebraic identities that no data could falsify. The break written to
+         prove it passed only because it perturbed `retailPct` after the fact,
+         which breaks the identity rather than exercising the check. Meanwhile
+         the rendered page read "$461B plus $257B is a $717.9B drug base", and
+         461 + 257 is 718.
+
+         What can actually fail is the arithmetic on the printed strings, so
+         that is what is checked: the segments a reader can add, and each
+         printed width applied to the printed total. */
       runGuarded('The spend bar labels equal the values its widths encode', () => {
-        const fromRetailWidth = (DRUG_BASE.retailPct / 100) * DRUG_BASE.total;
-        const fromNonWidth = (DRUG_BASE.nonRetailPct / 100) * DRUG_BASE.total;
-        const ok = Math.abs(fromRetailWidth - DRUG_BASE.retail) < 0.05 &&
-          Math.abs(fromNonWidth - DRUG_BASE.nonRetail) < 0.05 &&
-          Math.abs(DRUG_BASE.retailPct + DRUG_BASE.nonRetailPct - 100) < 1e-9;
+        const a = spendBarArithmetic();
         return {
-          ok,
-          note: DRUG_BASE.retailPct.toFixed(2) + '% = $' +
-            fromRetailWidth.toFixed(1) + 'B, labelled $' +
-            DRUG_BASE.retail.toFixed(1) + 'B'
+          ok: a.sumAgrees && a.widthsAgree &&
+            Math.abs(DRUG_BASE.retailPct + DRUG_BASE.nonRetailPct - 100) < 1e-9,
+          note: !a.sumAgrees
+            ? 'the printed segments sum to ' + a.labelSum.toFixed(1) +
+              ', the printed total is ' + a.printedTotal.toFixed(1)
+            : !a.widthsAgree
+              ? DRUG_BASE_LABELS.retailWidth + '% of ' + a.printedTotal +
+                ' is ' + a.retailFromWidth + ', labelled ' + DRUG_BASE_LABELS.retail
+              : '$' + DRUG_BASE_LABELS.retail + 'B + $' +
+                DRUG_BASE_LABELS.nonRetail + 'B = $' + a.labelSum.toFixed(1) +
+                'B, printed as $' + DRUG_BASE_LABELS.total + 'B'
         };
       }),
       runGuarded('The chapter builds both segments from the model, not from a literal', () => {
