@@ -12,13 +12,15 @@ import { runMonteCarlo } from './model';
 import {
   bandCounts, BASE_SCENARIO_ID, catalogShapeProblems,
   collapsingSliderParameters, effectiveParams, naturalCeiling,
-  OVERRIDES_BEYOND_SLIDER, paramBandNote, provenanceProblems,
+  OVERRIDES_BEYOND_SLIDER, paramBandNote, PROVENANCE_MIN_CHARS, provenanceProblems,
   provenanceGradeCounts, scenarioStructural, SCENARIOS as MODEL_SCENARIOS,
   SIGNED_PATH_FIELDS, sliderBandReach, sliderSpreadNote,
   SLIDER_REACH_DECLARED, SLIDER_REACH_TOLERANCE, spreadDependence,
   SPREAD_COLLAPSE_DECLARED,
-  STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS, unknownOverrideKeys,
-  unknownStructuralKeys
+  shallowUnstressedReasons, staleUnstressedDeclarations,
+  STRESS_SCENARIO_COUNT, STRUCTURAL_KNOBS, undeclaredUnstressed,
+  unknownOverrideKeys,
+  unknownStructuralKeys, unstressedKindCounts, unstressedParameters
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -2031,6 +2033,53 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               : 'states ' + DRUG_BASE_NOTE_FIGURES.length + ' measured figures, $' +
                 DRUG_BASE.low.toFixed(1) + 'B to $' + DRUG_BASE.high.toFixed(1) +
                 'B around a $' + DRUG_BASE.total.toFixed(1) + 'B mode'
+        };
+      })
+    ]
+  },
+  {
+    /* R140 [§S7]: nothing sits outside every stress test unremarked */
+    surface: 'scenario-coverage',
+    rows: () => [
+      runGuarded('Every parameter is stressed by a scenario or declared', () => {
+        const undeclared = undeclaredUnstressed();
+        const stale = staleUnstressedDeclarations();
+        const shallow = shallowUnstressedReasons();
+        const kinds = unstressedKindCounts();
+        const unstressed = unstressedParameters();
+        return {
+          ok: !undeclared.length && !stale.length && !shallow.length,
+          note: undeclared.length
+            ? 'stressed by nothing and declared nowhere: ' + undeclared.join(', ')
+            : stale.length
+              ? 'declared unstressed but a scenario touches it: ' + stale.join(', ')
+              : shallow.length
+                ? 'reason under ' + PROVENANCE_MIN_CHARS + ' chars: ' + shallow.join(', ')
+                : (PARAM_DEFS.length - unstressed.length) + ' of ' +
+                  PARAM_DEFS.length + ' stressed, ' + kinds.sampled +
+                  ' declared as sampled inputs, ' + kinds.open + ' declared open'
+        };
+      }),
+      /* R140's headline: the parameter that reduces both the new-revenue
+         requirement and the apparent household burden had no scenario at its
+         low end. This holds that specific case rather than only the general
+         rule, because the general rule is satisfied by a declaration. */
+      runGuarded('The wage pass-through low end is explored by a scenario', () => {
+        const base = PARAMS_BY_ID.wagePassThrough;
+        let best: number | null = null;
+        let where = '';
+        for (const s of MODEL_SCENARIOS) {
+          const ov = s.overrides.wagePassThrough;
+          if (!ov) continue;
+          const mode = 'to' in ov ? ov.to[1] : base.mode * ov.mult;
+          if (best === null || mode < best) { best = mode; where = s.id; }
+        }
+        return {
+          ok: best !== null && best <= base.low,
+          note: best === null
+            ? 'no scenario touches wagePassThrough'
+            : where + ' takes it to ' + best + '%, against a base low of ' +
+              base.low + '% and a mode of ' + base.mode + '%'
         };
       })
     ]

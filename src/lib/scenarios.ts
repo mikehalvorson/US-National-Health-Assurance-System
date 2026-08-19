@@ -190,6 +190,23 @@ export const SCENARIOS: Scenario[] = [
         to: [5, 12, 25], confidence: 'low',
         why: 'Care-model change delivers a fraction of the central estimate. An ' +
           'assumed floor.'
+      },
+      /* R140 [§S7]: the two the row names after wagePassThrough. Both are cost
+         inputs that only ever ran at their central value, in a catalog whose
+         other transition figure is already stressed here. */
+      itCapital: {
+        to: [120, 160, 180], confidence: 'low',
+        why: 'The information mesh overruns alongside the transition envelope, ' +
+          'settling near the top of its own declared 60 to 180 band. That band ' +
+          'is already a three-fold range drawn from the VA and NPfIT records, ' +
+          'so this explores it rather than widening it.'
+      },
+      rdPublic: {
+        to: [95, 110, 120], confidence: 'low',
+        why: 'Replacing monopoly-price R&D financing costs near the top of the ' +
+          'declared 50 to 120 band, at or above the industry spend the ' +
+          'parameter is sized against. Judgement about what a public ' +
+          'replacement has to match, not a scored estimate.'
       }
     }
   },
@@ -317,6 +334,21 @@ export const SCENARIOS: Scenario[] = [
         why: 'Capture of what employers spend today falls roughly 20 points ' +
           'below the central estimate as firms restructure. The size of the ' +
           'behavioural response is assumed.'
+      },
+      /* R140 [§S7]: the conspicuous omission, and this is its scenario. A firm
+         restructuring to avoid the contribution is the same firm not handing
+         the savings back as wages, so the two belong in one case. Below the
+         base low of 40 deliberately: the parameter reduces both the
+         new-revenue requirement and the apparent household burden, and no
+         scenario explored its low end, which meant the parameter most able to
+         make the financing look worse sat outside every stress test. */
+      wagePassThrough: {
+        to: [25, 40, 58], confidence: 'low',
+        why: 'Pass-through stalls at or below the base low of 40%, against a ' +
+          'central 70%. The long-run convention the parameter cites is near ' +
+          '100%, so this is the short-run end of that evidence carried to ' +
+          'maturity, and the magnitude is judgement about firm behaviour ' +
+          'rather than a scored estimate.'
       }
     }
   },
@@ -909,6 +941,128 @@ export const OVERRIDES_BEYOND_SLIDER: OverrideBeyondSlider[] = [
       'clamping would quietly weaken the scenario to protect a UI bound.'
   }
 ];
+
+/* R140 [§S7]: every parameter is stressed by some scenario, or it is on this
+ * list with a reason.
+ *
+ * The row said ten of 31 parameters were never touched by any scenario. It is
+ * eleven of 32: `lowValuePool` was added after the row was written and nobody
+ * re-measured. Three of the eleven are now stressed, which is the three the
+ * row names: `wagePassThrough` at its low end in SCN-EMP-FAIL, `itCapital` and
+ * `rdPublic` near the top of their bands in SCN-PESS.
+ *
+ * The eight below are declared, and the declaration is honest about which kind
+ * each one is. `sampled` means a scenario is the wrong instrument: the Monte
+ * Carlo already draws the parameter across its whole range in every ensemble,
+ * and a stress case would be modelling a different world rather than a
+ * different policy. `open` means it should be stressed and nobody has done it,
+ * which is a finding rather than a justification, and the self-test reports
+ * the count so it stays visible.
+ *
+ * Held equal to the measured set in both directions, the pattern §S6b's three
+ * exception lists use: a newly-unstressed parameter fails the build until
+ * someone writes down why, and an entry for a parameter that some scenario now
+ * touches fails it too. */
+export type UnstressedKind = 'sampled' | 'open';
+
+export interface UnstressedDeclaration {
+  param: string;
+  kind: UnstressedKind;
+  why: string;
+}
+
+export const UNSTRESSED_DECLARED: UnstressedDeclaration[] = [
+  {
+    param: 'gdpRealGrowth', kind: 'sampled',
+    why: 'A macroeconomic input, not a policy outcome. Its 1.4 to 2.4% band is ' +
+      'graded high and every ensemble draws across it, so a scenario that ' +
+      'moved it would be describing a different economy rather than a ' +
+      'different health system.'
+  },
+  {
+    param: 'popGrowth', kind: 'sampled',
+    why: 'The same shape as gdpRealGrowth: a demographic input graded high, ' +
+      'sampled across its 0.2 to 0.6% band in every run. Nothing the plan does ' +
+      'changes it.'
+  },
+  {
+    param: 'embeddedDrugSpend', kind: 'sampled',
+    why: 'A measurement of what is spent today on clinician-administered ' +
+      'drugs, not an outcome. Its 200 to 300 band is what makes the drug base ' +
+      'a range rather than a number, and drugPriceCut is the lever a drug ' +
+      'scenario moves.'
+  },
+  {
+    param: 'lowValuePool', kind: 'sampled',
+    why: 'The measured size of the low-value care pool, 75.7 to 101.2, taken ' +
+      'from a published estimate. What a scenario stresses is how much of it ' +
+      'the plan recovers, which is careModelSavings, and that is stressed in ' +
+      'three cases.'
+  },
+  {
+    param: 'coverageDemandShare', kind: 'open',
+    why: 'Graded low, never stressed. How much latent demand universal ' +
+      'coverage releases is contested and the 0.25 to 0.4 band is judgement, ' +
+      'so this is a gap rather than a decision. Nearest neighbour utilIncrease ' +
+      'is stressed in four cases and this is not.'
+  },
+  {
+    param: 'legacyAdminFloor', kind: 'open',
+    why: 'Graded low, never stressed. How much private insurance ' +
+      'administration survives at maturity is a political outcome, and 0.05 to ' +
+      '0.14 is a wide judgement band that no case explores. A gap.'
+  },
+  {
+    param: 'residualPrivateShare', kind: 'open',
+    why: 'Graded low, never stressed. The 4 to 9% of system cost left outside ' +
+      'the public system at maturity is the same kind of political outcome as ' +
+      'legacyAdminFloor and has the same gap.'
+  },
+  {
+    param: 'dvhExpansion', kind: 'open',
+    why: 'The dental, vision and hearing benefit costs 35 to 95 a year at ' +
+      'maturity, a band that nearly triples end to end, and no case moves it. ' +
+      'Every other benefit expansion in the catalog is stressed somewhere.'
+  }
+];
+
+/* The parameters no scenario overrides, measured. `scenarios` is a parameter
+ * for the reason unknownOverrideKeys takes its catalog as one: a check that
+ * can only run against the live data cannot be probed with a fabricated case. */
+export function unstressedParameters(
+  scenarios: Scenario[] = SCENARIOS
+): string[] {
+  const touched = new Set<string>();
+  for (const s of scenarios) {
+    for (const key of Object.keys(s.overrides)) touched.add(key);
+  }
+  return PARAM_DEFS.filter((p) => !touched.has(p.id)).map((p) => p.id);
+}
+
+export function undeclaredUnstressed(scenarios: Scenario[] = SCENARIOS): string[] {
+  const declared = new Set(UNSTRESSED_DECLARED.map((d) => d.param));
+  return unstressedParameters(scenarios).filter((id) => !declared.has(id));
+}
+
+export function staleUnstressedDeclarations(
+  scenarios: Scenario[] = SCENARIOS
+): string[] {
+  const unstressed = new Set(unstressedParameters(scenarios));
+  return UNSTRESSED_DECLARED.filter((d) => !unstressed.has(d.param))
+    .map((d) => d.param);
+}
+
+export function shallowUnstressedReasons(): string[] {
+  return UNSTRESSED_DECLARED
+    .filter((d) => d.why.trim().length < PROVENANCE_MIN_CHARS)
+    .map((d) => d.param + ' (' + d.why.trim().length + ' chars)');
+}
+
+export function unstressedKindCounts(): Record<UnstressedKind, number> {
+  const out: Record<UnstressedKind, number> = { sampled: 0, open: 0 };
+  for (const d of UNSTRESSED_DECLARED) out[d.kind] += 1;
+  return out;
+}
 
 /* The effective triple a scenario gives a parameter, without the slider path.
  * Used by the checks and by the note below; not by the engine, which reads
