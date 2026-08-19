@@ -179,9 +179,20 @@ describe('R231: maturity closure says what it means', () => {
        seed. What survives re-drawing is that the base case sits inside the cap
        and that scenarios outside it exist, the pessimistic one among them.
        The count is pinned exactly instead, so a real move is visible and a
-       reseed is not mistaken for one. */
-    expect(breaching.length).toBe(10);
+       reseed is not mistaken for one.
+
+       R140 [§S7]: it caught one. 10 -> 11. SCN-EMP-FAIL now stresses
+       wagePassThrough at and below its base low, and the scenario crossed the
+       cap from inside it to 8.25%, which makes it the fourth worst of the
+       twenty. That is the row's own premise confirmed: the parameter reduces
+       both the new-revenue requirement and the apparent household burden, and
+       until this change the employer-pass-through-failure case showed
+       households inside the 5% cap. SCN-PESS also moved, 15.59 -> 15.88, from
+       rdPublic. The scenario that crossed is asserted by name, so a future
+       move of the same size somewhere else cannot pass on the count alone. */
+    expect(breaching.length).toBe(11);
     expect(breaching).toContain('SCN-PESS');
+    expect(breaching).toContain('SCN-EMP-FAIL');
     expect(p.documentedGap).toBeTruthy();
   });
 
