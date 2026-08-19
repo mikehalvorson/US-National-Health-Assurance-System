@@ -803,7 +803,12 @@ export function unreadEngineConstants(ids: string[], root = REPO_ROOT): string[]
  * consumes reads as a working control. */
 export function unreadStructuralKnobs(names: string[], root = REPO_ROOT): string[] {
   const masked = maskComments(readFileSync(join(root, ENGINE_FILE), 'utf8'));
-  return names.filter((n) => !masked.includes('s.' + n));
+  /* Review [§S6b]: a bare `includes('s.' + n)` is satisfied by any
+     identifier ending in `s`, so `opts.shock` would have passed for
+     `s.shock` and renaming the engine's parameter would have broken it
+     silently. This file argues elsewhere against checks a deletion cannot
+     fail; the same standard applies to its own. The boundary is asserted. */
+  return names.filter((n) => !new RegExp('(?<![\\w.])s\\.' + n + '\\b').test(masked));
 }
 
 /* R11 [§S6a]: the offset architecture document, held to the engine.

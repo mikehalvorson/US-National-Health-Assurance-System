@@ -24,7 +24,9 @@ import type { TableData } from '../lib/overview-tables';
 import { growthDecompNote } from '../lib/growth-decomp';
 import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
 import type { Scenario } from '../lib/scenarios';
-import { MATURE_INDEX, PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
+import {
+  MATURE_INDEX, PARAM_DEFS, PARAMS_BY_ID, DEFLATOR_2023_TO_2024 as DEF
+} from '../lib/params';
 import { money } from '../lib/format';
 
 /* How many positions a parameter slider offers between its declared bounds. */
@@ -245,7 +247,7 @@ function initHealth(): void {
     head.appendChild(document.createTextNode(
       scn.basis === 'sourced'
         ? 'Magnitudes: the researched parameter base, unaltered. '
-        : 'Magnitudes: chosen to stress the model, not measured. '));
+        : 'Magnitudes: analyst estimates chosen to stress the model. '));
     const keys = Object.keys(scn.overrides);
     if (keys.length) {
       head.appendChild(document.createTextNode(
@@ -268,7 +270,7 @@ function initHealth(): void {
     for (const key of keys) {
       const ov = scn.overrides[key];
       if (!ov) continue;
-      const p = PARAM_DEFS.filter((d) => d.id === key)[0];
+      const p = PARAMS_BY_ID[key];
       const li = document.createElement('li');
       const name = document.createElement('b');
       name.textContent = (p && p.label ? p.label : key) + ' ';

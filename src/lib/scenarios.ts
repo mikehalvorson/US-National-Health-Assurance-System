@@ -76,6 +76,13 @@ export interface ScenarioStructural {
  * it required of nine call sites whose only message was "no knobs". */
 export interface ScenarioStructuralDecl extends ScenarioStructural {
   why: string;
+  /* Review [§S6b]: this carried a reason and no grade, while every override
+     carried both. A structural block states magnitudes too, and the two the
+     original finding named by name, SCN-PANDEMIC's $220B and SCN-CYBER's $45B,
+     are structural rather than parameter overrides. So they were the figures
+     that reached a reader ungraded. CONVENTIONS rule 3 wants a grade on every
+     number, and it does not stop at the ones that were easy to reach. */
+  confidence: OverrideGrade;
 }
 
 /* Whether a scenario's magnitudes rest on published figures or on analyst
@@ -139,7 +146,7 @@ export const SCENARIOS: Scenario[] = [
       careModelSavings: {
         to: [20, 35, 50], confidence: 'low',
         why: 'Team-based and preventive care deliver near the top of the base ' +
-          'range. An assumed upper bracket.'
+          'range, at 20 to 50 against a central 15 to 40.'
       }
     }
   },
@@ -177,7 +184,7 @@ export const SCENARIOS: Scenario[] = [
       transitionTotal: {
         to: [1600, 2100, 2800], confidence: 'low',
         why: 'Transition runs long and over budget, at roughly 1.4 times the ' +
-          'central envelope. The multiple is judgement.'
+          'central envelope, which is the widest overrun this catalog uses.'
       },
       careModelSavings: {
         to: [5, 12, 25], confidence: 'low',
@@ -206,11 +213,12 @@ export const SCENARIOS: Scenario[] = [
       lowValueCapture: {
         mult: 0.75, confidence: 'low',
         why: 'Diversion of low-value utilization depends on unit capacity and ' +
-          'falls with it. The proportion is judgement.'
+          'falls with it, by a share chosen to bracket the base case.'
       }
     },
     structural: {
       unitsRampMult: 0.6, costShareDelayYears: 2,
+      confidence: 'low',
       why: 'The ramp is cut to the 60% the description states, and cost-sharing ' +
         'elimination slips two years because its phase gate depends on unit ' +
         'capacity being in place. Both are assumed consequences of the ' +
@@ -224,8 +232,8 @@ export const SCENARIOS: Scenario[] = [
     overrides: {
       providerPaymentFactor: {
         to: [0.92, 0.98, 1.05], confidence: 'low',
-        why: 'Premium pay to clear specialist queues pushes effective rates to ' +
-          'roughly the levels paid today. An assumed response to scarcity.'
+        why: 'Premium pay to clear specialist queues pushes effective rates back ' +
+          'to roughly the levels paid today.'
       },
       careModelSavings: {
         mult: 0.7, confidence: 'low',
@@ -236,7 +244,7 @@ export const SCENARIOS: Scenario[] = [
       workforceEdu: {
         mult: 1.3, confidence: 'low',
         why: 'Training spending rises to close the specialist gap faster than ' +
-          'planned. The size of the response is assumed.'
+          'planned, by roughly a third.'
       }
     }
   },
@@ -252,14 +260,14 @@ export const SCENARIOS: Scenario[] = [
       },
       transitionTotal: {
         mult: 1.15, confidence: 'low',
-        why: 'Stabilization corridors and later corrections add to transition ' +
-          'spending. The proportion is judgement.'
+        why: 'Stabilization corridors and later corrections add roughly 15% to ' +
+          'transition spending.'
       },
       extractionSavings: {
         mult: 0.7, confidence: 'low',
         why: 'Savings from reduced financial extraction shrink when budgets are ' +
-          'already tight enough to force emergency support. An assumed ' +
-          'interaction.'
+          'already tight enough to force emergency support, to roughly ' +
+          'seven tenths of the base case.'
       }
     }
   },
@@ -277,7 +285,7 @@ export const SCENARIOS: Scenario[] = [
       extractionSavings: {
         mult: 0.6, confidence: 'low',
         why: 'Extraction savings largely fail to arrive when budgets are set ' +
-          'above efficient cost. The fraction is judgement.'
+          'above efficient cost, delivering roughly three fifths.'
       }
     }
   },
@@ -319,13 +327,13 @@ export const SCENARIOS: Scenario[] = [
     overrides: {
       governanceRate: {
         to: [0.9, 1.3, 1.8], confidence: 'low',
-        why: 'Appeals, ombudsman and oversight load rises by roughly half. The ' +
-          'magnitude is judgement about how a trust failure shows up as cost.'
+        why: 'Appeals, ombudsman and oversight load rises by roughly half, which is ' +
+          'how a trust failure shows up as a cost the model can price.'
       },
       transitionTotal: {
         mult: 1.2, confidence: 'low',
-        why: 'Outreach, re-enrollment and correction work extend the transition. ' +
-          'The proportion is assumed.'
+        why: 'Outreach, re-enrollment and correction work extend the transition by ' +
+          'roughly a fifth.'
       },
       utilIncrease: {
         to: [8, 12, 18], confidence: 'low',
@@ -336,6 +344,7 @@ export const SCENARIOS: Scenario[] = [
     },
     structural: {
       coverageDelayYears: 1,
+      confidence: 'low',
       why: 'Enrollment slips a year because take-up depends on trust. An assumed ' +
         'delay rather than a scheduled one.'
     }
@@ -353,13 +362,13 @@ export const SCENARIOS: Scenario[] = [
       },
       careModelSavings: {
         mult: 0.7, confidence: 'low',
-        why: 'Care-model savings that depend on decision support fall with it. ' +
-          'The fraction is judgement.'
+        why: 'Care-model savings that depend on decision support fall with it, to ' +
+          'roughly seven tenths.'
       },
       itOperating: {
         mult: 1.25, confidence: 'low',
         why: 'Suspension does not remove the systems: they still run, under ' +
-          'heavier review and audit. An assumed compliance overhead.'
+          'heavier review and audit, at roughly a quarter more.'
       }
     }
   },
@@ -371,11 +380,12 @@ export const SCENARIOS: Scenario[] = [
       itOperating: {
         mult: 1.35, confidence: 'low',
         why: 'Cyber operations step up permanently after a major event, by ' +
-          'roughly a third. An assumed post-incident level.'
+          'roughly a third, and do not fall back.'
       }
     },
     structural: {
       shock: { startYear: 6, years: 2, amountB: 45 },
+      confidence: 'low',
       why: 'The $45B over two years is an assumed recovery cost for a ' +
         'nationwide claims-infrastructure outage, and it is the kind of ' +
         'magnitude the 2024 clearinghouse ransomware event put in view. It is ' +
@@ -396,6 +406,7 @@ export const SCENARIOS: Scenario[] = [
     },
     structural: {
       shock: { startYear: 5, years: 3, amountB: 18 },
+      confidence: 'low',
       why: 'The $18B a year over three years is an assumed emergency ' +
         'procurement premium, sized as a small share of annual retail ' +
         'prescription spending rather than from a shortage-cost study.'
@@ -409,11 +420,12 @@ export const SCENARIOS: Scenario[] = [
       emsPhExpansion: {
         mult: 1.3, confidence: 'low',
         why: 'Emergency and public-health capacity expands by roughly a third ' +
-          'during the surge. An assumed response level.'
+          'for the duration of the surge.'
       }
     },
     structural: {
       shock: { startYear: 7, years: 2, amountB: 220 },
+      confidence: 'low',
       why: 'The $220B a year over two years is about 4.5% of national health ' +
         'spending, which is the arithmetic that sizes it. The choice of 4.5% ' +
         'is judgement: it is the order of the 2020 and 2021 federal public ' +
@@ -433,8 +445,8 @@ export const SCENARIOS: Scenario[] = [
       },
       ltcWageFloor: {
         mult: 1.3, confidence: 'low',
-        why: 'Direct-care wages rise faster when demand outruns the workforce. ' +
-          'The size of the response is assumed.'
+        why: 'Direct-care wages rise faster when demand outruns the workforce, by ' +
+          'roughly a third.'
       },
       baselineRealGrowth: {
         to: [3.0, 3.8, 4.6], confidence: 'low',
@@ -452,7 +464,7 @@ export const SCENARIOS: Scenario[] = [
       transitionTotal: {
         mult: 1.12, confidence: 'low',
         why: 'Standing up federal fallback administration in resisting states ' +
-          'adds to transition spending. The proportion is assumed.'
+          'adds roughly 12% to transition spending.'
       },
       publicAdminRate: {
         mult: 1.15, confidence: 'low',
@@ -465,6 +477,7 @@ export const SCENARIOS: Scenario[] = [
     },
     structural: {
       coverageDelayYears: 1, stateMoeMult: 0.75,
+      confidence: 'low',
       why: 'Rollout slips a year and a quarter of state maintenance-of-effort ' +
         'fails to arrive. Both are assumed consequences of noncooperation; the ' +
         '25% is a round stress figure, not a count of states.'
@@ -483,12 +496,12 @@ export const SCENARIOS: Scenario[] = [
       },
       transitionTotal: {
         mult: 1.08, confidence: 'low',
-        why: 'Litigation and re-legislation add to transition spending. The ' +
-          'proportion is assumed.'
+        why: 'Litigation and re-legislation add roughly 8% to transition spending.'
       }
     },
     structural: {
       coverageDelayYears: 1,
+      confidence: 'low',
       why: 'Rollout slips a year while the financing is re-legislated. An ' +
         'assumed delay.'
     }
@@ -500,20 +513,20 @@ export const SCENARIOS: Scenario[] = [
     overrides: {
       providerPaymentFactor: {
         to: [0.92, 0.99, 1.06], confidence: 'low',
-        why: 'Premium pay and overtime push effective rates to roughly the levels ' +
-          'paid today. An assumed response to vacancies.'
+        why: 'Premium pay and overtime push effective rates back to roughly the ' +
+          'levels paid today, which is what vacancies cost.'
       },
       workforceEdu: {
         mult: 1.4, confidence: 'low',
-        why: 'Training and pipeline spending rise sharply to close the gap. The ' +
-          'size of the response is assumed.'
+        why: 'Training and pipeline spending rise by roughly 40% to close the gap.'
       },
       utilIncrease: {
         to: [4, 8, 13], confidence: 'low',
-        why: 'Utilization comes in BELOW the central estimate because there is ' +
-          'nobody to deliver the care. That lowers spending while making access ' +
-          'worse, which is why the description says the access harm is not ' +
-          'priced. Reading this scenario as cheap would be reading it backwards.'
+        why: 'Utilization comes in below the central estimate because there ' +
+          'are not enough staff to deliver the care. Spending falls and access ' +
+          'gets worse at the same time, and only the spending side is priced ' +
+          'here, so the lower total in this scenario is a shortfall rather ' +
+          'than a saving.'
       }
     }
   },
@@ -539,22 +552,22 @@ export const SCENARIOS: Scenario[] = [
       emsPhExpansion: {
         mult: 1.35, confidence: 'low',
         why: 'Emergency services carry more of the load where facilities close ' +
-          'or thin out. The proportion is assumed.'
+          'or thin out, by roughly a third.'
       },
       transitionTotal: {
         mult: 1.1, confidence: 'low',
         why: 'Stabilization corridors for fragile rural facilities extend ' +
-          'transition spending. The proportion is assumed.'
+          'transition spending by roughly a tenth.'
       },
       extractionSavings: {
         mult: 0.8, confidence: 'low',
         why: 'There is less financial extraction to recover from facilities ' +
-          'already operating near the margin. An assumed interaction.'
+          'already operating near the margin, leaving roughly four fifths.'
       },
       unitsCost: {
         mult: 1.15, confidence: 'low',
-        why: 'Units serving low-density areas cost more per person reached. The ' +
-          'premium is assumed.'
+        why: 'Units serving low-density areas cost roughly 15% more per person ' +
+          'reached.'
       }
     }
   }
@@ -633,17 +646,21 @@ export const STRUCTURAL_KNOBS = [
   'stateMoeMult', 'shock'
 ];
 
-/* `why` is the block's provenance (R141), not a knob the engine reads, so it
- * is excluded by name rather than by being added to the list above - putting
- * it there would make the read check demand that the engine consume it. */
-export const STRUCTURAL_PROVENANCE_KEY = 'why';
+/* Provenance, not knobs. These are excluded by name rather than added to the
+ * list above, because that list is what the engine is required to READ, and
+ * demanding the engine consume a reason string would be the wrong rule.
+ *
+ * Review [§S6b]: this was a single key until `confidence` joined `why`, and
+ * the guard caught the second one the same way it caught the first. Two
+ * special cases is a set, so it is one now and a third costs nothing. */
+export const STRUCTURAL_PROVENANCE_KEYS = ['why', 'confidence'];
 
 export function unknownStructuralKeys(scenarios: Scenario[]): string[] {
   const known = new Set(STRUCTURAL_KNOBS);
   const unknown: string[] = [];
   for (const s of scenarios) {
     for (const key of Object.keys(s.structural || {})) {
-      if (key === STRUCTURAL_PROVENANCE_KEY) continue;
+      if (STRUCTURAL_PROVENANCE_KEYS.includes(key)) continue;
       if (!known.has(key)) unknown.push(s.id + ' sets ' + key);
     }
   }
@@ -805,8 +822,16 @@ export function provenanceProblems(): string[] {
         problems.push(at + ' is graded medium and its reason names no figure');
       }
     }
-    if (s.structural && s.structural.why.trim().length < PROVENANCE_MIN_CHARS) {
-      problems.push(s.id + ' sets structural knobs and gives no reason');
+    if (s.structural) {
+      if (s.structural.why.trim().length < PROVENANCE_MIN_CHARS) {
+        problems.push(s.id + ' sets structural knobs and gives no reason');
+      }
+      if (s.structural.confidence === 'medium' &&
+          !hasFigure.test(s.structural.why)) {
+        problems.push(s.id + ' grades its structural block medium and its ' +
+          'reason names no figure');
+      }
+      if (s.structural.confidence === 'low') lowGraded += 1;
     }
     if (s.basis === 'sourced' && lowGraded) {
       problems.push(s.id + ' declares its magnitudes sourced while carrying ' +
@@ -899,6 +924,16 @@ export interface BandCounts {
   outsideBase: number;
   withSliderBounds: number;
   beyondSlider: string[];
+  /* Review [§S6b]: how many parameters actually have an upper bound, by
+     where it comes from. Both axes of the review landed on the same sentence
+     here, from opposite directions: it told a reader that what cannot be
+     crossed comes from the unit, and for 14 of the 32 the unit supplies no
+     ceiling at all. Those 14 are $B quantities and growth rates, which have no
+     natural maximum, so the code is right and the sentence was wrong. It is
+     built from these three counts now, so it cannot say more than is true. */
+  unitCapped: number;
+  sliderCapped: number;
+  floorOnly: number;
 }
 
 export function bandCounts(): BandCounts {
@@ -926,6 +961,12 @@ export function bandCounts(): BandCounts {
       }
     }
   }
+  let unitCapped = 0, sliderCapped = 0, floorOnly = 0;
+  for (const p of PARAM_DEFS) {
+    if (naturalCeiling(p) != null) unitCapped += 1;
+    else if (typeof p.sliderMax === 'number') sliderCapped += 1;
+    else floorOnly += 1;
+  }
   return {
     parameters: PARAM_DEFS.length,
     overrides: overrides,
@@ -933,7 +974,10 @@ export function bandCounts(): BandCounts {
     withSliderBounds: PARAM_DEFS.filter(function (p) {
       return typeof p.sliderMin === 'number' && typeof p.sliderMax === 'number';
     }).length,
-    beyondSlider: beyondSlider
+    beyondSlider: beyondSlider,
+    unitCapped: unitCapped,
+    sliderCapped: sliderCapped,
+    floorOnly: floorOnly
   };
 }
 
@@ -943,16 +987,17 @@ export function bandCounts(): BandCounts {
  * whole. */
 export function paramBandNote(): string {
   const c = bandCounts();
-  return 'Low and high are the ends of the range each parameter is drawn from, ' +
-    'not limits the model refuses to cross. A stress scenario replaces the ' +
-    'whole range, and ' + c.outsideBase + ' of the ' + c.overrides + ' scenario ' +
-    'adjustments here sit outside the range shown in this table. That is what a ' +
-    'stress catalog is for. What cannot be crossed comes from the unit: a ' +
-    'percentage or a share is held between 0 and 100 wherever a scenario or a ' +
-    'slider would push past it. ' + c.withSliderBounds + ' of the ' +
-    c.parameters + ' parameters also carry slider limits, which set how far the ' +
-    'controls above can be dragged; those limits bound the controls, not the ' +
-    'scenarios.';
+  return 'Low and high are the ends of the range each parameter is drawn from. ' +
+    'A stress scenario replaces the whole range, and ' + c.outsideBase +
+    ' of the ' + c.overrides + ' scenario adjustments here sit outside the ' +
+    'range shown in this table, which is what a stress catalog is for. ' +
+    'Upper limits vary by what the quantity is. ' + c.unitCapped + ' of the ' +
+    c.parameters + ' are percentages or shares of something and are held at ' +
+    '100. Another ' + c.sliderCapped + ' carry a slider limit, which caps the ' +
+    'control rather than the scenario. The remaining ' + c.floorOnly +
+    ' are dollar amounts and growth rates, which have no natural maximum: they ' +
+    'are held at zero from below and bounded above only by the range each ' +
+    'scenario sets.';
 }
 
 /* ---- R237 [AC7]: the band collapses where the model is least certain -----
@@ -1121,18 +1166,23 @@ export function sliderBandReach(): SliderReach[] {
 export function sliderSpreadNote(): string {
   const d = spreadDependence();
   const reach = sliderBandReach();
-  return 'Moving a slider moves the whole range, not just the middle of it: ' +
-    'the band above and below is rebuilt in proportion to wherever you put ' +
-    'the control. Setting one of these to zero therefore removes its ' +
-    'uncertainty as well as its effect, which is the right answer for a lever ' +
-    'that is switched off and a strong claim for one that is merely small. ' +
+  /* Review [§S6b]: this read reach[0] unguarded, in a function the health
+     page calls from its frontmatter, while the self-test on the same value
+     guarded it. An empty catalog is not reachable today, and a page that
+     throws at build time over a sentence would be a poor way to find out. */
+  const widest = reach.length ? reach[0].times.toFixed(1) : 'several';
+  return 'Moving a slider rebuilds the band around it: the range above and ' +
+    'below is scaled in proportion to wherever you put the control. Setting ' +
+    'one of these to zero therefore removes its uncertainty along with its ' +
+    'effect, which reads correctly for a lever switched off and overstates ' +
+    'confidence for one that is merely small. ' +
     'The range a slider starts from also depends on the scenario above it, in ' +
     d.differing.length + ' of the ' + (d.differing.length + d.identical.length) +
     ' cases where a scenario adjusts an assumption you can also drag. Two ' +
     'scenarios at the same slider position are therefore not being compared ' +
     'at the same uncertainty. Dragging a control to its far end widens the ' +
     'band with it, and the band runs past the end of the control: at its ' +
-    'maximum the widest of these reaches about ' + reach[0].times.toFixed(1) +
+    'maximum the widest of these reaches about ' + widest +
     ' times the highest value the control itself offers. That is the model ' +
     'carrying its own uncertainty out to a value you asked for rather than ' +
     'one it was calibrated on.';

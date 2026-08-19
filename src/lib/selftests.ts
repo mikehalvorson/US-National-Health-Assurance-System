@@ -1409,7 +1409,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          it is exact: reshape the triple and the band moves, scale it and the
          band does not. Both directions are asserted, so a change to how
          sliders rebuild spread cannot pass by making every case agree. */
-      runGuarded('Slider spread follows the scenario, by the rule it follows', () => {
+      runGuarded('Slider spread follows the scenario, and follows one rule', () => {
         const d = spreadDependence();
         const problems = d.wrongWay.slice();
         if (!d.differing.length) {
@@ -1528,17 +1528,35 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          needs to tell design from defect. */
       runGuarded('The parameter bands say what they are, where a reader can see them', () => {
         const note = paramBandNote();
-        const missing = ['Low and high', 'stress scenario', 'slider limits']
-          .filter((phrase) => !note.includes(phrase));
+        const c = bandCounts();
+        /* Review [§S6b]: this matched three prose phrases, and rewording the
+           note to make it TRUER broke it. Worse, the phrase it insisted on was
+           part of the false claim. Match the measured numbers instead: they
+           are what makes the sentence honest, a rewrite that keeps them stays
+           green, and no amount of vague prose satisfies them.
+
+           The three tiers are the correction itself. The note used to tell a
+           reader that what cannot be crossed comes from the unit, and for the
+           14 parameters that are dollar amounts and growth rates the unit
+           gives no ceiling at all. Both axes of the code review found that
+           sentence independently. */
+        const mustState = [c.unitCapped, c.sliderCapped, c.floorOnly,
+          c.outsideBase, c.overrides, c.parameters];
+        const unstated = mustState.filter((n) => !note.includes(String(n)));
         const problems: string[] = [];
         if (!bandNoteIsRendered()) problems.push('the note reaches no page');
-        if (missing.length) problems.push('the note never mentions ' + missing.join(', '));
+        if (unstated.length) {
+          problems.push('the note states none of: ' + unstated.join(', '));
+        }
+        if (c.unitCapped + c.sliderCapped + c.floorOnly !== c.parameters) {
+          problems.push('the bound tiers do not sum to the catalog');
+        }
         return {
           ok: !problems.length,
-          note: problems.join(' | ') || bandCounts().outsideBase + ' of ' +
-            bandCounts().overrides + ' overrides outside the base band, ' +
-            bandCounts().withSliderBounds + ' of ' + bandCounts().parameters +
-            ' parameters carry slider limits, both stated on the page'
+          note: problems.join(' | ') || c.outsideBase + ' of ' + c.overrides +
+            ' overrides outside the base band; upper bounds ' + c.unitCapped +
+            ' from the unit, ' + c.sliderCapped + ' from a slider, ' +
+            c.floorOnly + ' with none, all stated on the page'
         };
       }),
       runGuarded('The catalog holds one base case and its declared stress set', () => {
