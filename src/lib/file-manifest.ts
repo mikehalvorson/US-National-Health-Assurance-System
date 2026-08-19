@@ -46,6 +46,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/data-phases.ts',
   'src/lib/data-view.ts',
   'src/lib/declared-sets.ts',
+  'src/lib/drug-lever.ts',
   'src/lib/equation-diagram.ts',
   'src/lib/equation-render.ts',
   'src/lib/equations.ts',

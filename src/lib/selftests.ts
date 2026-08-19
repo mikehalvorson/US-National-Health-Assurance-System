@@ -60,7 +60,7 @@ import {
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
   DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
-  literalRetailTotals, MEDICATIONS_PAGE,
+  drugLeverNoteIsRendered, literalRetailTotals, MEDICATIONS_PAGE,
   RETAIL_BAND_HIGH, RETAIL_BAND_LOW,
   displayOnlyDatasetsInEngine,
   divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
@@ -76,6 +76,9 @@ import {
 import {
   ALL_DRUG_SPEND_2024, DRUG_BASE, DRUG_BASE_NOTE_FIGURES, drugBaseNote
 } from './medications';
+import {
+  DRUG_LEVER, DRUG_LEVER_NOTE_FIGURES, drugLeverNote
+} from './drug-lever';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
 import {
@@ -2023,6 +2026,38 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               : 'states ' + DRUG_BASE_NOTE_FIGURES.length + ' measured figures, $' +
                 DRUG_BASE.low.toFixed(1) + 'B to $' + DRUG_BASE.high.toFixed(1) +
                 'B around a $' + DRUG_BASE.total.toFixed(1) + 'B mode'
+        };
+      })
+    ]
+  },
+  {
+    /* R50 [§S7]: two controls for one quantity, and what they actually do */
+    surface: 'drug-lever.ts',
+    rows: () => [
+      /* R50's own checkable claim was that the two figures should be equal at
+         identical settings. They are not, and wiring the sliders would not
+         make them equal: the tab multiplies a 2024-scale base and the engine
+         multiplies a base grown to the mature year, so the gap is a growth
+         factor, not a wiring fault. The claim is replaced by the measurement,
+         and the measurement is what the page states. The band is wide because
+         the factor moves with the growth parameters; it is narrow enough that
+         a change of basis on either side fails it. */
+      runGuarded('The two drug-price controls are separate, and the page says by how much', () => {
+        const d = DRUG_LEVER;
+        const note = drugLeverNote();
+        const missing = DRUG_LEVER_NOTE_FIGURES.filter((f) => !note.includes(f));
+        const rendered = drugLeverNoteIsRendered();
+        const inBand = d.ratio > 1.5 && d.ratio < 3.0;
+        return {
+          ok: !missing.length && rendered && inBand && d.tabLever > 0,
+          note: !rendered
+            ? 'the note is not rendered on ' + MEDICATIONS_PAGE
+            : missing.length
+              ? 'the note no longer states: ' + missing.join(', ')
+              : 'at ' + d.cut.toFixed(0) + '% the tab reports $' +
+                d.tabLever.toFixed(0) + 'B and the engine $' +
+                d.modelSaving.toFixed(0) + 'B at ' + d.matureYear + ', ratio ' +
+                d.ratio.toFixed(3)
         };
       })
     ]

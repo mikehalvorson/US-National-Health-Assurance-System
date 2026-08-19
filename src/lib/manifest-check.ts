@@ -979,6 +979,14 @@ export function drugBaseNoteIsRendered(root = REPO_ROOT): boolean {
   return /drugBaseNote\(\)/.test(text);
 }
 
+/* R50 [§S7]: and the note saying the two reduction controls are separate has
+ * to sit beside the control it is about. §BY5's point was that the caption is
+ * where the reader forms the belief. */
+export function drugLeverNoteIsRendered(root = REPO_ROOT): boolean {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  return /drugLeverNote\(\)/.test(text);
+}
+
 export function literalRetailTotals(root = REPO_ROOT): string[] {
   const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
   const found: string[] = [];

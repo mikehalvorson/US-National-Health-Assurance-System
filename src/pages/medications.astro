@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
 import { DRUG_BASE, drugBaseNote } from '../lib/medications';
+import { drugLeverNote } from '../lib/drug-lever';
 
 /* R296 [§S7]: the spend bar's labels and the widths that encode them are the
    same two numbers, read once from the model's own decomposition. The bar used
@@ -388,9 +389,11 @@ const retail2023 = DRUG_BASE.retail2023.toFixed(1);
             <output id="medications-reduction-value">40%</output></span>
           <input id="medications-reduction" type="range" min="25" max="55"
             step="1" value="40">
-          <small>Same range as the fiscal model's national drug-price parameter
+          <small>The same range as the fiscal model's national drug-price
+            parameter, but a separate control
             <span class="conf medium">medium</span></small>
         </label>
+        <p class="note">{drugLeverNote()}</p>
         <p id="medications-savings-formula" class="medications-savings-formula">
           ${drugBase}B × 15% × 40% = $43.1B per year</p>
       </div>
