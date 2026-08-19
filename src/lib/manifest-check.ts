@@ -987,6 +987,31 @@ export function drugLeverNoteIsRendered(root = REPO_ROOT): boolean {
   return /drugLeverNote\(\)/.test(text);
 }
 
+/* R176 [§S7]: the six inclusion reasons are typed in the data and typed again,
+ * as strings, into the tab's filter markup. A union that the filter does not
+ * offer is a reason no reader can select; a filter option outside the union
+ * matches nothing and silently returns an empty list, which is the failure
+ * mode the union was added to stop. Read the option values and hold the two
+ * lists equal in both directions. */
+export function medicationsFilterReasons(root = REPO_ROOT): string[] {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  const block = text.match(
+    /<select id="medications-reason-filter">([\s\S]*?)<\/select>/);
+  if (!block) return [];
+  const out: string[] = [];
+  for (const m of block[1].matchAll(/<option value="([^"]*)"/g)) {
+    if (m[1]) out.push(m[1]);
+  }
+  return out;
+}
+
+/* R175 [§S7]: and the principle behind the phases has to be on the page that
+ * publishes them, not only in the module that derives them. */
+export function phasePrincipleIsRendered(root = REPO_ROOT): boolean {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  return /phasePrinciple\(\)/.test(text);
+}
+
 export function literalRetailTotals(root = REPO_ROOT): string[] {
   const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
   const found: string[] = [];

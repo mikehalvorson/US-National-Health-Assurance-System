@@ -61,6 +61,7 @@ import {
   scenarioProvenanceNotRendered,
   DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
   drugLeverNoteIsRendered, literalRetailTotals, MEDICATIONS_PAGE,
+  medicationsFilterReasons, phasePrincipleIsRendered,
   RETAIL_BAND_HIGH, RETAIL_BAND_LOW,
   displayOnlyDatasetsInEngine,
   divergenceIsRendered, divergenceNamesRecommendation, ENGINE_FILE, ENRICHERS,
@@ -74,7 +75,11 @@ import {
   unregisteredEngineLiterals, unregisteredSelfTestSurfaces
 } from './manifest-check';
 import {
-  ALL_DRUG_SPEND_2024, DRUG_BASE, DRUG_BASE_NOTE_FIGURES, drugBaseNote
+  ALL_DRUG_SPEND_2024, DRUG_BASE, DRUG_BASE_NOTE_FIGURES, drugBaseNote,
+  FAMILIES, FAMILY_SOURCES, FAMILY_TAGS, FAMILY_WHY_FLOOR, familyGradeCounts,
+  familyPhaseCounts, PHASE_FOR_CLASS, phasePrinciple, shallowFormClassReasons,
+  staleFormClassDeclarations, undeclaredFormClasses, unknownFamilyTags,
+  unusedFamilyTags
 } from './medications';
 import {
   DRUG_LEVER, DRUG_LEVER_NOTE_FIGURES, drugLeverNote
@@ -2026,6 +2031,98 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               : 'states ' + DRUG_BASE_NOTE_FIGURES.length + ' measured figures, $' +
                 DRUG_BASE.low.toFixed(1) + 'B to $' + DRUG_BASE.high.toFixed(1) +
                 'B around a $' + DRUG_BASE.total.toFixed(1) + 'B mode'
+        };
+      })
+    ]
+  },
+  {
+    /* R174 + R175 + R176 [§S7]: the portfolio's own provenance */
+    surface: 'medications-portfolio',
+    rows: () => [
+      /* R175 [§S7]: the principle is the only thing that assigns a phase, so
+         the published increments are what it produces. §BJ hand-counted the
+         methodology independently and got the same four numbers; this holds
+         the derivation to them. */
+      runGuarded('Every family\'s phase is derived from its dosage-form class', () => {
+        const counts = familyPhaseCounts();
+        const ok = FAMILIES.length === 200 && counts.P5 === 61 &&
+          counts.P6 === 116 && counts.P7 === 11 && counts.P8 === 12 &&
+          FAMILIES.every((f) => f.phase === PHASE_FOR_CLASS[f.formClass]);
+        return {
+          ok,
+          note: FAMILIES.length + ' families, ' + counts.P5 + '/' + counts.P6 +
+            '/' + counts.P7 + '/' + counts.P8 + ' across P5 to P8'
+        };
+      }),
+      /* And the class is not just the phase written twice. The essential forms
+         are read independently, and every family the reading disagrees with
+         has to say why. Held in both directions: a stale reason fails too. */
+      runGuarded('Every family whose forms disagree with its class says why', () => {
+        const undeclared = undeclaredFormClasses();
+        const stale = staleFormClassDeclarations();
+        const shallow = shallowFormClassReasons();
+        const declared = FAMILIES.filter((f) => f.why).length;
+        return {
+          ok: !undeclared.length && !stale.length && !shallow.length,
+          note: undeclared.length
+            ? 'undeclared: ' + undeclared.slice(0, 3).join('; ')
+            : stale.length
+              ? 'reason no longer needed: ' + stale.join(', ')
+              : shallow.length
+                ? 'reason under ' + FAMILY_WHY_FLOOR + ' chars: ' + shallow.join(', ')
+                : (200 - declared) + ' read off the forms, ' + declared +
+                  ' declared with a reason'
+        };
+      }),
+      /* R174 [§S7]: and every family carries both fields, with the grade the
+         basis of its own assignment supports. BY6 found `high` published on
+         the portfolio while the data graded nothing at all. */
+      runGuarded('Every drug family carries a source and a confidence grade', () => {
+        const grades = familyGradeCounts();
+        const ok = FAMILIES.every((f) =>
+          FAMILY_SOURCES[f.source] !== undefined && f.confidence.length > 0) &&
+          grades.high + grades.medium === 200 &&
+          Object.keys(FAMILY_SOURCES).every((k) =>
+            FAMILIES.some((f) => f.source === k));
+        return {
+          ok,
+          note: grades.high + ' high, ' + grades.medium + ' medium, across ' +
+            Object.keys(FAMILY_SOURCES).length + ' declared sources'
+        };
+      }),
+      /* R176 [§S7]: the six reasons are a union, and the tab's filter offers
+         exactly the reasons some family carries. */
+      runGuarded('Every inclusion reason is a member of the declared union', () => {
+        const unknown = unknownFamilyTags();
+        const unused = unusedFamilyTags();
+        const offered = medicationsFilterReasons();
+        const missingFromPage = FAMILY_TAGS.filter((t) => !offered.includes(t));
+        const strayOnPage = offered.filter((t) => !(FAMILY_TAGS as readonly string[]).includes(t));
+        return {
+          ok: !unknown.length && !unused.length && !missingFromPage.length &&
+            !strayOnPage.length,
+          note: unknown.length
+            ? 'not in the union: ' + unknown.join(', ')
+            : unused.length
+              ? 'declared and unused: ' + unused.join(', ')
+              : missingFromPage.length || strayOnPage.length
+                ? 'the filter and the union disagree: ' +
+                  (missingFromPage as readonly string[]).concat(strayOnPage).join(', ')
+                : FAMILY_TAGS.length + ' reasons, all used, all offered by the filter'
+        };
+      }),
+      /* R175 [§S7]: and the principle reaches a reader. AZ4 called it coherent
+         and undocumented; documenting it in the module and not on the tab
+         would leave it exactly as invisible as it was. */
+      runGuarded('The tab states what decides a family\'s phase', () => {
+        const rows = phasePrinciple();
+        const ordered = rows.map((r) => r.phase).join(',');
+        return {
+          ok: phasePrincipleIsRendered() && rows.length === 4 &&
+            ordered === 'P5,P6,P7,P8',
+          note: phasePrincipleIsRendered()
+            ? rows.map((r) => r.phase + ' ' + r.formClass).join(', ')
+            : 'the principle is not rendered on ' + MEDICATIONS_PAGE
         };
       })
     ]

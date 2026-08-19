@@ -5,8 +5,8 @@ test('Medications: 200 unique sequential families (docs self-test 1)', () => {
   const seen: Record<string, boolean> = {};
   const ok = FAMILIES.length === 200 && FAMILIES.every((family, i) => {
     const expected = 'PF-' + String(i + 1).padStart(3, '0');
-    if (family[0] !== expected || seen[family[0]]) return false;
-    seen[family[0]] = true;
+    if (family.id !== expected || seen[family.id]) return false;
+    seen[family.id] = true;
     return true;
   });
   expect(ok).toBe(true);
@@ -14,7 +14,7 @@ test('Medications: 200 unique sequential families (docs self-test 1)', () => {
 
 test('Medications: phase counts + savings attribution reconcile (docs self-test 2)', () => {
   const counts: Record<string, number> = { P5: 0, P6: 0, P7: 0, P8: 0 };
-  FAMILIES.forEach((family) => { counts[family[3]] += 1; });
+  FAMILIES.forEach((family) => { counts[family.phase] += 1; });
   expect(counts.P5).toBe(61);
   expect(counts.P6).toBe(116);
   expect(counts.P7).toBe(11);

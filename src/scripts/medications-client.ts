@@ -31,10 +31,11 @@ function renderPortfolio(): void {
   const phase = phaseNode.value;
   const reason = reasonNode.value;
   const matches = FAMILIES.filter(function (family) {
-    const searchable = (family[1] + ' ' + family[2] + ' ' + family[4].join(' ')).toLowerCase();
+    const searchable = (family.name + ' ' + family.form + ' ' +
+      family.tags.join(' ')).toLowerCase();
     return (!query || searchable.indexOf(query) >= 0) &&
-      (!phase || family[3] === phase) &&
-      (!reason || family[4].indexOf(reason) >= 0);
+      (!phase || family.phase === phase) &&
+      (!reason || family.tags.indexOf(reason as never) >= 0);
   });
 
   host.textContent = '';
@@ -48,15 +49,25 @@ function renderPortfolio(): void {
   matches.forEach(function (family) {
     const card = element('article', 'medications-family');
     const head = element('div', 'medications-family-head');
-    head.appendChild(element('h3', '', family[1]));
-    head.appendChild(element('span', 'medications-phase-chip', PHASE_META[family[3]]));
+    head.appendChild(element('h3', '', family.name));
+    head.appendChild(element('span', 'medications-phase-chip', PHASE_META[family.phase]));
     card.appendChild(head);
-    card.appendChild(element('p', 'medications-family-form', family[2]));
+    card.appendChild(element('p', 'medications-family-form', family.form));
     const tags = element('div', 'medications-family-tags');
-    family[4].forEach(function (tag) {
+    family.tags.forEach(function (tag) {
       tags.appendChild(element('span', '', tag));
     });
     card.appendChild(tags);
+    /* R174 [§S7]: the provenance, on the family it belongs to. Declaring it in
+       the data and never rendering it would repeat the omission one layer in,
+       which is the trap §S6b's scenario picker walked into. */
+    const why = element('p', 'medications-family-why',
+      family.formClass + ' product, so it qualifies at ' + family.phase +
+      (family.why ? '. ' + family.why : '.'));
+    const grade = element('span', 'conf ' + family.confidence, family.confidence);
+    why.appendChild(document.createTextNode(' '));
+    why.appendChild(grade);
+    card.appendChild(why);
     host.appendChild(card);
   });
 }
