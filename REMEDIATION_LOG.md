@@ -2086,3 +2086,245 @@ not noting it was not.
   migration hazard is unchanged, except that it is no longer silent: after the per-type rework
   those three keys will fail the build at module load rather than being ignored.
 - **The audit-document repo still has no remote.** Asked in P5, P6, P7 and now P8.
+
+## P9 — §S7 Medications & PMC · 2026-08-19 · branch `nha-remediation`
+STATUS: complete — all 12 rows landed across 9 commits (`R214`+`R296` as one, `R173`+`R204` as
+one, `R174`+`R175`+`R176` as one), plus 4 new findings, plus 1 self-inflicted defect found and
+fixed by the repo's own gates
+
+**Entry gate:** `## P7` (`§S6a`) `STATUS: complete` ✅ · `check_audit_docs.py` 35/35 exit 0,
+`astro build` passes, both trees clean ✅ · **part 2 run in this session:** changed
+`STRESS_SCENARIO_COUNT` from 19 to 18, the build failed on `The catalog holds one base case and
+its declared stress set`, restored from the bytes read before the break, tree clean ✅
+
+### LANDED
+
+| Commit | Rows |
+|---|---|
+| `9c7529f` | `R214` + `R296` — one owner for the retail drug line, and a bar whose labels are its widths |
+| `5cef699` | `R173` + `R204` — the drug base is a mode with a range around it, and the chapter says so |
+| `d8a215c` | `R50` — the two reduction controls are separate, and the page says by how much they differ |
+| `e974449` | `R174` + `R175` + `R176` — the portfolio says what it rests on, per family |
+| `f3f9568` | `R52` — four tests that can fail replace three that could not |
+| `3a52c93` | `R140` — three parameters leave the unstressed set, eight say why they are in it |
+| `44c7102` | `R140` follow-up — the household-cost breach count moves 10 → 11, and the scenario that crossed is named |
+| `a38e0e0` | `R34` — the IRA scores are original scores, and all four sites now say so |
+| `92fe1c8` | `R105` — rule 3 names five categories that can interrupt care; two were never certified |
+
+### THE EXIT PROTOCOL FIELDS
+
+- **DRUG BASE: $717.9B → $717.9B.** Retail component **`$467B` as published → `$461.4B` as
+  published**, which is what it always was in the model. The defect was never that the model
+  used the wrong number; it was that the page described the model's base with a CMS figure the
+  model does not use. `449.7 × 1.026 = 461.4`, derived from `BASE2023.rxRetail` rather than
+  typed.
+- **DRUG-PRICE LEVER: $287.2B → $287.2B**, at the 40% mode. Unchanged for the same reason, and
+  an intermediate `midP9` dump taken immediately after the base commit proves it: every figure
+  moved 0.000%.
+- **FAMILIES SOURCED: 200 of 200.** Graded **185 high, 15 medium**, across 2 declared sources.
+- **SLIDER: disclosed as independent**, and the disclosure states the measured factor. See
+  `D71`, which supersedes the row's own checkable claim.
+- **CONTRADICTIONS:** five, `D68`–`D72`. Two are the audit contradicting the code, two are the
+  code contradicting itself, and one is a row whose checkable claim is unsatisfiable.
+
+### HEADLINE FIGURES — nothing moved on the base case
+
+2024 dollars, `SCN-BASE`, paired comparison at identical seeds, `preP9` → `postP9`.
+
+| Figure | Before | After | Change |
+|---|---|---|---|
+| Mature-year total (`matureToday`) | $5,305.35 | $5,305.35 | **+0.000%** |
+| 2041 total | $9,210.96 | $9,210.96 | **+0.000%** |
+| New revenue required | $3,409.35 | $3,409.35 | **+0.000%** |
+| Per capita | $25,648.52 | $25,648.52 | **+0.000%** |
+| NHE / GDP at maturity | 23.6965% | 23.6965% | **+0.000%** |
+| Federal increase | $4,648.47 | $4,648.47 | **+0.000%** |
+
+**727 published targets unchanged. 1,170 interim cells unchanged. 0 of 1,037 criticality
+positions moved, 0 RPN changed.** The declared noise floors (0.56% hero, 1.37% new revenue,
+0.40% p90 tail) never came into it on the base case: every figure is bit-identical.
+
+**Two stress scenarios did move, and that is `R140` working.** At identical seeds:
+
+| Scenario | Mature new revenue | Change | Against its floor |
+|---|---|---|---|
+| `SCN-EMP-FAIL` | $3,675.4 → $3,730.7 | **+1.50%** | above the 1.37% floor |
+| `SCN-PESS` | $4,372.8 → $4,401.5 | +0.66% | **below** it |
+
+Three intermediate labels were dumped, not one: `midP9` after the base commit, `r140P9` after
+the stress commit, `postP9` at the end. `preP9 → midP9`, `midP9 → r140P9` and `preP9 → postP9`
+are each 0.000% on every base-case figure, which is how each movement above is attributed to one
+commit rather than to the section.
+
+### DISCREPANCIES
+
+**`D68` — `R214`/`R296`: the audit said it could not tell which retail figure was right. The
+repository can.** `§BJ5` filed the $16.9B as "a reconciliation failure, not an error
+attribution." Two things inside the repo settle it, and neither had been brought together
+before. `SiteHeader.astro` publishes the calibration convention on all fourteen pages — real
+2024 dollars, calibrated to CMS NHE 2023, the last finalized year — so a CMS 2024 actual and a
+2023-calibrated figure deflated for display are **different quantities by construction**, and
+the page was placing them side by side as though they were comparable. And `research/03`'s 2024
+NHE table, the source of the $467.0B, records in its own source note that the CMS PDF *"returned
+HTTP 403 on direct fetch during this research pass"* and that its figures are *"drawn from
+search-result excerpts"*; it asks for a human re-pull. `research/01`'s 2023 table was read
+whole, and it is the one `params.ts` calibrates on. **Resolved for `BASE2023.rxRetail`.**
+
+**`D69` — `R140`'s count is wrong, as the section brief warned, and the brief's correction is
+right.** The row says ten of 31 parameters are never touched by any scenario. Measured: **11 of
+32**. `lowValuePool` is the addition and nobody re-measured after it was added. The row's ten
+names are all correct. Implemented against the measurement.
+
+**`D70` — `R52`'s premise understates the problem it names.** The row calls
+`calcSavings(5,25) === 8.97375` tautological, which it is. What the row does not say is that the
+same test file also pinned the phase counts, and those two things sat in one test under one
+name, so a genuine reconciliation and a tautology failed and passed together. Split.
+
+**`D71` — `R50`'s checkable claim is unsatisfiable, and satisfying its wording would have made
+the dashboard worse.** The claim is *"Medications-tab savings equal the healthcare model's drug
+savings at identical settings."* Measured, the engine's mature drug saving is **2.007 times**
+the tab's lever, at 25%, at 40% and at 55% — a constant factor, not a shape difference. Both
+apply the same percentage; the tab multiplies a 2024-scale base of $717.9B and the engine
+multiplies a base grown to 2041 with utilisation applied, 1404.6 against 699.7 in 2023 dollars.
+**Wiring the two controls together, which is what the row asks for, would have made the
+percentages agree and left the dollars a factor of two apart** — a reader would have read the
+agreement as reconciliation. Resolved for the measurement: the controls stay separate and the
+page states the relationship, with the factor derived rather than asserted.
+
+**`D72` — `R34` understates its own scope by a factor of four.** The row names the seed rows
+`CP-OFF-003a/b`. The same two figures appear in **four** places, and only one of the four
+carried the re-scoring caveat — and the least-qualified statement of them, `research/01`'s
+*"the single most authoritative, directly-scored real-world data point in the entire offsets
+section"*, was in a file with no caveat at all. All four now carry it, plus `params.ts`
+`drugPriceCut`, which leans on the precedent.
+
+### NEW FINDINGS
+
+**🔴 `NF1` — the same 2024 NHE table is internally inconsistent on a second line, and nobody had
+checked it.** `research/03` CP-DX-001 records physician & clinical services at **$1.11T (2024)**
+described as having *"grew 8.1%"*, against **$978.0B (2023)** in `research/01`. That is **13.5%
+growth, not 8.1%**. Applying 8.1% to the 2023 NHE total of $4,866.5B gives $5,261B, which is the
+**$5.28T** total the same entry reports — so **the 8.1% is the NHE total's growth rate attached
+to a category line**. The retail-drug mismatch `§BJ` found is therefore not an isolated slip in
+that table, and the 403 note explains both. Recorded in `research/03` under CP-RX-001. **Nobody's
+row: the physician line feeds `BASE2023.physician`, which is `§S6a`'s territory, and the 2023
+value is the one the model uses, so nothing published is affected.**
+
+**🟡 `NF2` — `itCapital` can now be reported as stressed and still move nothing the dashboard
+publishes.** Raising it from 100 to 160 changes mature-year new revenue and total by **exactly
+0.00**. It is one-time capital and it lands in 2027 through 2034, +4.8 to +9.0 a year, +60 in
+total, seven years before the year the dashboard reports its mature system from. All of
+`SCN-PESS`'s movement is `rdPublic`. This is not a new defect — `R156`'s existing self-test
+already asserts that the bridge year carries no one-time cost in any scenario, and this is the
+same property from the other side — but the coverage rule `R140` asks for cannot distinguish
+coverage from effect, and a later reader should not mistake one for the other.
+
+**🟡 `NF3` — four of the eight declared-unstressed parameters are gaps, not decisions.**
+`coverageDemandShare`, `legacyAdminFloor`, `residualPrivateShare` and `dvhExpansion` are all
+graded low or carry bands that nearly triple end to end, and no scenario moves any of them.
+`UNSTRESSED_DECLARED` carries a `kind` field precisely so these four are recorded as `open`
+rather than absorbed into a list that reads as justification, and the self-test reports the
+split. **Whoever next opens `scenarios.ts` owns them.**
+
+**🟡 `NF4` — the medications page's search index does not include the family id.** A reader
+searching `PF-096` gets nothing, because `renderPortfolio` builds its searchable string from
+name, form and tags. Small, and it is the id the audit and this log use to refer to families.
+**Nobody's row.**
+
+### THE SELF-INFLICTED DEFECT, AND WHAT CAUGHT IT
+
+`3a52c93` changed a pinned count and did not update its test in the same commit, which golden
+rule 4 requires. `pnpm test` reported it; the failure was in the same output as the pass line,
+and the commit had already run in the same command chain. Fixed in `44c7102` rather than by
+amending, so the sequence stays visible.
+
+**The test that caught it is the one `R143` left deliberately exact.** `KPP-C8`'s mature
+household cost against a 5% cap, with the breaching-scenario count pinned to the number rather
+than to "most", *"so a real move is visible and a reseed is not mistaken for one."* It caught a
+real move. Attributed by running the pre-`R140` catalog against the post-`R140` one at identical
+seeds:
+
+| Scenario | Before | After | |
+|---|---|---|---|
+| `SCN-EMP-FAIL` | inside the cap | **8.2489%** | **crossed**, now 4th worst of 20 |
+| `SCN-PESS` | 15.5873% | 15.8801% | moved, already breaching |
+| every other scenario | | | unchanged to four decimals |
+
+**`SCN-EMP-FAIL` crossing is `R140`'s own premise confirmed.** The row calls `wagePassThrough`
+*"the parameter most able to make the financing look worse"* and notes it reduces both the
+new-revenue requirement and the apparent household burden. Until this section, the scenario
+named for employer pass-through failure showed households **inside** the 5% cap — and the reason
+it did was that the parameter the scenario is about was excluded from it.
+
+### GATES ADDED, ALL PROVEN BY BREAKING THEM
+
+Self-tests **141 → 155**. `README.md` bumped in the same edit as each addition. The full
+break pass runs 22 breaks; **all 22 fail the build and name their own check**, no `SKIP`, tree
+clean afterwards. `NHA-Mental-Health/baseline-P9/prove_p9.py`.
+
+| Gate | What trips it |
+|---|---|
+| The drug base decomposes into the CMS line the model owns | Any retail term that is not `BASE2023.rxRetail × DEFLATOR` |
+| The spend bar labels equal the values its widths encode | A label and a width that disagree by more than $0.05B |
+| The chapter builds both segments from the model, not from a literal | A hand-typed $400–560B total on the page, or any of five `DRUG_BASE` reads going away |
+| The chapter says its base is modal and says its base year | The note dropping any of its five measured figures, or leaving the page |
+| The two drug-price controls are separate, and the page says by how much | The note leaving the page, dropping a figure, or the measured ratio leaving a 1.5–3.0 band |
+| Every family's phase is derived from its dosage-form class | The derivation being bypassed, or 61/116/11/12 moving |
+| Every family whose forms disagree with its class says why | An undeclared disagreement, a stale reason, or a reason under 60 characters |
+| Every drug family carries a source and a confidence grade | A source key outside the declared table, or a table entry nothing uses |
+| Every inclusion reason is a member of the declared union | A misspelled tag (compile error), or the tab's filter and the union disagreeing either way |
+| The tab states what decides a family's phase | The principle leaving the page |
+| Every site quoting the IRA score carries the re-scoring caveat | The caveat leaving the 1,200-character window around any quotation, or the sweep going blind |
+| Every parameter is stressed by a scenario or declared | A new unstressed parameter, a stale declaration, or a reason under 40 characters |
+| The wage pass-through low end is explored by a scenario | The override staying but abandoning the end that matters |
+| Every metric named in derivation rule 3 is certified at P8 | A rule-3 metric losing its P8 row, or the map carrying fewer than five categories |
+
+Plus one gate outside the self-test registry: **`tools/build_data_phase_targets.py` refuses to
+write** if a rule-3 category has no P8 certification row. Proven separately; it raises
+`R105: derivation rule 3 names categories with no P8 certification row: abnormal-result closure
+(TPP-6.3)`.
+
+### THREE WRONG BREAKS, AND WHAT EACH ONE WAS WORTH
+
+The P8 handoff warns that a break can trip a different check and read as success, and that a
+wrong break is not a wrong check. Three fired here, and they were not all the same kind.
+
+1. **`whyNot`** — renaming a provenance key instead of deleting the field. `FamilyRecord`
+   refuses an unknown property, so the build died at `astro check` and never reached the
+   self-test. A wrong break. Incidental finding worth keeping: **a typo'd provenance key cannot
+   ship silently in this module.**
+2. **Renaming a family instead of moving its class** — nothing failed, correctly. A name is not
+   a class.
+3. **Deleting one phrasing of the IRA caveat** — the build passed, and this one was a **wrong
+   check, not a wrong break.** The check asked whether the *file* contained the caveat token
+   anywhere, and the same file mentions re-scoring a second time while explaining the history.
+   Tightened to a window around each quotation, which then legitimately failed on two value
+   lines that were fixed. A second attempt found the window read only forward and called a
+   caveat written immediately *before* the figure missing; it now reads both ways. **The break
+   that could not fail is what turned a weak check into a real one.**
+
+### WHAT THIS SECTION DID NOT TOUCH
+
+The savings calculator's arithmetic and its *"It does not add a new offset"* disclosure, as
+`§S7` requires. `V8` (61 → +116 → +11 → +12 = 200) and `V9` (exact at every point including the
+$9–99B stress boundary) both still pass, and `V9` is now checked against the sliders that
+produce the boundary rather than against two numbers retyped into a test.
+
+`R175`'s phasing principle was surfaced, not changed: all twelve P8 families are still
+biologics and all eleven P7 families are still device-combination or inhaled.
+
+### CARRIED FORWARD
+
+Everything in the P8 handoff's "Findings P8 raised that other sections own" is unchanged except
+`R140`, which is closed here. Still open and still nobody's or someone else's: the two pages
+publishing "new revenue needed" from different statistics of the same model; `R135`'s seven
+`low`-confidence parameters with empty `url` (`P25`); `risk.astro`'s 7 role-less `aria-label`led
+`<div>`s (`§S14`); the 14 non-finite equation cells; `health.astro`'s "KPP-A3 allows <=0.5%
+billing exceptions" prose breach; `wealthTaxPotential`'s label; the four judgement-call smells in
+`scenarios.ts`; and the three significant figures the ensemble cannot support.
+
+**`§AC6`'s `unitsCost` migration hazard is untouched and still live**, overridden by
+`SCN-UNIT-UNDER`, `SCN-AI-FAIL` and `SCN-RURAL-STRESS`.
+
+`astro check`: 0 errors, 0 warnings, **1 hint** (`equations.ts` unreachable `return NaN`),
+unchanged.
