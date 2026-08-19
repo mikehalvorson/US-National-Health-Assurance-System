@@ -1012,6 +1012,30 @@ export function phasePrincipleIsRendered(root = REPO_ROOT): boolean {
   return /phasePrinciple\(\)/.test(text);
 }
 
+/* R52 [§S7]: the medication tests asserted that multiplication works. What
+ * they should assert is what the page and the model have agreed to share, and
+ * that needs the page's actual controls rather than numbers retyped into a
+ * test. Both readers below fail closed: a control that stops being a range
+ * input, or a boundary sentence that stops stating two figures, returns null
+ * and the assertion has nothing to pass on. */
+export function medicationsSliderRange(
+  id: string, root = REPO_ROOT
+): { min: number; max: number; value: number } | null {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  const m = text.match(new RegExp(
+    '<input id="' + id + '" type="range" min="(\\d+)" max="(\\d+)"[^>]*value="(\\d+)"'));
+  return m ? { min: Number(m[1]), max: Number(m[2]), value: Number(m[3]) } : null;
+}
+
+/* The stated stress boundary, read out of the prose §BY4 verified and §S7
+ * protects. Read, not rewritten: the disclosure is do-not-touch, so this
+ * checks it rather than deriving it. */
+export function statedStressBoundary(root = REPO_ROOT): [number, number] | null {
+  const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
+  const m = text.match(/stress boundary is\s+approximately \$(\d+)[^\d]+(\d+)B per year/);
+  return m ? [Number(m[1]), Number(m[2])] : null;
+}
+
 export function literalRetailTotals(root = REPO_ROOT): string[] {
   const text = readFileSync(join(root, MEDICATIONS_PAGE), 'utf8');
   const found: string[] = [];
