@@ -1012,6 +1012,86 @@ export function phasePrincipleIsRendered(root = REPO_ROOT): boolean {
   return /phasePrinciple\(\)/.test(text);
 }
 
+/* R34 [§S7]: the IRA scores are correct as original scores and overstated as
+ * current standing, and they appear in four places that did not agree about
+ * that. `research/03` graded them High-for-original and Medium-for-durability
+ * and named the 2025 re-scoring; `research/01` graded the identical figures
+ * HIGH and called them the most authoritative data point in the section with
+ * no re-scoring caveat at all; the seed CSV carried `high` with a note that
+ * said the same; BUILD-BRIEF repeated the claim.
+ *
+ * Rather than declare the four sites, the scan finds them: a file that states
+ * the $98.5B score in an IRA context has to carry the caveat. A new site
+ * quoting the figure is caught without anyone remembering to add it to a list.
+ * The IRA token is what keeps `fmea.ts`, which uses 98.5 as a headroom
+ * percentage, out of the sweep. */
+export const IRA_SCORE = /\$?98\.5\b/g;
+export const IRA_CONTEXT = /\bIRA\b|Inflation Reduction Act/;
+export const IRA_RESCORING = /re-scor|rescor|revised .{0,40}downward|downward .{0,40}re-?scor/i;
+
+/* The caveat has to sit with the figure, not merely somewhere in the same
+ * file. The first version of this asked whether the file contained the token
+ * anywhere, and the break written to prove it could not fail: research/01's
+ * new text mentions "re-scoring" a second time while explaining the history,
+ * so deleting the caveat from the confidence line left the check passing. A
+ * window is what makes the check about the quotation rather than the document.
+ * 1200 characters covers the value line to the confidence line in the research
+ * entries, which is the longest gap any of the four sites has.
+ *
+ * The window reads both ways. A first attempt read only forward and called a
+ * caveat written immediately BEFORE the figure missing, which is the wrong
+ * answer: a reader meets it either way round. */
+export const IRA_CAVEAT_WINDOW = 1200;
+
+const IRA_SCAN_DIRS = ['research', 'src/lib'];
+const IRA_SCAN_FILES = ['BUILD-BRIEF.md'];
+
+function iraScanFiles(root: string): string[] {
+  const files: string[] = [...IRA_SCAN_FILES];
+  for (const dir of IRA_SCAN_DIRS) {
+    for (const name of readdirSync(join(root, dir))) {
+      if (/\.(md|csv|ts)$/.test(name)) files.push(dir + '/' + name);
+    }
+  }
+  return files;
+}
+
+/* Every place the score is quoted, with the offset, so a file quoting it three
+ * times has to caveat all three. */
+function iraQuotations(root: string, rel: string): number[] {
+  const text = readFileSync(join(root, rel), 'utf8');
+  if (!IRA_CONTEXT.test(text)) return [];
+  const at: number[] = [];
+  for (const m of text.matchAll(IRA_SCORE)) at.push(m.index ?? 0);
+  return at;
+}
+
+export function iraScoresWithoutCaveat(root = REPO_ROOT): string[] {
+  const bad: string[] = [];
+  for (const rel of iraScanFiles(root)) {
+    const at = iraQuotations(root, rel);
+    if (!at.length) continue;
+    const text = readFileSync(join(root, rel), 'utf8');
+    for (const i of at) {
+      const window = text.slice(Math.max(0, i - IRA_CAVEAT_WINDOW),
+        i + IRA_CAVEAT_WINDOW);
+      if (!IRA_RESCORING.test(window)) bad.push(rel + '@' + i);
+    }
+  }
+  return bad;
+}
+
+/* The quotations that do carry it, so the check reports a number rather than
+ * only an absence, and a scan that silently stops matching anything is
+ * visible. */
+export function iraScoreSites(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  for (const rel of iraScanFiles(root)) {
+    for (const i of iraQuotations(root, rel)) out.push(rel + '@' + i);
+  }
+  return out;
+}
+
 /* R52 [§S7]: the medication tests asserted that multiplication works. What
  * they should assert is what the page and the model have agreed to share, and
  * that needs the page's actual controls rather than numbers retyped into a

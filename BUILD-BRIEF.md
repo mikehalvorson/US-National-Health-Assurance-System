@@ -43,8 +43,11 @@ benchmarks (below) - and report the gap if there is one.
    ($360.3B, CP-TOT-005) vs. the broader Himmelstein/Woolhandler academic
    estimate ($1.1T, CP-OFF-001) vs. the CBO-scored IRA drug-negotiation
    savings ($98.5B/10yr, CP-OFF-003, the most authoritative single figure
-   because it's the only one based on actual enacted-policy results rather
-   than a modeled estimate). Pick one explicit, itemized, non-overlapping
+   *as originally scored*, because it's the only one based on actual
+   enacted-policy results rather than a modeled estimate; R34: CBO re-scoring
+   in 2025 revised the projected deficit reduction downward, so this is a
+   policy precedent and not the IRA's current standing). Pick one explicit,
+   itemized, non-overlapping
    list of what's inside `C_offsets(t)` before coding it - don't blend
    figures from studies with different scopes into one number.
 

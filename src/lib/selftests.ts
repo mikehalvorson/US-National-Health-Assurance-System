@@ -62,7 +62,8 @@ import {
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
   DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
-  drugLeverNoteIsRendered, literalRetailTotals, MEDICATIONS_PAGE,
+  drugLeverNoteIsRendered, iraScoreSites, iraScoresWithoutCaveat,
+  literalRetailTotals, MEDICATIONS_PAGE,
   medicationsFilterReasons, phasePrincipleIsRendered,
   RETAIL_BAND_HIGH, RETAIL_BAND_LOW,
   displayOnlyDatasetsInEngine,
@@ -2033,6 +2034,27 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               : 'states ' + DRUG_BASE_NOTE_FIGURES.length + ' measured figures, $' +
                 DRUG_BASE.low.toFixed(1) + 'B to $' + DRUG_BASE.high.toFixed(1) +
                 'B around a $' + DRUG_BASE.total.toFixed(1) + 'B mode'
+        };
+      })
+    ]
+  },
+  {
+    /* R34 [§S7]: an original score is not a current standing */
+    surface: 'ira-precedent',
+    rows: () => [
+      runGuarded('Every site quoting the IRA score carries the re-scoring caveat', () => {
+        const bad = iraScoresWithoutCaveat();
+        const sites = iraScoreSites();
+        /* A scan that stops matching anything reports success by finding no
+           problems, which is the shape §S6b's first render check had. Require
+           the sweep to still be finding the figure somewhere. */
+        return {
+          ok: !bad.length && sites.length >= 4,
+          note: bad.length
+            ? 'states the score without the caveat: ' + bad.join(', ')
+            : sites.length < 4
+              ? 'the scan found only ' + sites.length + ' sites; it used to find 4'
+              : sites.length + ' sites quote it, all carrying the caveat'
         };
       })
     ]

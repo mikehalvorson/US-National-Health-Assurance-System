@@ -371,7 +371,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Net drug price reduction from national purchasing (mature)",
     low: 25, mode: 40, high: 55,
     confidence: "medium",
-    source: "US net prices ~2.78× OECD peers overall, 4.22× brand (RAND RRA788-3 2024). IRA first-cycle negotiated cuts 38–79% list / ~22% net Medicare spending (CMS). Framework target SR-DRUG-002 is ≥55%. High end assumes full international-reference-level purchasing.",
+    source: "US net prices ~2.78× OECD peers overall, 4.22× brand (RAND RRA788-3 2024). IRA first-cycle negotiated cuts 38–79% list / ~22% net Medicare spending (CMS). R34: the IRA precedent this leans on is the original CBO score. CBO re-scoring in 2025 revised the package's projected deficit reduction downward, so the precedent shows that negotiation can save at program level, not how much a national purchaser would save. Framework target SR-DRUG-002 is ≥55%. High end assumes full international-reference-level purchasing.",
     url: "https://www.rand.org/pubs/research_reports/RRA788-3.html",
     adjustable: true, sliderMin: 0, sliderMax: 65
   },
