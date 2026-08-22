@@ -97,6 +97,7 @@ import {
   CARE_GATE_WHY_FLOOR, CARE_SCENARIOS, careCardYears, careGateProblems,
   careEvidenceBoundsMissing, careNotesTypingYears, careProseCatalogCodes,
   earlyBenefitProblems, householdVintageProblems, householdVintageSpan,
+  UNCOVERED_EITHER_WAY, uncoveredEitherWayProblems, undeclaredIdenticalColumns,
   undeclaredVintageGaps,
   frameworkPhaseMismatches,
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
@@ -1013,6 +1014,18 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !missing.length,
           note: missing.length ? HEALTH_CLIENT + ' never calls ' + missing.join(', ')
             : 'all ' + CARE_SCENARIO_CALLS.length + ' reads present in ' + HEALTH_CLIENT
+        };
+      }),
+      /* R86 [§S8]: the finding was withdrawn; the fact it named is pinned. */
+      runGuarded('The two uncovered-either-way cards still report the same figure twice', () => {
+        const bad = uncoveredEitherWayProblems();
+        const undeclared = undeclaredIdenticalColumns();
+        return {
+          ok: !bad.length && !undeclared.length,
+          note: [bad.join('; '),
+            undeclared.length ? undeclared.join(', ') + ' repeats a range and is not declared' : '']
+            .filter(Boolean).join(' | ') ||
+            UNCOVERED_EITHER_WAY.join(' and ') + ', each with its own reason'
         };
       }),
       /* R172 [§S8] */

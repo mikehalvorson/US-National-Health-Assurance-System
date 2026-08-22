@@ -371,7 +371,11 @@ export const CARE_SCENARIOS: CareScenario[] = [
     id: 'nursing',
     title: 'Nursing home care (one year)',
     todayInsured: { lo: 111000, hi: 128000, note: "Medicare doesn't cover it; Medicaid only after spending down your assets" },
-    todayUninsured: { lo: 111000, hi: 128000, note: 'private-pay national average' },
+    todayUninsured: {
+      lo: 111000, hi: 128000,
+      note: 'the private-pay national average, which is what an insured household ' +
+        'pays too, because this is not a benefit insurance buys'
+    },
     nha: {
       amount: 0, promise: 'point-of-care',
       gates: [costSharingGate(), expansionGate('Long-term care')],
@@ -573,6 +577,60 @@ export function careEvidenceBoundsMissing(): string[] {
     }
   }
   return out;
+}
+
+/* R86 [§S8]: the two cards whose insured and uninsured ranges are identical.
+ *
+ * ⚠️ The finding behind this row was WITHDRAWN before the row was written.
+ * §AG8 read `hearing` and `nursing` repeating the same figures in both columns
+ * as a copy-paste bug and asked for a distinct "not covered either way"
+ * treatment. §AY5 checked and withdrew it: both are deliberate, both say so in
+ * their own notes, and hearing aids and nursing-home years genuinely cost the
+ * same whether or not a person has insurance. The row survived the withdrawal
+ * in the recommendation table with no note.
+ *
+ * So there is nothing to fix and something to protect. The equality is the
+ * fact the cards exist to report, and a later pass reading the page as §AG8
+ * did could "fix" it by nudging one range apart. This pins it: the two cards
+ * must keep both columns equal, and each must keep saying why, in its own
+ * words rather than in one shared sentence - the two reasons are different
+ * (an uncovered market, versus a benefit Medicare excludes) and collapsing
+ * them into one would lose the half that matters.
+ */
+export const UNCOVERED_EITHER_WAY = ['hearing', 'nursing'];
+export const UNCOVERED_REASON_FLOOR = 30;
+
+export function uncoveredEitherWayProblems(): string[] {
+  const out: string[] = [];
+  const notes: string[] = [];
+  for (const id of UNCOVERED_EITHER_WAY) {
+    const c = CARE_SCENARIOS.filter((x) => x.id === id)[0];
+    if (!c) { out.push(id + ': card is gone'); continue; }
+    if (c.todayInsured.lo !== c.todayUninsured.lo || c.todayInsured.hi !== c.todayUninsured.hi) {
+      out.push(id + ': the two columns no longer match, which is what the card reports');
+    }
+    for (const side of [c.todayInsured, c.todayUninsured]) {
+      if (side.note.trim().length < UNCOVERED_REASON_FLOOR) {
+        out.push(id + ': a column stopped explaining why the two are the same');
+      }
+      notes.push(side.note.trim());
+    }
+  }
+  if (new Set(notes).size !== notes.length) {
+    out.push('two columns share a sentence; the reasons are different and both matter');
+  }
+  return out;
+}
+
+/* And the other direction: no OTHER card may quietly become one of these. A
+   card whose two columns are equal and which is not declared above is either a
+   real copy-paste error or an undeclared member of this set. */
+export function undeclaredIdenticalColumns(): string[] {
+  return CARE_SCENARIOS
+    .filter((c) => UNCOVERED_EITHER_WAY.indexOf(c.id) < 0)
+    .filter((c) => c.todayInsured.lo === c.todayUninsured.lo &&
+      c.todayInsured.hi === c.todayUninsured.hi)
+    .map((c) => c.id);
 }
 
 /* R171 [§S8]: the cards' own rendered strings, checked by value rather than by
