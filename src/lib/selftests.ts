@@ -105,7 +105,7 @@ import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
   ENGINE_DECLARATION_LITERALS, FRAMEWORK_CLAIM, MATURE_INDEX, MATURE_YEAR,
-  MONTE_CARLO_DRAWS, OFFSET_ARCHITECTURE_DOC, PARAM_DEFS,
+  MONTE_CARLO_DRAWS, OFFSET_ARCHITECTURE_DOC, PARAM_DEFS, paramProseCatalogCodes,
   PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS, SEED_STABILITY,
   SPONSOR_SHARE, START_YEAR, transitionEnvelope
 } from './params';
@@ -1024,14 +1024,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             RESIDUAL_CAVEAT_SITES.length + ' sites, one declared sentence'
         };
       }),
-      runGuarded('No catalog code reaches the care cards or the chapter prose modules', () => {
+      runGuarded('No catalog code reaches reader prose on these two chapters', () => {
         const hits = narrativeCatalogCodes();
         const inCards = careProseCatalogCodes();
+        const inParams = paramProseCatalogCodes();
         return {
-          ok: !hits.length && !inCards.length,
-          note: [hits.map((h) => h.file + ':' + h.line).join('; '), inCards.join('; ')]
+          ok: !hits.length && !inCards.length && !inParams.length,
+          note: [hits.map((h) => h.file + ':' + h.line).join('; '), inCards.join('; '),
+            inParams.join('; ')]
             .filter(Boolean).join(' | ') ||
-            NARRATIVE_SURFACES.length + ' narrative surfaces carry none'
+            NARRATIVE_SURFACES.length + ' narrative surfaces, ' + CARE_SCENARIOS.length +
+            ' cards and ' + PARAM_DEFS.length + ' parameter rows carry none'
         };
       }),
       runGuarded('No care card states a benefit year in its own prose', () => {

@@ -375,7 +375,7 @@ export const PARAM_DEFS: ParamDef[] = [
        table (health.astro), so the `R34:` prefix put an internal remediation
        code in reader-facing text, which is the class golden rule 2 forbids.
        The substance stays; the code goes. */
-    source: "US net prices ~2.78× OECD peers overall, 4.22× brand (RAND RRA788-3 2024). IRA first-cycle negotiated cuts 38–79% list / ~22% net Medicare spending (CMS). The IRA precedent here is the original CBO score: CBO re-scoring in 2025 revised the package's projected deficit reduction downward, so the precedent shows that negotiation can save at program level, not how much a national purchaser would save. Framework target SR-DRUG-002 is ≥55%. High end assumes full international-reference-level purchasing.",
+    source: "US net prices ~2.78× OECD peers overall, 4.22× brand (RAND RRA788-3 2024). IRA first-cycle negotiated cuts 38–79% list / ~22% net Medicare spending (CMS). The IRA precedent here is the original CBO score: CBO re-scoring in 2025 revised the package's projected deficit reduction downward, so the precedent shows that negotiation can save at program level, not how much a national purchaser would save. The plan's own target for this lever is at least 55%. High end assumes full international-reference-level purchasing.",
     url: "https://www.rand.org/pubs/research_reports/RRA788-3.html",
     adjustable: true, sliderMin: 0, sliderMax: 65
   },
@@ -422,7 +422,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Independent oversight, appeals, safety & legitimacy bodies",
     low: 0.5, mode: 0.9, high: 1.4,
     confidence: "medium",
-    source: "Framework PR-CST-010 mandates 0.25–0.5% for the legitimacy layer alone; HHS OIG/GAO/SSA analogues (research/05) add the oversight/ombudsman/adaptation bodies. Distinct from claims administration above.",
+    source: "The plan sets aside 0.25–0.5% for the legitimacy layer alone; HHS OIG/GAO/SSA analogues (research/05) add the oversight/ombudsman/adaptation bodies. Distinct from claims administration above.",
     url: "",
     adjustable: false
   },
@@ -433,7 +433,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "ED diversion + avoidable admission + readmission savings",
     low: 10, mode: 25, high: 45,
     confidence: "medium",
-    source: "155M ED visits × $2,453 avg (CDC NHAMCS); disputed avoidable share 25–67% (research/02); framework targets ≥30% low-acuity ED reduction (KPP-B3). Net of unit-network substitution cost, which is priced separately in the units category.",
+    source: "155M ED visits × $2,453 avg (CDC NHAMCS); disputed avoidable share 25–67% (research/02); the plan targets at least a 30% reduction in low-acuity ED use. Net of unit-network substitution cost, which is priced separately in the units category.",
     url: "",
     adjustable: false
   },
@@ -460,7 +460,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Related-party extraction & profit-stripping limits (hospitals)",
     low: 3, mode: 8, high: 15,
     confidence: "low",
-    source: "Framework SR-HOSP-006 caps related-party extraction at 0.5% of hospital budgets. Narrow scope on purpose: facility-fee/rate effects live in the payment factor, not here.",
+    source: "The plan caps related-party extraction at 0.5% of hospital budgets. Narrow scope on purpose: facility-fee/rate effects live in the payment factor, not here.",
     url: "",
     adjustable: false
   },
@@ -516,7 +516,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Four-unit diagnostic-treatment network (15,000 units, operating + amortized capital)",
     low: 15, mode: 25, high: 36,
     confidence: "low",
-    source: "DERIVED; no direct analogue exists. Urgent-care visit economics ($150–200/visit, ~15% margin) and FQHC cost structures (research/02) imply ~$1–2M avg annual cost/unit × 15,000 units (SR-ACC-010) + capital.",
+    source: "DERIVED; no direct analogue exists. Urgent-care visit economics ($150–200/visit, ~15% margin) and FQHC cost structures (research/02) imply ~$1–2M avg annual cost/unit × the plan's 15,000-unit network + capital.",
     url: "",
     adjustable: true, sliderMin: 5, sliderMax: 60
   },
@@ -534,7 +534,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Workforce pipeline: 55k training slots, scholarships, Rural Service Corps",
     low: 15, mode: 25, high: 40,
     confidence: "medium",
-    source: "Medicare GME $100–180k/resident/yr (CMS/MedPAC) × PR-WF-002's 55,000 new slots + AAMC debt-relief scale + rural incentives.",
+    source: "Medicare GME $100–180k/resident/yr (CMS/MedPAC) × the plan's 55,000 new residency slots + AAMC debt-relief scale + rural incentives.",
     url: "",
     adjustable: false
   },
@@ -612,7 +612,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Wealth-tax collection efficiency",
     low: 70, mode: 84, high: 92,
     confidence: "medium",
-    source: "Framework KPP-C7 targets ≥92%; Saez–Zucman assume 85%; critics argue much lower. Applied to gross potential above.",
+    source: "The plan targets at least 92%; Saez–Zucman assume 85%; critics argue much lower. Applied to gross potential above.",
     url: "",
     adjustable: true, sliderMin: 40, sliderMax: 95
   }
@@ -734,6 +734,33 @@ export const RAMPS = {
  * year. transitionShape and itCapitalShape are deliberately absent: they
  * are shapes over a span, not milestones at a year.
  * ------------------------------------------------------------------------ */
+/* §S8 finding: the full parameter table on the Healthcare chapter renders
+   `label`, `unit`, `source` and the divergence fields, so those four are reader
+   prose and golden rule 2 applies to them. Seven catalog codes were reaching a
+   reader there, four of them in the "Framework X requires Y" register the same
+   rule forbids. Checked by value rather than by scanning the file, for the
+   reason careProseCatalogCodes is: this module legitimately names CP ids in
+   comments and in research-file pointers that nothing renders. */
+export function paramProseCatalogCodes(): string[] {
+  const code = /\b(?:KPP|TPP|CP|SR|PR|OI|SN|GAP)-[A-Z0-9][A-Z0-9.\-]*/;
+  const out: string[] = [];
+  for (const p of PARAM_DEFS) {
+    const rendered: Array<{ where: string; text: string }> = [
+      { where: 'label', text: p.label || '' },
+      { where: 'unit', text: p.unit || '' },
+      { where: 'source', text: p.source || '' },
+      { where: 'divergence.leans', text: p.divergence ? p.divergence.leans : '' },
+      { where: 'divergence.recommended', text: p.divergence ? p.divergence.recommended : '' },
+      { where: 'divergence.note', text: p.divergence ? p.divergence.note : '' }
+    ];
+    for (const r of rendered) {
+      const hit = r.text.match(code);
+      if (hit) out.push(p.id + '.' + r.where + ': ' + hit[0]);
+    }
+  }
+  return out;
+}
+
 export interface RampMilestone { ramp: keyof typeof RAMPS; phase: string; atLeast: number; claim: string }
 export const RAMP_MILESTONES: RampMilestone[] = [
   { ramp: 'coverage',      phase: 'P3', atLeast: 0.20, claim: 'public coverage wave I opens' },
