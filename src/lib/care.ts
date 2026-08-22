@@ -66,6 +66,36 @@ export interface CareNha {
   early?: CareEarlyBenefit;
   note: string;
 }
+/* R82/R83 [§S8]: the figures a card publishes, and the file in this repository
+   that contains them. §AG2's finding was that the therapy card named a federal
+   source that does not hold the numbers it was cited for; §AG3's was that the
+   insulin card cited a source that undercuts its own floor. Both are the same
+   defect, and both are checkable once a card says WHERE its figures live and
+   exactly WHICH strings to look for. `find` is matched verbatim against the
+   file with whitespace collapsed, so a figure that moves without its source
+   moving fails the build. */
+export type CareAmountKey = 'todayInsured' | 'todayUninsured';
+
+/* One bound of one range, and the exact sentence in the file that carries it.
+   Per bound rather than per card, because a range's two ends can come from two
+   different records and the insulin card's do: the floor is a nonprofit
+   manufacturer's list price and the ceiling is ordinary retail.
+
+   Bound by bound is also the only version that works. A first draft asked
+   whether each bound appeared anywhere among the cited strings, and moving the
+   therapy card's insured ceiling from $60 to $75 did not fail it, because 75
+   appears in a different quotation on the same card. The break refusing to
+   fail is what found that; the pairing is what fixes it. */
+export interface CareCitation { amount: CareAmountKey; end: 'lo' | 'hi'; find: string }
+
+export interface CareEvidence {
+  file: string;
+  cites: CareCitation[];
+  /* strings that must be in the file and back no figure: a corroborating
+     anchor a reader is told about, checked so it cannot rot silently. */
+  also?: string[];
+}
+
 export interface CareScenario {
   id: string;
   title: string;
@@ -73,6 +103,7 @@ export interface CareScenario {
   todayUninsured: CareAmount;
   nha: CareNha;
   source: string;
+  evidence?: CareEvidence;
   confidence: string;
 }
 
@@ -286,15 +317,28 @@ export const CARE_SCENARIOS: CareScenario[] = [
   {
     id: 'therapy',
     title: 'Therapy session (mental health)',
-    todayInsured: { lo: 20, hi: 75, note: 'in-network copay, when an in-network therapist can be found' },
-    todayUninsured: { lo: 100, hi: 200, note: 'typical cash price per session' },
+    todayInsured: { lo: 20, hi: 60, note: 'in-network copay, when an in-network therapist can be found' },
+    todayUninsured: { lo: 100, hi: 300, note: 'typical cash price per 45 to 60 minute session' },
     nha: {
       amount: 0, promise: 'point-of-care',
       gates: [costSharingGate(), expansionGate('Behavioral health')],
       note: 'covered; the behavioral-health expansion carries the 48-hour first-contact standard'
     },
-    source: 'SAMHSA spending data; typical market rates (plan- and market-dependent)',
-    confidence: 'low'
+    source: 'Consumer-pricing surveys compiled in this project’s behavioral-health ' +
+      'research file; no federal average session price exists. Medicare’s physician ' +
+      'fee schedule allows $75 to $150 for a 45-minute session, which brackets the ' +
+      'cash range from the other side.',
+    evidence: {
+      file: 'research/04_ltc_behavioral_dvh_ems_publichealth.md',
+      cites: [
+        { amount: 'todayInsured', end: 'lo', find: '$20-$60/session' },
+        { amount: 'todayInsured', end: 'hi', find: '$20-$60/session' },
+        { amount: 'todayUninsured', end: 'lo', find: '$100–$300 typical range' },
+        { amount: 'todayUninsured', end: 'hi', find: '$100–$300 typical range' }
+      ],
+      also: ['$75-$150 per 45-min CPT 90834 session']
+    },
+    confidence: 'medium'
   },
   {
     id: 'hearing',
@@ -480,6 +524,38 @@ export function careNotesTypingYears(): string[] {
     for (const p of prose) {
       const hit = p.text.match(/\b20\d\d\b/);
       if (hit) out.push(c.id + '.' + p.where + ': ' + hit[0]);
+    }
+  }
+  return out;
+}
+
+/* R82/R83 [§S8]: the other half of "the source contains the figures".
+   `careEvidenceMisses` proves the strings are in the file. This proves the
+   strings are about the card: every bound of every range the evidence claims
+   to back has to appear inside one of those strings. Without it a figure could
+   move from 20 to 25 and the file would still contain "$20-$60/session". */
+export function careEvidenceBoundsMissing(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const ev = c.evidence;
+    if (!ev) continue;
+    if (!ev.cites.length) { out.push(c.id + ': evidence cites no figure'); continue; }
+    for (const cite of ev.cites) {
+      const value = c[cite.amount][cite.end];
+      /* as a money figure in ITS OWN quotation, not merely as digits somewhere
+         among the card's citations */
+      if (!new RegExp('\\$' + value + '(?![0-9.])').test(cite.find)) {
+        out.push(c.id + '.' + cite.amount + '.' + cite.end + ': $' + value +
+          ' is not in "' + cite.find + '"');
+      }
+    }
+    /* and every bound the card publishes has to be cited by something */
+    for (const key of ['todayInsured', 'todayUninsured'] as CareAmountKey[]) {
+      for (const end of ['lo', 'hi'] as Array<'lo' | 'hi'>) {
+        const cited = ev.cites.some((x) => x.amount === key && x.end === end);
+        const backed = ev.cites.some((x) => x.amount === key);
+        if (backed && !cited) out.push(c.id + '.' + key + '.' + end + ': uncited');
+      }
     }
   }
   return out;

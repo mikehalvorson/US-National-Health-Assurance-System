@@ -61,7 +61,8 @@ import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
-  CARE_SCENARIO_CALLS, careRequirementsNotInFramework, careScenarioCallsMissing,
+  CARE_SCENARIO_CALLS, careEvidenceMisses, careRequirementsNotInFramework,
+  careScenarioCallsMissing,
   narrativeCatalogCodes, RESIDUAL_CAVEAT_SITES, residualCaveatSitesMissing,
   typedResidualFigures,
   careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_CLIENT, HEALTH_PAGE, NARRATIVE_SURFACES,
@@ -94,7 +95,7 @@ import {
 } from './drug-lever';
 import {
   CARE_GATE_WHY_FLOOR, CARE_SCENARIOS, careCardYears, careGateProblems,
-  careNotesTypingYears, careProseCatalogCodes, earlyBenefitProblems,
+  careEvidenceBoundsMissing, careNotesTypingYears, careProseCatalogCodes, earlyBenefitProblems,
   frameworkPhaseMismatches,
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
@@ -1009,6 +1010,18 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !missing.length,
           note: missing.length ? HEALTH_CLIENT + ' never calls ' + missing.join(', ')
             : 'all ' + CARE_SCENARIO_CALLS.length + ' reads present in ' + HEALTH_CLIENT
+        };
+      }),
+      /* R82 + R83 [§S8] */
+      runGuarded('Every cited care-card source contains the figures it is cited for', () => {
+        const missing = careEvidenceMisses();
+        const unbacked = careEvidenceBoundsMissing();
+        const cited = CARE_SCENARIOS.filter((c) => c.evidence).length;
+        return {
+          ok: !missing.length && !unbacked.length,
+          note: [missing.join('; '), unbacked.join('; ')].filter(Boolean).join(' | ') ||
+            cited + ' of ' + CARE_SCENARIOS.length + ' cards cite a file in this ' +
+            'repository; the rest cite outside sources nothing here can read'
         };
       }),
       /* R171 [§S8] */

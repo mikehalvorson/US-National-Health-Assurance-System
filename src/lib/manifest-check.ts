@@ -1089,6 +1089,42 @@ export function careScenarioCallsMissing(root = REPO_ROOT): string[] {
     (name) => !new RegExp('\\b' + name + '\\s*\\(').test(text));
 }
 
+/* R82/R83 [§S8]: a card's cited source has to contain the figures it is cited
+ * for. §AG2: the therapy card named "SAMHSA spending data" for per-session
+ * prices, and SAMHSA publishes an aggregate national total. §AG3: the insulin
+ * card cited Civica Rx while showing an uninsured floor Civica undercuts.
+ *
+ * A card that declares `evidence` names the research file its figures live in
+ * and the exact strings to find there. Whitespace is collapsed on both sides
+ * because a research file wraps and a TypeScript string concatenates; nothing
+ * else is normalised, so a figure that moves without its source moving fails. */
+export function careEvidenceMisses(root = REPO_ROOT): string[] {
+  const cache = new Map<string, string>();
+  const out: string[] = [];
+  for (const card of CARE_SCENARIOS) {
+    const ev = card.evidence;
+    if (!ev) continue;
+    let text = cache.get(ev.file);
+    if (text === undefined) {
+      try {
+        text = collapse(readFileSync(join(root, ev.file), 'utf8'));
+      } catch {
+        out.push(card.id + ': ' + ev.file + ' does not exist');
+        continue;
+      }
+      cache.set(ev.file, text);
+    }
+    if (!ev.cites.length) out.push(card.id + ': declares evidence and cites no figure');
+    const strings = ev.cites.map((c) => c.find).concat(ev.also || []);
+    for (const f of strings) {
+      if (!text.includes(collapse(f))) {
+        out.push(card.id + ': ' + ev.file + ' does not contain "' + f + '"');
+      }
+    }
+  }
+  return out;
+}
+
 /* R170 [§S8]: a framework requirement a card quotes has to be in the framework.
  *
  * §AG2's complaint about the therapy card was that its cited source does not
