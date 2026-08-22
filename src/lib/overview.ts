@@ -7,6 +7,7 @@
  * static render and the client-side recompute script can share one source
  * of truth for the Overview hero/tiles/family-burden note.
  * ========================================================================= */
+import { RESIDUAL_BILLING_CAVEAT } from './care';
 import { runMonteCarlo } from './model';
 import type { MonteCarloResult } from './model-types';
 import {
@@ -88,8 +89,9 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
     "from about $" + Math.round(famNow * 1e9 / (hhNow * 1e6)).toLocaleString("en-US") +
     " to $" + Math.round(fam2041 * 1e9 / (hh2041 * 1e6)).toLocaleString("en-US") +
     " per household per year, with no new coverage to show for it. Under NHA " +
-    "in the same year, covered care costs $0 at the point of use and the " +
-    "the plan caps ordinary households at 5% of the new financing " +
+    "in the same year, " + RESIDUAL_BILLING_CAVEAT.charAt(0).toLowerCase() +
+    RESIDUAL_BILLING_CAVEAT.slice(1) + " The plan caps ordinary households at " +
+    "5% of the new financing " +
     "(about $" + Math.round(kppPerHH).toLocaleString("en-US") + " per household); " +
     "the rest shifts to the tax side, weighted toward the top. Who pays what " +
     "is the Taxes & Financing tab.";

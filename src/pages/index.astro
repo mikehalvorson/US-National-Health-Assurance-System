@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { RESIDUAL_BILLING_CAVEAT } from '../lib/care';
 import { PROBLEM_STATS } from '../lib/params';
 import { sponsorTableData } from '../lib/overview-tables';
 
@@ -108,8 +109,7 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         <li><b>Automatic, continuous coverage</b> for every resident: no
           enrollment cliffs, no churn, no linkage to your job.</li>
         <li><b>$0 at the point of care</b> for covered medically necessary
-          care; medical debt for covered care is prohibited (patient billing
-          capped at 0.5% of encounters).</li>
+          care. {RESIDUAL_BILLING_CAVEAT}</li>
         <li><b>National drug purchasing</b> through a real-time public
           pharmacy claims utility (replacing
           <abbr class="overview-acronym" title="Pharmacy Benefit Managers">PBMs</abbr>),

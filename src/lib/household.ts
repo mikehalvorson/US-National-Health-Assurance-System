@@ -2,7 +2,9 @@
    renderHouseholdCalc (204-272). The tax-share line reads live model numbers
    via getModelNumbers(), supplied by the Overview client so it tracks the
    shared Monte Carlo run. KPP-C8: ordinary households bear <=5% of new financing. */
-import { HOUSEHOLD_PROFILES, HOUSEHOLDS_M, moneyRange } from './care';
+import {
+  HOUSEHOLD_PROFILES, HOUSEHOLDS_M, moneyRange, RESIDUAL_BILLING_CAVEAT
+} from './care';
 import { money } from './format';
 
 export interface HouseholdModelNumbers { newRevenueB: number }
@@ -68,7 +70,7 @@ export function renderHouseholdCalc(
     const nOop = div('hh-line', nhaCol);
     div('hh-line-label', nOop, 'Point-of-care costs for covered care');
     div('hh-line-val', nOop, '$0');
-    div('hh-line-note', nhaCol, 'covered medically necessary care is free at the point of use (KPP-A3 allows ≤0.5% billing exceptions); non-covered extras remain private');
+    div('hh-line-note', nhaCol, RESIDUAL_BILLING_CAVEAT);
     const nTax = div('hh-line', nhaCol);
     div('hh-line-label', nTax, 'Avg. household share of new taxes if financed per the plan’s cap');
     div('hh-line-val', nTax, '≤ $' + Math.round(kppShare).toLocaleString('en-US'));
@@ -78,7 +80,7 @@ export function renderHouseholdCalc(
       'The rest falls on wealth, high-income, employer, and health-sector taxes, if those levers deliver.');
 
     foot.textContent =
-      'Honest caveats: employer payroll contributions are widely expected to show up partly in wages over time (not modeled); ' +
+      'What this leaves out: employer payroll contributions are widely expected to show up partly in wages over time (not modeled); ' +
       'the uninsured today spend little on average because they skip care, so the comparison understates what coverage is worth to them; ' +
       'and the tax line depends entirely on Congress honoring the plan’s household-protection cap.';
   }

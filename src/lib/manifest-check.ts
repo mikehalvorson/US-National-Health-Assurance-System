@@ -525,11 +525,17 @@ export interface CodeReference { file: string; line: number; text: string }
    says only what it is looking for and where it is allowed to be. */
 export function scanSourceLines(
   pattern: RegExp,
-  options: { skip?: string[]; only?: string } = {},
+  /* R171 [§S8]: `only` widened from one file to a list. A scan whose scope is
+     a named set of narrative surfaces needs to say so as a set; passing them
+     one at a time is how the four sites in RESIDUAL_CAVEAT_SITES would end up
+     with four callers and three of them forgotten. */
+  options: { skip?: string[]; only?: string | string[] } = {},
   root = REPO_ROOT
 ): CodeReference[] {
   const skip = new Set(options.skip || []);
-  const files = options.only ? [options.only] : enumerateSourceFiles(root);
+  const only = options.only === undefined ? null
+    : (typeof options.only === 'string' ? [options.only] : options.only);
+  const files = only || enumerateSourceFiles(root);
   const out: CodeReference[] = [];
   for (const rel of files) {
     if (!rel.startsWith('src/')) continue;
@@ -965,6 +971,96 @@ export function careSectionTypedYears(root = REPO_ROOT): string[] {
   const end = text.indexOf('</section>', from);
   const section = text.slice(from, end < 0 ? text.length : end);
   return (section.match(/\b20\d\d\b/g) || []);
+}
+
+/* R171 [§S8]: the residual-billing caveat has one owner and four render sites,
+ * and none of them may restate the figure.
+ *
+ * §AY3: two requirements govern point-of-care cost and neither promises an
+ * absolute zero. The Overview said so; the ten cards, the household
+ * calculator's `$0` line and the family-burden sentence did not. Four sites,
+ * four separately-typed sentences, one of which was missing.
+ *
+ * Each site is named separately rather than counted, for the reason
+ * DRUG_BASE_READS names its five separately: a check that asks whether SOME
+ * site renders the caveat passes with three of the four deleted. */
+export const RESIDUAL_CAVEAT_SITES = [
+  'src/pages/health.astro',
+  'src/pages/index.astro',
+  'src/lib/household.ts',
+  'src/lib/overview.ts'
+];
+
+/* Import statements are stripped before the scan, and that is the whole check.
+   The first version tested whether the identifier appeared anywhere in the
+   file, and every site imports it - so deleting the render and leaving the
+   import behind passed. Proven by the break refusing to fail: exactly the
+   read-list defect the §S7 review caught, written again by the pass that had
+   read about it. A mention is not a use. */
+const IMPORT_STATEMENT = /import\s[\s\S]*?from\s*['"][^'"]*['"];?/g;
+
+export function residualCaveatSitesMissing(root = REPO_ROOT): string[] {
+  return RESIDUAL_CAVEAT_SITES.filter((rel) => {
+    const text = maskComments(readFileSync(join(root, rel), 'utf8'))
+      .replace(IMPORT_STATEMENT, ' ');
+    return !/\bRESIDUAL_BILLING_CAVEAT(?![A-Za-z0-9_])/.test(text);
+  });
+}
+
+/* And the other half of one owner: the figure itself, typed beside a $0 claim,
+   is how four sites came to say four things. `care.ts` is the declaration and
+   is the only place the number may appear. */
+export function typedResidualFigures(root = REPO_ROOT): CodeReference[] {
+  return scanSourceLines(
+    /\b0\.5\s*%|\bhalf a percent\b/g,
+    { skip: ['src/lib/care.ts'], only: RESIDUAL_CAVEAT_SITES },
+    root
+  );
+}
+
+/* R171 [§S8], and the golden rule the §S8 brief inherited: no catalog code in
+ * reader prose outside the Data and Quality chapters, whose subject IS the
+ * catalog and which explain the codes.
+ *
+ * `household.ts` rendered "KPP-A3 allows <=0.5% billing exceptions" and
+ * `money-flow.ts` labelled a ribbon "(KPP-C8)", both on the Healthcare
+ * chapter, both predating §S6a and in no row. R170's own first draft added a
+ * third - "Framework requirement SR-DRUG-001" on the insulin card - written by
+ * the pass that was fixing the chapter, which is why this exists as a check
+ * and not as a sweep.
+ *
+ * ⚠️ SCOPED, and the scope is the finding. This covers the Healthcare
+ * chapter's narrative surfaces only. Measured across all of `src/`, eighteen
+ * other files carry catalog codes in string literals; most are legitimate
+ * (equations.ts, quality-data.ts, fmea.ts and data-phases.ts ARE the catalog),
+ * but `rollout.ts` carries nineteen OI-0xx references, `gov.ts` thirty-three
+ * KPP/TPP codes, `hardening.ts` two SR ids and `units-client.ts` one, and
+ * whether those reach a reader is a sweep no row owns. Widening this list is
+ * how that row gets done.
+ *
+ * `care.ts` is deliberately NOT in this list. It DECLARES a requirement id and
+ * the requirement's verbatim words so the extract check has something to match,
+ * and neither reaches a reader; a line scan cannot tell a declared id from a
+ * rendered one. Its rendered fields are checked by value instead, in
+ * `careProseCatalogCodes`, which is the stronger test of the two. */
+export const NARRATIVE_SURFACES = [
+  'src/pages/health.astro',
+  'src/pages/index.astro',
+  'src/lib/household.ts',
+  'src/lib/overview.ts',
+  'src/lib/money-flow.ts'
+];
+
+/* The code shapes the convention names: KPP/TPP/CP metric ids, SR/PR
+   requirement ids, OI open issues, SN source notes. Matched only inside string
+   literals would need a parser; the whole masked line is enough, because these
+   modules have no other reason to write one. */
+export const CATALOG_CODE_SOURCE =
+  String.raw`\b(?:KPP|TPP|CP|SR|PR|OI|SN|GAP)-[A-Z0-9][A-Z0-9.\-]*`;
+
+export function narrativeCatalogCodes(root = REPO_ROOT): CodeReference[] {
+  return scanSourceLines(
+    new RegExp(CATALOG_CODE_SOURCE, 'g'), { only: NARRATIVE_SURFACES }, root);
 }
 
 /* R85 [§S8]: the client has to actually re-derive the card years.

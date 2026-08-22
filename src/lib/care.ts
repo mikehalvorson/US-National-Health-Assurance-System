@@ -41,7 +41,16 @@ export type CarePromise = 'point-of-care' | 'premium';
    state, and promised it nine years early. Carrying the id, the words and the
    phase as data is what lets the build check the card against the framework
    instead of against the sentence beside it. */
-export interface CareFrameworkRequirement { id: string; quote: string; byPhase: string }
+export interface CareFrameworkRequirement {
+  id: string;
+  /* verbatim, for the check against the source extract. NEVER rendered:
+     golden rule 2 keeps the source document's codes and its "the system
+     shall" register off every chapter outside Data and Quality. */
+  quote: string;
+  /* the same obligation as a reader meets it, which is what the card shows */
+  plain: string;
+  byPhase: string;
+}
 
 /* What genuinely does arrive before the card's year, so that "arrives early"
    can be said about the thing that is early rather than about the $0. */
@@ -222,6 +231,8 @@ export const CARE_SCENARIOS: CareScenario[] = [
         id: 'SR-DRUG-001',
         quote: 'The system shall provide $0 patient charge for at least 98% of ' +
           'essential formulary fills by Phase 8.',
+        plain: 'The plan requires no patient charge on at least 98% of essential ' +
+          'prescription fills',
         byPhase: 'P8'
       },
       early: {
@@ -313,6 +324,31 @@ export const CARE_SCENARIOS: CareScenario[] = [
   }
 ];
 
+/* ---- The residual the plan actually promises -----------------------------
+ * R171 [§S8]. Two requirements govern point-of-care cost, and neither of them
+ * promises an absolute zero: covered-care patient billing is limited to no
+ * more than 0.5% of covered encounters at maturity, and household
+ * point-of-care spending falls by at least 90% from baseline. Roughly one
+ * covered visit in two hundred can still generate a bill.
+ *
+ * The Overview said so. The ten cards a reader actually consults for their own
+ * situation did not, and neither did the household calculator's `$0` line or
+ * the family-burden sentence under the hero. Three sites stated an absolute
+ * `$0` and one stated the residual, all four typed separately.
+ *
+ * One owner. The ceiling is a number the model computes - it is the mature
+ * value of the covered-care patient-billing rate - and a self-test holds this
+ * declaration to it, so the sentence cannot drift away from the model that
+ * produces it.
+ * ------------------------------------------------------------------------ */
+export const RESIDUAL_BILLING_CEILING_PCT = 0.5;
+
+export const RESIDUAL_BILLING_CAVEAT =
+  'Covered care is free at the point of use. At maturity the plan still allows ' +
+  'up to ' + RESIDUAL_BILLING_CEILING_PCT + '% of covered visits to be billed, ' +
+  'for claims that do not settle cleanly, and care outside the covered benefit ' +
+  'stays private. Medical debt for covered care is prohibited either way.';
+
 /* ---- The four sentences a card prints about its year ---------------------
  * R85 [§S8]: written once and used twice. health.astro renders them at build
  * time under SCN-BASE; health-client.ts re-renders them from the same
@@ -348,7 +384,7 @@ export function careRequirementText(card: CareScenario, ramps: RampSet = RAMPS):
   const verdict = late > 0
     ? 'this scenario misses it by ' + late + (late === 1 ? ' year' : ' years')
     : late === 0 ? 'this lands exactly on it' : 'this lands ~' + lands + ', ahead of it';
-  return 'Framework requirement ' + f.id + ' is due by ~' + due + '; ' + verdict + '.';
+  return f.plain + ' by ~' + due + '; ' + verdict + '.';
 }
 
 /* ---- What holds the derivation up ---------------------------------------
@@ -446,6 +482,36 @@ export function careNotesTypingYears(): string[] {
       if (hit) out.push(c.id + '.' + p.where + ': ' + hit[0]);
     }
   }
+  return out;
+}
+
+/* R171 [§S8]: the cards' own rendered strings, checked by value rather than by
+   scanning the file. A catalog code belongs to the Data and Quality chapters,
+   whose subject is that catalog and which explain the codes; a reader of the
+   Healthcare chapter has never met one. This module declares SR-DRUG-001 and
+   quotes it verbatim so the extract check has something to match against, and
+   neither string is rendered - which is exactly why a line scan is the wrong
+   instrument here and the field values are the right one. */
+export const CATALOG_CODE = /\b(?:KPP|TPP|CP|SR|PR|OI|SN|GAP)-[A-Z0-9][A-Z0-9.\-]*/;
+
+export function careProseCatalogCodes(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const rendered: Array<{ where: string; text: string }> = [
+      { where: 'title', text: c.title },
+      { where: 'source', text: c.source },
+      { where: 'todayInsured.note', text: c.todayInsured.note },
+      { where: 'todayUninsured.note', text: c.todayUninsured.note },
+      { where: 'nha.note', text: c.nha.note },
+      { where: 'nha.early.what', text: c.nha.early ? c.nha.early.what : '' },
+      { where: 'nha.framework.plain', text: c.nha.framework ? c.nha.framework.plain : '' }
+    ];
+    for (const r of rendered) {
+      const hit = r.text.match(CATALOG_CODE);
+      if (hit) out.push(c.id + '.' + r.where + ': ' + hit[0]);
+    }
+  }
+  if (CATALOG_CODE.test(RESIDUAL_BILLING_CAVEAT)) out.push('RESIDUAL_BILLING_CAVEAT');
   return out;
 }
 

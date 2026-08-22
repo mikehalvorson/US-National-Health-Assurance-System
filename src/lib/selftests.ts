@@ -62,7 +62,9 @@ import {
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
   CARE_SCENARIO_CALLS, careRequirementsNotInFramework, careScenarioCallsMissing,
-  careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_CLIENT, HEALTH_PAGE,
+  narrativeCatalogCodes, RESIDUAL_CAVEAT_SITES, residualCaveatSitesMissing,
+  typedResidualFigures,
+  careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_CLIENT, HEALTH_PAGE, NARRATIVE_SURFACES,
   DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
   drugLeverNoteIsRendered, iraScoreSites, iraScoresWithoutCaveat,
   literalRetailTotals, MEDICATIONS_PAGE,
@@ -92,7 +94,8 @@ import {
 } from './drug-lever';
 import {
   CARE_GATE_WHY_FLOOR, CARE_SCENARIOS, careCardYears, careGateProblems,
-  careNotesTypingYears, earlyBenefitProblems, frameworkPhaseMismatches,
+  careNotesTypingYears, careProseCatalogCodes, earlyBenefitProblems,
+  frameworkPhaseMismatches,
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
 } from './care';
@@ -1006,6 +1009,29 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !missing.length,
           note: missing.length ? HEALTH_CLIENT + ' never calls ' + missing.join(', ')
             : 'all ' + CARE_SCENARIO_CALLS.length + ' reads present in ' + HEALTH_CLIENT
+        };
+      }),
+      /* R171 [§S8] */
+      runGuarded('Every site that publishes $0 for covered care carries the residual', () => {
+        const missing = residualCaveatSitesMissing();
+        const typed = typedResidualFigures();
+        return {
+          ok: !missing.length && !typed.length,
+          note: [
+            missing.length ? 'no caveat on ' + missing.join(', ') : '',
+            typed.map((t) => t.file + ':' + t.line + ' restates the figure').join('; ')
+          ].filter(Boolean).join(' | ') ||
+            RESIDUAL_CAVEAT_SITES.length + ' sites, one declared sentence'
+        };
+      }),
+      runGuarded('No catalog code reaches the care cards or the chapter prose modules', () => {
+        const hits = narrativeCatalogCodes();
+        const inCards = careProseCatalogCodes();
+        return {
+          ok: !hits.length && !inCards.length,
+          note: [hits.map((h) => h.file + ':' + h.line).join('; '), inCards.join('; ')]
+            .filter(Boolean).join(' | ') ||
+            NARRATIVE_SURFACES.length + ' narrative surfaces carry none'
         };
       }),
       runGuarded('No care card states a benefit year in its own prose', () => {

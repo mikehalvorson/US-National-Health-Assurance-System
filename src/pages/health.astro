@@ -6,7 +6,8 @@ import { OUTCOME_STATS, PARAM_DEFS, CALENDAR_ANCHOR_NOTE } from '../lib/params';
 import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
 import {
   CARE_SCENARIOS, moneyRange,
-  careChipText, careEarlyText, carePhasingText, careRequirementText
+  careChipText, careEarlyText, carePhasingText, careRequirementText,
+  RESIDUAL_BILLING_CAVEAT
 } from '../lib/care';
 import { selfTestSummary } from '../lib/selftests';
 
@@ -69,7 +70,7 @@ const careLines = CARE_SCENARIOS.map((s) => ({
             <div class="care-nha">
               <div class="care-nha-line">
                 <div class="care-nha-label">Under NHA</div>
-                <div class="care-nha-val">$0</div>
+                <div class="care-nha-val" title={RESIDUAL_BILLING_CAVEAT}>$0</div>
                 <div class="care-year-chip" data-care-chip={s.id} title={CALENDAR_ANCHOR_NOTE}>{careLines[i].chip}</div>
               </div>
               <div class="care-nha-phasing" data-care-phasing={s.id} hidden={careLines[i].phasing === null}>{careLines[i].phasing}</div>
@@ -78,13 +79,14 @@ const careLines = CARE_SCENARIOS.map((s) => ({
               )}
               <div class="care-nha-note">{s.nha.note}</div>
               {careLines[i].requirement !== null && (
-                <div class="care-nha-req" data-care-req={s.id} title={s.nha.framework!.quote}>{careLines[i].requirement}</div>
+                <div class="care-nha-req" data-care-req={s.id}>{careLines[i].requirement}</div>
               )}
             </div>
             <div class="care-src">Source: {s.source} <span class={"conf " + s.confidence}>{s.confidence}</span></div>
           </div>
         ))}
       </div>
+      <p class="note" id="care-residual-note">{RESIDUAL_BILLING_CAVEAT}</p>
     </section>
 
     <section class="card">
