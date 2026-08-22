@@ -2428,3 +2428,335 @@ three were written *while fixing* defects of exactly that shape, by someone who 
 described the shape in a commit message. **Naming a failure mode does not immunise the
 next thing you write against it. The only thing that caught these was a second pass with
 a different brief.**
+
+
+## P10 — §S8 Care cards & benefit arrival · 2026-08-22 · branch `nha-remediation`
+STATUS: complete — all 10 recommendations landed across 10 commits, plus one
+  finding commit for a defect none of them owned.
+
+ENTRY GATE: `## P3` (`§S2`) is `STATUS: complete` ✅ · the `R256` calendar-anchor
+  decision is recorded there and landed in `3d67812` — the years ARE anchored,
+  Year 1 is 2027, stated once in `CALENDAR_ANCHOR_NOTE` ✅ ·
+  `check_audit_docs.py` 35/35 exit 0 ✅ · `pnpm build` passes ✅ · tree clean ✅
+
+  Pre-section dumps at `NHA-Mental-Health/baseline-P10/` (`preP10-*.json`), plus
+  a fifth artifact this section adds: `preP10-care.json`, written by a new
+  `caredump.test.ts`. The four P9 artifacts are untouched so they stay
+  byte-comparable with the P9 labels.
+
+LANDED:
+  - `4d7e389` `R81`  — no care card types its year, and all ten move later
+  - `64f28d7` `R170` — the insulin card checked against the framework
+  - `5126ab5` `R85`  — card years move with the scenario; four scenarios move them
+  - `83d4ac9` `R171` — one residual-billing caveat, four render sites
+  - `9e13f5e` finding — the parameter table published seven catalog codes
+  - `98f1018` `R82`  — the therapy card cites what actually holds its figures
+  - `e0c4b6b` `R83`  — the insulin floor stops understating Civica Rx
+  - `073733d` `R205` — every household-profile component declares its vintage
+  - `04e0bfb` `R172` — the fourth household count, and the check R84 claimed
+  - `3260c09` `R86`  — the withdrawn finding's fact, pinned instead of "fixed"
+  - `260be8e` `R164` — 84 leadership titles, each saying whose title it is
+
+CARD YEARS: every card, before -> after, with the gate that decides it.
+
+  | card       | before | after | binding gate                        |
+  |------------|--------|-------|-------------------------------------|
+  | premium    | 2030   | 2036  | coverage >= 0.99                    |
+  | er         | 2034   | 2037  | costShareElim >= 1.00               |
+  | childbirth | 2034   | 2037  | costShareElim >= 1.00               |
+  | insulin    | 2029   | 2037  | costShareElim >= 1.00               |
+  | mri        | 2034   | 2037  | costShareElim >= 1.00               |
+  | ambulance  | 2034   | 2038  | expansions >= 1.00 (EMS)            |
+  | labs       | 2034   | 2037  | costShareElim >= 1.00               |
+  | therapy    | 2034   | 2038  | expansions >= 1.00 (behavioral)     |
+  | hearing    | 2036   | 2038  | expansions >= 1.00 (dental/vision/hearing) |
+  | nursing    | 2036   | 2038  | expansions >= 1.00 (long-term care) |
+
+  **None is unchanged and every one moves later.** Four cards carry two gates
+  rather than one: an expanded benefit has to exist before it can be free, and
+  the expansions ramp finishes a year after cost-sharing elimination, so the
+  later gate is what the reader is told.
+
+  Each card also prints the open end of its span, derived: cost-sharing relief
+  begins 2033, expansions begin 2031, coverage migration begins 2030.
+
+INSULIN: **2029 -> 2037**, against `SR-DRUG-001`, "$0 patient charge for at
+  least 98% of essential formulary fills by Phase 8". Phase 8 is 2038, so the
+  card now lands a year inside the deadline rather than nine years outside it.
+  The requirement is data on the card - id, verbatim words, deadline phase -
+  checked against `research/framework_v2_extract.md`, and rendered in reader
+  language with no catalog code. What genuinely arrives early is named
+  separately and correctly: the pharmacy utility starts cutting the price from
+  2029, which is a price and not a $0 counter charge.
+
+SCENARIO-AWARE: **yes.** Four of the twenty scenarios move the card years and
+  the page says so in the care section's own intro: "Pick a stress scenario
+  further down the page and these years move with the ramps it delays." The
+  four are declared in `phase-map-check.ts` with their card counts and shift
+  sizes and held in both directions.
+
+    SCN-TRUST-COLLAPSE  10 cards  +1yr    SCN-UNIT-UNDER   9 cards  +2yr
+    SCN-STATE-RESIST    10 cards  +1yr    SCN-LEGAL       10 cards  +1yr
+
+  Under `SCN-UNIT-UNDER` the insulin card lands 2039 against a 2038 deadline
+  and says "this scenario misses it by 1 year". That is a stress result, so the
+  build gate checks the base case only.
+
+DISCREPANCY: **eight, and the audit's own account of this section did not
+  survive intact.** The handoff warned that §S8's account "verifies" and told
+  P10 not to let that lower its guard on the other rows. That was the right
+  warning: `AG1` and `AY2` are exact, and almost everything around them is not.
+
+  `D80` **`AY1`'s ramp values are stale.** It reports `hearing` and `nursing`
+    naming 2036 against `expansions = 0.40`, a three-year gap. Post-`R133` the
+    ramp reads **0.60** in 2036 and completes in 2038, so the gap is **two**
+    years, not three. The audit measured against the pre-realignment ramps. The
+    code wins; the direction of the finding is unchanged and its size is not.
+
+  `D81` **`R82`'s cited fix is not executable from the document it cites.** The
+    row says to replace the therapy figures with Medicare Physician Fee Schedule
+    rates for CPT 90834/90837, "see `07_mental_health.md` §3.2". §3.2
+    *recommends adopting* the fee schedule as the framework's reference price
+    and flags the absence of a published figure as `GAP-BH-002`; it carries no
+    per-code dollar amount. Adopting one would be inventing a number, which
+    golden rule 3 forbids. The card cites the record that does hold its figures
+    and carries the fee schedule's commercial allowed-amount range as a
+    corroborating anchor. The document wins on the diagnosis, the code wins on
+    the remedy.
+
+  `D82` **`R170`'s stated test is the wrong direction.** "No card's `fromYear`
+    precedes the phase its framework requirement names" would fail the model for
+    delivering in 2037 against a "by Phase 8" deadline of 2038. A deadline is
+    not a start date. What is checked is that no card promises LATER than the
+    requirement allows; the row's own defect - promising something the framework
+    has not required yet - is caught by the gate list instead.
+
+  `D83` **`R86` rests on a finding the audit withdrew.** `AG8` was withdrawn by
+    `AY5` twenty-three passes later, in words: "Not a bug; do not 'fix'". The
+    recommendation table carries `R86` with no withdrawal note, so a reader of
+    the table alone would implement a change the audit had already retracted.
+    No visual change was made and the fact `AG8` named is pinned instead.
+
+  `D84` **`R164`'s two values cannot both be populated.** The row asks for
+    `leaderBasis` carrying `framework` or `design`. Measured against
+    `framework_v2_extract.md`, **no** entity's leadership title survives
+    checking: a naive scan reports 35 of 84 "found" and every one is a generic
+    word ("director", "administrator", "inspector general") matching on the word
+    rather than the office. Grading any title `framework` would assert an
+    unverified provenance, which is this row's own defect one level up. The
+    values are `existing` (2) and `design` (82).
+
+  `D85` **`R84`'s comment claimed a self-test that did not exist.** `params.ts`
+    says of the household denominators that "a self-test holds every
+    per-household output to naming one". `care.ts` was the only reader in the
+    repository and nothing held it to being one; `overview.ts` went on typing
+    `hhNow = 132.2` and `hh2041 = 141`. The comment is now true.
+
+  `D86` **`AZ3` and golden rule 2 disagree about the same page.** `AZ3` praises
+    `hardening.astro` for citing "both a metric ID and a requirement ID per
+    tile" as the sourcing standard other modules should meet. Golden rule 2
+    confines those codes to the Data and Quality chapters. `dist/hardening/`
+    renders ten. Not resolved here; it belongs to whoever owns that chapter.
+
+  `D87` **The section brief's file list is short.** `§S8` lists `src/lib/care.ts`
+    and `src/pages/health.astro`. `R164` lives in `gov.ts`, `gov.astro` and
+    `gov-client.ts` and touches neither. `R171` and `R172` reach `index.astro`,
+    `household.ts`, `overview.ts` and `money-flow.ts`. The rows are correctly in
+    `§S8`; the file list is not the section's extent.
+
+  And one naming error in the P9 handoff, harmless but worth writing down: it
+  says `GATE_FLOORS` carries `{ ramp: 'costShareElim', phase: 'P8', atLeast:
+  1.00 }`. That is `RAMP_MILESTONES` in `params.ts`. `gate-floors.ts` exists and
+  is about catalog progression floors. The handoff also puts the "KPP-A3 allows
+  <=0.5% billing exceptions" prose in `health.astro`; it is in
+  `src/lib/household.ts:71`, rendered onto that page.
+
+NEW FINDINGS:
+
+  🔴 **Nobody's row, and it shipped live** — the family-burden sentence under
+    the hero on the Healthcare chapter read "covered care costs $0 at the point
+    of use **and the the** plan caps ordinary households at 5%". A doubled word
+    in rendered prose on the most-read chapter, in `overview.ts`. Fixed in
+    `R171`, which rewrote that sentence anyway.
+
+  🔴 **Golden rule 2 was breached on two chapters and nothing checked it.**
+    `household.ts` rendered "KPP-A3 allows <=0.5% billing exceptions",
+    `money-flow.ts` labelled a ribbon "(KPP-C8)", and the full parameter table
+    rendered seven more codes from `params.ts` source strings, four of them in
+    the "Framework X requires Y" register the same rule forbids. All are gone
+    and a check covers the care cards, the four prose modules and the parameter
+    table by value. **Measured on the built output: the Healthcare and Overview
+    chapters render zero catalog codes; `dist/hardening/` renders ten.**
+    ⚠️ That measurement reads static HTML, so anything a client script writes at
+    runtime is invisible to it - `gov.ts` carries 33 codes and `rollout.ts` 19
+    `OI-0xx` references this sweep does not see.
+
+  🟡 **Whoever owns the Healthcare chapter's voice** — the household
+    calculator's footnote opened "Honest caveats:", which is the "honest limits"
+    tic golden rule 4 names by name. Fixed in `R171`; it says "What this leaves
+    out:".
+
+  🟡 **`R219` (§S12) is still open and still adjacent.** `<div
+    class="care-nha-val">$0</div>` is hardcoded while `CareNha.amount` carries
+    the figure and all ten cards set it to 0. §S8 deliberately did not take it -
+    it is another section's row - but the `$0` now carries the residual caveat
+    as a title attribute, so the natural place to attach `R171`'s caveat that
+    `R219` said was missing exists either way.
+
+  🟡 **Two cards cite a file in this repository; eight cite outside sources.**
+    KFF, CDC NHAMCS, Genworth, HCCI and the federal ambulance collection are
+    real citations that nothing here can verify. The self-test reports the
+    split rather than implying all ten are checked.
+
+CONTRADICTIONS:
+  - `AY1` vs the post-`R133` ramps on `hearing`/`nursing` (D80). Code wins.
+  - `R82`'s remedy vs `07_mental_health.md` §3.2 (D81). Code wins.
+  - `R170`'s test direction vs what a deadline means (D82). Code wins.
+  - `R86` vs `AY5`'s withdrawal of `AG8` (D83). The withdrawal wins.
+  - `R164`'s vocabulary vs the extract (D84). The measurement wins.
+  - `R84`'s comment vs the checks that existed (D85). The code won; the comment
+    is now true.
+  - `AZ3` vs golden rule 2 on `hardening.astro` (D86). Unresolved, not ours.
+
+GATES ADDED: **17 new self-tests. The registry goes 155 -> 172** and `README.md`
+  is updated in the same edits. Every one was proven by breaking it, watching
+  `npm run build` fail, and reading the exit code rather than a grep. The full
+  break/restore pass is `NHA-Mental-Health/baseline-P10/prove_p10.py`, re-run at
+  section end.
+
+  Deriving a value and then checking it against the thing it was derived from is
+  the trap this section could most easily have fallen into, because ten card
+  years became derived in the first commit. `premiumCardYearDrift` was deleted
+  for exactly that reason rather than updated. What the new checks assert are
+  pairs of independently maintained facts:
+
+    - a gate's threshold against its ramp's maximum;
+    - a card's promise KIND against the gate list it declares;
+    - a card's gate against `RAMP_MILESTONES`, maintained in another file;
+    - the printed phase-in year against the ramp array from the other side;
+    - a quoted requirement against `framework_v2_extract.md`;
+    - a declared deadline phase against the quote's own words;
+    - a published bound against the one sentence cited for it;
+    - a scenario's measured card movement against a declared table;
+    - a rendered caveat against four separately named render sites;
+    - a distribution's household sum against the universe it is declared to be;
+    - a component's numerator year against its denominator year.
+
+TRAPS MET, and what each one costs:
+
+  🛑 **A tolerant helper answering a strict question.** `careReliefYear` asked
+    the existing `firstIndexAtLeast` for "the first index above zero". That
+    helper compares `>= atLeast - 1e-9`, so index 0 matches every ramp and all
+    ten cards printed "phasing in from 2027". **No check caught it; rendering
+    the page did.** A check now asserts the printed year against the ramp from
+    the other side. The general rule: an epsilon belongs to the question it was
+    written for, and reusing a comparison helper across questions silently
+    changes what it means.
+
+  🛑 **Two breaks refused to fail, and both times the check was wrong.**
+    (1) The residual-caveat scan asked whether `RESIDUAL_BILLING_CAVEAT`
+    appeared in the file. Every site imports it, so deleting the render left it
+    passing. Import statements are stripped now. **This is the read-list defect
+    the §S7 review caught, written again by the pass that had just read about
+    it.** (2) The citation-bounds check searched the joined citation strings, so
+    moving the therapy card's insured ceiling from $60 to $75 passed - 75
+    appears in the Medicare quotation on the same card. Each bound is paired to
+    its own sentence now. **Suspect the check before the break, every time.**
+
+  🛑 **A rule breached by the pass that was fixing it.** `R170`'s first draft
+    rendered "Framework requirement SR-DRUG-001" on the Healthcare chapter,
+    which is a golden rule 2 breach on both halves at once - a catalog code and
+    the "the framework says" register - written while §S8 was busy fixing two
+    other instances of it. It is why that fix is a build check rather than a
+    sweep. **Naming a failure mode does not immunise the next thing you write
+    against it**, which is P9's lesson arriving on schedule.
+
+  ⚠️ **A check whose name promised more than its scope.** "No catalog code
+    reaches reader prose on these chapters" was true of the four prose modules
+    and false of the parameter table on the same page. Renamed to what it
+    covered, then widened, then renamed back. A check's name is read by whoever
+    trusts it.
+
+  ⚠️ **This repository has mixed line endings.** `src/pages/index.astro` is LF;
+    everything else touched here is CRLF. A CRLF-built replacement payload
+    matched zero times against it and reported success. Print the match count
+    and assert it, which is what caught this.
+
+  ⚠️ **A non-ASCII `print` still kills a Python edit script mid-run.** Hit once,
+    printing a `>=` from a replacement payload; the script died after the
+    replacements and before the write, so the file was untouched. Print an index
+    and a count, never the matched text.
+
+  ⚠️ **Generating TypeScript from Python is where the syntax errors come from.**
+    Two builds died on strings this session: a note whose continuation was a raw
+    newline inside a quote, and a comment block whose `*/` closed a paragraph
+    early. Both were payloads assembled in Python, not code written directly.
+
+  ⚠️ **A break payload goes stale the moment its anchor changes.** The
+    `cited string drifted` break SKIPped after `R82`'s citation shape changed
+    mid-row. SKIP counts as a failure; the payload was repaired, not deleted.
+
+  ⚠️ **One break can trip two checks.** `deadline moved earlier` fails the
+    requirement-quote row and the deadline row together, because one edit makes
+    two things wrong. Assert the name you meant.
+
+  ⚠️ **`npx astro build` is not the build.** `pnpm build` runs `astro check`
+    first, and three of this section's failures were type errors that only that
+    step sees, including one caught in a client helper's return type.
+
+  ⚠️ **`as string` trips an existing gate.** `primitiveAssertions` fails on a
+    primitive type assertion anywhere outside its declared allowlist. Write the
+    typed array instead; it reads better anyway.
+
+  ⚠️ **A `const` that reads another `const` must come after it.** Pointing
+    `PARAMETER_EXPLORER` at `HEALTH_PAGE` was a module-init failure until the
+    declaration moved above it.
+
+HARNESS AND EVIDENCE: `NHA-Mental-Health/baseline-P10/` holds `dump.test.ts`,
+  `taxdump.test.ts`, **`caredump.test.ts` (new)**, `baseline.vitest.config.ts`,
+  `probe.vitest.config.ts`, `diff2.py`, `crlf_edit.py`, **`prove_p10.py`**, and
+  `preP10-`, `r81P10-` and `postP10-` for all five artifacts.
+
+  🆕 **`caredump.test.ts` is the fifth artifact.** `dump.test.ts` has never
+  carried the care cards and §S8's whole subject is what year each card
+  promises, so a `-care.json` records every card's gates, derived year, relief
+  year, ranges, source and confidence, plus each ramp's delivery years and, for
+  all twenty scenarios, where the shifted ramps land. It is a separate file so
+  the four P9 artifacts stay byte-comparable with the P9 labels.
+
+  `r81P10` is the intermediate label. It was taken after the first commit, which
+  is what lets "the model did not move" be attributed to that commit rather than
+  to the section.
+
+WHAT MOVED, MEASURED:
+
+  **The model did not move at all.** `preP10 -> postP10`: 0 of 727 published
+  targets, 0 of 1,170 interim cells, 0 of 1,037 criticality positions, and every
+  headline figure identical to four decimal places. §S8 is a section in which
+  the page made promises the model does not keep, so the whole of it lands on
+  what a reader is told.
+
+  **Ten of ten card years moved, and every one moved later**: +2 to +8 years,
+  the largest being the insulin card's +8. Three published dollar ranges moved,
+  each toward its source: the insulin uninsured floor $70 -> $30 (Civica Rx
+  undercut the card it was cited on), the therapy insured ceiling $75 -> $60 and
+  the therapy uninsured ceiling $200 -> $300 (both to the record that holds
+  them). One confidence grade moved, therapy `low` -> `medium`, because the
+  figures now come from a record graded medium in its own file.
+
+  Nothing was tuned toward anything. `HOUSEHOLDS_M` is unchanged at 132.2.
+
+STILL OPEN, and whose:
+  - **`R219` (§S12)** — `$0` is still hardcoded in the care-card template while
+    `CareNha.amount` carries it. Deliberately not taken here.
+  - **Golden rule 2 site-wide** — `dist/hardening/` renders ten catalog codes,
+    and `gov.ts` (33) and `rollout.ts` (19 `OI-0xx`) carry codes a static-HTML
+    sweep cannot see. `AZ3` praises the practice `hardening.astro` follows;
+    golden rule 2 forbids it. Someone has to pick one.
+  - **`R135` (§S11b)**, the seven `low`-confidence parameters with empty `url`:
+    tenth session open, untouched here.
+  - **`R245` (§S14)**, `risk.astro`'s 7 role-less `aria-label`led `<div>`s:
+    still 7.
+  - **The 14 non-finite equation cells**: still 14, still inert, still nobody's.
+  - **Eight of the ten care cards cite outside sources** nothing in this
+    repository can verify. The self-test reports the split.
