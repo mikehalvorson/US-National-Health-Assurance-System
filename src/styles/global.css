@@ -987,6 +987,8 @@ nav.tabs button:hover:not(.active), nav.tabs a:hover:not(.active) { color: var(-
 .care-nha-note { color: var(--text-muted); font-size: 11.5px; margin-top: 3px; }
 /* R81 [§S8]: the years the benefit is arriving over, under the year it lands. */
 .care-nha-phasing { color: var(--text-secondary); font-size: 11.5px; margin-top: 4px; }
+/* R170 [§S8]: the framework requirement the card answers to, and its deadline. */
+.care-nha-req { color: var(--text-muted); font-size: 11px; margin-top: 4px; font-style: italic; }
 .care-src { color: var(--text-muted); font-size: 10.5px; margin-top: 9px; }
 
 /* ---- Household calculator ---- */

@@ -166,6 +166,42 @@ export interface CareGateBacking {
   why: string;
 }
 
+/* R170 [§S8]: the card against the framework, not against the model.
+ *
+ * The insulin card quoted SR-DRUG-001 - "$0 patient charge for at least 98% of
+ * essential formulary fills BY PHASE 8" - and printed 2029, which is Phase 2.
+ * Nine years early against the requirement and eight against the model, on the
+ * item with the sharpest human stakes on the page.
+ *
+ * ⚠️ The row's own stated test reads "no card's fromYear precedes the phase its
+ * framework requirement names", and that is the wrong direction for this class
+ * of requirement. "By Phase 8" is a DEADLINE: delivering in 2037 satisfies a
+ * 2038 deadline, and a check written the row's way would fail the model for
+ * being a year better than required. What must not happen is the opposite -
+ * a card promising later than the framework requires, or the model quietly
+ * slipping past the deadline it cites.
+ */
+export interface CareRequirementMiss {
+  card: string;
+  requirement: string;
+  lands: number;
+  deadline: number;
+}
+
+export function careRequirementMisses(): CareRequirementMiss[] {
+  const out: CareRequirementMiss[] = [];
+  for (const card of CARE_SCENARIOS) {
+    const f = card.nha.framework;
+    if (!f) continue;
+    const deadline = calendarYearOfPhase(f.byPhase);
+    const lands = careFromYear(card);
+    if (!Number.isFinite(deadline) || lands > deadline) {
+      out.push({ card: card.id, requirement: f.id, lands: lands, deadline: deadline });
+    }
+  }
+  return out;
+}
+
 export function careGatesWithoutMilestone(): CareGateBacking[] {
   const out: CareGateBacking[] = [];
   for (const card of CARE_SCENARIOS) {

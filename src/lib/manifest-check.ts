@@ -15,6 +15,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CARE_SCENARIOS } from './care';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
 
@@ -880,7 +881,12 @@ export function primitiveAssertions(root = REPO_ROOT): CodeReference[] {
    the full parameter table. Declaring the note in params.ts and never
    rendering it would be the same silence in a new place, so the page that
    renders the table is scanned for it. */
-export const PARAMETER_EXPLORER = 'src/pages/health.astro';
+export const HEALTH_PAGE = 'src/pages/health.astro';
+
+/* The same file HEALTH_PAGE names, under the name this check reads it by.
+   One owner: a second literal path is how two checks end up scanning
+   different files after a rename. */
+export const PARAMETER_EXPLORER = HEALTH_PAGE;
 
 /* Review: the divergence check tested `note.length >= 80`, which is a check on
    effort rather than on content. A note that does not name the number it
@@ -950,7 +956,6 @@ export function divergenceIsRendered(root = REPO_ROOT): boolean {
  * "actual 2023 spending" is a vintage. Comments are masked for the reason
  * `literalRetailTotals` masks them: a note explaining why a year was removed
  * has to name the year. */
-export const HEALTH_PAGE = 'src/pages/health.astro';
 export const CARE_SECTION_START = 'id="care-card-section"';
 
 export function careSectionTypedYears(root = REPO_ROOT): string[] {
@@ -960,6 +965,33 @@ export function careSectionTypedYears(root = REPO_ROOT): string[] {
   const end = text.indexOf('</section>', from);
   const section = text.slice(from, end < 0 ? text.length : end);
   return (section.match(/\b20\d\d\b/g) || []);
+}
+
+/* R170 [§S8]: a framework requirement a card quotes has to be in the framework.
+ *
+ * §AG2's complaint about the therapy card was that its cited source does not
+ * contain the figures it is cited for. The same test applied to a requirement:
+ * the id has to exist in the extract and the card's words have to be that
+ * requirement's words, not a paraphrase that drifted. Whitespace is collapsed
+ * because the card wraps its quote across source lines and the extract does not. */
+export const FRAMEWORK_EXTRACT = 'research/framework_v2_extract.md';
+
+function collapse(s: string): string {
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+export function careRequirementsNotInFramework(root = REPO_ROOT): string[] {
+  const text = collapse(readFileSync(join(root, FRAMEWORK_EXTRACT), 'utf8'));
+  const out: string[] = [];
+  for (const card of CARE_SCENARIOS) {
+    const f = card.nha.framework;
+    if (!f) continue;
+    if (!text.includes(f.id)) { out.push(card.id + ': ' + f.id + ' is not in the extract'); continue; }
+    if (!text.includes(collapse(f.quote))) {
+      out.push(card.id + ': ' + f.id + ' does not read the way the card quotes it');
+    }
+  }
+  return out;
 }
 
 /* R296 [§S7]: the medications chapter is where the drug base meets a reader,

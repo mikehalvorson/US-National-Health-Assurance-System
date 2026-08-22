@@ -34,12 +34,26 @@ export interface CareGate { ramp: CareRamp; atLeast: number; why: string }
    point-of-care card gates on costShareElim has two sides that can disagree. */
 export type CarePromise = 'point-of-care' | 'premium';
 
+/* R170 [§S8]: a framework requirement a card is quoting, and the phase the
+   requirement names as its DEADLINE. The insulin card quoted SR-DRUG-001's
+   98%-of-fills threshold, which is a Phase 8 requirement, to describe a Phase 2
+   state, and promised it nine years early. Carrying the id, the words and the
+   phase as data is what lets the build check the card against the framework
+   instead of against the sentence beside it. */
+export interface CareFrameworkRequirement { id: string; quote: string; byPhase: string }
+
+/* What genuinely does arrive before the card's year, so that "arrives early"
+   can be said about the thing that is early rather than about the $0. */
+export interface CareEarlyBenefit { ramp: CareRamp; what: string }
+
 export interface CareNha {
   amount: number;
   promise: CarePromise;
   /* every condition, not just the binding one: the card's year is the latest
      of them, and which one binds is then a measurement rather than a claim */
   gates: CareGate[];
+  framework?: CareFrameworkRequirement;
+  early?: CareEarlyBenefit;
   note: string;
 }
 export interface CareScenario {
@@ -104,6 +118,15 @@ export function careFromYear(card: CareScenario, ramps: RampSet = RAMPS): number
 function firstNonZeroIndex(arr: number[]): number {
   for (let i = 0; i < arr.length; i++) if (arr[i] > 0) return i;
   return -1;
+}
+
+/* R170 [§S8]: the year the card's early benefit starts, which is a real
+   arrival and not the one the `$0` describes. */
+export function careEarlyYear(card: CareScenario, ramps: RampSet = RAMPS): number | null {
+  const e = card.nha.early;
+  if (!e) return null;
+  const i = firstNonZeroIndex(ramps[e.ramp]);
+  return i < 0 ? null : START_YEAR + i;
 }
 
 export function careReliefYear(card: CareScenario, ramps: RampSet = RAMPS): number | null {
@@ -194,8 +217,19 @@ export const CARE_SCENARIOS: CareScenario[] = [
     todayUninsured: { lo: 70, hi: 300, note: 'cash price after 2023–24 list-price cuts; production cost is $2–6/vial' },
     nha: {
       amount: 0, promise: 'point-of-care', gates: [costSharingGate()],
+      framework: {
+        id: 'SR-DRUG-001',
+        quote: 'The system shall provide $0 patient charge for at least 98% of ' +
+          'essential formulary fills by Phase 8.',
+        byPhase: 'P8'
+      },
+      early: {
+        ramp: 'drugs',
+        what: 'the public pharmacy utility starts cutting what insulin costs'
+      },
       note: '$0 for at least 98% of essential formulary fills, which cost-sharing ' +
-        'elimination delivers; the Phase 2 pharmacy utility cuts the price long before that'
+        'elimination is what delivers. The pharmacy utility opens years earlier and ' +
+        'cuts the price, which is a different thing from a $0 counter charge.'
     },
     source: 'Yale/BMJ Global Health production-cost study; Civica Rx $30/vial nonprofit price; ADA/manufacturer cap programs',
     confidence: 'medium'
@@ -362,9 +396,53 @@ export function reliefYearProblems(ramps: RampSet = RAMPS): string[] {
    they belong in `source` and in the `today*` notes, and R205 wants more of
    them, not fewer. */
 export function careNotesTypingYears(): string[] {
-  return CARE_SCENARIOS
-    .filter((c) => /\b20\d\d\b/.test(c.nha.note))
-    .map((c) => c.id + ': ' + (c.nha.note.match(/\b20\d\d\b/) || [''])[0]);
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const prose: Array<{ where: string; text: string }> = [
+      { where: 'note', text: c.nha.note },
+      { where: 'early', text: c.nha.early ? c.nha.early.what : '' }
+    ];
+    for (const p of prose) {
+      const hit = p.text.match(/\b20\d\d\b/);
+      if (hit) out.push(c.id + '.' + p.where + ': ' + hit[0]);
+    }
+  }
+  return out;
+}
+
+/* R170 [§S8]: a card that says something arrives sooner has to be pointing at
+   something that does. Pointing `early` at the card's own gating ramp would
+   reproduce AY2 in one field: a real arrival described as if it were the $0. */
+export function earlyBenefitProblems(ramps: RampSet = RAMPS): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    if (!c.nha.early) continue;
+    const early = careEarlyYear(c, ramps);
+    const lands = careFromYear(c, ramps);
+    if (early === null) { out.push(c.id + ': early benefit never starts'); continue; }
+    if (early >= lands) out.push(c.id + ': "sooner" is ' + early + ', the card lands ' + lands);
+    if (c.nha.gates.some((g) => g.ramp === c.nha.early!.ramp)) {
+      out.push(c.id + ': early benefit rides ' + c.nha.early.ramp + ', which also gates the card');
+    }
+  }
+  return out;
+}
+
+/* R170 [§S8]: a requirement's deadline is checked against the phase the card
+   declares, so the declared phase has to be the one the requirement's own words
+   name. A quote saying "by Phase 8" filed under `byPhase: 'P2'` would pass every
+   other check and be exactly the substitution AY2 found. */
+export function frameworkPhaseMismatches(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const f = c.nha.framework;
+    if (!f) continue;
+    const spelled = 'Phase ' + f.byPhase.replace(/^P/, '');
+    if (!f.quote.includes(spelled) && !f.quote.includes(f.byPhase)) {
+      out.push(c.id + ': declares ' + f.byPhase + ', quote does not name it');
+    }
+  }
+  return out;
 }
 
 /* The derived table, for the page, the client and the before/after dump. */

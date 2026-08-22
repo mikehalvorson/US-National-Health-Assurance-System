@@ -61,7 +61,7 @@ import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
-  careSectionTypedYears, HEALTH_PAGE,
+  careRequirementsNotInFramework, careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_PAGE,
   DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
   drugLeverNoteIsRendered, iraScoreSites, iraScoresWithoutCaveat,
   literalRetailTotals, MEDICATIONS_PAGE,
@@ -91,7 +91,8 @@ import {
 } from './drug-lever';
 import {
   CARE_GATE_WHY_FLOOR, CARE_SCENARIOS, careCardYears, careGateProblems,
-  careNotesTypingYears, pointOfCareCardsMissingCostShareGate, reliefYearProblems,
+  careNotesTypingYears, earlyBenefitProblems, frameworkPhaseMismatches,
+  pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
 } from './care';
 import { TABS } from './tabs';
@@ -112,7 +113,8 @@ import {
   benefitStartDrift, calendarAnchorDenials, calendarConverterSplit, calendarYearOf,
   expansionSpanDisagreements,
   ltcBenefitStartYear, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
-  careGatesWithoutMilestone, rampLegendDisagreements, rampMilestoneMisses,
+  careGatesWithoutMilestone, careRequirementMisses, rampLegendDisagreements,
+  rampMilestoneMisses,
   rolloutHeadlineMisses, trainProgAtMaturity, unitBuildoutIssues
 } from './phase-map-check';
 import {
@@ -955,6 +957,35 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !bad.length,
           note: bad.join('; ') ||
             careCardYears().map((c) => c.id + ' ' + (c.reliefYear ?? '-')).join(', ')
+        };
+      }),
+      /* R170 [§S8] */
+      runGuarded('Every framework requirement a card quotes is in the framework', () => {
+        const missing = careRequirementsNotInFramework();
+        const mismatched = frameworkPhaseMismatches();
+        const quoted = CARE_SCENARIOS.filter((c) => c.nha.framework).length;
+        return {
+          ok: !missing.length && !mismatched.length,
+          note: [missing.join('; '), mismatched.join('; ')].filter(Boolean).join(' | ') ||
+            quoted + ' quoted requirement(s) verbatim in ' + FRAMEWORK_EXTRACT
+        };
+      }),
+      runGuarded('Every "arrives sooner" claim names something that does', () => {
+        const bad = earlyBenefitProblems();
+        const n = CARE_SCENARIOS.filter((c) => c.nha.early).length;
+        return {
+          ok: !bad.length,
+          note: bad.join('; ') || n + ' early-benefit claim(s), each on a ramp that does not gate its card'
+        };
+      }),
+      runGuarded('No card promises later than the requirement it quotes allows', () => {
+        const miss = careRequirementMisses();
+        return {
+          ok: !miss.length,
+          note: miss.map((m) => m.card + ' lands ' + m.lands + ', ' + m.requirement +
+            ' is due ' + m.deadline).join('; ') ||
+            CARE_SCENARIOS.filter((c) => c.nha.framework)
+              .map((c) => c.id + ' meets ' + c.nha.framework!.id).join(', ')
         };
       }),
       runGuarded('No care card states a benefit year in its own prose', () => {

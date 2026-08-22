@@ -4,7 +4,8 @@ import ChapterNav from '../components/ChapterNav.astro';
 import { computeOverview } from '../lib/overview';
 import { OUTCOME_STATS, PARAM_DEFS, CALENDAR_ANCHOR_NOTE } from '../lib/params';
 import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
-import { CARE_SCENARIOS, moneyRange, careFromYear, careReliefYear } from '../lib/care';
+import { CARE_SCENARIOS, moneyRange, careEarlyYear, careFromYear, careReliefYear } from '../lib/care';
+import { calendarYearOfPhase } from '../lib/rollout';
 import { selfTestSummary } from '../lib/selftests';
 
 const v = computeOverview('SCN-BASE', null);
@@ -14,7 +15,11 @@ const selftests = selfTestSummary();
    time for the base scenario. health-client.ts re-derives them whenever a
    stress scenario is selected, so the two agree by construction. */
 const careYears = CARE_SCENARIOS.map((s) => ({
-  fromYear: careFromYear(s), reliefYear: careReliefYear(s)
+  fromYear: careFromYear(s),
+  reliefYear: careReliefYear(s),
+  earlyYear: careEarlyYear(s),
+  /* R170 [§S8]: the deadline the quoted requirement sets, from the phase map. */
+  deadline: s.nha.framework ? calendarYearOfPhase(s.nha.framework.byPhase) : null
 }));
 ---
 <BaseLayout title="National Health Assurance: Healthcare">
@@ -66,7 +71,13 @@ const careYears = CARE_SCENARIOS.map((s) => ({
               {careYears[i].reliefYear !== null && (
                 <div class="care-nha-phasing" data-care-phasing={s.id}>Phasing in from ~{careYears[i].reliefYear}; the figure above is what you pay once it completes.</div>
               )}
+              {s.nha.early && careYears[i].earlyYear !== null && (
+                <div class="care-nha-phasing" data-care-early={s.id}>Sooner, and a different thing: {s.nha.early.what}, from ~{careYears[i].earlyYear}.</div>
+              )}
               <div class="care-nha-note">{s.nha.note}</div>
+              {s.nha.framework && (
+                <div class="care-nha-req" data-care-req={s.id} title={s.nha.framework.quote}>Framework requirement {s.nha.framework.id} is due by ~{careYears[i].deadline}; this lands ~{careYears[i].fromYear}.</div>
+              )}
             </div>
             <div class="care-src">Source: {s.source} <span class={"conf " + s.confidence}>{s.confidence}</span></div>
           </div>
