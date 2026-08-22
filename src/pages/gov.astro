@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { LEADER_BASIS_NOTE } from '../lib/gov';
 ---
 <BaseLayout title="National Health Assurance: Governance">
   <main>
@@ -30,7 +31,8 @@ import ChapterNav from '../components/ChapterNav.astro';
       one governing body; click any box for the full entry, including the
       position in charge and what it answers for.</p>
     <div class="tiles" id="gov-summary"></div>
-    <p class="note">Leadership titles follow standard federal practice:
+    <p class="note" id="leader-basis-note">{LEADER_BASIS_NOTE}</p>
+    <p class="note">Those proposals follow standard federal practice:
       Senate-confirmed heads for benefit-paying executive bodies, with
       nonexecutive scorekeeping and adjudication assigned only to
       constitutionally appropriate legislative offices or courts. After the

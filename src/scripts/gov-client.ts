@@ -2,7 +2,10 @@
    (no dependencies) plus a detail card per entity. Port of docs/js/govapp.js.
    Runs on astro:page-load; idempotent via the groups host's dataset.wired. */
 import { el, div, showTip, hideTip, tipRow } from '../lib/chart-util';
-import { GOV_GROUPS, type GovGroup, type GovMember } from '../lib/gov';
+import {
+  GOV_GROUPS, LEADER_BASIS_LABELS, leaderBasis,
+  type GovGroup, type GovMember
+} from '../lib/gov';
 
 /* Fold a natural "Led by" lead-in into the leadership clause so the hover reads
    as one sentence, instead of a right-aligned "Led by" label. Clauses that are
@@ -108,17 +111,27 @@ function renderCards(container: HTMLElement, group: GovGroup): void {
     code.textContent = m.code;
     head.appendChild(code);
 
-    function line(label: string, text: string, cls?: string): void {
+    function line(label: string, text: string, cls?: string): HTMLElement {
       const row = div('gov-line' + (cls ? ' ' + cls : ''), card);
       const b = document.createElement('b');
       b.textContent = label + ': ';
       row.appendChild(b);
       row.appendChild(document.createTextNode(text));
+      return row;
     }
     line('What it does', m.role);
     line('Why it exists', m.why);
     line('Replaces', m.replaces, /^New/.test(m.replaces) ? 'gov-new' : 'gov-replaces');
-    line('Who runs it', m.leader);
+    /* R164 [§S8]: the title, and whose title it is. Same shape as the
+       Specified/Derived badge on the Data tab, which §BX1 confirmed carries
+       its meaning as text rather than as colour. */
+    const runs = line('Who runs it', m.leader);
+    const basis = leaderBasis(m.code);
+    const badge = document.createElement('span');
+    badge.className = 'data-basis' + (basis === 'design' ? ' derived' : '');
+    badge.textContent = LEADER_BASIS_LABELS[basis];
+    runs.appendChild(document.createElement('br'));
+    runs.appendChild(badge);
   });
 }
 
@@ -137,7 +150,8 @@ function renderSummary(): void {
     { label: 'Governing bodies', value: '9',
       range: 'fiscal foundations, the operating department and its five administrations, independent oversight, transition, innovation' },
     { label: 'Entities in total', value: String(total),
-      range: 'each with statutory duties, a named leadership position, and published metrics' },
+      range: 'each with statutory duties and published metrics; the leadership ' +
+        'position on every card is labelled with whose title it is' },
     { label: 'Replace existing functions', value: String(replacing),
       range: 'absorbing work now done by insurers, PBMs, state offices, and federal agencies' },
     { label: 'Wholly new capabilities', value: String(novel),

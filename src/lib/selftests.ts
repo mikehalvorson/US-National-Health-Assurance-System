@@ -62,7 +62,7 @@ import {
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
   CARE_SCENARIO_CALLS, careEvidenceMisses, careRequirementsNotInFramework,
-  careScenarioCallsMissing, householdDenominatorNotRead,
+  careScenarioCallsMissing, householdDenominatorNotRead, leaderBasisNotRendered,
   narrativeCatalogCodes, RESIDUAL_CAVEAT_SITES, residualCaveatSitesMissing,
   typedResidualFigures,
   careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_CLIENT, HEALTH_PAGE, NARRATIVE_SURFACES,
@@ -103,6 +103,7 @@ import {
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
 } from './care';
+import { leaderBasisCounts, leaderBasisProblems } from './gov';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
 import {
@@ -1014,6 +1015,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !missing.length,
           note: missing.length ? HEALTH_CLIENT + ' never calls ' + missing.join(', ')
             : 'all ' + CARE_SCENARIO_CALLS.length + ' reads present in ' + HEALTH_CLIENT
+        };
+      }),
+      /* R164 [§S8] */
+      runGuarded('Every leadership title says whose title it is', () => {
+        const bad = leaderBasisProblems();
+        const unrendered = leaderBasisNotRendered();
+        const counts = leaderBasisCounts();
+        return {
+          ok: !bad.length && !unrendered.length,
+          note: [bad.join('; '), unrendered.join('; ')].filter(Boolean).join(' | ') ||
+            counts.existing + ' existing offices, ' + counts.design + ' staffing proposals'
         };
       }),
       /* R86 [§S8]: the finding was withdrawn; the fact it named is pinned. */

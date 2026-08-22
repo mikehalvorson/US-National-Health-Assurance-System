@@ -1089,6 +1089,36 @@ export function careScenarioCallsMissing(root = REPO_ROOT): string[] {
     (name) => !new RegExp('\\b' + name + '\\s*\\(').test(text));
 }
 
+/* R164 [§S8]: the leadership disclaimer has to reach the DOM.
+ *
+ * §AW3's finding is that the sentence existed only in a source comment. Moving
+ * it into a constant and never rendering it would be the same silence one layer
+ * in, which is the failure `drugBaseNoteIsRendered` exists to catch on another
+ * chapter. Each read is named separately for the reason DRUG_BASE_READS names
+ * its five separately, and imports are stripped so a module that imports the
+ * label map and stops using it does not satisfy the scan. */
+export const GOV_PAGE = 'src/pages/gov.astro';
+export const GOV_CLIENT = 'src/scripts/gov-client.ts';
+
+export const LEADER_BASIS_READS: Array<{ file: string; read: string }> = [
+  { file: GOV_PAGE, read: 'LEADER_BASIS_NOTE' },
+  { file: GOV_CLIENT, read: 'leaderBasis' },
+  { file: GOV_CLIENT, read: 'LEADER_BASIS_LABELS' }
+];
+
+export function leaderBasisNotRendered(root = REPO_ROOT): string[] {
+  const cache = new Map<string, string>();
+  return LEADER_BASIS_READS.filter((r) => {
+    let text = cache.get(r.file);
+    if (text === undefined) {
+      text = maskComments(readFileSync(join(root, r.file), 'utf8'))
+        .replace(IMPORT_STATEMENT, ' ');
+      cache.set(r.file, text);
+    }
+    return !new RegExp('\\b' + r.read + '(?![A-Za-z0-9_])').test(text);
+  }).map((r) => r.file + ' never uses ' + r.read);
+}
+
 /* R172 [§S8]: the modules that publish a per-household figure must read a
  * declared denominator rather than type one.
  *

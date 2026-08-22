@@ -24,6 +24,100 @@ export interface GovGroup {
   members: GovMember[];
 }
 
+/* ---- R164 [§S8]: whose title is it -------------------------------------
+ * §AW3: the header above says leadership titles are a staffing design and not
+ * quotations from the plan, and that sentence appeared ONLY in this comment.
+ * All 84 cards rendered "Who runs it: <title>" as plain fact, the page said
+ * leadership titles follow standard federal practice, and a summary tile
+ * advertised "each with statutory duties, a named leadership position, and
+ * published metrics". A reader had no way to separate the plan's institutional
+ * design from the dashboard's staffing proposal.
+ *
+ * ⚠️ The row asks for the field to carry `framework` or `design`. Measured
+ * against research/framework_v2_extract.md, NOTHING can be graded `framework`:
+ * no entity's leadership title appears there in a form that survives checking,
+ * and the generic words that do appear ("director", "administrator",
+ * "inspector general") match on the word, not on the office. Grading any title
+ * `framework` would assert a provenance that was not verified, which is the
+ * defect this row is about, one level up. So the values are the two the
+ * evidence supports.
+ *
+ * `existing` is an office that exists today under that title, and there are
+ * exactly two. Everything else is this dashboard's proposal, including the
+ * entities that absorb existing functions: replacing what an agency does is
+ * not the same as inheriting who runs it. That default is what makes the small
+ * declared list the honest shape - eighty-two entries all saying "design"
+ * would be a field with one value, dressed as a distinction.
+ * ------------------------------------------------------------------------ */
+export type LeaderBasis = 'existing' | 'design';
+
+export const LEADER_BASIS_LABELS: Record<LeaderBasis, string> = {
+  existing: 'Office that exists today',
+  design: 'Staffing design, not plan text'
+};
+
+export const EXISTING_OFFICE_LEADERS: Array<{ code: string; why: string }> = [
+  { code: 'CONG',
+    why: 'The health committees of both chambers exist, chair them today, and the plan adds duties to them rather than proposing who leads them.' },
+  { code: 'TREAS',
+    why: 'The Secretary of the Treasury and the Fiscal Assistant Secretary are current offices with current holders; only the duties described here are new.' }
+];
+
+export function leaderBasis(code: string): LeaderBasis {
+  return EXISTING_OFFICE_LEADERS.some((e) => e.code === code) ? 'existing' : 'design';
+}
+
+export const LEADER_BASIS_NOTE =
+  'Every leadership position below is labelled. Two of them are offices that ' +
+  'exist today, and the rest are this dashboard’s staffing proposal: they are ' +
+  'consistent with the plan’s executive-hardening provisions and they are not ' +
+  'quoted from it, so a reader can tell the institutional design from the ' +
+  'staffing around it. Replacing what an agency does is not the same as ' +
+  'inheriting who runs it.';
+
+/* ---- and what holds it up ---------------------------------------------- */
+
+/* Pinned as a number for the reason R143 pins the KPP-C8 breach count: a third
+   entity becoming an existing office is a real change and should be visible,
+   not absorbed. */
+export const EXISTING_OFFICE_COUNT = 2;
+export const LEADER_WHY_FLOOR = 60;
+
+export function leaderBasisProblems(): string[] {
+  const out: string[] = [];
+  const codes = new Set<string>();
+  for (const g of GOV_GROUPS) for (const m of g.members) codes.add(m.code);
+  for (const e of EXISTING_OFFICE_LEADERS) {
+    if (!codes.has(e.code)) out.push(e.code + ': declared an existing office and is not an entity');
+    if (e.why.trim().length < LEADER_WHY_FLOOR) out.push(e.code + ': reason is thinner than the floor');
+  }
+  if (EXISTING_OFFICE_LEADERS.length !== EXISTING_OFFICE_COUNT) {
+    out.push('declared ' + EXISTING_OFFICE_LEADERS.length + ' existing offices, pinned at ' +
+      EXISTING_OFFICE_COUNT);
+  }
+  const labels = Object.keys(LEADER_BASIS_LABELS) as LeaderBasis[];
+  for (const k of labels) {
+    if (!LEADER_BASIS_LABELS[k].trim()) out.push(k + ': label is empty');
+  }
+  if (new Set(labels.map((k) => LEADER_BASIS_LABELS[k])).size !== labels.length) {
+    out.push('the two basis labels read the same, so the badge draws no distinction');
+  }
+  /* every entity resolves to one of the two, which is the row's own test */
+  for (const g of GOV_GROUPS) {
+    for (const m of g.members) {
+      if (labels.indexOf(leaderBasis(m.code)) < 0) out.push(m.code + ': no basis');
+      if (!m.leader.trim()) out.push(m.code + ': renders a leadership line with no title');
+    }
+  }
+  return out;
+}
+
+export function leaderBasisCounts(): Record<LeaderBasis, number> {
+  const out: Record<LeaderBasis, number> = { existing: 0, design: 0 };
+  for (const g of GOV_GROUPS) for (const m of g.members) out[leaderBasis(m.code)] += 1;
+  return out;
+}
+
 export const GOV_GROUPS: GovGroup[] = [
 {
   id: "fiscal", color: "var(--series-5)",
