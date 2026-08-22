@@ -939,6 +939,29 @@ export function divergenceIsRendered(root = REPO_ROOT): boolean {
     /divergence\.recommended/.test(text);
 }
 
+/* R81 [§S8]: the care cards' section of the Healthcare page must not type a
+ * year either. Removing `fromYear` from `CareNha` makes a typed year a type
+ * error inside the data, and `careNotesTypingYears` covers the card notes, but
+ * the section's own prose is neither: it carried "assuming enactment in 2027",
+ * a second copy of the calendar anchor `R256` settled in one place.
+ *
+ * Scoped to the care section rather than the file, because the rest of the page
+ * legitimately publishes calendar years - "2027-2042" is a chart heading and
+ * "actual 2023 spending" is a vintage. Comments are masked for the reason
+ * `literalRetailTotals` masks them: a note explaining why a year was removed
+ * has to name the year. */
+export const HEALTH_PAGE = 'src/pages/health.astro';
+export const CARE_SECTION_START = 'id="care-card-section"';
+
+export function careSectionTypedYears(root = REPO_ROOT): string[] {
+  const text = maskComments(readFileSync(join(root, HEALTH_PAGE), 'utf8'));
+  const from = text.indexOf(CARE_SECTION_START);
+  if (from < 0) return ['the care card section is gone: ' + CARE_SECTION_START + ' not found'];
+  const end = text.indexOf('</section>', from);
+  const section = text.slice(from, end < 0 ? text.length : end);
+  return (section.match(/\b20\d\d\b/g) || []);
+}
+
 /* R296 [§S7]: the medications chapter is where the drug base meets a reader,
  * so it is where the base has to be the model's own decomposition rather than
  * a number typed beside it. BY2 found the spend bar captioned "Modeled

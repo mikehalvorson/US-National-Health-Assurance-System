@@ -37,7 +37,7 @@ import {
 } from './rollout';
 import { DATA_PHASES, DATA_PHASE_YEARS_AS_GENERATED } from './data-phases';
 import { CALENDAR_ANCHOR_DENIAL, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
-import { CARE_SCENARIOS } from './care';
+import { CARE_SCENARIOS, careFromYear } from './care';
 import { phaseIndex, EQ_PHASES, modelValueAt, rampValueAt } from './equations';
 import { runPath, sampleParams } from './model';
 import { effectiveParams } from './scenarios';
@@ -141,16 +141,55 @@ export function rampMilestoneMisses(): MilestoneMiss[] {
   return out;
 }
 
-/* The ramp the care page's premium card depends on. AY1: the card's own note
-   says the coverage wave migrates over Years 4-8, so its `fromYear` has to be
-   the calendar year of the coverage ramp's first migrating index, not one
-   after it. Pinned here because the two live in different files. */
-export function premiumCardYearDrift(): { fromYear: number; rampYear: number } | null {
-  const card = CARE_SCENARIOS.find((s) => s.id === 'premium');
-  if (!card) return { fromYear: NaN, rampYear: NaN };
-  const first = RAMPS.coverage.findIndex((v) => v > 0);
-  const rampYear = START_YEAR + first;
-  return card.nha.fromYear === rampYear ? null : { fromYear: card.nha.fromYear, rampYear };
+/* R81 [§S8]: what a care card is allowed to rest its promise on.
+ *
+ * This replaces `premiumCardYearDrift`, which asserted that the premium card's
+ * typed `fromYear` equalled the coverage ramp's FIRST migrating year. That was
+ * the right check for a typed year and the wrong claim about the benefit: the
+ * first wave opening is not the last wave closing, and the card said `$0` to
+ * everybody. The years are derived now, so "the card agrees with the ramp" has
+ * become one arithmetic compared with itself and is worth nothing.
+ *
+ * What can still differ: a card names a ramp and a share, and `RAMP_MILESTONES`
+ * separately declares what each ramp claims to deliver and by which phase.
+ * A card resting on a share no milestone claims is a promise with nothing
+ * behind it. The two lists are maintained in different files by different rows.
+ *
+ * The second half is the direction that matters for §AG1: the card's derived
+ * year must not fall AFTER the phase whose milestone backs it, because then
+ * the page would be promising something the roadmap says has already happened.
+ */
+export interface CareGateBacking {
+  card: string;
+  ramp: string;
+  atLeast: number;
+  why: string;
+}
+
+export function careGatesWithoutMilestone(): CareGateBacking[] {
+  const out: CareGateBacking[] = [];
+  for (const card of CARE_SCENARIOS) {
+    for (const g of card.nha.gates) {
+      const claims = RAMP_MILESTONES.filter((m) => m.ramp === g.ramp && m.atLeast >= g.atLeast - 1e-9);
+      if (!claims.length) {
+        out.push({
+          card: card.id, ramp: g.ramp, atLeast: g.atLeast,
+          why: 'no RAMP_MILESTONES entry claims ' + g.ramp + ' reaches ' + g.atLeast
+        });
+        continue;
+      }
+      /* the earliest phase any backing milestone names */
+      const deadline = Math.min.apply(null, claims.map((m) => calendarYearOfPhase(m.phase)));
+      const lands = careFromYear(card);
+      if (lands > deadline) {
+        out.push({
+          card: card.id, ramp: g.ramp, atLeast: g.atLeast,
+          why: 'card lands ' + lands + ', milestone claims it by ' + deadline
+        });
+      }
+    }
+  }
+  return out;
 }
 
 /* ---- 4. trainProg's denominator spans the rollout horizon (R234) -------- */

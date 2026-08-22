@@ -2,14 +2,20 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
 import { computeOverview } from '../lib/overview';
-import { OUTCOME_STATS, PARAM_DEFS } from '../lib/params';
+import { OUTCOME_STATS, PARAM_DEFS, CALENDAR_ANCHOR_NOTE } from '../lib/params';
 import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
-import { CARE_SCENARIOS, moneyRange } from '../lib/care';
+import { CARE_SCENARIOS, moneyRange, careFromYear, careReliefYear } from '../lib/care';
 import { selfTestSummary } from '../lib/selftests';
 
 const v = computeOverview('SCN-BASE', null);
 const gapsList = ' ' + PARAM_DEFS.filter((p) => p.confidence === 'low').map((p) => p.label).join(' · ');
 const selftests = selfTestSummary();
+/* R81 [§S8]: the card years are read off the ramps that deliver them, at build
+   time for the base scenario. health-client.ts re-derives them whenever a
+   stress scenario is selected, so the two agree by construction. */
+const careYears = CARE_SCENARIOS.map((s) => ({
+  fromYear: careFromYear(s), reliefYear: careReliefYear(s)
+}));
 ---
 <BaseLayout title="National Health Assurance: Healthcare">
   <main>
@@ -32,10 +38,11 @@ const selftests = selfTestSummary();
       <h2>What you'd pay for care</h2>
       <p class="desc">Here is what that design means for real care episodes:
         today's typical cost with employer insurance, without insurance, and
-        under NHA, with the year each benefit arrives, assuming enactment in
-        2027.</p>
+        under NHA. Each card's year is the year the ramp that delivers that
+        benefit finishes delivering it, not the year the phase containing it
+        opens.</p>
       <div class="care-grid" id="care-cards">
-        {CARE_SCENARIOS.map((s) => (
+        {CARE_SCENARIOS.map((s, i) => (
           <div class="care-card">
             <div class="care-title">{s.title}</div>
             <div class="care-rows">
@@ -54,8 +61,11 @@ const selftests = selfTestSummary();
               <div class="care-nha-line">
                 <div class="care-nha-label">Under NHA</div>
                 <div class="care-nha-val">$0</div>
-                <div class="care-year-chip" title="Assuming enactment in 2027; see the phase roadmap.">from ~{s.nha.fromYear}</div>
+                <div class="care-year-chip" data-care-chip={s.id} title={CALENDAR_ANCHOR_NOTE}>from ~{careYears[i].fromYear}</div>
               </div>
+              {careYears[i].reliefYear !== null && (
+                <div class="care-nha-phasing" data-care-phasing={s.id}>Phasing in from ~{careYears[i].reliefYear}; the figure above is what you pay once it completes.</div>
+              )}
               <div class="care-nha-note">{s.nha.note}</div>
             </div>
             <div class="care-src">Source: {s.source} <span class={"conf " + s.confidence}>{s.confidence}</span></div>

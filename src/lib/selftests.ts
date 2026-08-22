@@ -61,6 +61,7 @@ import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
+  careSectionTypedYears, HEALTH_PAGE,
   DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
   drugLeverNoteIsRendered, iraScoreSites, iraScoresWithoutCaveat,
   literalRetailTotals, MEDICATIONS_PAGE,
@@ -88,6 +89,11 @@ import {
 import {
   DRUG_LEVER, DRUG_LEVER_NOTE_FIGURES, drugLeverNote
 } from './drug-lever';
+import {
+  CARE_GATE_WHY_FLOOR, CARE_SCENARIOS, careCardYears, careGateProblems,
+  careNotesTypingYears, pointOfCareCardsMissingCostShareGate, reliefYearProblems,
+  shallowCareGateReasons
+} from './care';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
 import {
@@ -106,7 +112,7 @@ import {
   benefitStartDrift, calendarAnchorDenials, calendarConverterSplit, calendarYearOf,
   expansionSpanDisagreements,
   ltcBenefitStartYear, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
-  premiumCardYearDrift, rampLegendDisagreements, rampMilestoneMisses,
+  careGatesWithoutMilestone, rampLegendDisagreements, rampMilestoneMisses,
   rolloutHeadlineMisses, trainProgAtMaturity, unitBuildoutIssues
 } from './phase-map-check';
 import {
@@ -855,12 +861,13 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             RAMP_MILESTONES.length + ' milestones land'
         };
       }),
-      runGuarded('The premium card starts the year its coverage ramp does', () => {
-        const drift = premiumCardYearDrift();
+      /* R81 [§S8] */
+      runGuarded('Every care card rests on a ramp milestone the model declares', () => {
+        const bad = careGatesWithoutMilestone();
         return {
-          ok: drift === null,
-          note: drift ? 'card says ' + drift.fromYear + ', ramp migrates from ' + drift.rampYear
-            : 'both ' + (START_YEAR + RAMPS.coverage.findIndex((v) => v > 0))
+          ok: !bad.length,
+          note: bad.map((b) => b.card + '/' + b.ramp + ': ' + b.why).join('; ') ||
+            CARE_SCENARIOS.length + ' cards, every gate backed by a declared milestone'
         };
       }),
       runGuarded('Training progress is exactly complete at the P8 anchor', () => {
@@ -907,6 +914,58 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: bad.map((b) => b.page + ' says ' + b.stated + '; ' + b.phase + ' is ' + b.expected)
             .join('; ') || 'long-term care begins ' + ltcBenefitStartYear() +
             ' (' + (LTC_BENEFIT_PHASE ? LTC_BENEFIT_PHASE.id : '?') + ')'
+        };
+      })
+    ]
+  },
+  {
+    /* R81 [§S8]: the care cards' years are derived from the ramps, so no check
+       here compares a card with the ramp it was computed from. These are the
+       assertions whose two sides are still independent. */
+    surface: 'care.ts',
+    rows: () => [
+      runGuarded('Every care-card gate names a share its ramp can reach', () => {
+        const bad = careGateProblems();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.card + '/' + b.ramp + ' needs ' + b.atLeast +
+            ', ramp peaks at ' + b.max).join('; ') ||
+            careCardYears().map((c) => c.id + ' ' + c.fromYear).join(', ')
+        };
+      }),
+      runGuarded('Every point-of-care card is gated on cost-sharing elimination', () => {
+        const bad = pointOfCareCardsMissingCostShareGate();
+        const n = CARE_SCENARIOS.filter((c) => c.nha.promise === 'point-of-care').length;
+        return {
+          ok: !bad.length,
+          note: bad.length ? bad.join(', ') + ' promise $0 without it'
+            : n + ' of ' + CARE_SCENARIOS.length + ' cards are point-of-care and all gate on it'
+        };
+      }),
+      runGuarded('Every care-card gate says why that ramp governs that card', () => {
+        const bad = shallowCareGateReasons();
+        return {
+          ok: !bad.length,
+          note: bad.join(', ') || 'all gates reason past ' + CARE_GATE_WHY_FLOOR + ' characters'
+        };
+      }),
+      runGuarded('Every phase-in year is the year that card\'s ramps start moving', () => {
+        const bad = reliefYearProblems();
+        return {
+          ok: !bad.length,
+          note: bad.join('; ') ||
+            careCardYears().map((c) => c.id + ' ' + (c.reliefYear ?? '-')).join(', ')
+        };
+      }),
+      runGuarded('No care card states a benefit year in its own prose', () => {
+        const inNotes = careNotesTypingYears();
+        const onPage = careSectionTypedYears();
+        return {
+          ok: !inNotes.length && !onPage.length,
+          note: [
+            inNotes.join('; '),
+            onPage.length ? HEALTH_PAGE + ' care section types ' + onPage.join(', ') : ''
+          ].filter(Boolean).join(' | ') || 'every year on these cards is read off a ramp'
         };
       })
     ]

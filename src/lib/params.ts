@@ -738,6 +738,11 @@ export interface RampMilestone { ramp: keyof typeof RAMPS; phase: string; atLeas
 export const RAMP_MILESTONES: RampMilestone[] = [
   { ramp: 'coverage',      phase: 'P3', atLeast: 0.20, claim: 'public coverage wave I opens' },
   { ramp: 'coverage',      phase: 'P6', atLeast: 0.85, claim: 'national public default coverage' },
+  /* R81 [§S8]: the care page's premium card rests on migration being FINISHED,
+     not started, and no milestone said when that is. 0.99 is the ramp's own
+     mature share: the residual is KPP-A2's uninsured rate, not an unmigrated
+     wave. Declared here so the card's gate has something behind it. */
+  { ramp: 'coverage',      phase: 'P7', atLeast: 0.99, claim: 'coverage migration complete' },
   { ramp: 'drugs',         phase: 'P2', atLeast: 0.15, claim: 'pharmacy utility first operation' },
   { ramp: 'drugs',         phase: 'P6', atLeast: 0.90, claim: 'drug program deepened through P6' },
   { ramp: 'drugs',         phase: 'P8', atLeast: 1.00, claim: 'drug program at full depth' },

@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { AGE_STRUCTURE, BASE2023, RAMPS, START_YEAR } from '../../src/lib/params';
-import { CARE_SCENARIOS } from '../../src/lib/care';
+import { CARE_SCENARIOS, careFromYear } from '../../src/lib/care';
 import { runPath, sampleParams } from '../../src/lib/model';
 import { effectiveParams } from '../../src/lib/scenarios';
 import { growthDecompNote } from '../../src/lib/growth-decomp';
@@ -83,14 +83,34 @@ test('R123: costShareElim index 0 is the enactment year, 2027', () => {
   expect(START_YEAR + firstRelief).toBe(2033);
 });
 
-test('R123: AG1 stands at three years, measured rather than asserted', () => {
+/* R81 [§S8] closed it. The two halves this test used to compare are now one
+   arithmetic - `careFromYear` reads the ramp - so asserting they agree would
+   assert nothing. What is still worth pinning is the ramp itself, and the SIZE
+   of the move, against the year the audit measured as a literal. AG1's history
+   is the independent side: 2034 is what the file said on 2026-08-18, and if a
+   later edit walks the card back toward it this fails. */
+const AG1_CARD_YEAR_BEFORE = 2034;
+
+test('R123/R81: AG1 measured three years and R81 moved the card by three', () => {
   const full = RAMPS.costShareElim.findIndex((v) => v >= 1);
   expect(START_YEAR + full).toBe(2037); // the model delivers $0 here
+  // At the year the card used to name, a tenth of cost sharing has gone.
+  expect(RAMPS.costShareElim[AG1_CARD_YEAR_BEFORE - START_YEAR]).toBeCloseTo(0.10, 9);
   const card = CARE_SCENARIOS.find((s) => s.id === 'er')!;
-  expect(card.nha.fromYear).toBe(2034); // the card promises it here
-  expect(START_YEAR + full - card.nha.fromYear).toBe(3);
-  // At the year the card names, a tenth of cost sharing has gone.
-  expect(RAMPS.costShareElim[2034 - START_YEAR]).toBeCloseTo(0.10, 9);
+  expect(careFromYear(card) - AG1_CARD_YEAR_BEFORE).toBe(3);
+  // and it moved later, which is the direction the fix is about
+  expect(careFromYear(card)).toBeGreaterThan(AG1_CARD_YEAR_BEFORE);
+});
+
+test('R81: every card moved later, and none of the ten kept its old year', () => {
+  /* The ten typed literals as they stood before §S8, in CARE_SCENARIOS order.
+     Recorded here rather than derived, because the point of the row is that
+     they were typed and are not any more. */
+  const TYPED_BEFORE = [2030, 2034, 2034, 2029, 2034, 2034, 2034, 2034, 2036, 2036];
+  const after = CARE_SCENARIOS.map((c) => careFromYear(c));
+  expect(after).toHaveLength(TYPED_BEFORE.length);
+  after.forEach((y, i) => expect(y).toBeGreaterThan(TYPED_BEFORE[i]));
+  expect(after).toEqual([2036, 2037, 2037, 2037, 2037, 2038, 2037, 2038, 2038, 2038]);
 });
 
 test('R123: the model reads the ramps 0-based on the same calendar', () => {
