@@ -95,7 +95,9 @@ import {
 } from './drug-lever';
 import {
   CARE_GATE_WHY_FLOOR, CARE_SCENARIOS, careCardYears, careGateProblems,
-  careEvidenceBoundsMissing, careNotesTypingYears, careProseCatalogCodes, earlyBenefitProblems,
+  careEvidenceBoundsMissing, careNotesTypingYears, careProseCatalogCodes,
+  earlyBenefitProblems, householdVintageProblems, householdVintageSpan,
+  undeclaredVintageGaps,
   frameworkPhaseMismatches,
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
@@ -1010,6 +1012,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !missing.length,
           note: missing.length ? HEALTH_CLIENT + ' never calls ' + missing.join(', ')
             : 'all ' + CARE_SCENARIO_CALLS.length + ' reads present in ' + HEALTH_CLIENT
+        };
+      }),
+      /* R205 [§S8] */
+      runGuarded('Every household-profile component declares its vintage', () => {
+        const gaps = undeclaredVintageGaps();
+        const bad = householdVintageProblems();
+        const span = householdVintageSpan();
+        return {
+          ok: !gaps.length && !bad.length,
+          note: [gaps.join('; '), bad.join('; ')].filter(Boolean).join(' | ') ||
+            'components dated ' + span.years.join(', ')
         };
       }),
       /* R82 + R83 [§S8] */

@@ -657,11 +657,36 @@ export function careCardYears(ramps: RampSet = RAMPS): CareCardYear[] {
   }));
 }
 
+/* R205 [§S8]: each component of a household profile declares its own vintage.
+ *
+ * §AG6: the profiles blend KFF's 2025 premium survey, CMS-derived out-of-pocket
+ * averages from 2023 and a note about subsidies expiring in 2026. Each figure is
+ * individually sourced and the combination has no single base year, so a reader
+ * comparing "today" with "the mature system" is comparing three different todays.
+ *
+ * `denominatorYear` is the sharp end of it. The family out-of-pocket average is
+ * a 2023 CMS total divided by a 2024 Census household count, which §AG6 filed
+ * against the repository's own vintage rule. The per-person figure beside it is
+ * 2023 over 2023 and has no such gap. Declaring the denominator's year
+ * separately is what makes the difference between them visible, and a check
+ * requires a component whose two years disagree to say both of them out loud.
+ *
+ * Same shape as DATASET_VINTAGES in taxparams.ts, deliberately: that is the
+ * pattern R38 established for this exact question one chapter over.
+ */
+export interface HouseholdComponent extends CareAmount {
+  dataYear: number;    /* the year the underlying statistic describes */
+  dollarYear: number;  /* the year its dollars are expressed in */
+  /* set only on a derived figure whose denominator comes from another year */
+  denominatorYear?: number;
+  source: string;
+}
+
 export interface HouseholdProfile {
   id: string;
   label: string;
-  premium: CareAmount;
-  oop: CareAmount;
+  premium: HouseholdComponent;
+  oop: HouseholdComponent;
   confidence: string;
 }
 
@@ -672,34 +697,138 @@ export interface HouseholdProfile {
    HOUSEHOLD_DENOMINATORS in params.ts for why. */
 export const HOUSEHOLDS_M = householdDenominator('census').households;
 
-/* docs/js/care.js:122-151 (verbatim) */
+/* docs/js/care.js:122-151, with R205's vintages added per component. */
 export const HOUSEHOLD_PROFILES: HouseholdProfile[] = [
   {
     id: 'emp-family',
     label: 'Family with employer coverage',
-    premium: { lo: 6850, hi: 6850, note: 'worker share of family premium (KFF 2025)' },
-    oop: { lo: 2500, hi: 5500, note: 'deductibles, copays, coinsurance; household average is about $3,825 (derived from CMS)' },
+    premium: {
+      lo: 6850, hi: 6850, dataYear: 2025, dollarYear: 2025,
+      source: 'KFF Employer Health Benefits Survey 2025',
+      note: 'worker share of a family premium'
+    },
+    oop: {
+      lo: 2500, hi: 5500, dataYear: 2023, dollarYear: 2023, denominatorYear: 2024,
+      source: 'CMS national out-of-pocket total, divided by the Census household count',
+      note: 'deductibles, copays, coinsurance; the household average of about $3,825 ' +
+        'divides a 2023 spending total by a 2024 household count, so it is not a ' +
+        'single-year figure'
+    },
     confidence: 'medium'
   },
   {
     id: 'emp-single',
     label: 'Single person with employer coverage',
-    premium: { lo: 1492, hi: 1492, note: 'worker share (~16%) of a $9,325 single premium (KFF 2025)' },
-    oop: { lo: 800, hi: 2500, note: 'per-person average ≈ $1,514 (derived from CMS)' },
+    premium: {
+      lo: 1492, hi: 1492, dataYear: 2025, dollarYear: 2025,
+      source: 'KFF Employer Health Benefits Survey 2025',
+      note: 'worker share (about 16%) of a $9,325 single premium'
+    },
+    oop: {
+      lo: 800, hi: 2500, dataYear: 2023, dollarYear: 2023,
+      source: 'CMS national out-of-pocket total, divided by the same year’s population',
+      note: 'per-person average of about $1,514; unlike the family figure, both ' +
+        'sides of this one are 2023'
+    },
     confidence: 'medium'
   },
   {
     id: 'marketplace',
     label: 'Family buying marketplace coverage',
-    premium: { lo: 6000, hi: 18000, note: 'varies enormously with age, state, and subsidy eligibility; enhanced subsidies expired in 2026' },
-    oop: { lo: 3000, hi: 9000, note: 'marketplace deductibles are typically much higher than employer plans' },
+    premium: {
+      lo: 6000, hi: 18000, dataYear: 2026, dollarYear: 2026,
+      source: 'Marketplace premium range after the enhanced subsidies expired',
+      note: 'varies enormously with age, state, and subsidy eligibility; the ' +
+        'enhanced subsidies expired in 2026 and this range is the world after that'
+    },
+    oop: {
+      lo: 3000, hi: 9000, dataYear: 2025, dollarYear: 2025,
+      source: 'Marketplace plan cost-sharing designs',
+      note: 'marketplace deductibles are typically much higher than employer plans'
+    },
     confidence: 'low'
   },
   {
     id: 'uninsured',
     label: 'Uninsured adult',
-    premium: { lo: 0, hi: 0, note: 'no premium, no protection' },
-    oop: { lo: 500, hi: 5000, note: 'averages hide the real risk: one hospitalization can mean five-figure debt' },
+    premium: {
+      lo: 0, hi: 0, dataYear: 2025, dollarYear: 2025,
+      source: 'No premium is paid, so there is no statistic to date',
+      note: 'no premium, no protection'
+    },
+    oop: {
+      lo: 500, hi: 5000, dataYear: 2023, dollarYear: 2023,
+      source: 'CMS out-of-pocket spending for the uninsured',
+      note: 'averages hide the real risk: one hospitalization can mean five-figure debt'
+    },
     confidence: 'low'
   }
 ];
+
+/* ---- What holds the vintages up ----------------------------------------- */
+
+/* A component whose numerator and denominator come from different years has to
+   say both years where a reader meets the figure. That is §AG6's finding, kept
+   as a rule rather than as a one-off correction. */
+export function undeclaredVintageGaps(): string[] {
+  const out: string[] = [];
+  for (const p of HOUSEHOLD_PROFILES) {
+    for (const key of ['premium', 'oop'] as Array<'premium' | 'oop'>) {
+      const c = p[key];
+      if (c.denominatorYear === undefined || c.denominatorYear === c.dataYear) continue;
+      const saysBoth = c.note.includes(String(c.dataYear)) &&
+        c.note.includes(String(c.denominatorYear));
+      if (!saysBoth) {
+        out.push(p.id + '.' + key + ': ' + c.dataYear + ' over ' +
+          c.denominatorYear + ', and the note says neither');
+      }
+    }
+  }
+  return out;
+}
+
+/* Every component declares a source, and no component is dated outside the
+   window the rest of the model works in. */
+export const HOUSEHOLD_SOURCE_FLOOR = 20;
+
+export function householdVintageProblems(): string[] {
+  const out: string[] = [];
+  for (const p of HOUSEHOLD_PROFILES) {
+    for (const key of ['premium', 'oop'] as Array<'premium' | 'oop'>) {
+      const c = p[key];
+      if (c.source.trim().length < HOUSEHOLD_SOURCE_FLOOR) {
+        out.push(p.id + '.' + key + ': source is thinner than ' + HOUSEHOLD_SOURCE_FLOOR + ' characters');
+      }
+      if (!(c.dataYear >= 2020 && c.dataYear < START_YEAR)) {
+        out.push(p.id + '.' + key + ': dataYear ' + c.dataYear + ' is outside the baseline window');
+      }
+      if (!(c.dollarYear >= 2020 && c.dollarYear < START_YEAR)) {
+        out.push(p.id + '.' + key + ': dollarYear ' + c.dollarYear + ' is outside the baseline window');
+      }
+    }
+  }
+  return out;
+}
+
+/* The span the profiles actually cover, computed rather than typed, so the page
+   can say "these are three different todays" with the right numbers in it. */
+export function householdVintageSpan(): { from: number; to: number; years: number[] } {
+  const years: number[] = [];
+  for (const p of HOUSEHOLD_PROFILES) {
+    for (const key of ['premium', 'oop'] as Array<'premium' | 'oop'>) {
+      const c = p[key];
+      years.push(c.dataYear);
+      if (c.denominatorYear !== undefined) years.push(c.denominatorYear);
+    }
+  }
+  const sorted = Array.from(new Set(years)).sort((a, b) => a - b);
+  return { from: sorted[0], to: sorted[sorted.length - 1], years: sorted };
+}
+
+export function householdVintageNote(): string {
+  const span = householdVintageSpan();
+  return 'The "today" column is not one year. Its components are dated ' +
+    span.years.join(', ') + ', a span of ' + (span.to - span.from) +
+    ' years, and each line below says which year it is from. The mature-system ' +
+    'column is a model projection and carries no survey year at all.';
+}

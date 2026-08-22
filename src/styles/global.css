@@ -990,6 +990,8 @@ nav.tabs button:hover:not(.active), nav.tabs a:hover:not(.active) { color: var(-
 /* R170 [§S8]: the framework requirement the card answers to, and its deadline. */
 .care-nha-req { color: var(--text-muted); font-size: 11px; margin-top: 4px; font-style: italic; }
 .care-src { color: var(--text-muted); font-size: 10.5px; margin-top: 9px; }
+/* R205 [§S8]: the vintage of each household-calculator component. */
+.hh-line-vintage { color: var(--text-muted); font-size: 10.5px; margin-top: 1px; font-style: italic; }
 
 /* ---- Household calculator ---- */
 .hh-picker { margin-top: 4px; }
