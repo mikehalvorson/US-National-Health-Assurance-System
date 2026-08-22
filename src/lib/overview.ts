@@ -11,7 +11,8 @@ import { RESIDUAL_BILLING_CAVEAT } from './care';
 import { runMonteCarlo } from './model';
 import type { MonteCarloResult } from './model-types';
 import {
-  DEFLATOR_2023_TO_2024, MATURE_INDEX, MONTE_CARLO_DRAWS, MONTE_CARLO_SEED
+  DEFLATOR_2023_TO_2024, householdDenominator, MATURE_INDEX, MONTE_CARLO_DRAWS,
+  MONTE_CARLO_SEED
 } from './params';
 import { money, moneyShort, pct, perCap } from './format';
 
@@ -76,9 +77,17 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
   const base2041 = money(baseMature) + "/yr";
 
   /* Family burden: where the status quo's growth actually lands.
-     Households sponsor 27% of NHE (CMS); ~141M households by 2041. */
+     Households sponsor 27% of NHE (CMS).
+
+     R172 [§S8]: both counts used to be typed here. `132.2` was a second copy of
+     the Census denominator R84 declared, and `141` was a 2041 projection with
+     no owner anywhere. Both are read from HOUSEHOLD_DENOMINATORS now, which is
+     also what makes the pairing visible: the "today" figure divides by today's
+     households and the 2041 figure by 2041's, and those are different numbers
+     for a reason. */
   const famNow = 0.27 * 5300, fam2041 = 0.27 * baseMature;
-  const hhNow = 132.2, hh2041 = 141;
+  const hhNow = householdDenominator('census').households;
+  const hh2041 = householdDenominator('census-2041').households;
   const d41 = mc.modePath.detail[MATURE_INDEX];
   const kppPerHH = 0.05 * d41.newRevenue * DEF * 1e9 / (hh2041 * 1e6);
   const familyNote =

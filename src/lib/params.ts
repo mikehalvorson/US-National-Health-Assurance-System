@@ -259,8 +259,38 @@ export const HOUSEHOLD_DENOMINATORS: HouseholdDenominator[] = [
     useFor: 'Whole-population per-household figures not derived from CBO income groups: the household calculator and the KPP-C8 burden share.' },
   { id: 'cbo', households: 131.0, dataYear: 2022,
     source: 'CBO, The Distribution of Household Income 2022, supplemental workbook.',
-    useFor: 'Anything computed per income group, because the group incomes and the group counts come from the same CBO table and must not be mixed with another universe.' }
+    useFor: 'Anything computed per income group, because the group incomes and the group counts come from the same CBO table and must not be mixed with another universe.' },
+  /* R172 [§S8]: a fourth site, and the one R84 did not reach. `overview.ts`
+     typed both `hhNow = 132.2` and `hh2041 = 141` beside the family-burden
+     sentence, so the Census count had a second copy and the 2041 projection had
+     no owner at all. §BC3 named the first; nobody had checked the second. */
+  { id: 'census-2041', households: 141.0, dataYear: 2041,
+    source: 'Census household projection for the mature year, consistent with the population growth the model runs on.',
+    useFor: 'Per-household figures stated at the mature year, where the country is bigger than it is today. Never use it for a figure dated now.' }
 ];
+
+/* R172 [§S8]: the two distributions that carry their own household counts have
+ * to agree with the denominator they are declared to be. `GROUPS` sums to CBO's
+ * universe and `WEALTH_DIST` to the Census one, which is the three-way split
+ * R84 measured; nothing held either sum to its declaration, so the split could
+ * quietly become a four-way one. The sums live in taxparams.ts and the
+ * declarations here, so this takes them as arguments rather than importing
+ * across the seam.
+ */
+export function denominatorSumDrift(
+  sums: Array<{ id: string; sum: number; of: string }>
+): string[] {
+  const out: string[] = [];
+  for (const s of sums) {
+    const d = HOUSEHOLD_DENOMINATORS.filter((x) => x.id === s.of)[0];
+    if (!d) { out.push(s.id + ': no denominator declared as ' + s.of); continue; }
+    /* the counts are one-decimal figures typed by hand in both places */
+    if (Math.abs(s.sum - d.households) > 0.05) {
+      out.push(s.id + ' sums to ' + s.sum.toFixed(2) + ', ' + s.of + ' declares ' + d.households);
+    }
+  }
+  return out;
+}
 
 /* ---- Top-capital real growth, one number ---------------------------------
  * R143 [§S5]. Two engines grew the same wealth-tax base at two different

@@ -1089,6 +1089,32 @@ export function careScenarioCallsMissing(root = REPO_ROOT): string[] {
     (name) => !new RegExp('\\b' + name + '\\s*\\(').test(text));
 }
 
+/* R172 [§S8]: the modules that publish a per-household figure must read a
+ * declared denominator rather than type one.
+ *
+ * R84 declared the two universes and wired `care.ts` to them, and the comment
+ * beside the declaration says a self-test holds every per-household output to
+ * naming one. It did not: `care.ts` was the only reader, and `overview.ts` went
+ * on typing `hhNow = 132.2` and `hh2041 = 141` beside the family-burden
+ * sentence under the hero. §BC3 named the first of those; the 2041 projection
+ * had no owner at all and nobody had looked.
+ *
+ * Import statements are stripped for the reason residualCaveatSitesMissing
+ * strips them: a module that imports the reader and stops calling it would
+ * otherwise pass. */
+export const HOUSEHOLD_DENOMINATOR_READERS = [
+  'src/lib/care.ts',
+  'src/lib/overview.ts'
+];
+
+export function householdDenominatorNotRead(root = REPO_ROOT): string[] {
+  return HOUSEHOLD_DENOMINATOR_READERS.filter((rel) => {
+    const text = maskComments(readFileSync(join(root, rel), 'utf8'))
+      .replace(IMPORT_STATEMENT, ' ');
+    return !/\bhouseholdDenominator\s*\(/.test(text);
+  });
+}
+
 /* R82/R83 [§S8]: a card's cited source has to contain the figures it is cited
  * for. §AG2: the therapy card named "SAMHSA spending data" for per-session
  * prices, and SAMHSA publishes an aggregate national total. §AG3: the insulin

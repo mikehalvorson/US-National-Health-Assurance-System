@@ -27,7 +27,7 @@ import { benchmarkChartRows, benchmarkText } from './benchmarks';
 import { classGrowth, defaultSettings, distribution, TAX_SELFTESTS } from './taxmodel';
 import {
   DATASET_VINTAGES, GROUPS as TAX_GROUPS, INSTRUMENTS as TAX_INSTRUMENTS,
-  SCENARIOS as TAX_SCENARIOS
+  SCENARIOS as TAX_SCENARIOS, WEALTH_DIST
 } from './taxparams';
 import {
   REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
@@ -62,7 +62,7 @@ import {
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
   CARE_SCENARIO_CALLS, careEvidenceMisses, careRequirementsNotInFramework,
-  careScenarioCallsMissing,
+  careScenarioCallsMissing, householdDenominatorNotRead,
   narrativeCatalogCodes, RESIDUAL_CAVEAT_SITES, residualCaveatSitesMissing,
   typedResidualFigures,
   careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_CLIENT, HEALTH_PAGE, NARRATIVE_SURFACES,
@@ -108,6 +108,7 @@ import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
   ENGINE_DECLARATION_LITERALS, FRAMEWORK_CLAIM, MATURE_INDEX, MATURE_YEAR,
+  denominatorSumDrift, HOUSEHOLD_DENOMINATORS,
   MONTE_CARLO_DRAWS, OFFSET_ARCHITECTURE_DOC, PARAM_DEFS, paramProseCatalogCodes,
   PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS, SEED_STABILITY,
   SPONSOR_SHARE, START_YEAR, transitionEnvelope
@@ -1012,6 +1013,23 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !missing.length,
           note: missing.length ? HEALTH_CLIENT + ' never calls ' + missing.join(', ')
             : 'all ' + CARE_SCENARIO_CALLS.length + ' reads present in ' + HEALTH_CLIENT
+        };
+      }),
+      /* R172 [§S8] */
+      runGuarded('Every per-household denominator in use is a declared one', () => {
+        const drift = denominatorSumDrift([
+          { id: 'taxparams GROUPS', of: 'cbo',
+            sum: TAX_GROUPS.reduce((a, g) => a + g.hhM, 0) },
+          { id: 'taxparams WEALTH_DIST', of: 'census',
+            sum: WEALTH_DIST.groups.reduce((a, g) => a + g.hhM, 0) }
+        ]);
+        const unread = householdDenominatorNotRead();
+        return {
+          ok: !drift.length && !unread.length,
+          note: [drift.join('; '),
+            unread.length ? unread.join(', ') + ' types a count instead of reading one' : '']
+            .filter(Boolean).join(' | ') ||
+            HOUSEHOLD_DENOMINATORS.map((d) => d.id + ' ' + d.households + 'M').join(', ')
         };
       }),
       /* R205 [§S8] */
