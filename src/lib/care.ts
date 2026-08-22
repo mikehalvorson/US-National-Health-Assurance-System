@@ -255,7 +255,13 @@ export const CARE_SCENARIOS: CareScenario[] = [
     id: 'insulin',
     title: 'Insulin, one month (diabetes)',
     todayInsured: { lo: 35, hi: 100, note: '$35/mo caps now apply in Medicare & many plans' },
-    todayUninsured: { lo: 70, hi: 300, note: 'cash price after 2023–24 list-price cuts; production cost is $2–6/vial' },
+    todayUninsured: {
+      lo: 30, hi: 300,
+      note: 'the floor is Civica Rx, a nonprofit manufacturer selling at $30 a vial ' +
+        'to anyone regardless of insurance; ordinary retail cash prices reach the ' +
+        'ceiling, and a patient using several vials a month pays a multiple of ' +
+        'either. Production cost is $2 to $6 a vial.'
+    },
     nha: {
       amount: 0, promise: 'point-of-care', gates: [costSharingGate()],
       framework: {
@@ -270,11 +276,19 @@ export const CARE_SCENARIOS: CareScenario[] = [
         ramp: 'drugs',
         what: 'the public pharmacy utility starts cutting what insulin costs'
       },
-      note: '$0 for at least 98% of essential formulary fills, which cost-sharing ' +
-        'elimination is what delivers. The pharmacy utility opens years earlier and ' +
-        'cuts the price, which is a different thing from a $0 counter charge.'
+      note: '$0 for at least 98% of essential formulary fills, delivered by ' +
+        'cost-sharing elimination. The pharmacy utility opens years earlier and cuts ' +
+        'the price, which is a different thing from a $0 charge at the counter.'
     },
     source: 'Yale/BMJ Global Health production-cost study; Civica Rx $30/vial nonprofit price; ADA/manufacturer cap programs',
+    evidence: {
+      file: 'research/03_drugs_pharmacy_diagnostics_devices.md',
+      cites: [
+        { amount: 'todayUninsured', end: 'lo', find: '$30/vial or $55 for a 5-pack of pens' },
+        { amount: 'todayUninsured', end: 'hi', find: '$250-$300+' }
+      ],
+      also: ['$2.28–$3.42']
+    },
     confidence: 'medium'
   },
   {
