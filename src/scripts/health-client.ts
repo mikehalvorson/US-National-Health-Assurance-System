@@ -22,7 +22,11 @@ import { benchmarkChartRows, benchmarkText } from '../lib/benchmarks';
 import { renderDataTable, pathTableData, bridgeTableData, financingTableData } from '../lib/overview-tables';
 import type { TableData } from '../lib/overview-tables';
 import { growthDecompNote } from '../lib/growth-decomp';
-import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
+import {
+  CARE_SCENARIOS, careChipText, careEarlyText, carePhasingText, careRequirementText
+} from '../lib/care';
+import { buildRamps } from '../lib/model';
+import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams, scenarioStructural } from '../lib/scenarios';
 import type { Scenario } from '../lib/scenarios';
 import {
   MATURE_INDEX, PARAM_DEFS, PARAMS_BY_ID, DEFLATOR_2023_TO_2024 as DEF
@@ -153,6 +157,31 @@ function initHealth(): void {
       } else {
         householdRerender();
       }
+    }
+
+    renderCareYears();
+  }
+
+  /* R85 [§S8]: the care cards' years, re-derived for the selected scenario.
+     SCN-TRUST-COLLAPSE, SCN-STATE-RESIST and SCN-LEGAL each delay coverage by
+     a year and SCN-UNIT-UNDER delays cost-sharing elimination by two, so the
+     model showed a delay while the cards showed unchanged promises. The
+     sentences come from care.ts, the same functions health.astro renders at
+     build time, so a scenario change rewrites the text rather than a second
+     copy of the wording. */
+  function renderCareYears(): void {
+    const ramps = buildRamps(scenarioStructural(state.scenario)) as unknown as Record<string, number[]>;
+    for (const card of CARE_SCENARIOS) {
+      const put = (attr: string, text: string | null) => {
+        const el = document.querySelector('[data-care-' + attr + '="' + card.id + '"]');
+        if (!(el instanceof HTMLElement)) return;
+        el.hidden = text === null;
+        el.textContent = text === null ? '' : text;
+      };
+      put('chip', careChipText(card, ramps));
+      put('phasing', carePhasingText(card, ramps));
+      put('early', careEarlyText(card, ramps));
+      put('req', careRequirementText(card, ramps));
     }
   }
 

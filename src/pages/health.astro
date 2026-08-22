@@ -4,22 +4,24 @@ import ChapterNav from '../components/ChapterNav.astro';
 import { computeOverview } from '../lib/overview';
 import { OUTCOME_STATS, PARAM_DEFS, CALENDAR_ANCHOR_NOTE } from '../lib/params';
 import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
-import { CARE_SCENARIOS, moneyRange, careEarlyYear, careFromYear, careReliefYear } from '../lib/care';
-import { calendarYearOfPhase } from '../lib/rollout';
+import {
+  CARE_SCENARIOS, moneyRange,
+  careChipText, careEarlyText, carePhasingText, careRequirementText
+} from '../lib/care';
 import { selfTestSummary } from '../lib/selftests';
 
 const v = computeOverview('SCN-BASE', null);
 const gapsList = ' ' + PARAM_DEFS.filter((p) => p.confidence === 'low').map((p) => p.label).join(' · ');
 const selftests = selfTestSummary();
 /* R81 [§S8]: the card years are read off the ramps that deliver them, at build
-   time for the base scenario. health-client.ts re-derives them whenever a
-   stress scenario is selected, so the two agree by construction. */
-const careYears = CARE_SCENARIOS.map((s) => ({
-  fromYear: careFromYear(s),
-  reliefYear: careReliefYear(s),
-  earlyYear: careEarlyYear(s),
-  /* R170 [§S8]: the deadline the quoted requirement sets, from the phase map. */
-  deadline: s.nha.framework ? calendarYearOfPhase(s.nha.framework.byPhase) : null
+   time for the base scenario. R85: health-client.ts re-renders these same four
+   sentences from the same functions when a stress scenario shifts the ramps,
+   so the page and the client cannot phrase the fact differently. */
+const careLines = CARE_SCENARIOS.map((s) => ({
+  chip: careChipText(s),
+  phasing: carePhasingText(s),
+  early: careEarlyText(s),
+  requirement: careRequirementText(s)
 }));
 ---
 <BaseLayout title="National Health Assurance: Healthcare">
@@ -45,7 +47,9 @@ const careYears = CARE_SCENARIOS.map((s) => ({
         today's typical cost with employer insurance, without insurance, and
         under NHA. Each card's year is the year the ramp that delivers that
         benefit finishes delivering it, not the year the phase containing it
-        opens.</p>
+        opens. Pick a stress scenario further down the page and these years
+        move with the ramps it delays, so the cards and the model cannot say
+        different things about the same benefit.</p>
       <div class="care-grid" id="care-cards">
         {CARE_SCENARIOS.map((s, i) => (
           <div class="care-card">
@@ -66,17 +70,15 @@ const careYears = CARE_SCENARIOS.map((s) => ({
               <div class="care-nha-line">
                 <div class="care-nha-label">Under NHA</div>
                 <div class="care-nha-val">$0</div>
-                <div class="care-year-chip" data-care-chip={s.id} title={CALENDAR_ANCHOR_NOTE}>from ~{careYears[i].fromYear}</div>
+                <div class="care-year-chip" data-care-chip={s.id} title={CALENDAR_ANCHOR_NOTE}>{careLines[i].chip}</div>
               </div>
-              {careYears[i].reliefYear !== null && (
-                <div class="care-nha-phasing" data-care-phasing={s.id}>Phasing in from ~{careYears[i].reliefYear}; the figure above is what you pay once it completes.</div>
-              )}
-              {s.nha.early && careYears[i].earlyYear !== null && (
-                <div class="care-nha-phasing" data-care-early={s.id}>Sooner, and a different thing: {s.nha.early.what}, from ~{careYears[i].earlyYear}.</div>
+              <div class="care-nha-phasing" data-care-phasing={s.id} hidden={careLines[i].phasing === null}>{careLines[i].phasing}</div>
+              {careLines[i].early !== null && (
+                <div class="care-nha-phasing" data-care-early={s.id}>{careLines[i].early}</div>
               )}
               <div class="care-nha-note">{s.nha.note}</div>
-              {s.nha.framework && (
-                <div class="care-nha-req" data-care-req={s.id} title={s.nha.framework.quote}>Framework requirement {s.nha.framework.id} is due by ~{careYears[i].deadline}; this lands ~{careYears[i].fromYear}.</div>
+              {careLines[i].requirement !== null && (
+                <div class="care-nha-req" data-care-req={s.id} title={s.nha.framework!.quote}>{careLines[i].requirement}</div>
               )}
             </div>
             <div class="care-src">Source: {s.source} <span class={"conf " + s.confidence}>{s.confidence}</span></div>

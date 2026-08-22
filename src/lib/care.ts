@@ -10,6 +10,7 @@
    so a card and the model cannot say different things about the same benefit. */
 
 import { RAMPS, START_YEAR, householdDenominator } from './params';
+import { calendarYearOfPhase } from './rollout';
 
 export interface CareAmount { lo: number; hi: number; note: string }
 
@@ -311,6 +312,44 @@ export const CARE_SCENARIOS: CareScenario[] = [
     confidence: 'high'
   }
 ];
+
+/* ---- The four sentences a card prints about its year ---------------------
+ * R85 [§S8]: written once and used twice. health.astro renders them at build
+ * time under SCN-BASE; health-client.ts re-renders them from the same
+ * functions when a stress scenario shifts the ramps. A page and a client that
+ * each phrase the same fact are how two chapters end up disagreeing, so
+ * neither of them phrases it.
+ * ------------------------------------------------------------------------ */
+export function careChipText(card: CareScenario, ramps: RampSet = RAMPS): string {
+  return 'from ~' + careFromYear(card, ramps);
+}
+
+export function carePhasingText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
+  const y = careReliefYear(card, ramps);
+  return y === null ? null
+    : 'Phasing in from ~' + y + '; the figure above is what you pay once it completes.';
+}
+
+export function careEarlyText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
+  const y = careEarlyYear(card, ramps);
+  return y === null || !card.nha.early ? null
+    : 'Sooner, and a different thing: ' + card.nha.early.what + ', from ~' + y + '.';
+}
+
+export function careRequirementText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
+  const f = card.nha.framework;
+  if (!f) return null;
+  const due = calendarYearOfPhase(f.byPhase);
+  const lands = careFromYear(card, ramps);
+  const late = lands - due;
+  /* R85: a stress scenario can push the card past the requirement it quotes.
+     That is a real result and the point of running one, so the card says which
+     way it came out rather than leaving a reader to compare two years. */
+  const verdict = late > 0
+    ? 'this scenario misses it by ' + late + (late === 1 ? ' year' : ' years')
+    : late === 0 ? 'this lands exactly on it' : 'this lands ~' + lands + ', ahead of it';
+  return 'Framework requirement ' + f.id + ' is due by ~' + due + '; ' + verdict + '.';
+}
 
 /* ---- What holds the derivation up ---------------------------------------
  * Deriving the year from the ramp makes "the card agrees with the ramp"

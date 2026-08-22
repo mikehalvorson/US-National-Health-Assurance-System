@@ -39,8 +39,8 @@ import { DATA_PHASES, DATA_PHASE_YEARS_AS_GENERATED } from './data-phases';
 import { CALENDAR_ANCHOR_DENIAL, RAMPS, RAMP_MILESTONES, START_YEAR } from './params';
 import { CARE_SCENARIOS, careFromYear } from './care';
 import { phaseIndex, EQ_PHASES, modelValueAt, rampValueAt } from './equations';
-import { runPath, sampleParams } from './model';
-import { effectiveParams } from './scenarios';
+import { buildRamps, runPath, sampleParams } from './model';
+import { effectiveParams, SCENARIOS, scenarioStructural } from './scenarios';
 
 /* ---- 1. one map, and every copy agrees with it (V2, R293) -------------- */
 export interface PhaseMapDrift { phase: string; source: string; year: number; expected: number }
@@ -164,6 +164,87 @@ export interface CareGateBacking {
   ramp: string;
   atLeast: number;
   why: string;
+}
+
+/* R85 [§S8]: which scenarios move the care-card years, declared.
+ *
+ * §AG7 named two - SCN-TRUST-COLLAPSE and SCN-STATE-RESIST, both applying
+ * `coverageDelayYears: 1`. Measured across all twenty scenarios there are
+ * four: SCN-LEGAL applies the same coverage delay, and SCN-UNIT-UNDER applies
+ * `costShareDelayYears: 2`, which is the largest movement of the four and
+ * lands on the six cards a reader is most likely to be looking at.
+ *
+ * Declared as data and held in both directions, the way UNSTRESSED_DECLARED is
+ * held: a scenario that gains a delay fails the build until someone writes
+ * down which cards it moves, and a declaration for a scenario that no longer
+ * moves anything fails it too. `maxShift` is pinned as a number for the reason
+ * R143 pins the KPP-C8 breach count - a real move should be visible.
+ */
+export interface CareYearShift {
+  scenario: string;
+  cards: number;   /* how many of the ten move */
+  maxShift: number; /* the largest movement, in years */
+  why: string;
+}
+
+export const CARE_YEAR_SHIFTS_DECLARED: CareYearShift[] = [
+  {
+    scenario: 'SCN-TRUST-COLLAPSE', cards: 10, maxShift: 1,
+    why: 'coverageDelayYears 1 shifts coverage, cost-sharing elimination and expansions together'
+  },
+  {
+    scenario: 'SCN-STATE-RESIST', cards: 10, maxShift: 1,
+    why: 'coverageDelayYears 1, the same shift, from states declining to participate'
+  },
+  {
+    scenario: 'SCN-LEGAL', cards: 10, maxShift: 1,
+    why: 'coverageDelayYears 1 from litigation; §AG7 did not name this one and it moves the same ten'
+  },
+  {
+    scenario: 'SCN-UNIT-UNDER', cards: 9, maxShift: 2,
+    why: 'costShareDelayYears 2 delays only cost-sharing elimination, so the premium ' +
+      'card does not move and the other nine move by two years'
+  }
+];
+
+export interface CareShiftDrift { scenario: string; declared: string; measured: string }
+
+function measuredCareShifts(): Map<string, { cards: number; maxShift: number }> {
+  const base = CARE_SCENARIOS.map((c) => careFromYear(c, RAMPS));
+  const out = new Map<string, { cards: number; maxShift: number }>();
+  for (const sc of SCENARIOS) {
+    const ramps = buildRamps(scenarioStructural(sc.id)) as unknown as Record<string, number[]>;
+    let cards = 0;
+    let maxShift = 0;
+    CARE_SCENARIOS.forEach((c, i) => {
+      const shift = careFromYear(c, ramps) - base[i];
+      if (shift !== 0) cards += 1;
+      if (Math.abs(shift) > Math.abs(maxShift)) maxShift = shift;
+    });
+    if (cards) out.set(sc.id, { cards: cards, maxShift: maxShift });
+  }
+  return out;
+}
+
+export function careYearShiftDrift(): CareShiftDrift[] {
+  const measured = measuredCareShifts();
+  const declared = new Map(CARE_YEAR_SHIFTS_DECLARED.map((d) => [d.scenario, d]));
+  const out: CareShiftDrift[] = [];
+  const say = (v: { cards: number; maxShift: number } | undefined) =>
+    v ? v.cards + ' cards, max ' + v.maxShift + 'yr' : 'no movement';
+  for (const id of new Set([...measured.keys(), ...declared.keys()])) {
+    const m = measured.get(id);
+    const d = declared.get(id);
+    const same = m && d && m.cards === d.cards && m.maxShift === d.maxShift;
+    if (!same) {
+      out.push({
+        scenario: id,
+        declared: d ? d.cards + ' cards, max ' + d.maxShift + 'yr' : 'undeclared',
+        measured: say(m)
+      });
+    }
+  }
+  return out.sort((a, b) => a.scenario.localeCompare(b.scenario));
 }
 
 /* R170 [§S8]: the card against the framework, not against the model.

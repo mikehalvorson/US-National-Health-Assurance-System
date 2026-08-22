@@ -967,6 +967,32 @@ export function careSectionTypedYears(root = REPO_ROOT): string[] {
   return (section.match(/\b20\d\d\b/g) || []);
 }
 
+/* R85 [§S8]: the client has to actually re-derive the card years.
+ *
+ * `careYearShiftDrift` proves the MODEL moves the years under four scenarios.
+ * It says nothing about whether the page shows the move, and the defect §AG7
+ * filed is precisely a model that moves while the cards do not. Deleting one
+ * call from health-client.ts would restore that state with every self-test
+ * still green.
+ *
+ * Each of the four sentence builders is named separately, for the reason
+ * SCENARIO_PROVENANCE_READS gives and the reason the §S7 review found the hard
+ * way: a check that asks whether SOME care function is called passes with three
+ * of the four deleted. The call parenthesis is required, so an import that is
+ * no longer used does not satisfy it. */
+export const HEALTH_CLIENT = 'src/scripts/health-client.ts';
+
+export const CARE_SCENARIO_CALLS = [
+  'careChipText', 'carePhasingText', 'careEarlyText', 'careRequirementText',
+  'buildRamps', 'scenarioStructural'
+];
+
+export function careScenarioCallsMissing(root = REPO_ROOT): string[] {
+  const text = maskComments(readFileSync(join(root, HEALTH_CLIENT), 'utf8'));
+  return CARE_SCENARIO_CALLS.filter(
+    (name) => !new RegExp('\\b' + name + '\\s*\\(').test(text));
+}
+
 /* R170 [§S8]: a framework requirement a card quotes has to be in the framework.
  *
  * §AG2's complaint about the therapy card was that its cited source does not

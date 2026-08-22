@@ -61,7 +61,8 @@ import {
   ALLOWED_ASSERTIONS, bandNoteIsRendered, baselineSplitCopies,
   spreadNoteIsRendered,
   scenarioProvenanceNotRendered,
-  careRequirementsNotInFramework, careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_PAGE,
+  CARE_SCENARIO_CALLS, careRequirementsNotInFramework, careScenarioCallsMissing,
+  careSectionTypedYears, FRAMEWORK_EXTRACT, HEALTH_CLIENT, HEALTH_PAGE,
   DRUG_BASE_READS, drugBaseNotRendered, drugBaseNoteIsRendered,
   drugLeverNoteIsRendered, iraScoreSites, iraScoresWithoutCaveat,
   literalRetailTotals, MEDICATIONS_PAGE,
@@ -113,7 +114,8 @@ import {
   benefitStartDrift, calendarAnchorDenials, calendarConverterSplit, calendarYearOf,
   expansionSpanDisagreements,
   ltcBenefitStartYear, phaseMapDrift, phasesWithoutYear, phaseYearMismatches,
-  careGatesWithoutMilestone, careRequirementMisses, rampLegendDisagreements,
+  careGatesWithoutMilestone, careRequirementMisses, CARE_YEAR_SHIFTS_DECLARED,
+  careYearShiftDrift, rampLegendDisagreements,
   rampMilestoneMisses,
   rolloutHeadlineMisses, trainProgAtMaturity, unitBuildoutIssues
 } from './phase-map-check';
@@ -986,6 +988,24 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ' is due ' + m.deadline).join('; ') ||
             CARE_SCENARIOS.filter((c) => c.nha.framework)
               .map((c) => c.id + ' meets ' + c.nha.framework!.id).join(', ')
+        };
+      }),
+      /* R85 [§S8] */
+      runGuarded('The scenarios that move care-card years are the declared four', () => {
+        const drift = careYearShiftDrift();
+        return {
+          ok: !drift.length,
+          note: drift.map((d) => d.scenario + ': declared ' + d.declared +
+            ', measured ' + d.measured).join('; ') ||
+            CARE_YEAR_SHIFTS_DECLARED.map((d) => d.scenario + ' +' + d.maxShift + 'yr').join(', ')
+        };
+      }),
+      runGuarded('The Healthcare client re-derives every card year it renders', () => {
+        const missing = careScenarioCallsMissing();
+        return {
+          ok: !missing.length,
+          note: missing.length ? HEALTH_CLIENT + ' never calls ' + missing.join(', ')
+            : 'all ' + CARE_SCENARIO_CALLS.length + ' reads present in ' + HEALTH_CLIENT
         };
       }),
       runGuarded('No care card states a benefit year in its own prose', () => {
