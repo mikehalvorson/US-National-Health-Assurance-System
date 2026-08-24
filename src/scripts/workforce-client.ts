@@ -5,7 +5,7 @@
 import {
   SCENARIOS, LEGACY, CREATED, ACRONYMS,
   ROLLOUT_YEARS, TOTAL_US_EMPLOYMENT_2024, ANNUAL_TRAINING_TARGET,
-  LTC_WORKFORCE, ltcWageFloorCost,
+  LTC_WORKFORCE, ltcWageFloorCost, WORKER_SUPPORT_RATE_BASIS,
   type ScenarioId
 } from '../lib/workforce';
 
@@ -311,6 +311,10 @@ function initWorkforce(): void {
     });
   });
   setScenario('plan');
+  /* R177 [§S9a]: the placement floor's basis, from the module rather than
+     retyped into the page, so the rate and the sentence explaining it cannot
+     drift apart. */
+  setText('wf-support-basis', WORKER_SUPPORT_RATE_BASIS);
   renderLtcWorkforce();
   addAcronymHovers(document.querySelector('main'));
 }

@@ -77,6 +77,7 @@ import {
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
+  supportRateDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
   unreadEngineConstants, unreadStructuralKnobs,
@@ -103,7 +104,7 @@ import {
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
 } from './care';
-import { workforceSelfTests } from './workforce';
+import { WORKER_SUPPORT_RATE, workforceSelfTests } from './workforce';
 import { leaderBasisCounts, leaderBasisProblems } from './gov';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
@@ -2497,7 +2498,22 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
        rows because V19 and the audit both count them as twelve, and because a
        row that cannot name the scenario it broke on is not serviceable. */
     surface: 'workforce.ts',
-    rows: () => runGuardedList('workforce ledger invariants', workforceSelfTests)
+    rows: () => runGuardedList('workforce ledger invariants', workforceSelfTests).concat([
+      /* R177 [§S9a]: and the rate that fourth relation compares against is
+         itself held to the requirement that controls it, the arithmetic in
+         the methodology note, and the floor the chapter shows a reader.
+         Without this, declaring WORKER_SUPPORT_RATE would only move the
+         literal, not source it. */
+      runGuarded('The worker-support rate agrees with KPP-W1, the derivation and the page', () => {
+        const bad = supportRateDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.where + ' says ' + b.says + ', expected ' + b.expected)
+            .join(' | ') ||
+            (WORKER_SUPPORT_RATE * 100) + '% agreed in four places'
+        };
+      })
+    ])
   },
   {
     /* R271 + R267: the inventory and the route registry stop being guesses */

@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 import { CARE_SCENARIOS } from './care';
 import { catalogCode } from './params';
+import { SCENARIOS, WORKER_SUPPORT_RATE } from './workforce';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
 
@@ -1422,4 +1423,138 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
     if (v >= RETAIL_BAND_LOW && v <= RETAIL_BAND_HIGH) found.push(m[0]);
   }
   return found;
+}
+
+/* R177 [§S9a]: the worker-support rate is stated in four places that were
+ * written independently, and until now nothing joined any two of them.
+ *
+ *   1. `WORKER_SUPPORT_RATE` in workforce.ts            (the declaration)
+ *   2. KPP-W1 in research/framework_v2_extract.md       (what controls it)
+ *   3. the derivation in the methodology note           (the arithmetic)
+ *   4. "controlled 75% worker-protection floor" on the  (what a reader sees)
+ *      Workforce chapter
+ *
+ * Every pair can disagree, which is what makes this an invariant rather than
+ * a restatement: the framework extract is a transcription of the source
+ * document, the methodology note is prose maintained by hand, and the page's
+ * label is a static <small>. Raising the rate in one place and not the others
+ * is the failure this catches, and it is the specific failure the audit found
+ * when it noticed the rate existed only as three literals.
+ *
+ * The methodology row is the strongest of the three, because it carries the
+ * base and the product as well as the rate: `760,000 x 75% = 570,000` cannot
+ * survive an edit to plan `eliminated` or plan `supported` either. */
+const SUPPORT_RATE_FRAMEWORK = 'research/framework_v2_extract.md';
+const SUPPORT_RATE_METHODOLOGY = 'research/workforce_transition_methodology.md';
+const SUPPORT_RATE_PAGE = 'src/pages/workforce.astro';
+const SUPPORT_RATE_CLIENT = 'src/scripts/workforce-client.ts';
+const SUPPORT_BASIS_ELEMENT = 'wf-support-basis';
+
+export interface SupportRateDisagreement {
+  where: string;
+  says: string;
+  expected: string;
+}
+
+export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
+  const out: SupportRateDisagreement[] = [];
+  const declaredPct = WORKER_SUPPORT_RATE * 100;
+  const plan = SCENARIOS.plan;
+
+  /* 2. KPP-W1's controlled floor, from the framework transcription. Anchored
+        on the metric ID: the extract carries several unrelated >=75% targets
+        (TPP-3.6, PR-SCH-010) and matching a bare percentage would pass on any
+        of them. Absence is drift -- a row that stops stating a threshold is
+        how a check quietly turns itself off. */
+  const framework = readFileSync(join(root, SUPPORT_RATE_FRAMEWORK), 'utf8');
+  const kppRows = framework.split('\n').filter(
+    (l) => l.includes('KPP-W1') && />=\s*\d+(\.\d+)?%/.test(l));
+  if (!kppRows.length) {
+    out.push({
+      where: SUPPORT_RATE_FRAMEWORK,
+      says: 'no KPP-W1 row states a threshold',
+      expected: '>=' + declaredPct + '%'
+    });
+  }
+  for (const row of kppRows) {
+    for (const m of row.matchAll(/>=\s*(\d+(?:\.\d+)?)%/g)) {
+      if (Number(m[1]) !== declaredPct) {
+        out.push({
+          where: SUPPORT_RATE_FRAMEWORK + ' KPP-W1',
+          says: '>=' + m[1] + '%',
+          expected: '>=' + declaredPct + '%'
+        });
+      }
+    }
+  }
+
+  /* 3. the derivation, base and product included */
+  const methodology = readFileSync(join(root, SUPPORT_RATE_METHODOLOGY), 'utf8');
+  const derivation = methodology.match(
+    /([\d,]+)\s*x\s*(\d+(?:\.\d+)?)%\s*=\s*([\d,]+)/);
+  if (!derivation) {
+    out.push({
+      where: SUPPORT_RATE_METHODOLOGY,
+      says: 'no placement-floor derivation',
+      expected: plan.eliminated * 1000 + ' x ' + declaredPct + '% = ' +
+        plan.supported * 1000
+    });
+  } else {
+    const base = Number(derivation[1].split(',').join(''));
+    const pct = Number(derivation[2]);
+    const product = Number(derivation[3].split(',').join(''));
+    if (base !== plan.eliminated * 1000 || pct !== declaredPct ||
+      product !== plan.supported * 1000) {
+      out.push({
+        where: SUPPORT_RATE_METHODOLOGY,
+        says: derivation[0],
+        expected: plan.eliminated * 1000 + ' x ' + declaredPct + '% = ' +
+          plan.supported * 1000
+      });
+    }
+  }
+
+  /* 4. what the chapter tells a reader. Comments and imports are stripped, so
+        a provenance note explaining the rate is not mistaken for the label. */
+  const page = renderedSource(SUPPORT_RATE_PAGE, root);
+  const labels = Array.from(page.matchAll(/(\d+(?:\.\d+)?)%\s+(?:worker-protection\s+)?floor/g));
+  if (!labels.length) {
+    out.push({
+      where: SUPPORT_RATE_PAGE,
+      says: 'the chapter states no support floor',
+      expected: declaredPct + '% floor'
+    });
+  }
+  for (const m of labels) {
+    if (Number(m[1]) !== declaredPct) {
+      out.push({
+        where: SUPPORT_RATE_PAGE,
+        says: m[0],
+        expected: declaredPct + '% floor'
+      });
+    }
+  }
+
+  /* 5. and the basis has to reach the reader, not merely exist. The §S7
+        review's defect, written again in §S8: a read-list scan is satisfied
+        by the import line. renderedSource strips imports for exactly this
+        reason, so deleting the setText call while leaving the import fails
+        here. The page must also still carry the element it writes into. */
+  const client = renderedSource(SUPPORT_RATE_CLIENT, root);
+  if (!/\bWORKER_SUPPORT_RATE_BASIS(?![A-Za-z0-9_])/.test(client)) {
+    out.push({
+      where: SUPPORT_RATE_CLIENT,
+      says: 'imports the basis without rendering it',
+      expected: 'WORKER_SUPPORT_RATE_BASIS written to the page'
+    });
+  }
+  if (!page.includes(SUPPORT_BASIS_ELEMENT)) {
+    out.push({
+      where: SUPPORT_RATE_PAGE,
+      says: 'no ' + SUPPORT_BASIS_ELEMENT + ' element',
+      expected: 'a rendered element for the placement floor basis'
+    });
+  }
+
+  return out;
 }

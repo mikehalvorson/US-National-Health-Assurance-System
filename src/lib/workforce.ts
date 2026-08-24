@@ -226,10 +226,48 @@ export interface WorkforceInvariantRow {
 
 export const SCENARIO_IDS: readonly ScenarioId[] = ['low', 'plan', 'high'];
 
-/* The share of eliminated positions that must reach placement or approved
-   training. Three literals in SCENARIOS today; R177 turns it into a named,
-   sourced rate. Until then this is the same bare 0.75 the old test carried. */
-const SUPPORT_RATE = 0.75;
+/* R177 [§S9a]: the share of eliminated positions that must reach paid
+   placement or approved training.
+
+   It was three literals -- 420 / 570 / 750 -- that happen to be exactly
+   0.75 x eliminated in all three scenarios, with nothing in this module
+   saying so. Three in four displaced workers receiving transition support is
+   the load-bearing assumption behind the whole transition-cost story, and a
+   reader of SCENARIOS could not see it.
+
+   It is not an invented planning rate. The framework controls it, and the
+   requirement is stricter than a target: PR-WF-007 is a shall.
+
+   `supported` stays authored per scenario rather than being computed from
+   this rate. That is deliberate. A derived `supported` would turn
+   `supported = eliminated x rate` into a comparison between a value and its
+   own derivation -- true by construction, incapable of failing, and the exact
+   defect three previous sections each shipped an instance of. Authored on
+   both sides, the assertion still catches an edit to any `eliminated`, any
+   `supported`, or the rate itself.
+
+   The controlling requirement is KPP-W1, the displaced-worker
+   placement/training rate, at or above 75% of eligible displaced workers.
+   PR-WF-007 turns it into an obligation: the project shall place or enroll at
+   least 75% of eligible displaced administrative workers into approved
+   employment or training pathways by Phase 8. It answers need SN-10 and is
+   owned by ARCH-AHWCS. Framework v2.0.0 sections 6.6 and 6.9 and Appendix M.
+
+   The identifiers stay here rather than in WORKER_SUPPORT_RATE_BASIS, because
+   that string is rendered to a reader and the site's prose rule keeps catalog
+   codes out of reader-facing text. supportRateDrift() reads KPP-W1 out of the
+   framework transcription, so the tie to the requirement is checked, not just
+   asserted in a comment. */
+export const WORKER_SUPPORT_RATE = 0.75;
+
+/* Rendered on the Workforce chapter under the placement tile. A rate with no
+   visible basis is the defect this row was filed for; a basis that exists
+   only in the module is the same defect one layer down. */
+export const WORKER_SUPPORT_RATE_BASIS =
+  'This floor is controlled, not assumed: the framework requires at least ' +
+  'three in four eligible displaced workers to be placed or enrolled in ' +
+  'approved training by Phase 8. Placement means paid work or approved ' +
+  'training with a verified start, not a referral or an application.';
 
 interface CrossRelation {
   label: string;
@@ -266,9 +304,9 @@ const CROSS_RELATIONS: CrossRelation[] = [
     declared: (s) => SCENARIOS[s].inside
   },
   {
-    label: 'supported = eliminated x support rate',
+    label: 'supported = eliminated x WORKER_SUPPORT_RATE',
     measured: (s) => SCENARIOS[s].supported,
-    declared: (s) => SCENARIOS[s].eliminated * SUPPORT_RATE
+    declared: (s) => SCENARIOS[s].eliminated * WORKER_SUPPORT_RATE
   }
 ];
 

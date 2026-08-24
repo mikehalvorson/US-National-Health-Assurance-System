@@ -104,10 +104,15 @@ import ChapterNav from '../components/ChapterNav.astro';
       </article>
       <article>
         <span>Placement or training target</span>
-        <strong id="wf-supported">570,000</strong>
+        <strong id="wf-supported" aria-describedby="wf-support-basis">570,000</strong>
         <small>controlled 75% worker-protection floor</small>
       </article>
     </div>
+    <!-- R177 [§S9a]: the 75% was three literals in SCENARIOS and a bare
+      percentage in this label. It is a declared rate now, and this is where a
+      reader can see what controls it. Rendered text, not a title attribute:
+      a tooltip is invisible on a touch device and in print. -->
+    <p class="note" id="wf-support-basis"></p>
     <div class="workforce-ledger-grid" aria-label="Three labor effects that must not be combined">
       <article>
         <span>1 &middot; Position contraction</span>
