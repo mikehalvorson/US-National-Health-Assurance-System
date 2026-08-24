@@ -77,6 +77,7 @@ import {
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
+  anchoredOccupationCodes, solvedResearchBlockers,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -2507,6 +2508,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          the methodology note, and the floor the chapter shows a reader.
          Without this, declaring WORKER_SUPPORT_RATE would only move the
          literal, not source it. */
+      /* R29 [§S9a]: research/05 said the BLS occupation counts "could not be
+         retrieved" and carried an action item for the next agent, while the
+         counts sat in the workforce methodology note. A stale blocker costs
+         whoever reads it next a re-chase of a solved problem. */
+      runGuarded('No research file reports a blocker for data the repo already holds', () => {
+        const stale = solvedResearchBlockers();
+        return {
+          ok: !stale.length,
+          note: stale.map((s) => s.file + ' says "' + s.marker + '" for SOC ' +
+            s.code + ', which the anchor table gives as ' +
+            s.count.toLocaleString('en-US')).join(' | ') ||
+            anchoredOccupationCodes().size + ' anchored occupation codes, no open blocker'
+        };
+      }),
       /* R64 [§S9a]: every ledger figure the chapter types -- the no-script
          fallbacks, the risk rows, the immigration tiles and the derived-
          quantities card -- against the one derivation. Type E moves all of

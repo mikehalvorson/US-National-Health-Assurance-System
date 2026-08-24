@@ -1432,6 +1432,76 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
   return found;
 }
 
+/* R29 [§S9a]: a research file must not carry a "we could not get this" note
+ * for data the repository already holds.
+ *
+ * research/05 recorded that BLS returned HTTP 403 and that the counts for
+ * occupation codes 43-9041 and 43-3021 "could not be retrieved". A later pass
+ * retrieved them and wrote them into the workforce methodology note's anchor
+ * table, and research/05 was never updated -- so the file kept sending the
+ * next reader to re-chase a solved problem, with an action item addressed to
+ * them by name.
+ *
+ * The check reads both sides: the anchor table for which SOC codes the
+ * repository actually has a count for, and every research file for blocker
+ * language naming one of them. A code whose count is present and whose
+ * blocker is still advertised is the defect.
+ *
+ * It fails in both directions, which is what keeps it honest. Deleting the
+ * anchor row clears the report by removing the data, and that is a real
+ * change of state rather than a loophole: if the count goes, the blocker note
+ * is true again. The anchors are separately joined to the chapter, so the
+ * count cannot disappear silently. */
+const RESEARCH_DIR = 'research';
+const BLOCKER_MARKERS = [
+  'could not retrieve',
+  'could not be retrieved',
+  'blocked automated fetch',
+  'http 403',
+  'returned 403'
+];
+const SOC_CODE = /\b\d{2}-\d{4}\b/g;
+
+/* SOC codes the anchor table gives a count for, read from the table. */
+export function anchoredOccupationCodes(root = REPO_ROOT): Map<string, number> {
+  const out = new Map<string, number>();
+  const note = readFileSync(join(root, UNIT_METHODOLOGY), 'utf8');
+  for (const m of note.matchAll(
+    /\|[^|]*SOC (\d{2}-\d{4})\s*\|\s*([\d,]+)\s*\|/g)) {
+    out.set(m[1], Number(m[2].split(',').join('')));
+  }
+  return out;
+}
+
+export interface SolvedBlocker {
+  file: string;
+  code: string;
+  count: number;
+  marker: string;
+}
+
+export function solvedResearchBlockers(root = REPO_ROOT): SolvedBlocker[] {
+  const anchored = anchoredOccupationCodes(root);
+  const out: SolvedBlocker[] = [];
+  if (!anchored.size) return out;
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith(RESEARCH_DIR + '/') || !rel.endsWith('.md')) continue;
+    if (rel.endsWith('/' + UNIT_METHODOLOGY.split('/')[1])) continue;
+    for (const line of readFileSync(join(root, rel), 'utf8').split('\n')) {
+      const lower = line.toLowerCase();
+      const marker = BLOCKER_MARKERS.filter((b) => lower.indexOf(b) >= 0)[0];
+      if (!marker) continue;
+      SOC_CODE.lastIndex = 0;
+      for (const code of line.match(SOC_CODE) || []) {
+        if (anchored.has(code)) {
+          out.push({ file: rel, code: code, count: anchored.get(code)!, marker: marker });
+        }
+      }
+    }
+  }
+  return out;
+}
+
 /* R64 [§S9a]: every ledger figure typed into the Workforce chapter, held to
  * the module that derives it.
  *
@@ -1605,6 +1675,19 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
       expected: TOTAL_US_EMPLOYMENT_2024.toLocaleString('en-US')
     });
   }
+  /* R29 [§S9a]: the occupation anchors the chapter states, against the table
+     that holds them. This is what makes "the data is present elsewhere in the
+     repo" a checked claim rather than an assertion in a commit message. */
+  for (const [code, count] of anchoredOccupationCodes(root)) {
+    if (raw.indexOf(count.toLocaleString('en-US')) < 0) {
+      out.push({
+        where: 'the BLS anchor note, SOC ' + code,
+        says: 'the chapter no longer states this anchor',
+        expected: count.toLocaleString('en-US')
+      });
+    }
+  }
+
   const shareLabel = raw.match(/<small>([\d.]+) million jobs nationally/);
   const millions = (TOTAL_US_EMPLOYMENT_2024 / 1e6).toFixed(2);
   if (!shareLabel) {
