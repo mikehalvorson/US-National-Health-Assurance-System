@@ -1756,6 +1756,30 @@ export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
     }
   }
 
+  /* R66 + R178 [§S9a]: the one part of the non-monotone `fills` that IS
+     documented. The methodology note fixes the planning case's unit fills as
+     the navigation and operations share of a unit team -- "30,000 navigation
+     and operations positions are treated as internal matches" -- so that
+     figure has a published counterpart and can be joined. The lower-exposure
+     case does not, and the declared exception says so rather than this check
+     pretending otherwise. */
+  const navigation = note.match(
+    /([\d,]+) navigation and operations positions are treated as internal matches/);
+  const unitFills = createdGroupTotals(['units'], 'plan').fills * 1000;
+  if (!navigation) {
+    out.push({
+      where: UNIT_METHODOLOGY,
+      says: 'no published basis for the unit-team internal matches',
+      expected: unitFills.toLocaleString('en-US') + ' navigation and operations positions'
+    });
+  } else if (Number(navigation[1].split(',').join('')) !== unitFills) {
+    out.push({
+      where: UNIT_METHODOLOGY + ' unit-team internal matches',
+      says: navigation[1],
+      expected: unitFills.toLocaleString('en-US')
+    });
+  }
+
   /* The published derivation is checked at the precision it publishes, in two
      independent parts, because it is not one equation:
 

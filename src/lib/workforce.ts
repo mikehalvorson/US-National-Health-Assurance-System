@@ -36,6 +36,17 @@ export interface CreatedItem {
   derivation: string;
   roles: string;
   confidence: string;
+  /* R66 + R178 [§S9a]: set only where `fills` is NOT monotone across
+     low -> plan -> high. Six of the seven items are monotone and carry
+     nothing. The one that is not has to say which pair inverts and why, and
+     the check refuses both a missing exception and a stale one. */
+  fillsException?: FillsException;
+}
+
+export interface FillsException {
+  /* the adjacent pair that inverts, e.g. ['low', 'plan'] */
+  between: [ScenarioId, ScenarioId];
+  reason: string;
 }
 
 export const ROLLOUT_YEARS = 12;
@@ -134,7 +145,19 @@ export const CREATED: CreatedItem[] = [
     fills: { low: 40, plan: 30, high: 45 },
     derivation: "Planning case: the 15,000-unit specification multiplied by the existing unit model's 9.2-FTE mix-weighted average, rounded. The high case moves toward the need-based 24,099-unit allocation but assumes substantial conversion of existing sites.",
     roles: "Nurses, NPs/PAs, physicians, technicians, imaging/lab staff, behavioral-health staff, community health workers, navigators, and unit operations.",
-    confidence: "Medium-Low"
+    confidence: "Medium-Low",
+    fillsException: {
+      between: ['low', 'plan'],
+      reason: "The lower-exposure case assigns 40,000 unit-team positions to " +
+        "displaced administrative workers and the planning case assigns 30,000, " +
+        "from a larger displaced pool. Only the planning figure is derived: the " +
+        "methodology note fixes it as the navigation and operations share of a " +
+        "unit team, the part of the team that does not require a clinical " +
+        "credential. The lower-exposure figure is a planning judgement and no " +
+        "source in this repository records how it was reached. It is left as " +
+        "authored rather than adjusted to restore the pattern, because moving " +
+        "it would be fitting the data to the shape of the other six items."
+    }
   },
   {
     id: "public",
@@ -582,6 +605,51 @@ export function workforceSelfTests(): WorkforceInvariantRow[] {
           : 'measured ' + measured + 'k, declared ' + declared + 'k'
       });
     }
+  }
+
+  /* R66 + R178 [§S9a], one defect filed twice: `fills` is monotone across the
+     three scenarios for six of the seven CREATED items and inverts for
+     `units`, 40 -> 30 -> 45. It is internally consistent and it reads as an
+     error. The exception has to be declared, and a declared exception that is
+     no longer an exception has to be removed -- otherwise the next edit that
+     restores monotonicity leaves a paragraph on the page explaining an
+     anomaly that is not there. */
+  for (const item of CREATED) {
+    const inversions: string[] = [];
+    for (let i = 1; i < SCENARIO_IDS.length; i++) {
+      const from = SCENARIO_IDS[i - 1];
+      const to = SCENARIO_IDS[i];
+      if (item.fills[to] < item.fills[from]) inversions.push(from + '->' + to);
+    }
+    const declared = item.fillsException;
+    let ok: boolean;
+    let note: string;
+    if (!inversions.length) {
+      ok = !declared;
+      note = declared
+        ? 'declares an exception between ' + declared.between.join(' and ') +
+          ' but fills is monotone: ' +
+          SCENARIO_IDS.map((s) => item.fills[s]).join(' -> ')
+        : SCENARIO_IDS.map((s) => item.fills[s]).join(' -> ') + ', monotone';
+    } else if (!declared) {
+      ok = false;
+      note = 'fills inverts at ' + inversions.join(', ') + ' (' +
+        SCENARIO_IDS.map((s) => item.fills[s]).join(' -> ') +
+        ') with no declared exception';
+    } else {
+      const pair = declared.between.join('->');
+      ok = inversions.indexOf(pair) >= 0 && declared.reason.length > 120;
+      note = ok
+        ? 'inverts at ' + pair + ' (' +
+          SCENARIO_IDS.map((s) => item.fills[s]).join(' -> ') + '), declared'
+        : 'declares ' + pair + ' but inverts at ' + inversions.join(', ');
+    }
+    rows.push({
+      name: 'Workforce ledger: CREATED.' + item.id +
+        ' fills are monotone or declare the exception',
+      ok: ok,
+      note: note
+    });
   }
 
   /* R179 [§S9a]: the headline unit-workforce number against the model it says
