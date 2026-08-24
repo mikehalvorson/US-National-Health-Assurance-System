@@ -771,8 +771,27 @@ export const RAMPS = {
    rule forbids. Checked by value rather than by scanning the file, for the
    reason careProseCatalogCodes is: this module legitimately names CP ids in
    comments and in research-file pointers that nothing renders. */
+/* Review [§S8]: the one owner of the catalog-code shape.
+ *
+ * It was written out three times - here, in care.ts and in manifest-check.ts -
+ * by the three commits that each needed it. That is the duplication
+ * `PARAMETER_EXPLORER = HEALTH_PAGE` was collapsed to avoid, reintroduced one
+ * field over: a second literal is how two checks end up scanning for different
+ * things after an edit. `params.ts` owns it because it is the module the other
+ * two already depend on.
+ *
+ * KPP/TPP/CP metric ids, SR/PR requirement ids, OI open issues, SN source notes,
+ * GAP markers. Returned fresh rather than shared, so no caller inherits another
+ * caller's `lastIndex`. */
+export const CATALOG_CODE_SOURCE =
+  String.raw`\b(?:KPP|TPP|CP|SR|PR|OI|SN|GAP)-[A-Z0-9][A-Z0-9.\-]*`;
+
+export function catalogCode(flags?: string): RegExp {
+  return new RegExp(CATALOG_CODE_SOURCE, flags);
+}
+
 export function paramProseCatalogCodes(): string[] {
-  const code = /\b(?:KPP|TPP|CP|SR|PR|OI|SN|GAP)-[A-Z0-9][A-Z0-9.\-]*/;
+  const code = catalogCode();
   const out: string[] = [];
   for (const p of PARAM_DEFS) {
     const rendered: Array<{ where: string; text: string }> = [

@@ -9,7 +9,7 @@
    conditions its promise actually depends on and the year is read off them,
    so a card and the model cannot say different things about the same benefit. */
 
-import { RAMPS, START_YEAR, householdDenominator } from './params';
+import { catalogCode, RAMPS, START_YEAR, householdDenominator } from './params';
 import { calendarYearOfPhase } from './rollout';
 
 export interface CareAmount { lo: number; hi: number; note: string }
@@ -431,7 +431,7 @@ export function carePhasingText(card: CareScenario, ramps: RampSet = RAMPS): str
 export function careEarlyText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
   const y = careEarlyYear(card, ramps);
   return y === null || !card.nha.early ? null
-    : 'Sooner, and a different thing: ' + card.nha.early.what + ', from ~' + y + '.';
+    : 'Arriving sooner: ' + card.nha.early.what + ', from ~' + y + '.';
 }
 
 export function careRequirementText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
@@ -505,13 +505,27 @@ export function shallowCareGateReasons(): string[] {
   return out;
 }
 
-/* The phase-in year the page prints beside each chip, checked against the ramp
-   rather than against the function that produced it: in the year it names, at
-   least one of the card's ramps has to be moving, and in the year before it,
-   none of them may be. The first draft of `careReliefYear` reported the
-   enactment year for all ten cards - true of nothing, and invisible until the
-   page was read - because it borrowed a tolerance meant for a different
-   question. */
+/* The phase-in year the page prints beside each chip: in the year it names at
+   least one of the card's ramps has to be moving, and in every year before it
+   none of them may be.
+ *
+ * ⚠️ Review [§S8]: be exact about what this can and cannot catch, because the
+ * first version of this comment claimed more. Two of the three things
+ * `careReliefYear` does are checkable here and one is not:
+ *
+ *   - `firstNonZeroIndex`'s contract IS checked. Breaking its comparison so it
+ *     returns an index whose value is zero fails this, which is the defect that
+ *     shipped for one build and printed the enactment year on all ten cards.
+ *   - The SELECTION across gates IS checked, for the four cards that carry two.
+ *     Taking the latest gate instead of the earliest leaves the other gate's
+ *     ramp already moving before the printed year, and this fires on all four.
+ *     Verified by mutation, not by argument.
+ *   - For the six single-gate cards it is a tautology: one gate, so the minimum
+ *     is that gate's own first non-zero index and both sides are the same
+ *     arithmetic. Nothing here can fail for those six and nothing pretends to.
+ *
+ * The prefix is scanned in full rather than only the year before, so a ramp
+ * with an early non-zero blip followed by zeroes cannot slip through. */
 export function reliefYearProblems(ramps: RampSet = RAMPS): string[] {
   const out: string[] = [];
   for (const c of CARE_SCENARIOS) {
@@ -519,9 +533,14 @@ export function reliefYearProblems(ramps: RampSet = RAMPS): string[] {
     if (y === null) continue;
     const i = y - START_YEAR;
     const moving = c.nha.gates.some((g) => (ramps[g.ramp][i] || 0) > 0);
-    const movedBefore = i > 0 && c.nha.gates.some((g) => (ramps[g.ramp][i - 1] || 0) > 0);
     if (!moving) out.push(c.id + ': nothing is moving in ' + y);
-    if (movedBefore) out.push(c.id + ': something was already moving in ' + (y - 1));
+    for (let j = 0; j < i; j++) {
+      const early = c.nha.gates.filter((g) => (ramps[g.ramp][j] || 0) > 0);
+      if (early.length) {
+        out.push(c.id + ': ' + early[0].ramp + ' was already moving in ' + (START_YEAR + j));
+        break;
+      }
+    }
   }
   return out;
 }
@@ -640,7 +659,7 @@ export function undeclaredIdenticalColumns(): string[] {
    quotes it verbatim so the extract check has something to match against, and
    neither string is rendered - which is exactly why a line scan is the wrong
    instrument here and the field values are the right one. */
-export const CATALOG_CODE = /\b(?:KPP|TPP|CP|SR|PR|OI|SN|GAP)-[A-Z0-9][A-Z0-9.\-]*/;
+const CATALOG_CODE = catalogCode();
 
 export function careProseCatalogCodes(): string[] {
   const out: string[] = [];

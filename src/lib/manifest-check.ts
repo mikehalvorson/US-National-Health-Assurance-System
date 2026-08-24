@@ -16,6 +16,7 @@ import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { CARE_SCENARIOS } from './care';
+import { catalogCode } from './params';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
 
@@ -999,10 +1000,34 @@ export const RESIDUAL_CAVEAT_SITES = [
    read about it. A mention is not a use. */
 const IMPORT_STATEMENT = /import\s[\s\S]*?from\s*['"][^'"]*['"];?/g;
 
+/* Review [§S8]: the mask-and-strip was written out three times, once per check
+   that needed it. Memoised as well, because three checks now read the same
+   handful of files on every build. */
+const renderedCache = new Map<string, string>();
+
+function renderedSource(rel: string, root: string): string {
+  const key = root + '|' + rel;
+  const hit = renderedCache.get(key);
+  if (hit !== undefined) return hit;
+  const text = maskComments(readFileSync(join(root, rel), 'utf8'))
+    .replace(IMPORT_STATEMENT, ' ');
+  renderedCache.set(key, text);
+  return text;
+}
+
+/* Review [§S8]: and a tooltip is not a rendered caveat.
+ *
+ * The §S8 spec review found the per-card carrier was a `title=` attribute:
+ * present in the markup, invisible on a touch device and in print, and read by
+ * this check as if it were text. So the identifier has to appear at least once
+ * OUTSIDE an attribute value on every site. `health.astro` carries it visibly
+ * under the card grid and associates each card's `$0` with that note through
+ * `aria-describedby`, which is a real association rather than a second copy. */
+const ATTRIBUTE_VALUE = /\b[a-zA-Z-]+\s*=\s*\{?[^\s>{}]*RESIDUAL_BILLING_CAVEAT[^\s>{}]*\}?/g;
+
 export function residualCaveatSitesMissing(root = REPO_ROOT): string[] {
   return RESIDUAL_CAVEAT_SITES.filter((rel) => {
-    const text = maskComments(readFileSync(join(root, rel), 'utf8'))
-      .replace(IMPORT_STATEMENT, ' ');
+    const text = renderedSource(rel, root).replace(ATTRIBUTE_VALUE, ' ');
     return !/\bRESIDUAL_BILLING_CAVEAT(?![A-Za-z0-9_])/.test(text);
   });
 }
@@ -1055,12 +1080,8 @@ export const NARRATIVE_SURFACES = [
    requirement ids, OI open issues, SN source notes. Matched only inside string
    literals would need a parser; the whole masked line is enough, because these
    modules have no other reason to write one. */
-export const CATALOG_CODE_SOURCE =
-  String.raw`\b(?:KPP|TPP|CP|SR|PR|OI|SN|GAP)-[A-Z0-9][A-Z0-9.\-]*`;
-
 export function narrativeCatalogCodes(root = REPO_ROOT): CodeReference[] {
-  return scanSourceLines(
-    new RegExp(CATALOG_CODE_SOURCE, 'g'), { only: NARRATIVE_SURFACES }, root);
+  return scanSourceLines(catalogCode('g'), { only: NARRATIVE_SURFACES }, root);
 }
 
 /* R85 [§S8]: the client has to actually re-derive the card years.
@@ -1107,16 +1128,9 @@ export const LEADER_BASIS_READS: Array<{ file: string; read: string }> = [
 ];
 
 export function leaderBasisNotRendered(root = REPO_ROOT): string[] {
-  const cache = new Map<string, string>();
-  return LEADER_BASIS_READS.filter((r) => {
-    let text = cache.get(r.file);
-    if (text === undefined) {
-      text = maskComments(readFileSync(join(root, r.file), 'utf8'))
-        .replace(IMPORT_STATEMENT, ' ');
-      cache.set(r.file, text);
-    }
-    return !new RegExp('\\b' + r.read + '(?![A-Za-z0-9_])').test(text);
-  }).map((r) => r.file + ' never uses ' + r.read);
+  return LEADER_BASIS_READS.filter((r) =>
+    !new RegExp('\\b' + r.read + '(?![A-Za-z0-9_])').test(renderedSource(r.file, root))
+  ).map((r) => r.file + ' never uses ' + r.read);
 }
 
 /* R172 [§S8]: the modules that publish a per-household figure must read a
@@ -1138,11 +1152,8 @@ export const HOUSEHOLD_DENOMINATOR_READERS = [
 ];
 
 export function householdDenominatorNotRead(root = REPO_ROOT): string[] {
-  return HOUSEHOLD_DENOMINATOR_READERS.filter((rel) => {
-    const text = maskComments(readFileSync(join(root, rel), 'utf8'))
-      .replace(IMPORT_STATEMENT, ' ');
-    return !/\bhouseholdDenominator\s*\(/.test(text);
-  });
+  return HOUSEHOLD_DENOMINATOR_READERS.filter(
+    (rel) => !/\bhouseholdDenominator\s*\(/.test(renderedSource(rel, root)));
 }
 
 /* R82/R83 [§S8]: a card's cited source has to contain the figures it is cited

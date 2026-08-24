@@ -53,7 +53,7 @@ export type LeaderBasis = 'existing' | 'design';
 
 export const LEADER_BASIS_LABELS: Record<LeaderBasis, string> = {
   existing: 'Office that exists today',
-  design: 'Staffing design, not plan text'
+  design: 'Proposed by this dashboard'
 };
 
 export const EXISTING_OFFICE_LEADERS: Array<{ code: string; why: string }> = [
@@ -67,13 +67,31 @@ export function leaderBasis(code: string): LeaderBasis {
   return EXISTING_OFFICE_LEADERS.some((e) => e.code === code) ? 'existing' : 'design';
 }
 
+/* Review [§S8]: reworded twice over. It told the reader the titles were "not
+   quoted from" the plan, which advertises a quotable source document that
+   golden rule 2 keeps off this chapter, and it leaned on "X is not the same as
+   Y" scaffolding that golden rule 4 names. Both are gone; the distinction it
+   exists to draw survives as a plain declarative. */
 export const LEADER_BASIS_NOTE =
   'Every leadership position below is labelled. Two of them are offices that ' +
-  'exist today, and the rest are this dashboard’s staffing proposal: they are ' +
-  'consistent with the plan’s executive-hardening provisions and they are not ' +
-  'quoted from it, so a reader can tell the institutional design from the ' +
-  'staffing around it. Replacing what an agency does is not the same as ' +
-  'inheriting who runs it.';
+  'exist today. The rest are this dashboard’s staffing proposal, consistent ' +
+  'with the plan’s executive-hardening provisions, so a reader can tell the ' +
+  'institutional design from the staffing around it. An entity that absorbs an ' +
+  'existing agency’s work still carries a proposed leader here.';
+
+/* R164 [§S8], and the §S8 spec review's point about it: the row's own binary is
+   "framework text or dashboard design", and the answer for all 84 is that none
+   is framework text. That measurement is the reason `framework` is not one of
+   the two values, so it is recorded here rather than left in a commit message,
+   and a check holds it. Raise this the day a title can be sourced.
+
+   ⚠️ Annotated `number` on purpose. Written as a bare `= 0` it takes the
+   literal type `0`, and `FRAMEWORK_SOURCED_TITLES !== 0` below becomes a
+   comparison TypeScript rejects as impossible: the check is then dead at
+   compile time, and the break that should have proven it died at `astro check`
+   instead of naming its own row. A count that a later edit is meant to raise
+   has to be typed as a count. */
+export const FRAMEWORK_SOURCED_TITLES: number = 0;
 
 /* ---- and what holds it up ---------------------------------------------- */
 
@@ -108,6 +126,12 @@ export function leaderBasisProblems(): string[] {
       if (labels.indexOf(leaderBasis(m.code)) < 0) out.push(m.code + ': no basis');
       if (!m.leader.trim()) out.push(m.code + ': renders a leadership line with no title');
     }
+  }
+  /* and the half of the row's binary that is answered by a measurement rather
+     than by a value: no title here is framework text. If one ever is, this
+     stops being a two-value field and the count has to move first. */
+  if (FRAMEWORK_SOURCED_TITLES !== 0) {
+    out.push('a title is now framework-sourced; the basis field needs a third value');
   }
   return out;
 }

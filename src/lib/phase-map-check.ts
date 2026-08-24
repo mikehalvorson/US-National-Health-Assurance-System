@@ -153,7 +153,14 @@ export function rampMilestoneMisses(): MilestoneMiss[] {
  * What can still differ: a card names a ramp and a share, and `RAMP_MILESTONES`
  * separately declares what each ramp claims to deliver and by which phase.
  * A card resting on a share no milestone claims is a promise with nothing
- * behind it. The two lists are maintained in different files by different rows.
+ * behind it.
+ *
+ * ⚠️ Review [§S8]: this used to say the two lists are "maintained in different
+ * files by different rows", and that overstates their independence today. R81
+ * added the `coverage@P7 0.99` milestone in the same commit as the premium
+ * card's gate, precisely because the gate had nothing behind it. They are
+ * separate from here on and they were not separate at birth; the check earns
+ * its keep from the next edit, not from this one.
  *
  * The second half is the direction that matters for §AG1: the card's derived
  * year must not fall AFTER the phase whose milestone backs it, because then

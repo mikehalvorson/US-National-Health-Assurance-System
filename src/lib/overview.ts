@@ -97,9 +97,11 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
     money(famNow) + " today to " + money(fam2041) + " by 2041, " +
     "from about $" + Math.round(famNow * 1e9 / (hhNow * 1e6)).toLocaleString("en-US") +
     " to $" + Math.round(fam2041 * 1e9 / (hh2041 * 1e6)).toLocaleString("en-US") +
-    " per household per year, with no new coverage to show for it. Under NHA " +
-    "in the same year, " + RESIDUAL_BILLING_CAVEAT.charAt(0).toLowerCase() +
-    RESIDUAL_BILLING_CAVEAT.slice(1) + " The plan caps ordinary households at " +
+    " per household per year, with no new coverage to show for it. " +
+    /* Review [§S8]: the caveat used to be spliced mid-sentence and
+       lower-cased at the call site. It is a sentence; it starts one. */
+    RESIDUAL_BILLING_CAVEAT +
+    " Under NHA in the same year the plan caps ordinary households at " +
     "5% of the new financing " +
     "(about $" + Math.round(kppPerHH).toLocaleString("en-US") + " per household); " +
     "the rest shifts to the tax side, weighted toward the top. Who pays what " +
