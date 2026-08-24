@@ -5,7 +5,7 @@
 import {
   SCENARIOS, LEGACY, CREATED, ACRONYMS,
   LTC_WORKFORCE, ltcWageFloorCost, WORKER_SUPPORT_RATE_BASIS,
-  workforceLedgerFigures, createdScopeStatement,
+  workforceLedgerFigures, createdScopeStatement, TOTAL_US_EMPLOYMENT_SERIES,
   type ScenarioId
 } from '../lib/workforce';
 
@@ -324,6 +324,9 @@ function initWorkforce(): void {
   /* R67 [§S9a]: what the floor leaves out, written from the declared
      exclusion list rather than typed beside the floor. */
   setText('wf-scope-exclusions', createdScopeStatement());
+  /* R69 [§S9a]: the denominator names its BLS series where a reader can
+     see it. OEWS is a different measure of the same year, ~9% smaller. */
+  setText('wf-labor-series', TOTAL_US_EMPLOYMENT_SERIES);
   renderLtcWorkforce();
   addAcronymHovers(document.querySelector('main'));
 }

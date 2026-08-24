@@ -19,7 +19,8 @@ import { CARE_SCENARIOS } from './care';
 import { catalogCode } from './params';
 import {
   ADMINISTRATIVE_MATCH_IDS, CLINICAL_ENTRANT_IDS, createdGroupTotals,
-  CREATED_SCOPE_EXCLUSIONS,
+  CREATED_SCOPE_EXCLUSIONS, OEWS_TOTAL_EMPLOYMENT_2024,
+  TOTAL_US_EMPLOYMENT_2024,
   DIRECT_PATIENT_CARE_PHYSICIANS, ANNUAL_TRAINING_TARGET,
   priorAuthReleasedFte, SCENARIOS, UNIT_MODEL, unitMixWeightedFte,
   WORKER_SUPPORT_RATE, workforceLedgerFigures
@@ -1453,6 +1454,7 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
  * sentence that happened to carry it. */
 const WORKFORCE_PAGE = 'src/pages/workforce.astro';
 const SCOPE_EXCLUSION_ELEMENT = 'wf-scope-exclusions';
+const EMPLOYMENT_SERIES_ELEMENT = 'wf-labor-series';
 
 type FigureFormat = 'thousands' | 'short' | 'percent0' | 'percent2' | 'ratio1' | 'plain';
 
@@ -1573,7 +1575,68 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     }
   }
 
-  /* 3. R67: the hand-written scope qualification, against the declared list.
+  /* 3. R69: the labour-share denominator declares its series, on the page and
+        against the anchor table, and cannot quietly become the OEWS total.
+
+        The three sides are the constant, the methodology note's anchor row,
+        and the `<small>` under the share tile. The fourth condition is the
+        trap itself: OEWS is a different measure of the same year, about 9%
+        smaller, and the moment someone updates "to the latest BLS release" it
+        is the wrong number sitting in the right place. */
+  if (TOTAL_US_EMPLOYMENT_2024 === OEWS_TOTAL_EMPLOYMENT_2024) {
+    out.push({
+      where: 'the labour-share denominator',
+      says: 'the OEWS occupational total',
+      expected: 'BLS industry employment, which includes the self-employed'
+    });
+  }
+  const anchorRow = readFileSync(join(root, UNIT_METHODOLOGY), 'utf8').match(
+    /\|\s*Total U\.S\. employment\s*\|\s*([\d,]+)\s*\|\s*(\d{4})\s*\|/);
+  if (!anchorRow) {
+    out.push({
+      where: UNIT_METHODOLOGY,
+      says: 'no total-employment anchor row',
+      expected: TOTAL_US_EMPLOYMENT_2024.toLocaleString('en-US')
+    });
+  } else if (Number(anchorRow[1].split(',').join('')) !== TOTAL_US_EMPLOYMENT_2024) {
+    out.push({
+      where: UNIT_METHODOLOGY + ' total-employment anchor',
+      says: anchorRow[1],
+      expected: TOTAL_US_EMPLOYMENT_2024.toLocaleString('en-US')
+    });
+  }
+  const shareLabel = raw.match(/<small>([\d.]+) million jobs nationally/);
+  const millions = (TOTAL_US_EMPLOYMENT_2024 / 1e6).toFixed(2);
+  if (!shareLabel) {
+    out.push({
+      where: 'the labour-share tile',
+      says: 'states no denominator',
+      expected: millions + ' million jobs nationally'
+    });
+  } else if (shareLabel[1] !== millions) {
+    out.push({
+      where: 'the labour-share tile',
+      says: shareLabel[1] + ' million',
+      expected: millions + ' million'
+    });
+  }
+  if (renderedSource(WORKFORCE_PAGE, root).indexOf(EMPLOYMENT_SERIES_ELEMENT) < 0) {
+    out.push({
+      where: EMPLOYMENT_SERIES_ELEMENT,
+      says: 'no such element',
+      expected: 'the denominator names its BLS series where a reader can see it'
+    });
+  }
+  if (!/\bTOTAL_US_EMPLOYMENT_SERIES(?![A-Za-z0-9_])/.test(
+    renderedSource('src/scripts/workforce-client.ts', root))) {
+    out.push({
+      where: 'src/scripts/workforce-client.ts',
+      says: 'imports the series label without rendering it',
+      expected: 'TOTAL_US_EMPLOYMENT_SERIES written to the page'
+    });
+  }
+
+  /* 4. R67: the hand-written scope qualification, against the declared list.
         Two sentences on this page name what the floor leaves out, and a third
         is generated from CREATED_SCOPE_EXCLUSIONS. The generated one cannot
         drift; the hand-written ones did, and will again the next time a

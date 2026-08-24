@@ -50,7 +50,34 @@ export interface FillsException {
 }
 
 export const ROLLOUT_YEARS = 12;
-export const TOTAL_US_EMPLOYMENT_2024 = 169956100;
+
+/* R69 [§S9a]: the labour-share denominator, and the trap that comes with it.
+ *
+ * This is BLS INDUSTRY employment: every job across all industries, from the
+ * employment-by-industry table. The OEWS total for the same year is
+ * 155,495,730, and it is NOT a newer vintage of this figure -- OEWS measures
+ * occupational employment and excludes the self-employed. Swapping one for
+ * the other moves the denominator about 9% for the wrong reason, and the
+ * obvious moment for someone to do it is a routine "update to the latest BLS
+ * release".
+ *
+ * So the series is declared beside the number and rendered on the chapter,
+ * and the incomparable measure is declared too, with a check that refuses to
+ * let this constant become it.
+ *
+ * The `: number` annotations are load-bearing. A bare integer literal takes
+ * that literal as its TYPE, so comparing two of them is a comparison
+ * TypeScript rejects as impossible and the guard would be dead at compile
+ * time -- which is how §S8 shipped a check that could never run. */
+export const TOTAL_US_EMPLOYMENT_2024: number = 169956100;
+
+export const TOTAL_US_EMPLOYMENT_SERIES =
+  'BLS employment by industry, all industries, 2024';
+
+/* Declared so it cannot be mistaken for an update. Not used as a denominator
+   anywhere and must not become one. */
+export const OEWS_TOTAL_EMPLOYMENT_2024: number = 155495730;
+
 export const ANNUAL_TRAINING_TARGET = 55000;
 export const DIRECT_PATIENT_CARE_PHYSICIANS = 866460;
 export const PRIOR_AUTH_HOURS_PER_WEEK = 13;
