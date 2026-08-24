@@ -77,7 +77,7 @@ import {
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
-  supportRateDrift, unitModelDrift,
+  supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
   unreadEngineConstants, unreadStructuralKnobs,
@@ -2507,6 +2507,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          the methodology note, and the floor the chapter shows a reader.
          Without this, declaring WORKER_SUPPORT_RATE would only move the
          literal, not source it. */
+      /* R64 [§S9a]: every ledger figure the chapter types -- the no-script
+         fallbacks, the risk rows, the immigration tiles and the derived-
+         quantities card -- against the one derivation. Type E moves all of
+         them at once, and this is what stops the tab inheriting the old
+         feasibility argument when it lands. */
+      runGuarded('Every figure the Workforce chapter states matches the ledger', () => {
+        const bad = workforceProseDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.where + ' says ' + b.says + ', expected ' + b.expected)
+            .join(' | ') ||
+            '22 no-script fallbacks and 15 stated claims agree with the plan case'
+        };
+      }),
       /* R179 [§S9a]: and the unit model behind CREATED.units is joined to the
          two places its inputs are maintained -- the staffing prose in
          units-client.ts and the published allocation. §S9b reworks both. */

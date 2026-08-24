@@ -192,6 +192,82 @@ export const CREATED: CreatedItem[] = [
   }
 ];
 
+/* ---- The figures the Workforce chapter publishes --------------------------
+   R64 [§S9a]. Every quantity on the tab was computed in renderFlow() inside
+   the client and typed a second time into the page as static HTML, and a
+   third time into the chapter's prose. Nine of those typed figures are
+   ledger arithmetic: the reconciliation grid, the flow columns, the labour
+   grid, the risk rows, and the immigration tiles.
+
+   R64's actual subject is that landing Type E moves all of them at once --
+   unit teams 138k, `created` 510k, entrants 150k, the annual pace 12,500 and
+   the training ratio 4.4x, which is the tab's central feasibility argument.
+   Type E is §S9b and Part 2, and this section does not land it. What this
+   section can do is make the inheritance impossible: one derivation, used by
+   the client, and a check that every figure typed into the page still agrees
+   with it. When Type E lands, the page fails the build instead of quietly
+   publishing the old argument.
+
+   Numbers, not formatted strings: formatting stays in the client, where the
+   Intl formatter lives. */
+export interface LedgerFigures {
+  eliminated: number;         // thousands
+  inside: number;
+  supported: number;
+  created: number;
+  entrants: number;
+  annualEntrants: number;     // positions per year, not thousands
+  externalPlacement: number;
+  unresolvedGap: number;
+  scopedDifference: number;
+  employmentSharePct: number;
+  transitionSharePct: number;
+  trainingRatio: number;
+}
+
+export function workforceLedgerFigures(s: ScenarioId): LedgerFigures {
+  const scenario = SCENARIOS[s];
+  const entrants = scenario.created - scenario.inside;
+  return {
+    eliminated: scenario.eliminated,
+    inside: scenario.inside,
+    supported: scenario.supported,
+    created: scenario.created,
+    entrants: entrants,
+    annualEntrants: Math.round(entrants * 1000 / ROLLOUT_YEARS),
+    externalPlacement: scenario.supported - scenario.inside,
+    unresolvedGap: scenario.eliminated - scenario.supported,
+    scopedDifference: scenario.eliminated - scenario.created,
+    employmentSharePct: entrants * 1000 / TOTAL_US_EMPLOYMENT_2024 * 100,
+    transitionSharePct: scenario.inside / scenario.created * 100,
+    trainingRatio: ANNUAL_TRAINING_TARGET /
+      Math.round(entrants * 1000 / ROLLOUT_YEARS)
+  };
+}
+
+/* Practice capacity tied up in prior authorization, in FTE. Stated on the tab
+   as "About 282,000 FTE-equivalent" and never added to the position count --
+   the page says so, and the ledger keeps it out. */
+export function priorAuthReleasedFte(): number {
+  return DIRECT_PATIENT_CARE_PHYSICIANS * PRIOR_AUTH_HOURS_PER_WEEK / 40;
+}
+
+/* The chapter's four risk rows read the CREATED table by group rather than by
+   total. Positions whose work is administrative and whose fills come from the
+   displaced pool are the "strong match" row; the two clinical groups are the
+   constrained and high-risk rows. */
+export const ADMINISTRATIVE_MATCH_IDS = ['public', 'data', 'medicines', 'assurance'];
+export const CLINICAL_ENTRANT_IDS = ['units', 'rural'];
+
+export function createdGroupTotals(
+  ids: string[], s: ScenarioId
+): { values: number; fills: number; entrants: number } {
+  const group = CREATED.filter((item) => ids.indexOf(item.id) >= 0);
+  const values = group.reduce((total, item) => total + item.values[s], 0);
+  const fills = group.reduce((total, item) => total + item.fills[s], 0);
+  return { values: values, fills: fills, entrants: values - fills };
+}
+
 /* ---- The unit model behind CREATED.units ---------------------------------
    R179 [§S9a]. `CREATED.units` plan = 138 and its derivation says where it
    comes from: "the 15,000-unit specification multiplied by the existing unit

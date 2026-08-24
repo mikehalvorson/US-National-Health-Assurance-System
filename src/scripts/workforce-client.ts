@@ -4,8 +4,8 @@
    via the legacy list's dataset.wired guard. */
 import {
   SCENARIOS, LEGACY, CREATED, ACRONYMS,
-  ROLLOUT_YEARS, TOTAL_US_EMPLOYMENT_2024, ANNUAL_TRAINING_TARGET,
   LTC_WORKFORCE, ltcWageFloorCost, WORKER_SUPPORT_RATE_BASIS,
+  workforceLedgerFigures,
   type ScenarioId
 } from '../lib/workforce';
 
@@ -68,16 +68,22 @@ function setBar(id: string, value: number, denominator: number): void {
   bar.style.width = Math.max(2, Math.min(100, value / denominator * 100)) + '%';
 }
 
+/* R64 [§S9a]: the ledger arithmetic used to live here and be typed a second
+   time into the page's static HTML and a third time into its prose. It is one
+   derivation now, in workforce.ts, and workforceProseDrift() holds the typed
+   copies to it. Landing Type E moves all of these at once; the build says so
+   rather than the page inheriting the old figures. */
 function renderFlow(): void {
   const scenario = SCENARIOS[activeScenario];
-  const external = scenario.supported - scenario.inside;
-  const gap = scenario.eliminated - scenario.supported;
-  const entrants = scenario.created - scenario.inside;
-  const annualEntrants = Math.round(entrants * 1000 / ROLLOUT_YEARS);
-  const scopedDifference = scenario.eliminated - scenario.created;
-  const employmentShare = entrants * 1000 / TOTAL_US_EMPLOYMENT_2024 * 100;
-  const transitionShare = scenario.inside / scenario.created * 100;
-  const trainingRatio = ANNUAL_TRAINING_TARGET / annualEntrants;
+  const f = workforceLedgerFigures(activeScenario);
+  const external = f.externalPlacement;
+  const gap = f.unresolvedGap;
+  const entrants = f.entrants;
+  const annualEntrants = f.annualEntrants;
+  const scopedDifference = f.scopedDifference;
+  const employmentShare = f.employmentSharePct;
+  const transitionShare = f.transitionSharePct;
+  const trainingRatio = f.trainingRatio;
 
   setText('wf-eliminated', fmtThousands(scenario.eliminated));
   setText('wf-inside', fmtThousands(scenario.inside));

@@ -18,7 +18,10 @@ import { fileURLToPath } from 'node:url';
 import { CARE_SCENARIOS } from './care';
 import { catalogCode } from './params';
 import {
-  SCENARIOS, UNIT_MODEL, unitMixWeightedFte, WORKER_SUPPORT_RATE
+  ADMINISTRATIVE_MATCH_IDS, CLINICAL_ENTRANT_IDS, createdGroupTotals,
+  DIRECT_PATIENT_CARE_PHYSICIANS, ANNUAL_TRAINING_TARGET,
+  priorAuthReleasedFte, SCENARIOS, UNIT_MODEL, unitMixWeightedFte,
+  WORKER_SUPPORT_RATE, workforceLedgerFigures
 } from './workforce';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
@@ -1425,6 +1428,172 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
     if (v >= RETAIL_BAND_LOW && v <= RETAIL_BAND_HIGH) found.push(m[0]);
   }
   return found;
+}
+
+/* R64 [§S9a]: every ledger figure typed into the Workforce chapter, held to
+ * the module that derives it.
+ *
+ * The chapter states its arithmetic three times: once as the static content
+ * of the elements the client overwrites (which is what a reader without
+ * JavaScript sees, and what a search engine indexes), once in the risk rows
+ * and the immigration tiles as prose, and once in the "what is derived" card.
+ * None of the three was checked against anything.
+ *
+ * R64's subject is that landing Type E moves all of them at once -- unit
+ * teams, `created`, entrants, the annual pace, and the training-slot ratio,
+ * which is the tab's central feasibility argument at 4.4x. Type E is §S9b's
+ * and Part 2's. This is what stops the argument being inherited: when the
+ * ledger moves and the prose does not, the build names the sentence.
+ *
+ * Two lists, because the failure modes differ. STATIC_FALLBACKS is mechanical
+ * -- an id, the figure it should show, and how the client formats it. The
+ * prose claims each need their own anchor, because a bare number in a
+ * sentence is not identifiable and matching one would pass on any other
+ * sentence that happened to carry it. */
+const WORKFORCE_PAGE = 'src/pages/workforce.astro';
+
+type FigureFormat = 'thousands' | 'short' | 'percent0' | 'percent2' | 'ratio1' | 'plain';
+
+function formatFigure(value: number, format: FigureFormat): string {
+  switch (format) {
+    case 'thousands': return (value * 1000).toLocaleString('en-US');
+    case 'short': return value.toLocaleString('en-US') + 'k';
+    case 'percent0': return Math.round(value) + '%';
+    case 'percent2': return value.toFixed(2) + '%';
+    case 'ratio1': return value.toFixed(1);
+    default: return value.toLocaleString('en-US');
+  }
+}
+
+export interface WorkforceProseDisagreement {
+  where: string;
+  says: string;
+  expected: string;
+}
+
+export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreement[] {
+  const out: WorkforceProseDisagreement[] = [];
+  const f = workforceLedgerFigures('plan');
+  const admin = createdGroupTotals(ADMINISTRATIVE_MATCH_IDS, 'plan');
+  const clinical = createdGroupTotals(CLINICAL_ENTRANT_IDS, 'plan');
+  const units = createdGroupTotals(['units'], 'plan');
+  const rural = createdGroupTotals(['rural'], 'plan');
+  const education = createdGroupTotals(['education'], 'plan');
+  const raw = readFileSync(join(root, WORKFORCE_PAGE), 'utf8');
+
+  /* 1. what a reader without JavaScript sees. The client writes the plan
+        scenario on init, so the static content has to be the plan scenario. */
+  const fallbacks: Array<[string, number, FigureFormat]> = [
+    ['wf-eliminated', f.eliminated, 'thousands'],
+    ['wf-created', f.created, 'thousands'],
+    ['wf-inside', f.inside, 'thousands'],
+    ['wf-new-hires', f.entrants, 'thousands'],
+    ['wf-supported', f.supported, 'thousands'],
+    ['wf-ledger-transfer', f.inside, 'thousands'],
+    ['wf-reconcile-created', f.created, 'thousands'],
+    ['wf-reconcile-inside', f.inside, 'thousands'],
+    ['wf-reconcile-entrants', f.entrants, 'thousands'],
+    ['wf-scope-eliminated', f.eliminated, 'thousands'],
+    ['wf-scope-created', f.created, 'thousands'],
+    ['wf-scope-difference', Math.abs(f.scopedDifference), 'thousands'],
+    ['wf-labor-entrants', f.entrants, 'thousands'],
+    ['wf-labor-annual', f.annualEntrants, 'plain'],
+    ['wf-labor-share', f.employmentSharePct, 'percent2'],
+    ['wf-labor-transition', f.transitionSharePct, 'percent0'],
+    ['wf-training-ratio', f.trainingRatio, 'ratio1'],
+    ['wf-table-annual', f.annualEntrants, 'plain'],
+    ['wf-flow-eliminated', f.eliminated, 'short'],
+    ['wf-flow-inside', f.inside, 'short'],
+    ['wf-flow-external', f.externalPlacement, 'short'],
+    ['wf-flow-gap', f.unresolvedGap, 'short']
+  ];
+  for (const [id, value, format] of fallbacks) {
+    const m = raw.match(new RegExp('id="' + id + '"[^>]*>([^<]*)<'));
+    const wanted = formatFigure(value, format);
+    if (!m) {
+      out.push({ where: id, says: 'no such element', expected: wanted });
+    } else if (m[1].indexOf(wanted) < 0) {
+      out.push({ where: id + ' fallback', says: m[1].trim(), expected: wanted });
+    }
+  }
+
+  /* 2. the sentences. Each anchored on enough of its own wording to be the
+        only place it can match, so a figure that moves is reported against
+        the claim that carries it rather than against a line number. */
+  const claims: Array<[string, RegExp, number]> = [
+    ['the created-positions heading',
+      /Where the ([\d,]+) gross positions are created/, f.created * 1000],
+    ['the administrative match, fills',
+      /([\d,]+) of [\d,]+ planning positions are mapped/, admin.fills * 1000],
+    ['the administrative match, total',
+      /[\d,]+ of ([\d,]+) planning positions are mapped/, admin.values * 1000],
+    ['the unit-team risk row',
+      /([\d,]+) planning positions require clinicians/, units.entrants * 1000],
+    ['the rural risk row',
+      /All ([\d,]+) planning positions require clinical/, rural.values * 1000],
+    ['the prior-authorization capacity note',
+      /About ([\d,]+) FTE-equivalent/, Math.round(priorAuthReleasedFte() / 1000) * 1000],
+    ['the physician denominator',
+      /to ([\d,]+) direct-patient-care physicians/, DIRECT_PATIENT_CARE_PHYSICIANS],
+    ['the immigration gap tile',
+      /<strong>([\d,]+)<\/strong><small>over the twelve-year rollout/, f.entrants * 1000],
+    ['the immigration hard-roles tile',
+      /<strong>([\d,]+)<\/strong><small>of the gap is unit-clinical and rural-clinical/,
+      clinical.entrants * 1000],
+    ['the derived-quantities card, eliminated',
+      /The ([\d,]+) eliminated-position case/, f.eliminated * 1000],
+    ['the derived-quantities card, internal matches',
+      /case, ([\d,]+) internal matches/, f.inside * 1000],
+    ['the derived-quantities card, new-position floor',
+      /matches, ([\d,]+) new-position floor/, f.created * 1000],
+    ['the derived-quantities card, flex pool',
+      /floor, and ([\d,]+) flex pool/, rural.values * 1000],
+    ['the training-slot target',
+      /the ([\d,]+) annual training slots/, ANNUAL_TRAINING_TARGET]
+  ];
+  for (const [label, pattern, expected] of claims) {
+    const m = raw.match(pattern);
+    if (!m) {
+      out.push({
+        where: label,
+        says: 'the sentence no longer states a figure',
+        expected: expected.toLocaleString('en-US')
+      });
+      continue;
+    }
+    const stated = Number(m[1].split(',').join(''));
+    if (stated !== expected) {
+      out.push({
+        where: label,
+        says: m[1],
+        expected: expected.toLocaleString('en-US')
+      });
+    }
+  }
+
+  /* 3. the faculty row spells its figure out, so it needs its own comparison.
+        Eleven is the only CREATED value small enough for the page to write in
+        words, and a word does not drift the way a digit does -- which is
+        exactly why it would go unnoticed. */
+  const spelled = /(\w+) thousand positions are small in national terms/.exec(raw);
+  const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+    'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen'];
+  const wanted = WORDS[education.values] || String(education.values);
+  if (!spelled) {
+    out.push({
+      where: 'the faculty risk row',
+      says: 'the sentence no longer states a figure',
+      expected: wanted + ' thousand'
+    });
+  } else if (spelled[1].toLowerCase() !== wanted) {
+    out.push({
+      where: 'the faculty risk row',
+      says: spelled[1] + ' thousand',
+      expected: wanted + ' thousand'
+    });
+  }
+
+  return out;
 }
 
 /* R179 [§S9a]: the unit model behind CREATED.units, joined to the two places
