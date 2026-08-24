@@ -14,9 +14,11 @@ import { PARAMS_BY_ID } from '../../src/lib/params';
    regression and cannot do it against one boolean, so they are named tests,
    generated from the same table the build gate reads.
 
-   Fifteen, not twelve: R65 adds `sum(LEGACY.inside) = inside`, the second
+   Sixteen, not twelve: R65 adds `sum(LEGACY.inside) = inside`, the second
    independently authored decomposition of the same total, which reconciled
-   before anything asserted it. */
+   before anything asserted it (five relations x three scenarios), and R179
+   adds the unit-model derivation behind CREATED.units, which is a planning-
+   case relation only. */
 describe('Workforce: the cross-decomposition invariants (V19)', () => {
   for (const row of workforceSelfTests()) {
     /* asserting the NOTE, not the flag: a failure then prints both sides */
@@ -24,8 +26,8 @@ describe('Workforce: the cross-decomposition invariants (V19)', () => {
   }
 
   /* and the table itself, so quietly deleting a relation is not a green run */
-  test('the table still holds fifteen invariants', () => {
-    expect(workforceSelfTests().length).toBe(15);
+  test('the table still holds sixteen invariants', () => {
+    expect(workforceSelfTests().length).toBe(16);
   });
 });
 

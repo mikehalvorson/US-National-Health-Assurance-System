@@ -192,6 +192,76 @@ export const CREATED: CreatedItem[] = [
   }
 ];
 
+/* ---- The unit model behind CREATED.units ---------------------------------
+   R179 [§S9a]. `CREATED.units` plan = 138 and its derivation says where it
+   comes from: "the 15,000-unit specification multiplied by the existing unit
+   model's 9.2-FTE mix-weighted average". The methodology note carries the
+   arithmetic in full -- 15,000 x 9.225 = 138,375, rounded to 138,000 -- and
+   the mix comes from the county allocation, 24,099 units at 222,323 FTE.
+
+   Nothing joined any of it. The unit model's per-type FTE existed in exactly
+   one place in the codebase: as PROSE inside the `staff` strings of
+   `UNIT_TYPES` in src/scripts/units-client.ts ("~10 (physician or senior
+   NP/PA lead, nurses, techs)"). The allocation existed only in the
+   methodology note. So the headline unit-workforce number was a hand-typed
+   result of a calculation whose inputs lived in two places that neither the
+   build nor any test could compare.
+
+   That is why R179 predicts Part 1 breaks the ledger silently: §S9b reworks
+   both inputs, and until now nothing downstream would have noticed.
+
+   The inputs are data here, with checks tying each one back to where it is
+   actually maintained -- the FTEs to `units-client.ts`, the allocation and
+   the rounding to the methodology note. `CREATED.units` stays AUTHORED. The
+   derivation is compared against it rather than replacing it, for the same
+   reason `supported` stays authored: an assertion whose two sides cannot
+   differ is not an assertion.
+
+   Scenario scope: only the planning case is tied to the controlled 15,000
+   target, because only the planning case claims to be. The low and high cases
+   imply about 12,100 and 19,000 units and the note explains the high one as
+   moving toward the need-based allocation; neither is derived here, and
+   inventing a unit count for them would be tuning to a target. */
+export interface UnitTypeStaffing {
+  key: 'a' | 'b' | 'c' | 'd';
+  label: string;
+  allocated: number;  // units in the need-based county allocation
+  fte: number;        // staffing per unit, from the unit model
+}
+
+export const UNIT_MODEL: {
+  controlledTargetUnits: number;
+  allocation: UnitTypeStaffing[];
+} = {
+  /* the framework's controlled certified-unit count at maturity */
+  controlledTargetUnits: 15000,
+  allocation: [
+    { key: 'a', label: 'Micro-unit', allocated: 7470, fte: 2.5 },
+    { key: 'b', label: 'Neighborhood unit', allocated: 9055, fte: 10 },
+    { key: 'c', label: 'Rural enhanced unit', allocated: 6397, fte: 14 },
+    { key: 'd', label: 'Urban public-health unit', allocated: 1177, fte: 20 }
+  ]
+};
+
+export function unitAllocationTotal(): number {
+  return UNIT_MODEL.allocation.reduce((total, t) => total + t.allocated, 0);
+}
+
+export function unitAllocationFte(): number {
+  return UNIT_MODEL.allocation.reduce((total, t) => total + t.allocated * t.fte, 0);
+}
+
+/* the blended average the derivation string names as "9.2 FTE" */
+export function unitMixWeightedFte(): number {
+  return unitAllocationFte() / unitAllocationTotal();
+}
+
+/* unit-team positions at the controlled target, in thousands, rounded the way
+   the methodology note rounds: 138,375 -> 138,000 */
+export function unitTeamPositionsK(): number {
+  return Math.round(UNIT_MODEL.controlledTargetUnits * unitMixWeightedFte() / 1000);
+}
+
 /* ---- The cross-decomposition invariants ----------------------------------
    V19 describes this module as carrying "twelve cross-decomposition
    invariants, twelve passes". In the code they were four relations AND-ed
@@ -325,6 +395,25 @@ export function workforceSelfTests(): WorkforceInvariantRow[] {
       });
     }
   }
+
+  /* R179 [§S9a]: the headline unit-workforce number against the model it says
+     it comes from. Nine authored inputs on the left (the controlled target
+     and four allocation counts and four per-type FTEs), one authored figure
+     on the right. §S9b reworks the left; this is what makes that break loud
+     instead of silent. */
+  const unitsItem = CREATED.filter((item) => item.id === 'units')[0];
+  const derivedK = unitTeamPositionsK();
+  const authoredK = unitsItem ? unitsItem.values.plan : NaN;
+  rows.push({
+    name: 'Workforce ledger [plan]: CREATED.units = target units x mix-weighted FTE',
+    ok: derivedK === authoredK,
+    note: unitAllocationTotal() + ' units at ' + unitAllocationFte() + ' FTE = ' +
+      unitMixWeightedFte().toFixed(3) + ' per unit; ' +
+      UNIT_MODEL.controlledTargetUnits + ' x that = ' + derivedK + 'k' +
+      (derivedK === authoredK ? ', authored ' + authoredK + 'k'
+        : ', but CREATED.units is authored at ' + authoredK + 'k')
+  });
+
   return rows;
 }
 

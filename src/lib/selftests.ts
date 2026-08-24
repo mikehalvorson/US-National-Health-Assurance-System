@@ -77,7 +77,7 @@ import {
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
-  supportRateDrift,
+  supportRateDrift, unitModelDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
   unreadEngineConstants, unreadStructuralKnobs,
@@ -104,7 +104,10 @@ import {
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
 } from './care';
-import { WORKER_SUPPORT_RATE, workforceSelfTests } from './workforce';
+import {
+  unitAllocationTotal, unitMixWeightedFte,
+  WORKER_SUPPORT_RATE, workforceSelfTests
+} from './workforce';
 import { leaderBasisCounts, leaderBasisProblems } from './gov';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
@@ -2504,6 +2507,19 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          the methodology note, and the floor the chapter shows a reader.
          Without this, declaring WORKER_SUPPORT_RATE would only move the
          literal, not source it. */
+      /* R179 [§S9a]: and the unit model behind CREATED.units is joined to the
+         two places its inputs are maintained -- the staffing prose in
+         units-client.ts and the published allocation. §S9b reworks both. */
+      runGuarded('The unit model behind CREATED.units agrees with its two sources', () => {
+        const bad = unitModelDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.where + ' says ' + b.says + ', expected ' + b.expected)
+            .join(' | ') ||
+            unitAllocationTotal() + ' allocated units, ' +
+            unitMixWeightedFte().toFixed(3) + ' FTE per unit, agreed in three places'
+        };
+      }),
       runGuarded('The worker-support rate agrees with KPP-W1, the derivation and the page', () => {
         const bad = supportRateDrift();
         return {

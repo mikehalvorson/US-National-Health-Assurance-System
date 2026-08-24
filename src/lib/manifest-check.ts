@@ -17,7 +17,9 @@ import { fileURLToPath } from 'node:url';
 
 import { CARE_SCENARIOS } from './care';
 import { catalogCode } from './params';
-import { SCENARIOS, WORKER_SUPPORT_RATE } from './workforce';
+import {
+  SCENARIOS, UNIT_MODEL, unitMixWeightedFte, WORKER_SUPPORT_RATE
+} from './workforce';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
 
@@ -1423,6 +1425,156 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
     if (v >= RETAIL_BAND_LOW && v <= RETAIL_BAND_HIGH) found.push(m[0]);
   }
   return found;
+}
+
+/* R179 [§S9a]: the unit model behind CREATED.units, joined to the two places
+ * its inputs are actually maintained.
+ *
+ * The per-type FTE lives in src/scripts/units-client.ts as PROSE inside each
+ * UNIT_TYPES entry's `staff` field -- "~10 (physician or senior NP/PA lead,
+ * nurses, techs)". The allocation lives in the methodology note. Neither is
+ * importable into src/lib (the client is downstream of it, and §S9b owns that
+ * file), so both are read as text, the way medicationsSliderRange reads the
+ * medication page's own controls rather than retyping the range into a test.
+ *
+ * Reading the prose is deliberate and is the point: §S9b is going to change
+ * those strings, and a check that reads them is the only thing that connects
+ * that edit to the workforce ledger. If a later section gives UNIT_TYPES a
+ * typed `fte` field, retarget this at the field and delete the parser.
+ *
+ * Type A is written as a range, "2-3", and the model uses its midpoint. The
+ * others are written as "~N". Both forms are parsed and the parse is reported
+ * in the check's note, so a failure says what it read rather than only that
+ * it disagreed. */
+const UNIT_CLIENT = 'src/scripts/units-client.ts';
+const UNIT_METHODOLOGY = 'research/workforce_transition_methodology.md';
+
+/* leading "~7", "7", "2-3", "2en-dash-3", "2em-dash-3"; a range is midpointed */
+const STAFF_FIGURE = /^\s*~?(\d+(?:\.\d+)?)(?:\s*[-–—]\s*(\d+(?:\.\d+)?))?/;
+
+export function unitStaffFromClient(root = REPO_ROOT): Record<string, number | null> {
+  const text = maskComments(readFileSync(join(root, UNIT_CLIENT), 'utf8'));
+  const out: Record<string, number | null> = {};
+  for (const t of UNIT_MODEL.allocation) {
+    const entry = text.match(new RegExp(
+      "\\b" + t.key + ":\\s*\\{[\\s\\S]*?staff:\\s*'((?:[^'\\\\]|\\\\.)*)'"));
+    if (!entry) { out[t.key] = null; continue; }
+    const figure = entry[1].match(STAFF_FIGURE);
+    if (!figure) { out[t.key] = null; continue; }
+    const lo = Number(figure[1]);
+    out[t.key] = figure[2] === undefined ? lo : (lo + Number(figure[2])) / 2;
+  }
+  return out;
+}
+
+export interface UnitModelDisagreement {
+  where: string;
+  says: string;
+  expected: string;
+}
+
+export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
+  const out: UnitModelDisagreement[] = [];
+
+  /* 1. the per-type FTE, against the unit model's own staffing prose */
+  const staffed = unitStaffFromClient(root);
+  for (const t of UNIT_MODEL.allocation) {
+    const read = staffed[t.key];
+    if (read === null) {
+      out.push({
+        where: UNIT_CLIENT + ' type ' + t.key,
+        says: 'no readable staffing figure',
+        expected: t.fte + ' FTE'
+      });
+    } else if (read !== t.fte) {
+      out.push({
+        where: UNIT_CLIENT + ' type ' + t.key,
+        says: read + ' FTE',
+        expected: t.fte + ' FTE'
+      });
+    }
+  }
+
+  /* 2. the controlled target, against the floor the unit page states */
+  const client = readFileSync(join(root, UNIT_CLIENT), 'utf8');
+  const target = client.match(/'≥ ([\d,]+)'/);
+  const statedTarget = target ? Number(target[1].split(',').join('')) : null;
+  if (statedTarget !== UNIT_MODEL.controlledTargetUnits) {
+    out.push({
+      where: UNIT_CLIENT + " plan's minimum",
+      says: statedTarget === null ? 'no stated minimum' : String(statedTarget),
+      expected: String(UNIT_MODEL.controlledTargetUnits)
+    });
+  }
+
+  /* 3. the allocation and the rounded result, against the published
+        derivation. The note states the counts per type, the total, the total
+        FTE, the average, and the product, so every input has a published
+        counterpart and none of them can move alone. */
+  const note = readFileSync(join(root, UNIT_METHODOLOGY), 'utf8');
+  for (const t of UNIT_MODEL.allocation) {
+    const row = new RegExp('Type ' + t.key.toUpperCase() +
+      ':\\s*([\\d,]+)\\s*units\\s*x\\s*([\\d.]+)\\s*FTE');
+    const m = note.match(row);
+    if (!m) {
+      out.push({
+        where: UNIT_METHODOLOGY + ' type ' + t.key,
+        says: 'no published allocation row',
+        expected: t.allocated + ' units x ' + t.fte + ' FTE'
+      });
+      continue;
+    }
+    const allocated = Number(m[1].split(',').join(''));
+    if (allocated !== t.allocated || Number(m[2]) !== t.fte) {
+      out.push({
+        where: UNIT_METHODOLOGY + ' type ' + t.key,
+        says: allocated + ' units x ' + m[2] + ' FTE',
+        expected: t.allocated + ' units x ' + t.fte + ' FTE'
+      });
+    }
+  }
+
+  /* The published derivation is checked at the precision it publishes, in two
+     independent parts, because it is not one equation:
+
+       15,000 x 9.225 = 138,375 FTE
+
+     9.225 is the exact mix (9.22540...) rounded to three decimals, and
+     138,375 is 15,000 x that ROUNDED average. The exact product is 138,381.
+     Comparing the note's result against the exact product fails by six FTE on
+     a figure the dashboard publishes as 138,000 either way, so the check
+     would be reporting the rounding rather than a disagreement. Instead: the
+     note's average must equal the model's average at the note's own decimal
+     places, and the note's product must equal its own base times its own
+     average. Both still fail the moment any allocation count or per-type FTE
+     moves. */
+  const product = note.match(/([\d,]+)\s*x\s*(\d+\.(\d+))\s*=\s*([\d,]+)\s*FTE/);
+  if (!product) {
+    out.push({
+      where: UNIT_METHODOLOGY,
+      says: 'no unit-team derivation',
+      expected: UNIT_MODEL.controlledTargetUnits + ' x ' +
+        unitMixWeightedFte().toFixed(3) + ' = ' +
+        Math.round(UNIT_MODEL.controlledTargetUnits * Number(unitMixWeightedFte().toFixed(3)))
+    });
+  } else {
+    const base = Number(product[1].split(',').join(''));
+    const average = Number(product[2]);
+    const places = product[3].length;
+    const result = Number(product[4].split(',').join(''));
+    const modelAverage = Number(unitMixWeightedFte().toFixed(places));
+    if (base !== UNIT_MODEL.controlledTargetUnits || average !== modelAverage ||
+      result !== Math.round(base * average)) {
+      out.push({
+        where: UNIT_METHODOLOGY,
+        says: product[0],
+        expected: UNIT_MODEL.controlledTargetUnits + ' x ' + modelAverage +
+          ' = ' + Math.round(UNIT_MODEL.controlledTargetUnits * modelAverage)
+      });
+    }
+  }
+
+  return out;
 }
 
 /* R177 [§S9a]: the worker-support rate is stated in four places that were
