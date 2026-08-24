@@ -19,6 +19,7 @@ import { CARE_SCENARIOS } from './care';
 import { catalogCode } from './params';
 import {
   ADMINISTRATIVE_MATCH_IDS, CLINICAL_ENTRANT_IDS, createdGroupTotals,
+  CREATED_SCOPE_EXCLUSIONS,
   DIRECT_PATIENT_CARE_PHYSICIANS, ANNUAL_TRAINING_TARGET,
   priorAuthReleasedFte, SCENARIOS, UNIT_MODEL, unitMixWeightedFte,
   WORKER_SUPPORT_RATE, workforceLedgerFigures
@@ -1451,6 +1452,7 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
  * sentence is not identifiable and matching one would pass on any other
  * sentence that happened to carry it. */
 const WORKFORCE_PAGE = 'src/pages/workforce.astro';
+const SCOPE_EXCLUSION_ELEMENT = 'wf-scope-exclusions';
 
 type FigureFormat = 'thousands' | 'short' | 'percent0' | 'percent2' | 'ratio1' | 'plain';
 
@@ -1571,7 +1573,58 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     }
   }
 
-  /* 3. the faculty row spells its figure out, so it needs its own comparison.
+  /* 3. R67: the hand-written scope qualification, against the declared list.
+        Two sentences on this page name what the floor leaves out, and a third
+        is generated from CREATED_SCOPE_EXCLUSIONS. The generated one cannot
+        drift; the hand-written ones did, and will again the next time a
+        domain gets sized -- LTC already moved from open to sized and needed
+        three separate edits. Every open domain must be named and no sized one
+        may still be listed as open.
+
+        The words come from the exclusion's own `pageWords`, not from its
+        `domain`: the page writes "EMS" where the data says the full name, and
+        splits one domain across an Oxford comma. Deriving the words from the
+        domain string produced two false failures on the first run of this
+        check, which is how a check ends up loosened until it passes. */
+  const floorNote = raw.match(
+    /This is deliberately a floor\.[\s\S]*?<\/p>/);
+  if (!floorNote) {
+    out.push({
+      where: 'the scope qualification',
+      says: 'the paragraph is gone',
+      expected: 'a sentence naming every unsized benefit workforce'
+    });
+  } else {
+    const prose = floorNote[0].toLowerCase();
+    for (const exclusion of CREATED_SCOPE_EXCLUSIONS) {
+      const named = exclusion.pageWords.every(
+        (w) => prose.indexOf(w.toLowerCase()) >= 0);
+      if (exclusion.status === 'not-sized' && !named) {
+        out.push({
+          where: 'the scope qualification',
+          says: 'does not name ' + exclusion.domain,
+          expected: 'every unsized benefit workforce named'
+        });
+      }
+    }
+  }
+  if (!raw.includes(SCOPE_EXCLUSION_ELEMENT)) {
+    out.push({
+      where: SCOPE_EXCLUSION_ELEMENT,
+      says: 'no such element',
+      expected: 'a rendered element for the declared exclusions'
+    });
+  }
+  const clientText = renderedSource('src/scripts/workforce-client.ts', root);
+  if (!/\bcreatedScopeStatement\s*\(/.test(clientText)) {
+    out.push({
+      where: 'src/scripts/workforce-client.ts',
+      says: 'imports the exclusion statement without rendering it',
+      expected: 'createdScopeStatement() written to the page'
+    });
+  }
+
+  /* 4. the faculty row spells its figure out, so it needs its own comparison.
         Eleven is the only CREATED value small enough for the page to write in
         words, and a word does not drift the way a digit does -- which is
         exactly why it would go unnoticed. */

@@ -5,7 +5,7 @@
 import {
   SCENARIOS, LEGACY, CREATED, ACRONYMS,
   LTC_WORKFORCE, ltcWageFloorCost, WORKER_SUPPORT_RATE_BASIS,
-  workforceLedgerFigures,
+  workforceLedgerFigures, createdScopeStatement,
   type ScenarioId
 } from '../lib/workforce';
 
@@ -321,6 +321,9 @@ function initWorkforce(): void {
      retyped into the page, so the rate and the sentence explaining it cannot
      drift apart. */
   setText('wf-support-basis', WORKER_SUPPORT_RATE_BASIS);
+  /* R67 [§S9a]: what the floor leaves out, written from the declared
+     exclusion list rather than typed beside the floor. */
+  setText('wf-scope-exclusions', createdScopeStatement());
   renderLtcWorkforce();
   addAcronymHovers(document.querySelector('main'));
 }

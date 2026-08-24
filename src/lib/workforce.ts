@@ -192,6 +192,118 @@ export const CREATED: CreatedItem[] = [
   }
 ];
 
+/* ---- What the gross-position floor leaves out -----------------------------
+   R67 [§S9a]. The 510,000 floor is not a whole-system workforce number. It
+   excludes the national job quantity for the expanded benefits -- long-term
+   care, behavioral health, dental, vision, hearing, EMS and public health --
+   which is the exact domain the benefit-expansion dollars pay for. A reader
+   comparing "510,000 new positions" against those dollars is comparing
+   incompatible scopes.
+
+   The chapter says so, twice, in prose. The methodology note says so. The
+   DATA said nothing: CREATED carries `derivation`, `roles` and `confidence`
+   and no field for what is out of scope, so nothing could check that the
+   prose list was complete or that it stayed true as domains got sized.
+
+   That has already bitten once. LTC used to be on this list and is now sized
+   in its own section on the same chapter, and the prose was updated by hand
+   in three places. `status` is what makes the next one mechanical.
+
+   Scope note against the row as written: AD6 asks for the field on CREATED.
+   It belongs one level up. The exclusion is a property of the floor, not of
+   any one operating function -- no single CREATED row excludes behavioral
+   health, the total does -- and putting it on the items would mean writing
+   the same sentence seven times or leaving six of them blank. */
+export interface ScopeExclusion {
+  domain: string;
+  /* 'sized' means the chapter now carries a number for it somewhere OUTSIDE
+     the transition ledger. It does not mean the domain is inside the floor. */
+  status: 'sized-separately' | 'not-sized';
+  /* What the reader-facing qualification has to call this domain. Declared
+     rather than derived from `domain`, because the page writes "EMS" where
+     the data says "emergency medical services" and splits "dental, vision,
+     and hearing" across an Oxford comma. Guessing the page's wording from the
+     data's produced two false failures on the first run; a check that has to
+     guess what prose looks like is a check that will be loosened later. */
+  pageWords: string[];
+  note: string;
+}
+
+export const CREATED_SCOPE_EXCLUSIONS: ScopeExclusion[] = [
+  {
+    domain: 'long-term care',
+    status: 'sized-separately',
+    pageWords: ['long-term care'],
+    note: 'The direct-care aide workforce is sized in its own section and its ' +
+      'wage-floor cost is carried in the fiscal model. It is kept out of the ' +
+      'ledger above because the entrant-pace math is about insurance and ' +
+      'billing jobs and must not absorb millions of aides.'
+  },
+  {
+    domain: 'behavioral health',
+    status: 'not-sized',
+    pageWords: ['behavioral health'],
+    note: 'No national job quantity is fixed for the behavioral-health benefit.'
+  },
+  /* Dental, vision and hearing are one benefit family and three entries. The
+     chapter lists them as three, and one entry carrying an internal comma
+     made the generated sentence read as five items where it meant three. */
+  {
+    domain: 'dental',
+    status: 'not-sized',
+    pageWords: ['dental'],
+    note: 'No national job quantity is fixed for the dental benefit.'
+  },
+  {
+    domain: 'vision',
+    status: 'not-sized',
+    pageWords: ['vision'],
+    note: 'No national job quantity is fixed for the vision benefit.'
+  },
+  {
+    domain: 'hearing',
+    status: 'not-sized',
+    pageWords: ['hearing'],
+    note: 'No national job quantity is fixed for the hearing benefit.'
+  },
+  {
+    domain: 'EMS',
+    status: 'not-sized',
+    pageWords: ['ems'],
+    note: 'No national job quantity is fixed for the emergency medical services benefit.'
+  },
+  {
+    domain: 'public health',
+    status: 'not-sized',
+    pageWords: ['public health'],
+    note: 'No national job quantity is fixed for the public-health expansion.'
+  }
+];
+
+/* Rendered on the chapter beside the floor, from the list rather than typed
+   beside it, so a domain that gets sized stops being described as missing. */
+export function createdScopeStatement(): string {
+  const open = CREATED_SCOPE_EXCLUSIONS
+    .filter((e) => e.status === 'not-sized').map((e) => e.domain);
+  const sized = CREATED_SCOPE_EXCLUSIONS
+    .filter((e) => e.status === 'sized-separately').map((e) => e.domain);
+  const openList = open.length > 1
+    ? open.slice(0, -1).join(', ') + ' and ' + open[open.length - 1]
+    : open.join('');
+  const sizedList = sized.length > 1
+    ? sized.slice(0, -1).join(', ') + ' and ' + sized[sized.length - 1]
+    : sized.join('');
+  return 'This floor is a floor, and the scope it leaves out is the scope the ' +
+    'expanded benefits pay for. It fixes no national job quantity for ' +
+    openList + '. ' +
+    (sized.length
+      ? 'The ' + sizedList + ' workforce is sized separately on this page and ' +
+        'is not inside the ledger above. '
+      : '') +
+    'Comparing this figure against benefit-expansion dollars compares two ' +
+    'different scopes.';
+}
+
 /* ---- The figures the Workforce chapter publishes --------------------------
    R64 [§S9a]. Every quantity on the tab was computed in renderFlow() inside
    the client and typed a second time into the page as static HTML, and a
