@@ -1,26 +1,28 @@
-import { expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
-  SCENARIOS, LEGACY, CREATED,
+  SCENARIOS,
   ROLLOUT_YEARS, ANNUAL_TRAINING_TARGET,
   DIRECT_PATIENT_CARE_PHYSICIANS, PRIOR_AUTH_HOURS_PER_WEEK,
-  LTC_WORKFORCE, ltcWageFloorCost,
-  type ScenarioId
+  LTC_WORKFORCE, ltcWageFloorCost, workforceSelfTests
 } from '../../src/lib/workforce';
 import { PARAMS_BY_ID } from '../../src/lib/params';
 
-function sumField(items: { [k: string]: Record<ScenarioId, number> }[] | any[], field: string, s: ScenarioId): number {
-  return items.reduce((total, item) => total + item[field][s], 0);
-}
+/* R65 [§S9a]: docs self-test 1 was four relations AND-ed across three
+   scenarios inside one `.every()`, asserted as `expect(ok).toBe(true)`. A
+   break read `expected false to be true` and named neither the relation nor
+   the scenario. §S9a has to distinguish a deliberate re-derivation from a
+   regression and cannot do it against one boolean, so the twelve are twelve
+   named tests, generated from the same table the build gate reads. */
+describe('Workforce: the twelve cross-decomposition invariants (V19)', () => {
+  for (const row of workforceSelfTests()) {
+    /* asserting the NOTE, not the flag: a failure then prints both sides */
+    test(row.name, () => expect(row.ok ? 'holds' : row.note).toBe('holds'));
+  }
 
-test('Workforce: scenario job ledgers reconcile (docs self-test 1)', () => {
-  const ok = (Object.keys(SCENARIOS) as ScenarioId[]).every((s) => {
-    const scenario = SCENARIOS[s];
-    return sumField(LEGACY, 'values', s) === scenario.eliminated &&
-      sumField(CREATED, 'values', s) === scenario.created &&
-      sumField(CREATED, 'fills', s) === scenario.inside &&
-      scenario.supported === scenario.eliminated * 0.75;
+  /* and the table itself, so quietly deleting a relation is not a green run */
+  test('the table still holds twelve invariants', () => {
+    expect(workforceSelfTests().length).toBe(12);
   });
-  expect(ok).toBe(true);
 });
 
 test('Workforce: entrant pace and prior-auth capacity math reconcile (docs self-test 2)', () => {

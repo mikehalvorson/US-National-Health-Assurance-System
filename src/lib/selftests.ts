@@ -103,6 +103,7 @@ import {
   pointOfCareCardsMissingCostShareGate, reliefYearProblems,
   shallowCareGateReasons
 } from './care';
+import { workforceSelfTests } from './workforce';
 import { leaderBasisCounts, leaderBasisProblems } from './gov';
 import { TABS } from './tabs';
 import type { PercentileBand } from './model-types';
@@ -2487,6 +2488,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         };
       })
     ]
+  },
+  {
+    /* R65 [§S9a]: the twelve cross-decomposition invariants reach the build.
+       They existed only in tests/lib/workforce.test.ts, as one boolean, so a
+       broken workforce ledger failed `pnpm test` and passed `pnpm build` --
+       and the deploy workflow runs the build. Registered here as twelve named
+       rows because V19 and the audit both count them as twelve, and because a
+       row that cannot name the scenario it broke on is not serviceable. */
+    surface: 'workforce.ts',
+    rows: () => runGuardedList('workforce ledger invariants', workforceSelfTests)
   },
   {
     /* R271 + R267: the inventory and the route registry stop being guesses */

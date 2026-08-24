@@ -192,6 +192,83 @@ export const CREATED: CreatedItem[] = [
   }
 ];
 
+/* ---- The twelve cross-decomposition invariants ---------------------------
+   V19 and the audit both describe this module as carrying "twelve
+   cross-decomposition invariants, twelve passes". In the code they were four
+   relations AND-ed across three scenarios inside a single `.every()` in
+   tests/lib/workforce.test.ts, collapsed to one `expect(ok).toBe(true)`. A
+   break read `expected false to be true` and named neither the relation nor
+   the scenario -- unserviceable for a section whose job is to distinguish a
+   deliberate re-derivation from a regression.
+
+   They are twelve named rows here, one per relation per scenario, and this
+   surface is registered in SELF_TEST_SOURCES, so a break fails `pnpm build`
+   and not only `pnpm test`. Each row's note carries BOTH sides, so the
+   failure states what disagreed with what.
+
+   The relations are genuine cross-checks, not restatements: every quantity on
+   the left is authored independently of every quantity on the right. Keep it
+   that way. An invariant whose two sides cannot differ is not an invariant. */
+export interface WorkforceInvariantRow {
+  name: string;
+  ok: boolean;
+  note: string;
+}
+
+export const SCENARIO_IDS: readonly ScenarioId[] = ['low', 'plan', 'high'];
+
+/* The share of eliminated positions that must reach placement or approved
+   training. Three literals in SCENARIOS today; R177 turns it into a named,
+   sourced rate. Until then this is the same bare 0.75 the old test carried. */
+const SUPPORT_RATE = 0.75;
+
+interface CrossRelation {
+  label: string;
+  measured: (s: ScenarioId) => number;
+  declared: (s: ScenarioId) => number;
+}
+
+const CROSS_RELATIONS: CrossRelation[] = [
+  {
+    label: 'sum(LEGACY.values) = eliminated',
+    measured: (s) => LEGACY.reduce((total, item) => total + item.values[s], 0),
+    declared: (s) => SCENARIOS[s].eliminated
+  },
+  {
+    label: 'sum(CREATED.values) = created',
+    measured: (s) => CREATED.reduce((total, item) => total + item.values[s], 0),
+    declared: (s) => SCENARIOS[s].created
+  },
+  {
+    label: 'sum(CREATED.fills) = inside',
+    measured: (s) => CREATED.reduce((total, item) => total + item.fills[s], 0),
+    declared: (s) => SCENARIOS[s].inside
+  },
+  {
+    label: 'supported = eliminated x support rate',
+    measured: (s) => SCENARIOS[s].supported,
+    declared: (s) => SCENARIOS[s].eliminated * SUPPORT_RATE
+  }
+];
+
+export function workforceSelfTests(): WorkforceInvariantRow[] {
+  const rows: WorkforceInvariantRow[] = [];
+  for (const relation of CROSS_RELATIONS) {
+    for (const s of SCENARIO_IDS) {
+      const measured = relation.measured(s);
+      const declared = relation.declared(s);
+      rows.push({
+        name: 'Workforce ledger [' + s + ']: ' + relation.label,
+        ok: measured === declared,
+        note: measured === declared
+          ? measured + 'k, both sides'
+          : 'measured ' + measured + 'k, declared ' + declared + 'k'
+      });
+    }
+  }
+  return rows;
+}
+
 /* ---- Long-term care direct-care workforce -------------------------------
    The home-first LTC benefit is delivered by aides (home care, residential,
    nursing assistants), not by the clinical or administrative roles counted
