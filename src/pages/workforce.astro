@@ -1,6 +1,27 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R168 [§S9a]: requirement density runs inversely to cost, and the four
+   thinnest requirement families govern the benefit expansions this chapter's
+   position floor deliberately excludes. It is the same gap seen from the
+   requirements side, so it is stated where the exclusion already is.
+   Measured at build time from the framework transcription and params.ts,
+   rendered as static HTML, so it survives with no script and cannot drift
+   from the counts a check reads. */
+import {
+  underSpecifiedAnnualB, underSpecifiedExpansions
+} from '../lib/manifest-check';
+
+/* Declaration order, not sorted: a row that shares a cost line has to appear
+   after the row that owns it, or "priced inside another" names nothing. */
+const UNDER_SPECIFIED = underSpecifiedExpansions();
+/* Each parameter once: public health is priced inside the EMS line, so
+   summing the rows would count that $45B twice. */
+const UNDER_SPECIFIED_TOTAL = underSpecifiedAnnualB(UNDER_SPECIFIED);
+const UNDER_SPECIFIED_REQUIREMENTS = UNDER_SPECIFIED.reduce(
+  (t, u) => t + u.requirements, 0);
+const UNDER_SPECIFIED_FAMILIES = UNDER_SPECIFIED.filter((u) => u.family).length;
+const UNGOVERNED = UNDER_SPECIFIED.filter((u) => !u.family).map((u) => u.domain);
 ---
 <BaseLayout title="National Health Assurance: Workforce">
   <main>
@@ -225,6 +246,33 @@ import ChapterNav from '../components/ChapterNav.astro';
       sentences. The hand-written note below it stays as the reader-facing
       qualification and is checked against the same list. -->
     <p class="note" id="wf-scope-exclusions"></p>
+    <!-- R168 [§S9a]: and the same gap from the requirements side. Rendered
+      from the framework transcription at build time, not typed. -->
+    <div class="workforce-scope-warning">
+      <strong>The plan is thinnest where it spends most, and this is where that shows.</strong>
+      <p>The domains left out of the floor above are also the domains the
+        framework specifies least. The
+        {UNDER_SPECIFIED_FAMILIES} requirement families below carry
+        {UNDER_SPECIFIED_REQUIREMENTS} system requirements between them and
+        govern about ${UNDER_SPECIFIED_TOTAL}B a year of benefit spending,
+        {UNGOVERNED.length ? 'and ' + UNGOVERNED.join(' and ') +
+          ' has no requirement family at all. ' : '. '}
+        The most heavily specified families in the framework carry fifteen
+        each, and cost far less. Thin specification is not the same as low
+        importance, and it is why these workforce quantities are open rather
+        than estimated.</p>
+      <ul class="workforce-underspec-list">
+        {UNDER_SPECIFIED.map((u) => (
+          <li><b>{u.domain}</b>
+            <span>{u.requirements === 0
+              ? 'no requirement family of its own'
+              : u.requirements + ' requirements'}</span>
+            <span>{u.pricedInsideRow
+              ? 'no cost line of its own, priced inside ' + u.pricedInsideRow
+              : 'about $' + u.annualB + 'B a year'}</span></li>
+        ))}
+      </ul>
+    </div>
     <p class="note">This is deliberately a floor. It excludes the still-open
       national workforce quantity for behavioral health, dental, vision,
       hearing, EMS, and public health. The long-term care direct-care workforce

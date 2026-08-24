@@ -16,7 +16,7 @@ import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { CARE_SCENARIOS } from './care';
-import { catalogCode } from './params';
+import { catalogCode, PARAMS_BY_ID } from './params';
 import {
   ADMINISTRATIVE_MATCH_IDS, CLINICAL_ENTRANT_IDS, createdGroupTotals,
   CREATED_SCOPE_EXCLUSIONS, OEWS_TOTAL_EMPLOYMENT_2024,
@@ -1432,6 +1432,117 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
   return found;
 }
 
+/* R168 [§S9a]: requirement density runs inversely to cost, and the dashboard
+ * should say so rather than leave it implicit.
+ *
+ * Measured, not taken from the row. Counting unique SR requirement IDs in the
+ * framework transcription:
+ *
+ *   SR-ARCH 15   SR-ADP 15   SR-ACC 15   SR-IF 15   SR-DATA 12   SR-RGT 12
+ *   SR-COV 11    ... SR-BH 3    SR-LTC 3    SR-DVH 2    SR-EMS 2
+ *
+ * The four thinnest families carry ten requirements between them and govern
+ * the benefit expansions, which price at $457B a year. Public health is
+ * thinner still: no SR family governs it at all. It is priced inside
+ * emsPhExpansion and has no requirements of its own.
+ *
+ * Both sides can move. The counts come from the framework transcription and
+ * the dollars from params.ts, so sourcing a family or repricing a parameter
+ * changes the answer, and a family that grows past the threshold stops being
+ * reported without anyone editing a list.
+ *
+ * The threshold is the row's own: fewer than five requirements is
+ * under-specified. */
+const UNDER_SPECIFIED_BELOW = 5;
+
+export function requirementFamilyCounts(root = REPO_ROOT): Map<string, number> {
+  const text = readFileSync(join(root, FRAMEWORK_EXTRACT), 'utf8');
+  const seen = new Map<string, Set<string>>();
+  for (const m of text.matchAll(/\bSR-([A-Z]+)-(\d{3})\b/g)) {
+    const family = 'SR-' + m[1];
+    if (!seen.has(family)) seen.set(family, new Set());
+    seen.get(family)!.add(m[2]);
+  }
+  const out = new Map<string, number>();
+  for (const [family, ids] of seen) out.set(family, ids.size);
+  return out;
+}
+
+export interface UnderSpecified {
+  domain: string;
+  family: string | null;
+  requirements: number;
+  annualB: number;
+  paramIds: string[];
+  /* Set when every parameter pricing this domain was already claimed by an
+     EARLIER row, and names that row. Public health is the case: it sits
+     inside emsPhExpansion, which the EMS row already accounts for, so adding
+     its annualB to a total would count that $45B twice. Reported rather than
+     hidden, because "no cost line of its own" is part of the finding -- but
+     reported against the domain that actually lacks one, not against both
+     domains that share a line. */
+  pricedInsideRow: string | null;
+}
+
+/* Each parameter once. Summing the rows double-counts emsPhExpansion. */
+export function underSpecifiedAnnualB(rows: UnderSpecified[]): number {
+  const seen = new Set<string>();
+  let total = 0;
+  for (const row of rows) {
+    for (const id of row.paramIds) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      total += PARAMS_BY_ID[id] ? PARAMS_BY_ID[id].mode : 0;
+    }
+  }
+  return total;
+}
+
+export function underSpecifiedExpansions(root = REPO_ROOT): UnderSpecified[] {
+  const counts = requirementFamilyCounts(root);
+  const out: UnderSpecified[] = [];
+  const seenFamilies = new Set<string>();
+  for (const exclusion of CREATED_SCOPE_EXCLUSIONS) {
+    const family = exclusion.requirementFamily;
+    /* dental, vision and hearing are three domains under one family; report
+       the family once, priced once */
+    const key = family || exclusion.domain;
+    if (seenFamilies.has(key)) continue;
+    const requirements = family ? (counts.get(family) ?? 0) : 0;
+    if (requirements >= UNDER_SPECIFIED_BELOW) continue;
+    seenFamilies.add(key);
+    const domain = family
+      ? CREATED_SCOPE_EXCLUSIONS.filter((e) => e.requirementFamily === family)
+        .map((e) => e.domain).join(', ')
+      : exclusion.domain;
+    /* first row to name a parameter owns its dollars; later rows sharing it
+       say whose line they are inside */
+    const owner = out.filter(
+      (row) => exclusion.paramIds.every((id) => row.paramIds.indexOf(id) >= 0))[0];
+    out.push({
+      domain: domain,
+      family: family,
+      requirements: requirements,
+      annualB: exclusion.paramIds.reduce(
+        (total, id) => total + (PARAMS_BY_ID[id] ? PARAMS_BY_ID[id].mode : 0), 0),
+      paramIds: exclusion.paramIds,
+      pricedInsideRow: owner ? owner.domain : null
+    });
+  }
+  return out;
+}
+
+/* The chapter has to actually render the measurement, not merely be able to.
+   Astro frontmatter is stripped from the served HTML, so this reads the source
+   for the call AND for the loop that emits it: importing the function and
+   never mapping over the result is the "a mention is not a use" defect the
+   §S7 review found and §S8 wrote again. */
+export function underSpecifiedRendered(root = REPO_ROOT): boolean {
+  const page = readFileSync(join(root, WORKFORCE_PAGE), 'utf8');
+  return /underSpecifiedExpansions\s*\(/.test(page) &&
+    /UNDER_SPECIFIED\.map\s*\(/.test(page);
+}
+
 /* R29 [§S9a]: a research file must not carry a "we could not get this" note
  * for data the repository already holds.
  *
@@ -1988,7 +2099,6 @@ export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
  * The methodology row is the strongest of the three, because it carries the
  * base and the product as well as the rate: `760,000 x 75% = 570,000` cannot
  * survive an edit to plan `eliminated` or plan `supported` either. */
-const SUPPORT_RATE_FRAMEWORK = 'research/framework_v2_extract.md';
 const SUPPORT_RATE_METHODOLOGY = 'research/workforce_transition_methodology.md';
 const SUPPORT_RATE_PAGE = 'src/pages/workforce.astro';
 const SUPPORT_RATE_CLIENT = 'src/scripts/workforce-client.ts';
@@ -2010,12 +2120,12 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
         (TPP-3.6, PR-SCH-010) and matching a bare percentage would pass on any
         of them. Absence is drift -- a row that stops stating a threshold is
         how a check quietly turns itself off. */
-  const framework = readFileSync(join(root, SUPPORT_RATE_FRAMEWORK), 'utf8');
+  const framework = readFileSync(join(root, FRAMEWORK_EXTRACT), 'utf8');
   const kppRows = framework.split('\n').filter(
     (l) => l.includes('KPP-W1') && />=\s*\d+(\.\d+)?%/.test(l));
   if (!kppRows.length) {
     out.push({
-      where: SUPPORT_RATE_FRAMEWORK,
+      where: FRAMEWORK_EXTRACT,
       says: 'no KPP-W1 row states a threshold',
       expected: '>=' + declaredPct + '%'
     });
@@ -2024,7 +2134,7 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
     for (const m of row.matchAll(/>=\s*(\d+(?:\.\d+)?)%/g)) {
       if (Number(m[1]) !== declaredPct) {
         out.push({
-          where: SUPPORT_RATE_FRAMEWORK + ' KPP-W1',
+          where: FRAMEWORK_EXTRACT + ' KPP-W1',
           says: '>=' + m[1] + '%',
           expected: '>=' + declaredPct + '%'
         });

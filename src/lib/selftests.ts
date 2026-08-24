@@ -77,7 +77,8 @@ import {
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
-  anchoredOccupationCodes, solvedResearchBlockers,
+  anchoredOccupationCodes, requirementFamilyCounts, solvedResearchBlockers,
+  underSpecifiedExpansions, underSpecifiedRendered,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -2508,6 +2509,25 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          the methodology note, and the floor the chapter shows a reader.
          Without this, declaring WORKER_SUPPORT_RATE would only move the
          literal, not source it. */
+      /* R168 [§S9a]: requirement density runs inversely to cost. The four
+         thinnest requirement families govern the benefit expansions, and the
+         chapter has to keep saying so as long as it is true -- and stop when
+         it is not. Both sides move: the counts come from the framework
+         transcription, the dollars from params.ts. */
+      runGuarded('The under-specified benefit families are named where the floor excludes them', () => {
+        const thin = underSpecifiedExpansions();
+        const rendered = underSpecifiedRendered();
+        const families = requirementFamilyCounts();
+        const thickest = Math.max(...families.values());
+        return {
+          ok: rendered && thin.length > 0 && thickest >= 5,
+          note: !rendered
+            ? 'the chapter no longer renders the under-specified families'
+            : thin.map((u) => (u.family || u.domain) + ' ' + u.requirements +
+              ' reqs, $' + u.annualB + 'B/yr').join('; ') +
+              ' (thickest family: ' + thickest + ')'
+        };
+      }),
       /* R29 [§S9a]: research/05 said the BLS occupation counts "could not be
          retrieved" and carried an action item for the next agent, while the
          counts sat in the workforce methodology note. A stale blocker costs

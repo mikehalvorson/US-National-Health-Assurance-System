@@ -1979,6 +1979,28 @@ footer.site a { color: var(--text-muted); }
   color: var(--text-secondary); font-size: 11.2px; line-height: 1.5;
 }
 .workforce-scope-warning p span { color: var(--text-primary); font-weight: 700; }
+/* R168 [§S9a]: the under-specified benefit families, rendered from the
+   framework transcription at build time. Spans both columns of the scope
+   warning so it reads as a table under the paragraph rather than as a third
+   grid cell. Same three-column row shape as .workforce-risk-row. */
+.workforce-underspec-list {
+  grid-column: 1 / -1; margin: 4px 0 0; padding: 0; list-style: none;
+}
+.workforce-underspec-list li {
+  display: grid; grid-template-columns: minmax(150px, .8fr) minmax(0, 1fr) minmax(0, .8fr);
+  gap: 15px; align-items: baseline; padding: 7px 0;
+  border-top: 1px solid var(--gridline);
+}
+.workforce-underspec-list li > b {
+  color: var(--text-primary); font-size: 11.5px; line-height: 1.4;
+}
+.workforce-underspec-list li > span {
+  color: var(--text-secondary); font-size: 10.8px; line-height: 1.45;
+}
+.workforce-underspec-list li > span:last-child { color: var(--series-5); }
+@media (max-width: 720px) {
+  .workforce-underspec-list li { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+}
 .workforce-labor-grid {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 17px; margin-top: 18px;

@@ -277,6 +277,12 @@ export interface ScopeExclusion {
      guess what prose looks like is a check that will be loosened later. */
   pageWords: string[];
   note: string;
+  /* R168 [§S9a]: the framework requirement family that governs this domain,
+     and the parameter that prices it. The two together are the finding:
+     requirement density runs inversely to cost. Null family means no SR
+     family governs the domain at all, which is the strongest form of it. */
+  requirementFamily: string | null;
+  paramIds: string[];
 }
 
 export const CREATED_SCOPE_EXCLUSIONS: ScopeExclusion[] = [
@@ -284,6 +290,8 @@ export const CREATED_SCOPE_EXCLUSIONS: ScopeExclusion[] = [
     domain: 'long-term care',
     status: 'sized-separately',
     pageWords: ['long-term care'],
+    requirementFamily: 'SR-LTC',
+    paramIds: ['ltcExpansion', 'ltcWageFloor'],
     note: 'The direct-care aide workforce is sized in its own section and its ' +
       'wage-floor cost is carried in the fiscal model. It is kept out of the ' +
       'ledger above because the entrant-pace math is about insurance and ' +
@@ -293,6 +301,8 @@ export const CREATED_SCOPE_EXCLUSIONS: ScopeExclusion[] = [
     domain: 'behavioral health',
     status: 'not-sized',
     pageWords: ['behavioral health'],
+    requirementFamily: 'SR-BH',
+    paramIds: ['bhExpansion'],
     note: 'No national job quantity is fixed for the behavioral-health benefit.'
   },
   /* Dental, vision and hearing are one benefit family and three entries. The
@@ -302,30 +312,42 @@ export const CREATED_SCOPE_EXCLUSIONS: ScopeExclusion[] = [
     domain: 'dental',
     status: 'not-sized',
     pageWords: ['dental'],
+    requirementFamily: 'SR-DVH',
+    paramIds: ['dvhExpansion'],
     note: 'No national job quantity is fixed for the dental benefit.'
   },
   {
     domain: 'vision',
     status: 'not-sized',
     pageWords: ['vision'],
+    requirementFamily: 'SR-DVH',
+    paramIds: ['dvhExpansion'],
     note: 'No national job quantity is fixed for the vision benefit.'
   },
   {
     domain: 'hearing',
     status: 'not-sized',
     pageWords: ['hearing'],
+    requirementFamily: 'SR-DVH',
+    paramIds: ['dvhExpansion'],
     note: 'No national job quantity is fixed for the hearing benefit.'
   },
   {
     domain: 'EMS',
     status: 'not-sized',
     pageWords: ['ems'],
+    requirementFamily: 'SR-EMS',
+    paramIds: ['emsPhExpansion'],
     note: 'No national job quantity is fixed for the emergency medical services benefit.'
   },
   {
     domain: 'public health',
     status: 'not-sized',
     pageWords: ['public health'],
+    /* No SR-PH family exists. Public health is priced inside
+       emsPhExpansion and governed by nothing of its own. */
+    requirementFamily: null,
+    paramIds: ['emsPhExpansion'],
     note: 'No national job quantity is fixed for the public-health expansion.'
   }
 ];
