@@ -11,17 +11,21 @@ import { PARAMS_BY_ID } from '../../src/lib/params';
    scenarios inside one `.every()`, asserted as `expect(ok).toBe(true)`. A
    break read `expected false to be true` and named neither the relation nor
    the scenario. §S9a has to distinguish a deliberate re-derivation from a
-   regression and cannot do it against one boolean, so the twelve are twelve
-   named tests, generated from the same table the build gate reads. */
-describe('Workforce: the twelve cross-decomposition invariants (V19)', () => {
+   regression and cannot do it against one boolean, so they are named tests,
+   generated from the same table the build gate reads.
+
+   Fifteen, not twelve: R65 adds `sum(LEGACY.inside) = inside`, the second
+   independently authored decomposition of the same total, which reconciled
+   before anything asserted it. */
+describe('Workforce: the cross-decomposition invariants (V19)', () => {
   for (const row of workforceSelfTests()) {
     /* asserting the NOTE, not the flag: a failure then prints both sides */
     test(row.name, () => expect(row.ok ? 'holds' : row.note).toBe('holds'));
   }
 
   /* and the table itself, so quietly deleting a relation is not a green run */
-  test('the table still holds twelve invariants', () => {
-    expect(workforceSelfTests().length).toBe(12);
+  test('the table still holds fifteen invariants', () => {
+    expect(workforceSelfTests().length).toBe(15);
   });
 });
 

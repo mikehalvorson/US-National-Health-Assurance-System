@@ -192,19 +192,28 @@ export const CREATED: CreatedItem[] = [
   }
 ];
 
-/* ---- The twelve cross-decomposition invariants ---------------------------
-   V19 and the audit both describe this module as carrying "twelve
-   cross-decomposition invariants, twelve passes". In the code they were four
-   relations AND-ed across three scenarios inside a single `.every()` in
+/* ---- The cross-decomposition invariants ----------------------------------
+   V19 describes this module as carrying "twelve cross-decomposition
+   invariants, twelve passes". In the code they were four relations AND-ed
+   across three scenarios inside a single `.every()` in
    tests/lib/workforce.test.ts, collapsed to one `expect(ok).toBe(true)`. A
    break read `expected false to be true` and named neither the relation nor
    the scenario -- unserviceable for a section whose job is to distinguish a
    deliberate re-derivation from a regression.
 
-   They are twelve named rows here, one per relation per scenario, and this
-   surface is registered in SELF_TEST_SOURCES, so a break fails `pnpm build`
-   and not only `pnpm test`. Each row's note carries BOTH sides, so the
-   failure states what disagreed with what.
+   The audit describes two DIFFERENT twelves. Both list four relations across
+   three scenarios; they agree on three relations and disagree on the fourth.
+   One counts `supported = eliminated x rate`, which is what the code
+   asserted. The other counts `sum(LEGACY.inside) = inside`, which the code
+   did not assert -- and which the audit elsewhere records, correctly, as
+   untested. There are FIVE relations of interest, four of them asserted here
+   and the fifth (`supported`) a policy rate rather than a decomposition, so
+   the honest count is five relations across three scenarios: fifteen.
+
+   They are named rows here, one per relation per scenario, and this surface
+   is registered in SELF_TEST_SOURCES, so a break fails `pnpm build` and not
+   only `pnpm test`. Each row's note carries BOTH sides, so the failure states
+   what disagreed with what.
 
    The relations are genuine cross-checks, not restatements: every quantity on
    the left is authored independently of every quantity on the right. Keep it
@@ -242,6 +251,18 @@ const CROSS_RELATIONS: CrossRelation[] = [
   {
     label: 'sum(CREATED.fills) = inside',
     measured: (s) => CREATED.reduce((total, item) => total + item.fills[s], 0),
+    declared: (s) => SCENARIOS[s].inside
+  },
+  /* R65 [§S9a]: the second, independently authored decomposition of the same
+     total. `inside` is maintained on the LEGACY side (workers whose function
+     survives) and `fills` on the CREATED side (new roles filled by
+     transitioning workers). Both reconciled before this assertion existed;
+     only the CREATED side was guarded, so editing any LEGACY.inside value
+     broke the reconciliation with nothing failing. This is the relation the
+     audit's own summary counts among "twelve" and the code never asserted. */
+  {
+    label: 'sum(LEGACY.inside) = inside',
+    measured: (s) => LEGACY.reduce((total, item) => total + item.inside[s], 0),
     declared: (s) => SCENARIOS[s].inside
   },
   {
