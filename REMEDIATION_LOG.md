@@ -2760,3 +2760,85 @@ STILL OPEN, and whose:
   - **The 14 non-finite equation cells**: still 14, still inert, still nobody's.
   - **Eight of the ten care cards cite outside sources** nothing in this
     repository can verify. The self-test reports the split.
+
+### THE CODE REVIEW
+
+Run after the section and after this entry was first written, two axes in
+parallel against the fixed point `8f3f013`. **Standards raised six, Spec raised
+three.** Both agents were checked against the code rather than believed: one
+Standards finding was overstated and is recorded as such; the rest hold. Landed
+as `5ec32b8`.
+
+🛑 **The worst finding was the Spec axis's, and it was in `R171` - the row whose
+whole subject is a disclosure reaching a reader.** The per-card carrier of the
+residual-billing caveat was a `title=` attribute. Present in the markup,
+reachable with a mouse, invisible on a touch device and in print, and read by
+`residualCaveatSitesMissing` as though it were rendered text. **A tooltip half
+the readers cannot open is worse than no per-card disclosure**, because to
+whoever checks with a mouse it looks like one. The `$0` now carries
+`aria-describedby` pointing at the caveat rendered visibly under the card grid;
+the check strips attribute values before scanning, so a tooltip cannot satisfy
+it. Proven by moving the caveat into a `title=`.
+
+🛑 **And the fix for another finding was itself dead at compile time.**
+`FRAMEWORK_SOURCED_TITLES` was added to record in code the measurement behind
+`R164`'s refusal to grade any title `framework`. Written as a bare `= 0` it
+takes the literal type `0`, so `FRAMEWORK_SOURCED_TITLES !== 0` is a comparison
+TypeScript rejects as impossible: the guard could never fire, and the break
+written to prove it died at `astro check` instead of naming its own row.
+Annotated `number`. **Third time in this section that a defect of the shape
+being fixed was written by the pass fixing it** - after the tolerance reuse in
+`R81` and the read-list scan in `R171`. 🆕 **A count a later edit is meant to
+raise has to be typed as a count**; a bare integer literal in TypeScript is not
+a number, it is that number.
+
+⚠️ **`reliefYearProblems` overclaimed, and the review overstated it back.** The
+Standards agent reported the check "cannot fail". Mutating the gate selection
+from `min` to `max` fails the build on all four two-gate cards, so it is real
+for those four and vacuous for the six single-gate ones, where one gate makes
+both sides the same arithmetic. **Measured by mutation, not argued.** The
+comment now states which of the three things the function does are checkable
+and which is not, and the prefix is scanned in full rather than only the year
+before, which covers a non-monotone ramp the single-year test would miss.
+
+⚠️ **`careGatesWithoutMilestone` claimed more independence than it has.** Its
+comment said the two lists are "maintained in different files by different
+rows"; `R81` added the `coverage@P7 0.99` milestone in the same commit as the
+gate that needed it. Corrected in place: separate from here on, not separate at
+birth, and the check earns its keep from the next edit.
+
+⚠️ **Five duplications, every one against a principle this section had just
+written down.** The catalog-code regex was written three times, once per commit
+that needed it - the same duplication `PARAMETER_EXPLORER = HEALTH_PAGE` was
+collapsed to avoid, one field over. `params.ts` owns the shape now
+(`CATALOG_CODE_SOURCE` + `catalogCode(flags?)` returning a fresh RegExp, so no
+caller inherits another caller's `lastIndex`). The mask-and-strip pair was
+written out in three checks and is now `renderedSource`, memoised. `overview.ts`
+lower-cased the first character of a shared sentence to splice it mid-clause.
+
+⚠️ **Golden rules 2 and 4, in strings this section added.**
+`LEADER_BASIS_NOTE` told the reader the titles were "not quoted from" the plan,
+which advertises a quotable source document rule 2 keeps off this chapter, and
+leaned on "X is not the same as Y" scaffolding rule 4 names. The badge read
+"Staffing design, not plan text" on all 84 cards; it now reads "Proposed by this
+dashboard". "Sooner, and a different thing:" is now "Arriving sooner:".
+
+**Recorded and deliberately not acted on**, both from the Spec axis:
+  - `9e13f5e` carries no `R` number, against the one-rec-per-commit order. Real,
+    disclosed in the commit itself, and already pushed.
+  - `care.ts` at 892 lines is Divergent Change - card data, ramp arithmetic,
+    view-string builders, household profiles and thirteen checks in one module.
+    Splitting data from checks is a seam move under a frozen architecture, and
+    the repo's own precedent (`model.ts` `selfTest()`, `equations.ts`
+    `equationSelfTests`) keeps checks beside their data. **Filed for whoever
+    moves that seam, not done here.**
+
+**`R164` keeps `existing`/`design`** over grading all 84 `design`. The Spec axis
+is right that the row's binary is unsatisfiable in letter; it is answered by
+measurement instead, and that measurement is now a declared constant with a
+check on it rather than a sentence in a commit message.
+
+**After the review: 32 breaks, all behaving, tree clean, self-tests still 172.**
+The break pass was re-run in full and one break was repaired mid-pass, which is
+how the dead comparison was found: it failed the build without naming its check,
+and the harness reports that as a failure rather than a pass.
