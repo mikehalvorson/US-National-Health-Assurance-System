@@ -79,7 +79,7 @@ import {
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   anchoredOccupationCodes, requirementFamilyCounts, solvedResearchBlockers,
   underSpecifiedExpansions, underSpecifiedRendered,
-  UNITS_COST_STRESSORS, unitsCostStressorDrift,
+  UNITS_COST_STRESSORS, unitsCostRangeDrift, unitsCostStressorDrift,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -2510,6 +2510,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          the methodology note, and the floor the chapter shows a reader.
          Without this, declaring WORKER_SUPPORT_RATE would only move the
          literal, not source it. */
+      /* R188 [§S9a]: the unit page prints the computed network cost against
+         "healthcare model's parameter covers $15-36B", and that range is a
+         hardcoded copy of unitsCost. Move a bound in params.ts and the page
+         advertises a disagreement that is not the one that exists -- and
+         that sentence is the evidence R188 rests on for reducing §S9b. */
+      runGuarded('The unit page reconciles against unitsCost\'s actual range', () => {
+        const bad = unitsCostRangeDrift();
+        const p = PARAMS_BY_ID['unitsCost'];
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => 'units-client.ts says ' + b.says +
+            ', expected ' + b.expected).join(' | ') ||
+            'the page reconciles against $' + p.low + '-' + p.high + 'B'
+        };
+      }),
       /* R62 [§S9a]: R60 refuses an override keyed to a parameter that does
          not exist. Part 1 specifies keeping `unitsCost` resolving to a shim,
          which satisfies R60 while the three stress scenarios go on

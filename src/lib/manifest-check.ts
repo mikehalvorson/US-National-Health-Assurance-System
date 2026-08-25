@@ -1435,6 +1435,54 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
   return found;
 }
 
+/* R188 [§S9a]: the reconciliation gap the unit page prints is real, and the
+ * range it prints it against is a hardcoded copy of `unitsCost`.
+ *
+ * R188's finding is a scope reduction for §S9b and both halves check out:
+ * `UNIT_TYPES` in units-client.ts carries per-type opLo/opMode/opHi and
+ * capital for types A to D, mode spread 3.4 / 0.45 = 7.56x (the row says
+ * ~7.6x), and `renderVerdict()` does render the computed network cost beside
+ * "healthcare model's parameter covers $15-36B". Part 1 is a connection job.
+ *
+ * The defect found while verifying it: that "$15-36B" is typed into the
+ * client. It is `unitsCost.low` and `.high`, restated. Move either bound in
+ * params.ts and the page goes on printing the old range, so the disagreement
+ * it advertises stops being the disagreement that exists -- and this sentence
+ * is the evidence R188 rests on for reducing §S9b's scope.
+ *
+ * Same defect class as R64's typed ledger figures, on a different chapter.
+ * The check is here rather than an edit to units-client.ts because that file
+ * is §S9b's; a build-time reader does not move the seam. */
+const UNITS_PAGE_CLIENT = 'src/scripts/units-client.ts';
+
+export interface UnitsCostRangeDrift {
+  says: string;
+  expected: string;
+}
+
+export function unitsCostRangeDrift(root = REPO_ROOT): UnitsCostRangeDrift[] {
+  const param = PARAMS_BY_ID['unitsCost'];
+  if (!param) return [];
+  const text = readFileSync(join(root, UNITS_PAGE_CLIENT), 'utf8');
+  /* the page writes an en dash between the bounds; accept either */
+  const printed = text.match(
+    /parameter covers \$(\d+(?:\.\d+)?)[-–—](\d+(?:\.\d+)?)B/);
+  const expected = '$' + param.low + '-' + param.high + 'B';
+  if (!printed) {
+    return [{
+      says: 'the unit page states no model range to reconcile against',
+      expected: expected
+    }];
+  }
+  if (Number(printed[1]) !== param.low || Number(printed[2]) !== param.high) {
+    return [{
+      says: '$' + printed[1] + '-' + printed[2] + 'B',
+      expected: expected
+    }];
+  }
+  return [];
+}
+
 /* R62 [§S9a]: the three scenarios that stress unit cost, named, so §S9b
  * cannot deprecate `unitsCost` and leave them running while stressing
  * nothing.
