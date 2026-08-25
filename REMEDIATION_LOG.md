@@ -3538,6 +3538,133 @@ CONTRADICTIONS: `§AZ3` versus golden rule 2 is still open and still nobody's
   a catalog code in a rendered tile label and is outside the five surfaces
   `narrativeCatalogCodes` scans. **The scan's surface list is the problem, not
   any one page.**
+THE CODE REVIEW: run after the entry above was written and after fifteen
+  breaks were proven, against the same fixed point `38d3e3c`, on two axes in
+  parallel. **Sixteen findings. Both axes re-ran the allocation over the county
+  file independently and confirmed every figure above; what they found wrong
+  was the reporting around it, and one live defect.** Fixed in `25db18f`.
+
+  🛑 **Three claims in the entry above were wrong when written**, and are
+  corrected here rather than edited out:
+
+  1. **"Replaced by a cited national comparator"** -- the comparator held a
+     `source` and a `url` and the page rendered neither. A reader saw a count,
+     a label and a year, with nothing to check them against. It is a graded row
+     now, rendered in the table with its link, and the survey name is a link in
+     the lead paragraph.
+  2. **"Stated on `units.astro`"**, of the absorption control's independence
+     from `unitsCost`. It was not stated anywhere on the page. It is now, in
+     the paragraph under the grade table, and it says why the two are
+     deliberately apart rather than only that they are.
+  3. **"the figure appeared exactly once in the entire repository"**, of
+     `~1.1 billion`. It appears twice: `docs/index.html` carries it in the
+     retired tree. Nothing reads it there either, so the substance of
+     DISCREPANCY 2 holds and the wording did not. The same sentence is in
+     `1c79188`'s commit body.
+
+  Standards axis, seven findings:
+
+  1. 🛑 **A check that cannot fail, in the section that exists to close them.**
+     `tests/lib/units.test.ts` asserted `t.fte === UNIT_TYPES[t.key].fte` while
+     `workforce.ts` assigned `fte: UNIT_TYPES.a.fte`. **The same commit added
+     the comment stating the rule it broke.** Fourth consecutive section to
+     ship one of these, and the second in a row where the review rather than
+     the section caught it.
+
+     🆕 **Replacing it found something worse.** `UNIT_MODEL.allocation` was an
+     array literal, so it read `UNIT_TYPES` **once at module load** -- still a
+     copy, just taken at import rather than typed by hand. The replacement
+     test moves `UNIT_TYPES.c.fte` and watches the ledger, and it **failed**:
+     nothing downstream moved. `allocation` is a getter now. This is the
+     finding the tautology was hiding, and it is why the fix for a vacuous
+     assertion has to be an assertion that can fail rather than a deletion.
+
+  2. 🛑 **A dead guard.** A regex testing `confidence` against
+     `low|medium|high` on a field typed as exactly those three. Same shape as
+     `§BU4`/`R275`'s unreachable branch in `fmea.ts`, and the second one this
+     section shipped -- DISCREPANCY 4 above is the other. Replaced with the
+     claim the page and the note both make: no model input is graded above
+     `low`.
+
+  3. **A threshold standing in for an equality.** The reconciliation asserted
+     only that the annualised window overlapped `unitsCost`'s range, leaving
+     operating cost free to fall 40% or rise 34% while the note advertised
+     agreement "within a couple of percent". `modeErrorPct` was computed,
+     printed, and never gated. Gated at 10% against a measured 3.4%, with a
+     test that reprices every type by a third to show the ranges can still
+     overlap while the check correctly fails.
+
+  4. **A note claiming what its check did not assert** ("none above low").
+     5. **A title over-promising** ("...and not the modelled cost", from an
+     `ok` that only checked the count moves). Both are the same shape as the
+     typed-figure defect `e660d10` caught: **the string a reader sees is not
+     held to the boolean beside it.**
+
+  6. **A page importing the audit harness.** `units.astro` pulled
+     `countyDemand` from `manifest-check.ts`. It is a loader, not a check;
+     `src/lib/counties.ts` owns it now and `manifest-check.ts` re-exports it,
+     so there is still one reader and one cache.
+
+  7. **Duplicated declarations**: `pct` in two files, `UnitCounts` and
+     `Totals` in two files.
+
+  Spec axis, nine findings. Three are the corrections above. The rest:
+
+  8. 🛑 **Done-when clause 2 was violated by the commit that claimed it.**
+     "the relationship between the existing `UNIT_TYPES` model and `unitsCost`
+     is stated in **one place**". `unitsCostComparison()` computed the scaling
+     in `units.ts`; `renderVerdict()` recomputed it inline and never imported
+     the function, and the self-test only exercised the `units.ts` path. **The
+     number a reader saw was not the number the build checked** -- the exact
+     defect class this section exists to remove, in the tile that exists to
+     close it. Rendered values are unchanged, which is what makes it the
+     dangerous kind.
+
+  9. **`GAP-BH-013` was never touched**, while `R186` carried a DONE stamp.
+     The row says in as many words: "Add the throughput vector to
+     `GAP-BH-013`". Now done, with the note that one UDS Table 5 pull closes
+     the skill mixes and the throughputs together.
+
+  10. **The HRSA comparator had no vintage**, on a rollup page that changes
+      yearly. It says 2025 now.
+
+  11. **Two floors counted as one.** `totals.floored` summed the rural access
+      floor and the last-resort floor, and the page rendered the total as if
+      it were all the first: 493 was 491 + 2. Split, and both are stated.
+      DISCREPANCY 3 and NEW FINDING 4 above both depend on the distinction,
+      and the page was contradicting them.
+
+  Verified and upheld: every number in the entry above and in `1c79188`'s
+  body, re-derived independently by both axes -- 24,099 units, $38.484B,
+  $23.95B at the target, $26.807B/$24.905B annualised, 19,436/28,889 at the
+  ends of the control, 491 floored, and "the share test adds zero" exact.
+  Memoisation, `units.ts` purity, the manifest, the README count, no em dash,
+  and `unitAllocationDrift`'s two-sidedness all clean.
+
+  **Not done, and now recorded rather than implied: `R188`'s first test.**
+  "`unitsCost`'s distribution is derived from `UNIT_TYPES` x the allocated
+  counts" means replacing the authored `15/25/36` in `params.ts` with a
+  computed distribution. The parameter is one of `R135`'s empty-`url` entries
+  and belongs to `§S11b` with the rest of its sourcing; deriving it here would
+  also couple the Monte Carlo to a county file, which is a modelling decision
+  no row authorises. `R188`'s stamp says so now. Its second test, "the tab and
+  the model report the same network operating cost", is met.
+
+  Counts after the review: self-tests **207**, unchanged -- five rows edited,
+  none added or removed. Full suite **424** passing, **58** files. `astro
+  check` 0 errors, 0 warnings, 1 hint. File manifest **123 -> 124**
+  (`src/lib/counties.ts`). Break-and-restore **19**, four of them new and
+  aimed at the review's own fixes.
+
+  🆕 **Two traps to add to the P12 list above.**
+  - **A shell-quoted replacement wrote a literal newline into a Python string
+    literal, twice**, producing a `SyntaxError` on the next run. Third and
+    fourth instance of A4 in one session.
+  - **A break payload that introduces a duplicate object key fails the build
+    for the wrong reason** and reports a PASS if the expected substring
+    happens to appear in the compiler's error. Caught because the payload
+    reported `exit=0` with a plugin error in the tail, which is not a shape
+    the harness models. **Assert the check name, and read the exit code.**
 
 STILL OPEN, NOT THIS SECTION'S: `R135`'s seven `low`-confidence parameters with
   empty `url` (`§S11b`, twelfth session) — and `unitsCost` is one of the nine
