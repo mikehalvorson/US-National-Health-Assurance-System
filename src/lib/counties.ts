@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { CountyDemand } from './units';
+import type { CountyRecord } from './units';
 
 /* src/lib/counties.ts -> repo root */
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -30,13 +30,13 @@ export const COUNTY_DATA = 'public/data/counties.json';
 /* Memoised per root, the repo convention for any filesystem read inside a
    self-test: the file is 244 KB and both the self-test pass and the page
    render would otherwise re-parse it. */
-const countyCache = new Map<string, CountyDemand[]>();
+const countyCache = new Map<string, CountyRecord[]>();
 
-export function countyDemand(root = REPO_ROOT): CountyDemand[] {
+export function countyDemand(root = REPO_ROOT): CountyRecord[] {
   const hit = countyCache.get(root);
   if (hit) return hit;
   const parsed = JSON.parse(
-    readFileSync(join(root, COUNTY_DATA), 'utf8')) as CountyDemand[];
+    readFileSync(join(root, COUNTY_DATA), 'utf8')) as CountyRecord[];
   countyCache.set(root, parsed);
   return parsed;
 }

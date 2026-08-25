@@ -326,7 +326,7 @@ def region_name(members: set[str]) -> str:
         frozenset({"IL", "MN", "WI"}): "Upper Midwest",
         frozenset({"AL", "IN", "KY", "MS", "TN"}): "Ohio Valley and Mid-South",
         frozenset({"MI", "OH", "WV"}): "Great Lakes and Appalachia",
-        frozenset({"DC", "MD", "PA", "VA"}): "Chesapeake",
+        frozenset({"DC", "MD", "PA", "VA"}): "Mid-Atlantic",
         frozenset({"DE", "NJ", "NY"}): "Northeast Metro",
     }
     return names.get(frozenset(members), " / ".join(sorted(members)))
@@ -389,6 +389,19 @@ def main() -> None:
                 "A boundary move cannot raise destination mean state-centroid distance above 300 miles",
             ],
             "source": "Census 2024 county population estimates and 2020 rural shares in public/data/counties.json",
+            # R72/R191 (S9c): the map colours regions so that no two sharing a
+            # border share a fill. The adjacency that answers "share a border"
+            # is this model's own -- it is what enforces the contiguity
+            # constraint above. Emitting it means the browser colours from the
+            # same graph the partition was built on, rather than from a second
+            # table in TypeScript that could drift from this one.
+            "state_adjacency": {s: sorted(n) for s, n in sorted(ADJACENCY.items())},
+            # R71/R190 (S9c): and the GeoJSON feature name each abbreviation
+            # belongs to, for the same reason. The render loop resolves a
+            # feature to a region through this map; a spelling that only
+            # exists in units-client.ts is a state silently dropped from a map
+            # whose description says every state is drawn.
+            "state_names": {s: STATE_NAMES[s] for s in sorted(STATE_NAMES)},
         },
         "regions": output_regions,
     }

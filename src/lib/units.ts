@@ -255,6 +255,20 @@ export interface CountyDemand {
   r: number;
 }
 
+/* R88/R213 [§S9c]: what public/data/counties.json actually carries, as
+   against what the allocation reads.
+   
+   `allocateCounty` takes `CountyDemand` and reads exactly two fields, which
+   is why it can be called with an object literal in a test. The file has more
+   -- the state code above all, which is how the region model's thirteen
+   populations get checked against the same 3,144 rows the unit network is
+   built from. Two types rather than one optional field, so neither caller
+   has to guard for a field the other guarantees. */
+export interface CountyRecord extends CountyDemand {
+  /* state USPS abbreviation */
+  s: string;
+}
+
 export interface UnitCounts { a: number; b: number; c: number; d: number; total: number }
 
 export interface AllocationTotals {

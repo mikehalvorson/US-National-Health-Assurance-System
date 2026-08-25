@@ -13,8 +13,37 @@ import {
 } from '../lib/units';
 import { countyDemand } from '../lib/counties';
 import { gradedUnitRows } from '../lib/manifest-check';
+/* R87 R211 R212 R88 R213 [§S9c]: every figure the regional model section
+   states about its own result, computed here from the shipped model file.
+   Each one used to be prose, and the two that were numbers were the two the
+   audit could check. */
+import { regionModel } from '../lib/region-data';
+import {
+  fragmentationAnchor, regionGeometry, selectionMargin, weightIntervals,
+  FRAGILE_WITHIN
+} from '../lib/hospital-regions';
 const THROUGHPUTS = UNIT_TYPE_KEYS.map((k) => UNIT_TYPES[k].throughput / 1000 + 'k').join(' / ');
 const NATIONAL_BILLIONS = Math.round(NATIONAL_OFFICE_VISITS.visits / 1e8) / 10;
+
+const REGIONS = regionModel();
+const MODEL = REGIONS.model;
+const GEO = regionGeometry(REGIONS.regions);
+const MARGIN = selectionMargin(MODEL.tested_region_counts, MODEL.selected_region_count);
+const ANCHOR = fragmentationAnchor(MODEL.tested_region_counts);
+const INTERVALS = weightIntervals(
+  MODEL.tested_region_counts, MODEL.weights, MODEL.selected_region_count);
+const FRAGILE = INTERVALS.filter((i) => i.fragile);
+const WEIGHT_LABELS: Record<string, string> = {
+  population_scale: 'Population scale',
+  geographic_compactness: 'Geographic compactness',
+  rural_workload: 'Rural workload balance',
+  administrative_fragmentation: 'Administrative fragmentation'
+};
+/* The two regions furthest below target, which the page named neither of. */
+const SMALLEST = GEO.below.slice(0, 2);
+const LARGEST = GEO.above.slice(0, 2);
+const M = (n: number) => (n / 1e6).toFixed(1) + 'M';
+const MILLION = (n: number) => (n / 1e6).toFixed(1) + ' million';
 
 /* Both ends of the absorption control, run over the same county file the
    client fetches. Typed prose here would be a figure nothing could check --
@@ -210,19 +239,32 @@ const GRADED = gradedUnitRows();
     <span class="physical-kicker">A reproducible regional model</span>
     <h2>Thirteen nonprofit operating regions balance scale with local accountability</h2>
     <p class="desc">A planning model aggregated all 3,144 counties to states,
-      then compared 10 through 16 contiguous regional partitions. It weighted
-      population scale 45%, geographic compactness 25%, rural workload 15%,
-      and the administrative cost of too many regions 15%. Every state and the
-      District of Columbia is assigned once; state boundaries stay intact.
-      The model selected 13 regions. California and Texas remain above the
-      26.2 million target because state integrity is a hard constraint, so
-      each would use internal operating districts.</p>
+      then compared {MODEL.tested_region_counts[0].regions} through
+      {MODEL.tested_region_counts[MODEL.tested_region_counts.length - 1].regions}
+      contiguous regional partitions. It weighted population scale
+      {Math.round(MODEL.weights.population_scale * 100)}%, geographic
+      compactness {Math.round(MODEL.weights.geographic_compactness * 100)}%,
+      rural workload {Math.round(MODEL.weights.rural_workload * 100)}%, and the
+      administrative cost of too many regions
+      {Math.round(MODEL.weights.administrative_fragmentation * 100)}%. Every
+      state and the District of Columbia is assigned once; state boundaries
+      stay intact. The model scored {MODEL.selected_region_count} regions best.
+      {LARGEST[0].region.name} and {LARGEST[1].region.name} remain above the
+      {MILLION(GEO.target)} target because state integrity is a hard
+      constraint, so each would use internal operating districts.</p>
     <div class="tiles hospital-model-tiles">
-      <div class="tile"><div class="label">Selected operating regions</div><div class="value">13</div><div class="range">lowest composite score: 0.059</div></div>
-      <div class="tile"><div class="label">Population assigned</div><div class="value">340.1M</div><div class="range">2024 county estimates</div></div>
-      <div class="tile"><div class="label">Population target per region</div><div class="value">26.2M</div><div class="range">state integrity overrides the target</div></div>
+      {/* R212: the tile used to show the winning score with no runner-up and
+          no spread, so a reader saw a clear optimum where the methodology
+          published a near-tie. Both numbers were already in the file. */}
+      <div class="tile"><div class="label">Selected operating regions</div><div class="value">{MARGIN.selected}</div><div class="range">composite {MARGIN.selectedTotal.toFixed(3)}, ahead of {MARGIN.runnerUp} regions at {MARGIN.runnerUpTotal.toFixed(3)} by {MARGIN.marginPct.toFixed(1)}%</div></div>
+      <div class="tile"><div class="label">Population assigned</div><div class="value">{M(GEO.total)}</div><div class="range">2024 county estimates</div></div>
+      <div class="tile"><div class="label">Population target per region</div><div class="value">{M(GEO.target)}</div><div class="range">achieved spread {GEO.spread.toFixed(2)}x, {GEO.smallest.id} to {GEO.largest.id}</div></div>
     </div>
     <div id="hospital-region-map"></div>
+    {/* R71/R190: what the map actually drew, written by the client after it
+        draws it. Static fallback text so a reader with no script is not told
+        anything the page has not checked. */}
+    <p class="note" id="hospital-region-integrity">Map integrity is checked when the map draws.</p>
     <div class="hospital-region-control">
       <label for="hospital-region-select">Inspect a region</label>
       <select id="hospital-region-select" aria-label="Select a nonprofit hospital administration region"></select>
@@ -232,6 +274,88 @@ const GRADED = gradedUnitRows();
       <span class="physical-section-label">Candidate model score (lower is better)</span>
       <div id="hospital-region-scores" aria-label="Scores for candidate region counts"></div>
     </div>
+    {/* R211: the three facts the methodology states separately and never puts
+        together. The third one is arithmetic, so it is computed rather than
+        asserted: if the fragmentation penalty ever stops being a parabola
+        centred on the selected count, this paragraph stops claiming it is. */}
+    <div class="warnbox">
+      <p><b>How much of this result is the scoring.</b> Every candidate map is
+        a version of the {MODEL.selected_region_count}-region one. The
+        {MODEL.selected_region_count}-region map was drawn by hand from state
+        contiguity, population, and recognizable operating geography; the
+        lower counts merge its regions and the higher counts split them. So
+        the comparison is between one hand-drawn map and
+        {MODEL.tested_region_counts.length - 1} deformations of it, not
+        between independent attempts at the problem.</p>
+      {ANCHOR && (
+        <p>And {Math.round(MODEL.weights.administrative_fragmentation * 100)}% of
+          the score is defined relative to the answer. The administrative
+          fragmentation term is exactly
+          {ANCHOR.coefficient.toFixed(2)} times the squared distance from
+          {ANCHOR.anchor} regions, so it is zero for the
+          {ANCHOR.zeroAt}-region map and a penalty for every other candidate.
+          A term that scores distance from an option cannot also be evidence
+          for it.</p>
+      )}
+      <p>The {MARGIN.marginPct.toFixed(1)}% margin over {MARGIN.runnerUp}
+        regions should be read that way: {MODEL.selected_region_count} regions
+        is a planning judgement that the scoring supports, not the output of a
+        search over possible partitions. The model does not claim otherwise;
+        this page previously did, by omission.</p>
+    </div>
+    {/* R87: the sweep the audit asked for, run here rather than published as
+        a static table, so it cannot go stale against the weights above. */}
+    <div class="tbl-scroll">
+      <table class="data">
+        <caption class="physical-section-label">Does {MODEL.selected_region_count} regions survive a different weighting? Each row moves one weight and rescales the other three.</caption>
+        <thead>
+          <tr><th>Objective term</th><th>Weight</th><th>{MODEL.selected_region_count} regions wins while the weight is</th><th>Verdict</th></tr>
+        </thead>
+        <tbody>
+          {INTERVALS.map((i) => (
+            <tr>
+              <th scope="row">{WEIGHT_LABELS[i.weight]}</th>
+              <td>{Math.round(i.authored * 100)}%</td>
+              <td>{Number.isNaN(i.low)
+                ? 'never'
+                : Math.round(i.low * 100) + '% to ' + Math.round(i.high * 100) + '%'}</td>
+              <td>{i.fragile ? 'flips within ' + Math.round(FRAGILE_WITHIN * 100) + ' points' : 'robust'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Read the third column against the second. Population scale
+      and compactness can be weighted almost anywhere and
+      {MODEL.selected_region_count} regions still scores best, so the two
+      largest terms are not what decides this.
+      {FRAGILE.length > 0 && (
+        <Fragment> The {FRAGILE.length === 1 ? 'term that does decide it is' : 'terms that decide it are'} {FRAGILE.map((i) => WEIGHT_LABELS[i.weight].toLowerCase()).join(' and ')}, {FRAGILE.length === 1 ? 'which sits' : 'which sit'} within {Math.round(FRAGILE_WITHIN * 100)} points of a weighting that selects a different number of regions.</Fragment>
+      )}
+      That is the honest summary of a {MARGIN.marginPct.toFixed(1)}% margin,
+      and it is a reason to treat the count as a decision to be made in public
+      rather than a number the model handed over.</p>
+    {/* R88: the page explained the two regions above target and said nothing
+        about the two equally far below it. R213: and the balance term. */}
+    <p class="note"><b>What the selected map achieved.</b> State integrity
+      explains the large regions: {LARGEST.map((r) => r.region.name + ' at ' +
+      r.ratio.toFixed(2) + 'x target').join(' and ')}. It does not explain the
+      small ones. {SMALLEST.map((r) => r.region.name + ' is ' +
+      r.ratio.toFixed(2) + 'x').join(' and ')}, and
+      {SMALLEST[0].region.name} is further from target than
+      {LARGEST[0].region.name} is. Those are optimizer outcomes, not
+      constraint outcomes: the small regions could have been merged with a
+      neighbor and were not. Smallest to largest, the spread is
+      {GEO.spread.toFixed(2)}x. On rural workload, which carries
+      {Math.round(MODEL.weights.rural_workload * 100)}% of the objective
+      precisely to avoid concentrating sparse-area obligations, the achieved
+      range runs from {(GEO.ruralLow.rural_share * 100).toFixed(1)}% rural in
+      {GEO.ruralLow.name} to {(GEO.ruralHigh.rural_share * 100).toFixed(1)}% in
+      {GEO.ruralHigh.name}, a {GEO.ruralSpread.toFixed(1)}x spread. Rural
+      population is geographically clustered and states cannot be split, so
+      some concentration is unavoidable under the hard constraints. The term
+      reduces the spread; it does not remove it, and the page should not imply
+      that it does.</p>
     <p class="note">These are administrative regions, not walls around
       patients. Specialty referrals, disaster response, border communities,
       and tribal or federal systems can cross them. Alaska-Washington and

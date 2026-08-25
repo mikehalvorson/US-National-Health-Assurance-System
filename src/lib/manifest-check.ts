@@ -15,8 +15,17 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { ACRONYMS as SITE_ACRONYMS } from './acronyms';
 import { CARE_SCENARIOS } from './care';
 import { countyDemand } from './counties';
+import {
+  assignRegionColors, bestCount, colorClashes, fragmentationAnchor,
+  regionAdjacency, regionAssignmentFaults, scoreBarFraction, selectionMargin,
+  stateCollisions, weightedTotal, weightIntervals,
+  type AssignmentFault, type ColorClash, type FragmentationAnchor,
+  type SelectionMargin, type WeightInterval
+} from './hospital-regions';
+import { regionModel, stateFeatureNames } from './region-data';
 import {
   allocateUnits, CAPITAL_AMORTISATION_YEARS, NATIONAL_COMPARATOR,
   NETWORK_ABSORPTION, networkCost, UNIT_ASSUMPTIONS, unitsCostComparison,
@@ -1677,6 +1686,223 @@ export function absorptionSpan(root = REPO_ROOT): AbsorptionSpan {
     lowUnits: lo.total, highUnits: hi.total,
     lowOpB: networkCost(lo).opTotal, highOpB: networkCost(hi).opTotal,
     unitsCostMode: PARAMS_BY_ID['unitsCost'].mode
+  };
+}
+
+/* =========================================================================
+ * §S9c — the thirteen-region hospital administration model
+ * ========================================================================= */
+
+/* R71 / R190: the claim the SVG description makes to a screen reader, run
+ * against the shipped rosters AND the shipped outlines.
+ *
+ * The description said "every state and the District of Columbia is assigned
+ * once" and the render loop dropped anything it could not resolve, so the two
+ * failure modes it forbids -- a state in two regions, a state in none, an
+ * outline whose name matches no abbreviation -- were all silent. §AH verified
+ * by hand that the data was correct; hand verification is not a guard, which
+ * is the whole of what R71 asks for. */
+export function regionAssignmentReport(root = REPO_ROOT): {
+  faults: AssignmentFault[]; states: number; features: number; regions: number;
+} {
+  const model = regionModel(root);
+  const names = stateFeatureNames(root);
+  return {
+    faults: regionAssignmentFaults(model.regions, model.model.state_names, names),
+    states: Object.keys(model.model.state_names).length,
+    features: names.length,
+    regions: model.regions.length
+  };
+}
+
+/* R72 / R191: no two regions that share a border share a fill.
+ *
+ * Two halves, because the first without the second is the shape §S9a and
+ * §S9b both shipped and their reviews both caught: a clash check over an
+ * empty adjacency graph reports "no clashes" forever. So the graph is checked
+ * for substance first -- every region has at least one neighbour, the
+ * relation is symmetric -- and only then for clashes. */
+export interface RegionColoring {
+  clashes: ColorClash[];
+  graphFaults: string[];
+  distinctColors: number;
+  regions: number;
+  edges: number;
+  maxDegree: number;
+}
+
+export function regionColoring(root = REPO_ROOT): RegionColoring {
+  const model = regionModel(root);
+  const adjacency = regionAdjacency(model.regions, model.model.state_adjacency);
+  const colors = assignRegionColors(model.regions, adjacency);
+  const graphFaults: string[] = [];
+  let edges = 0;
+  let maxDegree = 0;
+  for (const [id, neighbours] of adjacency) {
+    edges += neighbours.size;
+    maxDegree = Math.max(maxDegree, neighbours.size);
+    if (!neighbours.size) graphFaults.push(id + ' borders no other region');
+    for (const n of neighbours) {
+      if (!adjacency.get(n)?.has(id)) {
+        graphFaults.push(id + ' borders ' + n + ' but not the reverse');
+      }
+    }
+  }
+  /* The state adjacency the graph is built from has to cover the states the
+     rosters assign, or a region with no listed neighbours looks isolated
+     rather than unlisted. */
+  for (const r of model.regions) {
+    for (const s of r.states) {
+      if (!(s in model.model.state_adjacency)) {
+        graphFaults.push(s + ' is in ' + r.id + ' and has no adjacency entry');
+      }
+    }
+  }
+  return {
+    clashes: colorClashes(adjacency, colors),
+    graphFaults,
+    distinctColors: new Set(colors.values()).size,
+    regions: model.regions.length,
+    edges: edges / 2,
+    maxDegree
+  };
+}
+
+/* R192: the selected candidate draws the tallest bar.
+ *
+ * Asserted through the same function the client renders with, so this cannot
+ * pass while the chart is inverted. It was inverted: the bar was proportional
+ * to a score the caption itself describes as lower-is-better. */
+export function scoreChartEncoding(root = REPO_ROOT): {
+  ok: boolean; selected: number; tallest: number; selectedFraction: number;
+} {
+  const model = regionModel(root).model;
+  const scores = model.tested_region_counts;
+  const best = Math.min(...scores.map((s) => s.total));
+  const worst = Math.max(...scores.map((s) => s.total));
+  let tallest = scores[0];
+  let tallestF = scoreBarFraction(scores[0].total, best, worst);
+  for (const s of scores) {
+    const f = scoreBarFraction(s.total, best, worst);
+    if (f > tallestF) { tallest = s; tallestF = f; }
+  }
+  return {
+    ok: tallest.regions === model.selected_region_count,
+    selected: model.selected_region_count,
+    tallest: tallest.regions,
+    selectedFraction: scoreBarFraction(
+      scores.find((s) => s.regions === model.selected_region_count)!.total, best, worst)
+  };
+}
+
+/* R87 / R211 / R212: the published result is the one its own components
+ * produce, and the margin the page shows is real.
+ *
+ * Two independent sides, which is what makes it a check rather than a
+ * restatement. `total` and `selected_region_count` were written by
+ * tools/model_hospital_regions.py; the reconstruction re-derives both from the
+ * four components and the four weights in the same file. A hand-edited score,
+ * a re-weighting that was never re-run, or a component dropped from the
+ * emitter all break it. */
+export interface RegionSelectionCheck {
+  reconstructionFaults: string[];
+  declaredWinner: number;
+  computedWinner: number;
+  margin: SelectionMargin;
+  anchor: FragmentationAnchor | null;
+  fragile: WeightInterval[];
+  intervals: WeightInterval[];
+}
+
+/* Floating point: the components are 17-digit doubles and the weights are
+   two-decimal literals, so the reconstruction agrees to rounding, not to the
+   bit. A component silently dropped moves a total by percent, not by 1e-15. */
+export const SCORE_RECONSTRUCTION_TOLERANCE = 1e-12;
+
+export function regionSelection(root = REPO_ROOT): RegionSelectionCheck {
+  const model = regionModel(root).model;
+  const scores = model.tested_region_counts;
+  const faults: string[] = [];
+  for (const s of scores) {
+    const t = weightedTotal(s, model.weights);
+    if (Math.abs(t - s.total) > SCORE_RECONSTRUCTION_TOLERANCE) {
+      faults.push(s.regions + ' regions: file says ' + s.total +
+        ', its components weight to ' + t);
+    }
+  }
+  const sumW = Object.values(model.weights).reduce((a, b) => a + b, 0);
+  if (Math.abs(sumW - 1) > 1e-9) faults.push('the four weights sum to ' + sumW + ', not 1');
+  return {
+    reconstructionFaults: faults,
+    declaredWinner: model.selected_region_count,
+    computedWinner: bestCount(scores, model.weights),
+    margin: selectionMargin(scores, model.selected_region_count),
+    anchor: fragmentationAnchor(scores),
+    fragile: weightIntervals(scores, model.weights, model.selected_region_count)
+      .filter((i) => i.fragile),
+    intervals: weightIntervals(scores, model.weights, model.selected_region_count)
+  };
+}
+
+/* R88 / R213 / V18: the region file and the county file describe the same
+ * country.
+ *
+ * The handoff into this section flagged it as free: §S9b measures the
+ * national total from public/data/counties.json and §AH verified the thirteen
+ * region populations sum to 340,110,988, and nothing compared the two. They
+ * are genuinely independent -- one is 3,144 rows summed in TypeScript, the
+ * other is thirteen integers written by a Python model -- so this is the
+ * strongest arithmetic check on this page. */
+export interface RegionCountyAgreement {
+  regionTotal: number;
+  countyTotal: number;
+  perRegion: { id: string; regionSays: number; countiesSay: number }[];
+}
+
+export function regionCountyAgreement(root = REPO_ROOT): RegionCountyAgreement {
+  const model = regionModel(root);
+  const byState = new Map<string, number>();
+  for (const c of countyDemand(root)) {
+    byState.set(c.s, (byState.get(c.s) ?? 0) + c.p);
+  }
+  const perRegion: { id: string; regionSays: number; countiesSay: number }[] = [];
+  for (const r of model.regions) {
+    const countiesSay = r.states.reduce((a, s) => a + (byState.get(s) ?? 0), 0);
+    if (countiesSay !== r.population) {
+      perRegion.push({ id: r.id, regionSays: r.population, countiesSay });
+    }
+  }
+  return {
+    regionTotal: model.regions.reduce((a, r) => a + r.population, 0),
+    countyTotal: [...byState.values()].reduce((a, b) => a + b, 0),
+    perRegion
+  };
+}
+
+/* R70: an acronym key that is also a US state abbreviation.
+ *
+ * This is a tripwire, not the fix. The fix on this page is that the three
+ * containers rendering bare state codes carry `data-no-acronyms`, which both
+ * decorators honour. But the glossary is where the hazard originates, and it
+ * grows: `PA` and `VA` collide today, and `IN`, `OR`, `OK`, `ID`, `ME`, `HI`,
+ * `DE` and `MS` are all expansions someone could add without ever thinking
+ * about a map.
+ *
+ * So the collisions are pinned. A new one fails the build and lands on
+ * whoever added it, rather than surfacing as Pennsylvania being read out as a
+ * job title. Removing one also fails, which is correct: the site-wide half of
+ * this is R307 in §S13, and when it lands this list is how it proves it. */
+export const KNOWN_STATE_ACRONYM_COLLISIONS = ['PA', 'VA'];
+
+export function stateAcronymCollisions(root = REPO_ROOT): {
+  collisions: string[]; unexpected: string[]; resolved: string[];
+} {
+  const names = regionModel(root).model.state_names;
+  const collisions = stateCollisions(Object.keys(SITE_ACRONYMS), names);
+  return {
+    collisions,
+    unexpected: collisions.filter((c) => !KNOWN_STATE_ACRONYM_COLLISIONS.includes(c)),
+    resolved: KNOWN_STATE_ACRONYM_COLLISIONS.filter((c) => !collisions.includes(c))
   };
 }
 

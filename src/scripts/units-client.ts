@@ -13,6 +13,10 @@ import {
   unitsCostComparison,
   type AllocationTotals, type NetworkCost, type UnitCounts
 } from '../lib/units';
+import {
+  assignRegionColors, regionAdjacency, regionAssignmentFaults, scoreBarFraction,
+  type Region, type RegionsData
+} from '../lib/hospital-regions';
 
 const BASE = import.meta.env.BASE_URL;
 function $(id: string): HTMLElement | null { return document.getElementById(id); }
@@ -344,8 +348,11 @@ function typeColorsPlain(): TypeColors {
 
 function renderMapUnits(): void {
   const host = $('units-map');
-  if (!host) return;
-  renderUnitsMap(host, DATA.states!, DATA.counties!, typeFilter, typeColorsPlain());
+  /* R193 [§S9c]: the outlines are their own fetch now, so this can be reached
+     with counties loaded and us-states.json missing. The caller writes the
+     message; this just declines to draw. */
+  if (!host || !DATA.states || !DATA.counties) return;
+  renderUnitsMap(host, DATA.states, DATA.counties, typeFilter, typeColorsPlain());
 }
 
 function renderStateTable(): void {
@@ -370,8 +377,13 @@ function renderStateTable(): void {
   rows.forEach(function (s) {
     const tr = tbl.insertRow();
     [s.st!, s.pop.toLocaleString('en-US'), s.a, s.b, s.c, s.d, s.total,
-     Math.round(s.pop / s.total).toLocaleString('en-US')].forEach(function (v) {
-      tr.insertCell().textContent = String(v);
+     Math.round(s.pop / s.total).toLocaleString('en-US')].forEach(function (v, i) {
+      const cell = tr.insertCell();
+      /* R70 [§S9c]: column 0 is 51 bare state codes, so PA and VA were being
+         decorated here on every page view with the details open -- a second
+         live vector on this page, and one no pass of the audit reached. */
+      if (i === 0) stateCodeHost(cell);
+      cell.textContent = String(v);
     });
   });
 }
@@ -429,40 +441,27 @@ function wireUnitControls(): void {
 /* =========================================================================
  * Hospital administration regions (docs/js/hospitalregions.js, verbatim)
  * ========================================================================= */
-interface Region {
-  id: string; name: string; states: string[]; population: number;
-  rural_share: number; centroid: number[]; mean_state_centroid_miles?: number;
-}
-interface RegionsData {
-  regions: Region[];
-  model: { tested_region_counts: { regions: number; total: number }[]; selected_region_count: number };
-}
-
 let selectedId = 'R01';
 
-const STATE_TO_ABBR: Record<string, string> = {
-  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
-  'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
-  'District of Columbia': 'DC', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI',
-  'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-  'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME',
-  'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN',
-  'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE',
-  'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM',
-  'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-  'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI',
-  'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX',
-  'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA',
-  'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
-};
+/* R71/R190/R72/R191 [§S9c]: the name table and the colour list used to be
+   literals here.
 
-const REGION_COLORS = [
-  'var(--series-1)', 'var(--series-6)', 'var(--series-3)',
-  'var(--series-2)', 'var(--series-5)', 'var(--series-1)',
-  'var(--series-8)', 'var(--series-4)', 'var(--series-6)',
-  'var(--series-2)', 'var(--series-5)', 'var(--series-7)',
-  'var(--series-3)'
-];
+   The name table was 51 entries of `'Pennsylvania': 'PA'` maintained beside
+   the identical table in tools/model_hospital_regions.py, and the render loop
+   dropped any GeoJSON feature it could not find in it -- silently, under an
+   SVG description telling screen readers that every state is drawn. The
+   colour list was thirteen entries drawn from eight variables, applied by
+   array index, with no notion of which regions share a border.
+
+   Both now come from the model file, which the model tool emits: one name
+   table, one adjacency graph, and a colouring computed from it. */
+function stateToAbbr(model: RegionsData): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const abbr of Object.keys(model.model.state_names)) {
+    out[model.model.state_names[abbr]] = abbr;
+  }
+  return out;
+}
 
 function featurePath(feature: GeoFeature, projection: Projection): string {
   const geometry = feature.geometry;
@@ -501,10 +500,19 @@ function updateSelection(id: string): void {
   const head = document.createElement('strong');
   head.textContent = region.id + ' ' + region.name;
   detail.appendChild(head);
+  detail.appendChild(document.createTextNode(' · '));
+  /* R70 [§S9c]: the state codes go in their own marked span rather than the
+     whole line, so the rest of the sentence still gets its hovers. */
+  const states = stateCodeHost(document.createElement('span'));
+  states.textContent = region.states.join(', ');
+  detail.appendChild(states);
   detail.appendChild(document.createTextNode(
-    ' · ' + region.states.join(', ') +
     ' · ' + formatPopulation(region.population) +
     ' · ' + Math.round(region.rural_share * 100) + '% rural' +
+    /* R11 is the multi-state case and R09 the single-state one; the model
+       writes 0 miles for a single-state region rather than omitting the
+       field, so this reads a 0 as "no distance to average" and both the
+       missing and the zero case land on the same sentence. */
     (region.mean_state_centroid_miles
       ? ' · mean state-centroid distance ' +
         region.mean_state_centroid_miles.toLocaleString('en-US') + ' miles'
@@ -517,13 +525,26 @@ function renderRegionMap(): void {
   if (!container) return;
   container.innerHTML = '';
   const width = 960, height = 610;
+  const model = DATA.regions!;
   const projection = buildUsProjection(DATA.states!, width, height);
+  const abbrOf = stateToAbbr(model);
   const regionForState: Record<string, Region> = {};
-  const colorForRegion: Record<string, string> = {};
-  DATA.regions!.regions.forEach(function (region, index) {
-    colorForRegion[region.id] = REGION_COLORS[index % REGION_COLORS.length];
+  model.regions.forEach(function (region) {
     region.states.forEach(function (state) { regionForState[state] = region; });
   });
+
+  /* R72/R191 [§S9c]: adjacency-aware, so no two regions that share a border
+     share a fill and dissolve into one shape on a map whose only job is
+     showing where the borders are. */
+  const colorForRegion = assignRegionColors(
+    model.regions, regionAdjacency(model.regions, model.model.state_adjacency));
+
+  /* R71/R190 [§S9c]: measured before the loop, not discovered inside it.
+     `if (!region) return;` used to drop an unresolvable feature and carry on
+     under a description asserting that every state is drawn. */
+  const featureNames = DATA.states!.features.map(stateNameOf);
+  const faults = regionAssignmentFaults(
+    model.regions, model.model.state_names, featureNames);
 
   const svg = el('svg', {
     viewBox: '0 0 ' + width + ' ' + height,
@@ -532,20 +553,31 @@ function renderRegionMap(): void {
     'aria-labelledby': 'hospital-region-map-title hospital-region-map-desc'
   }, container);
   const title = el('title', { id: 'hospital-region-map-title' }, svg);
-  title.textContent = 'Thirteen proposed nonprofit hospital administration regions';
+  title.textContent = model.regions.length +
+    ' proposed nonprofit hospital administration regions';
   const desc = el('desc', { id: 'hospital-region-map-desc' }, svg);
-  desc.textContent =
-    'Every state and the District of Columbia is assigned once. Hover or focus a state for its region, population, and rural share.';
+  /* The description states what was drawn. It used to state what was intended,
+     which is the same sentence exactly as long as nothing has gone wrong. */
+  desc.textContent = faults.length
+    ? Object.keys(model.model.state_names).length + ' state-level jurisdictions were expected; ' +
+      faults.length + ' could not be placed and are missing from this map: ' +
+      faults.map(function (f) { return f.state + ' ' + f.problem; }).join('; ') +
+      '. Hover or focus a state for its region, population, and rural share.'
+    : Object.keys(model.model.state_names).length +
+      ' state-level jurisdictions, the fifty states and the District of Columbia, each assigned to exactly one region and each drawn once. ' +
+      'Hover or focus a state for its region, population, and rural share.';
 
   DATA.states!.features.forEach(function (feature) {
     const name = stateNameOf(feature);
-    const abbreviation = STATE_TO_ABBR[name];
+    const abbreviation = abbrOf[name];
     const region = regionForState[abbreviation];
+    /* Still skips, because there is nothing to draw -- but the skip is now
+       counted above and reported below, so absence is never silent. */
     if (!region) return;
     const path = el('path', {
       d: featurePath(feature, projection),
       class: 'hospital-map-state' + (region.id === selectedId ? ' is-selected' : ''),
-      fill: colorForRegion[region.id],
+      fill: colorForRegion.get(region.id)!,
       'fill-opacity': '0.52',
       tabindex: '0',
       'data-region': region.id,
@@ -554,7 +586,11 @@ function renderRegionMap(): void {
     function showRegionTip(event: PointerEvent): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = region.id + ' · ' + region.name;
-      const states = div('tip-row', box);
+      /* R70 [§S9c]: marked for the same reason as the detail line. The
+         tooltip host currently sits outside <main>, so no decorator reaches
+         it today; that is a fact about where one element is appended, not a
+         property anything holds, and this costs one attribute. */
+      const states = stateCodeHost(div('tip-row', box));
       states.textContent = region.states.join(', ');
       const metrics = div('tip-row', box);
       metrics.textContent = formatPopulation(region.population) +
@@ -572,7 +608,7 @@ function renderRegionMap(): void {
     });
   });
 
-  DATA.regions!.regions.forEach(function (region) {
+  model.regions.forEach(function (region) {
     const point = projection(region.centroid[0], region.centroid[1]);
     const label = el('text', {
       x: point[0].toFixed(1),
@@ -582,6 +618,23 @@ function renderRegionMap(): void {
     }, svg);
     label.textContent = region.id.replace('R', '');
   });
+
+  /* R71/R190 [§S9c]: and a sighted reader is told too. A screen-reader-only
+     correction would leave the map looking complete to everyone else. */
+  const note = $('hospital-region-integrity');
+  if (note) {
+    note.textContent = faults.length
+      ? 'Map integrity: ' + faults.length + ' of ' +
+        Object.keys(model.model.state_names).length +
+        ' states could not be placed and are missing from the map above (' +
+        faults.map(function (f) { return f.state + ' ' + f.problem; }).join('; ') + ').'
+      : 'Map integrity: all ' + Object.keys(model.model.state_names).length +
+        ' state-level jurisdictions are assigned to exactly one of the ' +
+        model.regions.length + ' regions and drawn exactly once, checked against the ' +
+        featureNames.length + ' outlines on this map. No two regions that share a border share a color.';
+    /* the shared warning style, so a fault is not a grey footnote */
+    note.className = faults.length ? 'note warnbox' : 'note';
+  }
 }
 
 function renderRegionControls(): void {
@@ -600,26 +653,48 @@ function renderRegionControls(): void {
   updateSelection(selectedId);
 }
 
+/* R192 [§S9c]: the bar used to be proportional to the composite score, and
+ * the composite score is lower-is-better -- so the winning candidate drew the
+ * shortest bar and read, at a glance, as the worst of the seven. The caption
+ * said "lower is better" and the aria-label stated the score correctly, which
+ * makes the chart labelled and still backwards: taller-means-more is a
+ * stronger convention than a caption.
+ *
+ * The bar now encodes advantage over the worst candidate, so the best option
+ * is the tallest. The printed number stays the raw score, because that is the
+ * figure the methodology publishes and a reader may want to compare. */
+const SCORE_BAR_MAX_PX = 49;
+const SCORE_BAR_MIN_PX = 7;
+
 function renderScores(): void {
   const host = $('hospital-region-scores');
   if (!host) return;
   host.innerHTML = '';
-  const tested = DATA.regions!.model.tested_region_counts;
-  const max = Math.max.apply(null, tested.map(function (row) { return row.total; }));
+  const model = DATA.regions!.model;
+  const tested = model.tested_region_counts;
+  /* the stylesheet lays this out as seven columns because the model happens
+     to score seven candidate counts; drive it from the data so scoring an
+     eighth does not silently overflow the row. */
+  host.style.gridTemplateColumns = 'repeat(' + tested.length + ', minmax(0, 1fr))';
+  const worst = Math.max.apply(null, tested.map(function (row) { return row.total; }));
+  const best = Math.min.apply(null, tested.map(function (row) { return row.total; }));
   tested.forEach(function (row) {
+    const selected = row.regions === model.selected_region_count;
     const cell = document.createElement('div');
-    cell.className = 'hospital-score' +
-      (row.regions === DATA.regions!.model.selected_region_count ? ' is-selected' : '');
+    cell.className = 'hospital-score' + (selected ? ' is-selected' : '');
     cell.setAttribute(
       'aria-label',
       row.regions + ' regions, composite score ' + row.total.toFixed(3) +
-      (row.regions === DATA.regions!.model.selected_region_count ? ', selected' : '')
+      ' where lower is better' + (selected ? ', selected' : '')
     );
     const value = document.createElement('span');
     value.textContent = row.total.toFixed(3);
     const bar = document.createElement('span');
     bar.className = 'hospital-score-bar';
-    bar.style.height = Math.max(7, Math.round(49 * row.total / max)) + 'px';
+    /* the best candidate fills the axis, the worst sits at the floor */
+    bar.style.height = Math.round(SCORE_BAR_MIN_PX +
+      (SCORE_BAR_MAX_PX - SCORE_BAR_MIN_PX) *
+      scoreBarFraction(row.total, best, worst)) + 'px';
     const label = document.createElement('span');
     label.textContent = String(row.regions);
     cell.appendChild(value);
@@ -632,6 +707,15 @@ function renderScores(): void {
 /* =========================================================================
  * Acronym decoration (docs/js/hospitalregions.js, verbatim)
  * ========================================================================= */
+/* R70 [§S9c]: `'PA': 'Physician assistant'` is gone from this map.
+ *
+ * On a page whose subject is geography, every two-letter key is a hazard: the
+ * decorator matches `\b(PA)\b` against arbitrary prose, and a list of states
+ * is arbitrary prose. `PA` was the only key that collided; `VA`, `IN`, `OR`,
+ * `ID`, `ME` and `HI` are all expansions someone could reasonably add later.
+ *
+ * Deleting the entry is half the fix and was never the live half. See
+ * ACRONYM_SAFE below. */
 const ACRONYMS: Record<string, string> = {
   'CMS': 'Centers for Medicare & Medicaid Services',
   'DOJ': 'Department of Justice',
@@ -646,12 +730,37 @@ const ACRONYMS: Record<string, string> = {
   'IV': 'Intravenous',
   'NHSA': 'National Hospital Stewardship Authority',
   'NP': 'Nurse practitioner',
-  'PA': 'Physician assistant',
   'RHA': 'Regional Health Administrators',
   'STI': 'Sexually transmitted infection',
   'UTI': 'Urinary tract infection',
   'VHA': 'Veterans Health Administration'
 };
+
+/* The attribute src/scripts/acronyms-client.ts already honours in its skip
+ * list. Marking a container with it is the half of R70 that fixes the live
+ * bug, and the reason it is needed is worth stating plainly:
+ *
+ * emptying this module's own map does nothing on the deployed page. The
+ * site-wide glossary in src/lib/acronyms.ts also defines `PA` as
+ * "Physician assistant" and `VA` as "Department of Veterans Affairs", and
+ * acronyms-client.ts runs a MutationObserver over <main> -- so it re-decorates
+ * anything this file renders, 200ms after it renders it, whatever this file's
+ * vocabulary says. The audit downgraded the Pennsylvania collision to latent
+ * on the grounds that decoration ran once at init against a region whose
+ * states do not collide. With that observer in place it is not latent: select
+ * R11 and the detail line comes back with PA and VA wrapped, aria-label and
+ * all, which reads them out to a screen reader as job titles.
+ *
+ * So the containers that render bare state codes declare themselves. Both
+ * decorators respect the declaration, and so will the next one. */
+const ACRONYM_SAFE = 'data-no-acronyms';
+
+/* Marks an element as state codes rather than prose, and returns it. */
+function stateCodeHost<T extends HTMLElement>(node: T): T {
+  node.setAttribute(ACRONYM_SAFE, '');
+  return node;
+}
+
 const acronymPattern = new RegExp('\\b(' + Object.keys(ACRONYMS).join('|') + ')\\b', 'g');
 let decorating = false;
 
@@ -663,7 +772,10 @@ function decorateAcronyms(root: HTMLElement | null): void {
   while (walker.nextNode()) {
     const node = walker.currentNode as Text;
     const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style, option') || !acronymPattern.test(node.nodeValue || '')) {
+    /* `[data-no-acronyms]` is in this skip list as well as the site-wide
+       decorator's, so the two agree about what is prose. */
+    if (!parent || parent.closest('abbr, script, style, option, [' + ACRONYM_SAFE + ']') ||
+        !acronymPattern.test(node.nodeValue || '')) {
       acronymPattern.lastIndex = 0;
       continue;
     }
@@ -714,43 +826,69 @@ function initUnits(): void {
   const main = mainEl();
   decorateAcronyms(main);
 
-  Promise.all([
-    fetch(BASE + 'data/counties.json').then(function (r) {
-      if (!r.ok) throw new Error('counties.json ' + r.status);
-      return r.json();
-    }),
-    fetch(BASE + 'data/us-states.json').then(function (r) {
-      if (!r.ok) throw new Error('us-states.json ' + r.status);
-      return r.json();
-    }),
-    fetch(BASE + 'data/hospital-regions.json').then(function (r) {
-      if (!r.ok) throw new Error('hospital-regions.json ' + r.status);
-      return r.json();
-    })
-  ]).then(function (res) {
-    DATA.counties = (res[0] as County[]).map(function (c) {
-      return { f: c.f, n: c.n, s: c.s, p: c.p, r: c.r, la: c.la, lo: c.lo };
-    });
-    DATA.states = res[1] as StatesGeo;
-    DATA.regions = res[2] as RegionsData;
+  /* R193 [§S9c]: three files, two independent sections, and it used to be one
+   * Promise.all with one .catch that wrote the same error into both maps. A
+   * 404 on hospital-regions.json destroyed the county map even though
+   * counties.json had loaded fine, and vice versa.
+   *
+   * allSettled, and each section renders if the files it actually needs
+   * arrived. The two maps share us-states.json -- that one failing does take
+   * both down, correctly, because neither can be drawn without the outlines,
+   * and the message says which file it was. */
+  async function grab(name: string): Promise<unknown> {
+    const r = await fetch(BASE + 'data/' + name);
+    if (!r.ok) throw new Error(name + ' ' + r.status);
+    return r.json();
+  }
+  const NAMES = ['counties.json', 'us-states.json', 'hospital-regions.json'];
 
-    /* county unit network */
-    wireUnitControls();
-    refreshUnits();
+  Promise.allSettled(NAMES.map(grab)).then(function (res) {
+    const failed: string[] = [];
+    res.forEach(function (r, i) {
+      if (r.status === 'rejected') failed.push(NAMES[i] + ' (' + String(r.reason) + ')');
+    });
+    DATA.error = failed.length ? failed.join('; ') : null;
+
+    const counties = res[0].status === 'fulfilled' ? res[0].value as County[] : null;
+    const states = res[1].status === 'fulfilled' ? res[1].value as StatesGeo : null;
+    const regions = res[2].status === 'fulfilled' ? res[2].value as RegionsData : null;
+    if (counties) {
+      DATA.counties = counties.map(function (c) {
+        return { f: c.f, n: c.n, s: c.s, p: c.p, r: c.r, la: c.la, lo: c.lo };
+      });
+    }
+    DATA.states = states;
+    DATA.regions = regions;
+
+    /* county unit network: needs counties, and needs the outlines only for
+       the dot map, so the verdict, the type cards and the state table survive
+       a missing us-states.json. */
+    if (counties) {
+      wireUnitControls();
+      refreshUnits();
+    }
+    if (!counties || !states) {
+      const host = $('units-map');
+      if (host) host.textContent = 'The county map could not be drawn: ' +
+        (failed.join('; ') || 'data missing') + '.';
+    }
 
     /* hospital administration regions */
-    renderRegionMap();
-    renderRegionControls();
-    renderScores();
+    if (regions && states) {
+      renderRegionMap();
+      renderRegionControls();
+      renderScores();
+    } else {
+      const rhost = $('hospital-region-map');
+      if (rhost) rhost.textContent = 'The region map could not be drawn: ' +
+        (failed.join('; ') || 'data missing') + '.';
+      /* the score chart does not need the outlines */
+      if (regions) {
+        renderRegionControls();
+        renderScores();
+      }
+    }
     decorateAcronyms(mainEl());
-  }).catch(function (e) {
-    DATA.error = String(e);
-    const host = $('units-map');
-    if (host) host.textContent =
-      'County data failed to load (' + DATA.error +
-      '). The Physical Care tab needs its data files under public/data.';
-    const rhost = $('hospital-region-map');
-    if (rhost) rhost.textContent = 'Regional model data failed to load (' + DATA.error + ').';
   });
 }
 

@@ -7,6 +7,7 @@ import {
   baselineCategorySplit, EMBEDDED_DRUG_CLINIC_SHARE, EMBEDDED_DRUG_HOSPITAL_SHARE,
   PROGRAM_INPUT_REAL_GROWTH, runPath, sampleParams, selfTest
 } from './model';
+import { FRAGILE_WITHIN, REGION_PALETTE } from './hospital-regions';
 import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
@@ -84,6 +85,8 @@ import {
   absorptionSpan, countyDemand, gradedUnitRows, unitAllocationDrift,
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
+  regionAssignmentReport, regionColoring, regionCountyAgreement,
+  regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -2707,6 +2710,123 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         };
       })
     ])
+  },
+  {
+    /* §S9c: the thirteen-region model. Every row here replaces a claim the
+       region map or the page made with nothing behind it. */
+    surface: 'hospital-regions.ts',
+    rows: () => [
+      /* R71 / R190: the SVG description tells a screen reader that every
+         state is assigned once and drawn once. §AH checked that by hand at
+         Pass 14 and it was true; the render loop went on silently dropping
+         anything it could not resolve, so nothing would have noticed when it
+         stopped being true. */
+      runGuarded('Every state is in exactly one region and drawn exactly once', () => {
+        const r = regionAssignmentReport();
+        return {
+          ok: !r.faults.length,
+          note: r.faults.map((f) => f.state + ' ' + f.problem).join(' | ') ||
+            r.states + ' states and the District of Columbia across ' + r.regions +
+            ' regions, checked against ' + r.features + ' map outlines'
+        };
+      }),
+      /* R72 / R191: thirteen regions were coloured from eight variables by
+         array index, so whether two regions sharing a border shared a fill
+         was luck. It happened to hold. The graph is checked before the
+         clashes, because a clash check over an empty graph passes forever --
+         which is the shape two previous sections shipped. */
+      runGuarded('No two regions that share a border share a color', () => {
+        const c = regionColoring();
+        return {
+          ok: !c.clashes.length && !c.graphFaults.length,
+          note: c.graphFaults.join(' | ') ||
+            c.clashes.map((x) => x.a + ' and ' + x.b + ' both ' + x.color).join(' | ') ||
+            c.regions + ' regions, ' + c.edges + ' shared borders, busiest has ' +
+            c.maxDegree + ' neighbors, coloured with ' + c.distinctColors +
+            ' of ' + REGION_PALETTE.length + ' palette entries'
+        };
+      }),
+      /* R192: the composite score is lower-is-better and the bar was
+         proportional to it, so the winner drew shortest. Asserted through the
+         function the client renders with. */
+      runGuarded('The score chart draws the selected candidate tallest', () => {
+        const e = scoreChartEncoding();
+        return {
+          ok: e.ok,
+          note: e.ok
+            ? e.selected + ' regions is both the selection and the full-height bar'
+            : e.tallest + ' regions draws tallest while ' + e.selected + ' is selected'
+        };
+      }),
+      /* R87 / R211 / R212: the published winner is the one the published
+         components and weights produce. Both sides come out of the model
+         file, but they were written by different halves of it -- the totals
+         and the winner by the emitter, the reconstruction from the four
+         components -- so a hand-edited score or a re-weighting that was never
+         re-run breaks this. */
+      runGuarded('The selected region count is what its own scoring produces', () => {
+        const s = regionSelection();
+        const agreed = s.declaredWinner === s.computedWinner;
+        return {
+          ok: !s.reconstructionFaults.length && agreed,
+          note: s.reconstructionFaults.join(' | ') ||
+            (!agreed
+              ? 'the file selects ' + s.declaredWinner + ' and its own weights select ' + s.computedWinner
+              : s.declaredWinner + ' regions wins by ' + s.margin.marginPct.toFixed(2) +
+                '% over ' + s.margin.runnerUp + ', and ' + s.fragile.length + ' of ' +
+                s.intervals.length + ' weights flip it within ' +
+                Math.round(FRAGILE_WITHIN * 100) + ' points')
+        };
+      }),
+      /* R211: the page states that the fragmentation term is a penalty on
+         distance from the selected count. It renders that paragraph only
+         while `fragmentationAnchor` returns one, so this asserts the
+         condition the prose is written under rather than the prose. */
+      runGuarded('The fragmentation term is still anchored on the selected count', () => {
+        const s = regionSelection();
+        return {
+          ok: !!s.anchor && s.anchor.anchor === s.declaredWinner,
+          note: !s.anchor
+            ? 'the fragmentation penalty is no longer a squared distance from one count, and the page paragraph saying it is must be rewritten'
+            : s.anchor.anchor === s.declaredWinner
+              ? 'zero at ' + s.anchor.zeroAt + ' regions, ' +
+                s.anchor.coefficient.toFixed(2) + ' times the squared distance elsewhere'
+              : 'anchored at ' + s.anchor.anchor + ' while ' + s.declaredWinner + ' is selected'
+        };
+      }),
+      /* V18 + R88 / R213: the region file and the county file describe the
+         same country. The two totals have been measured separately for two
+         sections and never compared. */
+      runGuarded('The region populations and the county file agree to the person', () => {
+        const a = regionCountyAgreement();
+        return {
+          ok: !a.perRegion.length && a.regionTotal === a.countyTotal,
+          note: a.perRegion.map((p) => p.id + ': regions say ' +
+            p.regionSays + ', counties say ' + p.countiesSay).join(' | ') ||
+            (a.regionTotal !== a.countyTotal
+              ? 'regions total ' + a.regionTotal + ', counties total ' + a.countyTotal
+              : a.countyTotal.toLocaleString('en-US') +
+                ' people, summed thirteen ways and 3,144 ways')
+        };
+      }),
+      /* R70: the glossary keys that are also state abbreviations, pinned.
+         The containers that render bare state codes opt out of decoration, so
+         this is a tripwire on the vocabulary rather than the fix. Growing the
+         list fails here; shrinking it also fails, which is how §S13's R307
+         will show its work. */
+      runGuarded('No unrecorded glossary entry collides with a state abbreviation', () => {
+        const c = stateAcronymCollisions();
+        return {
+          ok: !c.unexpected.length && !c.resolved.length,
+          note: c.unexpected.length
+            ? c.unexpected.join(', ') + ' now expand to something other than a state and are not recorded'
+            : c.resolved.length
+              ? c.resolved.join(', ') + ' no longer collide; update KNOWN_STATE_ACRONYM_COLLISIONS'
+              : c.collisions.join(' and ') +
+                ' collide with state abbreviations and are kept off state-code containers by data-no-acronyms'
+        };
+      })
+    ]
   },
   {
     /* R271 + R267: the inventory and the route registry stop being guesses */
