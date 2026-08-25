@@ -3176,6 +3176,85 @@ FOR §S9b, WHICH DEPENDS ON THIS SECTION: four tripwires are now aimed at it,
   pins `entrants === 150` and `annualEntrants === 12500` and will fail —
   correctly. Update the expected values deliberately; do not "fix" the test.
 
+
+THE CODE REVIEW: run after the entry above was written, against the same
+  fixed point `a4d1f97`, on two axes in parallel. **Both found real defects in
+  this section's own work, and one of them is a Done-when clause the entry
+  above claimed complete.** Fixed in `e660d10`.
+
+  Standards axis, six findings:
+
+  1. 🛑 **Golden rule 2, broken twice, by me.** "Never write 'the framework
+     says/calls for...'. State things directly as 'the plan' / 'the system.'"
+     I read the rule as being about catalog codes and wrote "the framework
+     specifies least" on the chapter and "the framework requires" into the
+     rendered support-rate basis -- the latter in a commit whose comment cites
+     golden rule 2 as its reason for keeping identifiers out of that string.
+     Both rewritten. **Two PRE-EXISTING violations remain on the same page**,
+     at lines 369 and 684; not mine, not touched, and they belong to the
+     site-wide golden-rule-2 row this log already carries as nobody's.
+
+  2. 🛑 **"fifteen each" was typed prose, on the page `R64` landed on.** The
+     guard asserted only that the thickest family was at or above the
+     threshold, so the sentence could go stale at sixteen with nothing
+     failing. **That is the exact defect class this section exists to close,
+     shipped in the commit that closed it.** Derived now. Verified by
+     injecting a sixteenth SR-ARCH requirement and rebuilding: the page reads
+     "16 rules each", and "15" again when it is removed.
+
+  3. **Duplicate path constants, four more of them**, after I recorded the
+     trap mid-section and fixed one instance. Collapsed to one name each.
+
+  4. **Twelve raw filesystem reads inside self-tests**, four of them re-reading
+     the same 20 KB note per pass, against a documented memoisation
+     convention. Routed through a cached reader. Stated accurately: 39 raw
+     reads predate this change, so the convention is honoured in the newer
+     checks rather than enforced.
+
+  5. **A coverage figure that could return {0, 0}.** The self-audit commit
+     replaced a typed count with module-level counters set as a side effect of
+     the check. Reading them first gave zeros: wrong rather than absent, which
+     is worse than the typed count it replaced. **The fix for a bad number
+     introduced a worse one.**
+
+  6. A duplicated `/* 4.` ordinal, and a ternary whose empty branch rendered
+     "spending, .".
+
+  Spec axis, three findings and four verifications:
+
+  7. 🛑 **The fourth "Done when" clause was neither met nor disputed** -- "the
+     direct-care headcounts have one source (coordinate with `§S9d`)". Seven
+     figures authored twice, in `LTC_WORKFORCE` and `ltc.ts`'s
+     `WORKFORCE_ASSESS`, with nothing holding them together. **`STATUS:
+     complete` above was wrong when written.** Now asserted equal, both sides
+     left authored, so `§S9d` can collapse them knowing it is safe.
+
+  8. 🛑 **`research/05` stated SOC 29-2072 two ways after my own edit**:
+     194,800 against 194,570. Different BLS products (OOH against OEWS), not a
+     correction of one by the other, and the file now says so. **R29's own
+     defect, committed while closing R29.**
+
+  9. **A comment claiming twelve registered rows while registering 23**, citing
+     "V19 and the audit both count them as twelve" -- contradicting this
+     section's own DISCREPANCY 2. The count is no longer restated there.
+
+  Verified and upheld: `ltcWageFloorCost()` untouched; "three, not four"
+  correct (`§BA5`'s "four" counts relations, not invariants); "none broke"
+  correct; and the 75% Done-when satisfied by a named sourced constant without
+  requiring `supported` to be derived.
+
+  Not done, and now recorded rather than silently skipped: **`R168`'s first
+  test, "every parameter above $50B/yr cites at least one governing
+  requirement", is not implemented.** Seven parameters qualify -- `lowValuePool`
+  88.5, `ltcExpansion` 230, `ltcWageFloor` 52, `bhExpansion` 70, `dvhExpansion`
+  60, `rdPublic` 85, `wealthTaxPotential` 350. Implementing it means authoring
+  a requirement citation per parameter in `params.ts`, which is `§S11b`/`§S10`
+  territory and needs sourcing this section cannot do. The seven are named here
+  so the next section has the list.
+
+  Counts after the review: self-tests **203**, full suite **400** passing,
+  `astro check` 0 errors / 0 warnings / 1 hint.
+
 STILL OPEN, NOT THIS SECTION'S: `R135`'s seven `low`-confidence parameters with
   empty `url` (`§S11b`, eleventh session). `R245`'s 7 role-less `aria-label`led
   `<div>`s on `risk.astro` (`§S14`). The 14 non-finite equation cells. Golden
