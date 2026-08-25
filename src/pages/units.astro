@@ -1,6 +1,29 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R186 [§S9b]: the assumptions behind the unit count, rendered from the same
+   data the allocation runs on. Every figure in the method note below used to
+   be typed prose beside literals in units-client.ts, and a reader had no way
+   to tell a measured input from a chosen one. src/lib/units.ts carries the
+   grade and the owner; this page shows both. Static HTML, so it is what a
+   crawler indexes and what a reader with no script sees. */
+import {
+  ALLOCATION_THRESHOLDS, allocateUnits, NATIONAL_OFFICE_VISITS, NETWORK_ABSORPTION,
+  UNIT_ASSUMPTIONS, UNIT_TYPE_KEYS, UNIT_TYPES, VISIT_SPLITS
+} from '../lib/units';
+import { countyDemand } from '../lib/manifest-check';
+
+const pct = (share: number) => Math.round(share * 100) + '%';
+const THROUGHPUTS = UNIT_TYPE_KEYS.map((k) => UNIT_TYPES[k].throughput / 1000 + 'k').join(' / ');
+const NATIONAL_BILLIONS = Math.round(NATIONAL_OFFICE_VISITS.visits / 1e8) / 10;
+
+/* Both ends of the absorption control, run over the same county file the
+   client fetches. Typed prose here would be a figure nothing could check --
+   the defect this whole section exists to close. */
+const COUNTIES = countyDemand();
+const ABSORPTION_LOW = allocateUnits(COUNTIES, NETWORK_ABSORPTION.min).total;
+const ABSORPTION_HIGH = allocateUnits(COUNTIES, NETWORK_ABSORPTION.max).total;
+const ABSORPTION_SPAN = ABSORPTION_HIGH - ABSORPTION_LOW;
 ---
 <BaseLayout title="National Health Assurance: Physical Care">
   <main>
@@ -300,28 +323,74 @@ import ChapterNav from '../components/ChapterNav.astro';
     <h2>The community front door, sized from need</h2>
     <p class="desc">The unit count is derived from the capacity needed to
       give urban and rural communities a practical front door to care. For
-      every U.S. county, this page estimates demand from population and rural
-      share (Census 2024 estimates, 2020 rural classifications), then converts
-      the network's expected share of the nation's ~1.1 billion annual
-      ambulatory encounters into units using realistic per-unit throughput.
-      Move the absorption slider to see how the count responds.</p>
+      every U.S. county, this page estimates demand as population times an
+      absorption rate (Census 2024 estimates, 2020 rural classifications),
+      splits it across the four unit types, and divides by per-unit
+      throughput. Move the absorption slider to see how the count responds.
+      For scale, the federal ambulatory survey counted about {NATIONAL_BILLIONS} billion
+      {NATIONAL_OFFICE_VISITS.label} in {NATIONAL_OFFICE_VISITS.year}; emergency and
+      hospital outpatient visits are on top of that, and the survey that
+      counted those ended in 2022.</p>
     <div class="control" style="max-width:420px">
       <label>Network absorption at maturity
         <span class="val" id="units-vpc-val"></span></label>
-      <input type="range" id="units-vpc" min="1.2" max="1.8" step="0.05" value="1.5"
+      <input type="range" id="units-vpc"
+        min={NETWORK_ABSORPTION.min} max={NETWORK_ABSORPTION.max}
+        step={NETWORK_ABSORPTION.step} value={NETWORK_ABSORPTION.default}
         aria-label="Network visits per person per year">
     </div>
     <div class="tiles" id="unit-verdict"></div>
-    <p class="note">Assumptions: urban visits split 28% micro-units, 57%
-      neighborhood units, 15% urban public-health units (folded into
-      Type B where a county has under 200,000 urban residents); rural
-      visits split 30% neighborhood, 70% rural enhanced; throughputs of
-      15k / 30k / 12k / 40k visits per year per unit for Types A–D;
-      majority-rural and small counties keep at least one Type C, and
-      every county gets at least one unit. Cost benchmarks come from
+    <p class="note">Assumptions: urban visits split {pct(VISIT_SPLITS.urban.a)} micro-units,
+      {pct(VISIT_SPLITS.urban.b)} neighborhood units, {pct(VISIT_SPLITS.urban.d)} urban
+      public-health units (folded into Type B where a county has under
+      {ALLOCATION_THRESHOLDS.urbanPopForTypeD.toLocaleString('en-US')} urban residents);
+      rural visits split {pct(VISIT_SPLITS.rural.b)} neighborhood,
+      {pct(VISIT_SPLITS.rural.c)} rural enhanced; throughputs of {THROUGHPUTS} visits
+      per year per unit for Types A–D; counties at or above
+      {pct(ALLOCATION_THRESHOLDS.ruralFloorShare)} rural, or under
+      {ALLOCATION_THRESHOLDS.ruralFloorPop.toLocaleString('en-US')} people, keep at least
+      one Type C, and every county gets at least one unit. Cost benchmarks come from
       urgent-care, retail-clinic, and FQHC economics in
       <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/02_hospital_clinical_workforce_education.md"
         target="_blank" rel="noopener">research file 02</a>.</p>
+  </section>
+
+  <!-- What the count rests on -->
+  <section class="card">
+    <h2>What the count rests on, and how much to trust it</h2>
+    <p class="desc">The numbers above are not all the same kind of thing. Some
+      are measured, some are policy choices, and most were chosen because a
+      capacity plan needs a number and no published one existed. Saying which
+      is which is more useful than presenting them all with equal weight, so
+      each input carries a confidence grade and the specific work that would
+      raise it. Nothing here is graded above low, and the network cost, the
+      unit count, and the unit-team headcount on the workforce chapter all
+      descend from these {UNIT_ASSUMPTIONS.length} rows.</p>
+    <div class="tbl-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Input</th><th>Value</th><th>Confidence</th><th>What it rests on</th><th>What would settle it</th></tr>
+        </thead>
+        <tbody>
+          {UNIT_ASSUMPTIONS.map((a) => (
+            <tr>
+              <th scope="row">{a.label}</th>
+              <td>{a.value}</td>
+              <td>{a.confidence}</td>
+              <td>{a.url
+                ? <Fragment>{a.basis} <a href={a.url} target="_blank" rel="noopener">Comparator source</a>.</Fragment>
+                : a.basis}</td>
+              <td>{a.owner}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">The absorption rate is the one to watch: it multiplies
+      every other input. Moving it from {NETWORK_ABSORPTION.min.toFixed(2)} to
+      {NETWORK_ABSORPTION.max.toFixed(2)} on the control changes the network by
+      {ABSORPTION_SPAN.toLocaleString('en-US')} units, which is
+      {Math.round(100 * ABSORPTION_SPAN / ABSORPTION_LOW)}% of the smaller network.</p>
   </section>
 
   <!-- The four types -->

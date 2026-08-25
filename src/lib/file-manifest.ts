@@ -90,6 +90,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/taxmodel.ts',
   'src/lib/taxparams.ts',
   'src/lib/toolchain-check.ts',
+  'src/lib/units.ts',
   'src/lib/workforce.ts',
   'src/pages/data.astro',
   'src/pages/gov.astro',

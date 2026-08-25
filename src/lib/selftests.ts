@@ -80,7 +80,9 @@ import {
   anchoredOccupationCodes, directCareHeadcountDrift, directCareSharedCount,
   requirementFamilyCounts, solvedResearchBlockers,
   underSpecifiedExpansions, underSpecifiedRendered,
-  UNITS_COST_STRESSORS, unitsCostRangeDrift, unitsCostStressorDrift,
+  UNITS_COST_STRESSORS, unitsCostStressorDrift,
+  absorptionSpan, countyDemand, unitAllocationDrift, unitAssumptionGaps,
+  UNIT_ASSUMPTION_IDS, unitsCostReconciliation, visitSplitClosure,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -109,7 +111,7 @@ import {
   shallowCareGateReasons
 } from './care';
 import {
-  unitAllocationTotal, unitMixWeightedFte,
+  UNIT_MODEL, unitAllocationTotal, unitMixWeightedFte,
   WORKER_SUPPORT_RATE, workforceSelfTests
 } from './workforce';
 import { leaderBasisCounts, leaderBasisProblems } from './gov';
@@ -2517,19 +2519,70 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          the methodology note, and the floor the chapter shows a reader.
          Without this, declaring WORKER_SUPPORT_RATE would only move the
          literal, not source it. */
-      /* R188 [§S9a]: the unit page prints the computed network cost against
-         "healthcare model's parameter covers $15-36B", and that range is a
-         hardcoded copy of unitsCost. Move a bound in params.ts and the page
-         advertises a disagreement that is not the one that exists -- and
-         that sentence is the evidence R188 rests on for reducing §S9b. */
-      runGuarded('The unit page reconciles against unitsCost\'s actual range', () => {
-        const bad = unitsCostRangeDrift();
-        const p = PARAMS_BY_ID['unitsCost'];
+      /* R188 [§S9b]: the reconciliation itself, not a copy of a range.
+         §S9a checked that units-client.ts had not drifted from unitsCost's
+         printed bounds; the client reads params.ts directly now, so the copy
+         is gone and this asserts the substantive claim instead. The two
+         price the same network at the same count to within a couple of
+         percent, at any capital amortisation across the declared window. */
+      runGuarded('The per-type model and unitsCost price the same network alike', () => {
+        const r = unitsCostReconciliation();
+        return {
+          ok: r.ok,
+          note: r.needBasedUnits.toLocaleString('en-US') + ' need-based units; the same mix at ' +
+            r.targetUnits.toLocaleString('en-US') + ' costs $' + r.annualisedLong.toFixed(1) +
+            '-' + r.annualisedShort.toFixed(1) + 'B/yr against the parameter\'s $' +
+            r.paramLow + '-' + r.paramHigh + 'B, ' + r.modeErrorPct.toFixed(1) +
+            '% off its $' + r.paramMode + 'B centre'
+        };
+      }),
+      /* R185 [§S9b]: the workforce ledger's per-type unit counts were the
+         hand-copied output of a computation that only ran in a browser.
+         The allocation is a pure function now, so the build re-runs it over
+         the county file and compares. */
+      runGuarded('The ledger\'s unit allocation is the one the model produces', () => {
+        const bad = unitAllocationDrift();
         return {
           ok: !bad.length,
-          note: bad.map((b) => 'units-client.ts says ' + b.says +
-            ', expected ' + b.expected).join(' | ') ||
-            'the page reconciles against $' + p.low + '-' + p.high + 'B'
+          note: bad.map((b) => 'type ' + b.key + ' authored ' + b.authored +
+            ', computed ' + b.computed).join(' | ') ||
+            UNIT_MODEL.allocation.map((t) => t.key + ' ' + t.allocated).join(' ') +
+            ', recomputed over ' + countyDemand().length.toLocaleString('en-US') + ' counties'
+        };
+      }),
+      /* R186 [§S9b]: a visit split that does not close on 1 is demand the
+         model silently stops placing. */
+      runGuarded('Every visit split closes on the whole of its demand', () => {
+        const bad = visitSplitClosure();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.which + ' sums to ' + b.sum).join(' | ') ||
+            'urban splits three ways and rural two, both to 1'
+        };
+      }),
+      /* R186 [§S9b]: and each of those inputs carries a grade and an owner.
+         The declared id list is what stops this passing on an empty table. */
+      runGuarded('Every unit-count assumption is graded and owned', () => {
+        const bad = unitAssumptionGaps();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.id + ' lacks ' + b.missing).join(' | ') ||
+            UNIT_ASSUMPTION_IDS.length + ' inputs graded, none above low'
+        };
+      }),
+      /* R187 [§S9b]: the absorption control moves the network and does not
+         move unitsCost. Declared rather than wired, and the declaration is
+         only honest if the control does something, so both halves are here. */
+      runGuarded('The absorption control moves the count, and not the modelled cost', () => {
+        const a = absorptionSpan();
+        const moves = a.highUnits > a.lowUnits && a.highOpB > a.lowOpB;
+        return {
+          ok: moves,
+          note: a.low.toFixed(2) + '-' + a.high.toFixed(2) + ' visits/person/yr spans ' +
+            a.lowUnits.toLocaleString('en-US') + '-' + a.highUnits.toLocaleString('en-US') +
+            ' units and $' + a.lowOpB.toFixed(1) + '-' + a.highOpB.toFixed(1) +
+            'B/yr on this page; the healthcare model holds $' + a.unitsCostMode +
+            'B either way'
         };
       }),
       /* R62 [§S9a]: R60 refuses an override keyed to a parameter that does

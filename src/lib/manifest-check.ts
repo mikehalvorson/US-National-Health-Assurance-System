@@ -16,6 +16,10 @@ import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { CARE_SCENARIOS } from './care';
+import {
+  allocateUnits, CAPITAL_AMORTISATION_YEARS, NETWORK_ABSORPTION, networkCost,
+  UNIT_ASSUMPTIONS, unitsCostComparison, VISIT_SPLITS, type CountyDemand
+} from './units';
 import { catalogCode, PARAMS_BY_ID } from './params';
 import {
   SCENARIOS as MODEL_SCENARIOS, SCENARIOS_BY_ID
@@ -1457,52 +1461,194 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
   return found;
 }
 
-/* R188 [§S9a]: the reconciliation gap the unit page prints is real, and the
- * range it prints it against is a hardcoded copy of `unitsCost`.
+/* R188 [§S9b]: what `unitsCost` and the per-type model actually say to each
+ * other. This replaces `unitsCostRangeDrift`, which policed a hardcoded
+ * "$15-36B" in units-client.ts; the client reads params.ts directly now, so
+ * there is no copy left to police and a check on one could not fail.
  *
- * R188's finding is a scope reduction for §S9b and both halves check out:
- * `UNIT_TYPES` in units-client.ts carries per-type opLo/opMode/opHi and
- * capital for types A to D, mode spread 3.4 / 0.45 = 7.56x (the row says
- * ~7.6x), and `renderVerdict()` does render the computed network cost beside
- * "healthcare model's parameter covers $15-36B". Part 1 is a connection job.
+ * MEASURED, and it contradicts the premise the section was written on.
+ * §BE7 read the page's printed gap as a top-down / bottom-up disagreement and
+ * Part 1 was scoped around reconciling one. There is no disagreement. The two
+ * numbers price different networks:
  *
- * The defect found while verifying it: that "$15-36B" is typed into the
- * client. It is `unitsCost.low` and `.high`, restated. Move either bound in
- * params.ts and the page goes on printing the old range, so the disagreement
- * it advertises stops being the disagreement that exists -- and this sentence
- * is the evidence R188 rests on for reducing §S9b's scope.
+ *   unitsCost                  15,000 units, "operating + amortized capital"
+ *   the page's bottom-up total the need-based count, ~24,100 at the default
  *
- * Same defect class as R64's typed ledger figures, on a different chapter.
- * The check is here rather than an edit to units-client.ts because that file
- * is §S9b's; a build-time reader does not move the seam. */
-const UNITS_PAGE_CLIENT = 'src/scripts/units-client.ts';
+ * Hold the type mix, scale the bottom-up model to 15,000 units, and it lands
+ * within a couple of percent of unitsCost's mode at any capital amortisation
+ * between ten and thirty years. The published gap is a COUNT difference
+ * rendered as a cost difference.
+ *
+ * The check asserts the agreement rather than the gap, because the agreement
+ * is the finding. It fails in every direction that matters: restaff or
+ * reprice a type, move either bound of unitsCost, or change the controlled
+ * target, and the two stop meeting. */
+const COUNTY_DATA = 'public/data/counties.json';
 
-export interface UnitsCostRangeDrift {
-  says: string;
-  expected: string;
+/* Memoised like every other filesystem read in a self-test. units.astro reads
+   this at build time too, so without the cache the county file is parsed once
+   per self-test pass and once per page render. */
+const countyCache = new Map<string, CountyDemand[]>();
+
+export function countyDemand(root = REPO_ROOT): CountyDemand[] {
+  const hit = countyCache.get(root);
+  if (hit) return hit;
+  const parsed = JSON.parse(sourceText(COUNTY_DATA, root)) as CountyDemand[];
+  countyCache.set(root, parsed);
+  return parsed;
 }
 
-export function unitsCostRangeDrift(root = REPO_ROOT): UnitsCostRangeDrift[] {
+export interface UnitsCostReconciliation {
+  targetUnits: number;
+  needBasedUnits: number;
+  /* operating plus capital over the short and long amortisation windows */
+  annualisedShort: number;
+  annualisedLong: number;
+  paramLow: number;
+  paramMode: number;
+  paramHigh: number;
+  ok: boolean;
+  /* how far the midpoint of the two windows sits from the parameter's mode */
+  modeErrorPct: number;
+}
+
+export function unitsCostReconciliation(root = REPO_ROOT): UnitsCostReconciliation {
   const param = PARAMS_BY_ID['unitsCost'];
-  if (!param) return [];
-  const text = sourceText(UNITS_PAGE_CLIENT, root);
-  /* the page writes an en dash between the bounds; accept either */
-  const printed = text.match(
-    /parameter covers \$(\d+(?:\.\d+)?)[-–—](\d+(?:\.\d+)?)B/);
-  const expected = '$' + param.low + '-' + param.high + 'B';
-  if (!printed) {
-    return [{
-      says: 'the unit page states no model range to reconcile against',
-      expected: expected
-    }];
+  const totals = allocateUnits(countyDemand(root), NETWORK_ABSORPTION.default);
+  const cmp = unitsCostComparison(totals);
+  const annualisedShort = cmp.targetAnnualised(CAPITAL_AMORTISATION_YEARS.short);
+  const annualisedLong = cmp.targetAnnualised(CAPITAL_AMORTISATION_YEARS.long);
+  const mid = (annualisedShort + annualisedLong) / 2;
+  return {
+    targetUnits: cmp.targetUnits,
+    needBasedUnits: cmp.needBasedUnits,
+    annualisedShort, annualisedLong,
+    paramLow: param.low, paramMode: param.mode, paramHigh: param.high,
+    /* both ends of the window have to sit inside the parameter's range, or the
+       agreement is a coincidence at one amortisation choice */
+    ok: annualisedLong >= param.low && annualisedShort <= param.high,
+    modeErrorPct: 100 * Math.abs(mid - param.mode) / param.mode
+  };
+}
+
+/* R185 [§S9b]: the workforce ledger's per-type unit counts, against the
+ * allocation the model actually produces.
+ *
+ * `UNIT_MODEL.allocation` carries 7,470 / 9,055 / 6,397 / 1,177, and until
+ * this section those four figures were the hand-copied output of a
+ * client-side computation nothing could re-run: `allocate()` lived in
+ * units-client.ts and read counties.json over fetch, so it existed only in a
+ * browser. The workforce chapter's 138,000 unit-team positions descend from
+ * them.
+ *
+ * The allocation is a pure function now and the county file is on disk, so
+ * the build runs it. Both sides stay independent: `allocated` is authored,
+ * the comparison is a computation over every county in the file. Move a
+ * throughput, a visit split, a threshold or the absorption default and this
+ * fails and names the type. */
+export interface UnitAllocationDisagreement {
+  key: string;
+  authored: number;
+  computed: number;
+}
+
+export function unitAllocationDrift(root = REPO_ROOT): UnitAllocationDisagreement[] {
+  const totals = allocateUnits(countyDemand(root), NETWORK_ABSORPTION.default);
+  const out: UnitAllocationDisagreement[] = [];
+  for (const t of UNIT_MODEL.allocation) {
+    const computed = totals[t.key];
+    if (computed !== t.allocated) {
+      out.push({ key: t.key, authored: t.allocated, computed });
+    }
   }
-  if (Number(printed[1]) !== param.low || Number(printed[2]) !== param.high) {
-    return [{
-      says: '$' + printed[1] + '-' + printed[2] + 'B',
-      expected: expected
-    }];
+  return out;
+}
+
+/* R186 [§S9b]: a visit split that does not close on 1 is demand the model
+ * stops placing, silently. Urban splits three ways and rural two; before this
+ * section both were bare literals inside one arithmetic expression, and
+ * editing 0.57 to 0.50 would have removed 7% of urban demand from the country
+ * with every test still green. Compared at a tolerance, because these are
+ * decimal fractions in binary floating point. */
+export interface SplitClosure { which: string; sum: number }
+
+export function visitSplitClosure(): SplitClosure[] {
+  const out: SplitClosure[] = [];
+  const urban = VISIT_SPLITS.urban.a + VISIT_SPLITS.urban.b + VISIT_SPLITS.urban.d;
+  const rural = VISIT_SPLITS.rural.b + VISIT_SPLITS.rural.c;
+  if (Math.abs(urban - 1) > 1e-9) out.push({ which: 'urban', sum: urban });
+  if (Math.abs(rural - 1) > 1e-9) out.push({ which: 'rural', sum: rural });
+  return out;
+}
+
+/* R186 [§S9b]: every input to the unit count carries a grade and an owner,
+ * and every graded row corresponds to something the model reads.
+ *
+ * The second half is the one that matters, and it is the shape §S9a shipped
+ * twice and the review caught: a coverage check whose data source can go away
+ * reports "nothing ungraded" for a table that has disappeared. The expected
+ * ids are declared here, so deleting a row fails rather than passing. */
+export const UNIT_ASSUMPTION_IDS = [
+  'absorption', 'throughput', 'urban-split', 'rural-split',
+  'type-d-threshold', 'rural-floor'
+];
+
+export interface AssumptionGap { id: string; missing: string }
+
+export function unitAssumptionGaps(): AssumptionGap[] {
+  const out: AssumptionGap[] = [];
+  const seen = new Set<string>();
+  for (const a of UNIT_ASSUMPTIONS) {
+    seen.add(a.id);
+    if (!a.basis.trim()) out.push({ id: a.id, missing: 'basis' });
+    if (!a.owner.trim()) out.push({ id: a.id, missing: 'owner' });
+    if (!a.value.trim()) out.push({ id: a.id, missing: 'value' });
+    if (!/^(low|medium|high)$/.test(a.confidence)) {
+      out.push({ id: a.id, missing: 'confidence' });
+    }
   }
-  return [];
+  for (const id of UNIT_ASSUMPTION_IDS) {
+    if (!seen.has(id)) out.push({ id, missing: 'the row itself' });
+  }
+  for (const a of UNIT_ASSUMPTIONS) {
+    if (!UNIT_ASSUMPTION_IDS.includes(a.id)) {
+      out.push({ id: a.id, missing: 'a declaration in UNIT_ASSUMPTION_IDS' });
+    }
+  }
+  return out;
+}
+
+/* R187 [§S9b]: the absorption control and `unitsCost` are independent, and
+ * that is a statement the build holds now rather than one a reader has to
+ * infer.
+ *
+ * §BD5 suspected they were unlinked and §BE did not confirm it. Confirmed:
+ * `visitsPerCapita` is module state in units-client.ts, it reaches
+ * `allocateCounty` and nothing else, and `unitsCost` is a PARAM_DEFS entry the
+ * Monte Carlo samples. Moving the control changes the unit count and the
+ * page's own bottom-up cost; it does not move a dollar in the healthcare
+ * model. R187 allows either wiring them or declaring the independence, and
+ * declaring it is right: the count is a capacity plan and the parameter is a
+ * sampled cost input with its own range.
+ *
+ * The check is that the two ends of the control produce genuinely different
+ * networks, so the page is showing a live consequence rather than a control
+ * that does nothing. */
+export interface AbsorptionSpan {
+  low: number; high: number; lowUnits: number; highUnits: number;
+  lowOpB: number; highOpB: number; unitsCostMode: number;
+}
+
+export function absorptionSpan(root = REPO_ROOT): AbsorptionSpan {
+  const counties = countyDemand(root);
+  const lo = allocateUnits(counties, NETWORK_ABSORPTION.min);
+  const hi = allocateUnits(counties, NETWORK_ABSORPTION.max);
+  return {
+    low: NETWORK_ABSORPTION.min, high: NETWORK_ABSORPTION.max,
+    lowUnits: lo.total, highUnits: hi.total,
+    lowOpB: networkCost(lo).opTotal, highOpB: networkCost(hi).opTotal,
+    unitsCostMode: PARAMS_BY_ID['unitsCost'].mode
+  };
 }
 
 /* R62 [§S9a]: the three scenarios that stress unit cost, named, so §S9b
@@ -2165,44 +2311,28 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseAudit {
   return { problems: out, fallbacks: fallbacks.length, claims: claims.length };
 }
 
-/* R179 [§S9a]: the unit model behind CREATED.units, joined to the two places
- * its inputs are actually maintained.
+/* R179 [§S9a] / R185 [§S9b]: the unit model behind CREATED.units, joined to
+ * where its inputs are actually maintained.
  *
- * The per-type FTE lives in src/scripts/units-client.ts as PROSE inside each
- * UNIT_TYPES entry's `staff` field -- "~10 (physician or senior NP/PA lead,
- * nurses, techs)". The allocation lives in the methodology note. Neither is
- * importable into src/lib (the client is downstream of it, and §S9b owns that
- * file), so both are read as text, the way medicationsSliderRange reads the
- * medication page's own controls rather than retyping the range into a test.
+ * §S9a had to read the per-type FTE out of PROSE, because that is where it
+ * lived: `staff: '~10 (physician or senior NP/PA lead, nurses, techs)'` in
+ * units-client.ts, parsed back out with a regex. The comment there said to
+ * retarget the check at a typed field if a later section added one. §S9b did:
+ * `UNIT_TYPES[k].fte` is typed data in src/lib/units.ts and `UNIT_MODEL`
+ * reads it, so the parser is deleted rather than pointed somewhere new. A
+ * comparison between a value and its own source is not a check.
  *
- * Reading the prose is deliberate and is the point: §S9b is going to change
- * those strings, and a check that reads them is the only thing that connects
- * that edit to the workforce ledger. If a later section gives UNIT_TYPES a
- * typed `fte` field, retarget this at the field and delete the parser.
+ * The same applies to the controlled target: units-client.ts derived its '15,000' floor
+ * from a literal, and reads CONTROLLED_TARGET_UNITS now.
  *
- * Type A is written as a range, "2-3", and the model uses its midpoint. The
- * others are written as "~N". Both forms are parsed and the parse is reported
- * in the check's note, so a failure says what it read rather than only that
- * it disagreed. */
+ * What replaces both is stronger and lives above -- `unitAllocationDrift`
+ * compares the authored per-type counts against the allocation computed over
+ * the county file, which is two independent sides rather than one restated.
+ *
+ * What remains here is the half that is still genuinely two-sided: the
+ * published methodology note, which states the allocation, the FTEs, the
+ * average and the product in prose a human maintains by hand. */
 const UNIT_METHODOLOGY = 'research/workforce_transition_methodology.md';
-
-/* leading "~7", "7", "2-3", "2en-dash-3", "2em-dash-3"; a range is midpointed */
-const STAFF_FIGURE = /^\s*~?(\d+(?:\.\d+)?)(?:\s*[-–—]\s*(\d+(?:\.\d+)?))?/;
-
-export function unitStaffFromClient(root = REPO_ROOT): Record<string, number | null> {
-  const text = maskComments(sourceText(UNITS_PAGE_CLIENT, root));
-  const out: Record<string, number | null> = {};
-  for (const t of UNIT_MODEL.allocation) {
-    const entry = text.match(new RegExp(
-      "\\b" + t.key + ":\\s*\\{[\\s\\S]*?staff:\\s*'((?:[^'\\\\]|\\\\.)*)'"));
-    if (!entry) { out[t.key] = null; continue; }
-    const figure = entry[1].match(STAFF_FIGURE);
-    if (!figure) { out[t.key] = null; continue; }
-    const lo = Number(figure[1]);
-    out[t.key] = figure[2] === undefined ? lo : (lo + Number(figure[2])) / 2;
-  }
-  return out;
-}
 
 export interface UnitModelDisagreement {
   where: string;
@@ -2213,38 +2343,7 @@ export interface UnitModelDisagreement {
 export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
   const out: UnitModelDisagreement[] = [];
 
-  /* 1. the per-type FTE, against the unit model's own staffing prose */
-  const staffed = unitStaffFromClient(root);
-  for (const t of UNIT_MODEL.allocation) {
-    const read = staffed[t.key];
-    if (read === null) {
-      out.push({
-        where: UNITS_PAGE_CLIENT + ' type ' + t.key,
-        says: 'no readable staffing figure',
-        expected: t.fte + ' FTE'
-      });
-    } else if (read !== t.fte) {
-      out.push({
-        where: UNITS_PAGE_CLIENT + ' type ' + t.key,
-        says: read + ' FTE',
-        expected: t.fte + ' FTE'
-      });
-    }
-  }
-
-  /* 2. the controlled target, against the floor the unit page states */
-  const client = sourceText(UNITS_PAGE_CLIENT, root);
-  const target = client.match(/'≥ ([\d,]+)'/);
-  const statedTarget = target ? Number(target[1].split(',').join('')) : null;
-  if (statedTarget !== UNIT_MODEL.controlledTargetUnits) {
-    out.push({
-      where: UNITS_PAGE_CLIENT + " plan's minimum",
-      says: statedTarget === null ? 'no stated minimum' : String(statedTarget),
-      expected: String(UNIT_MODEL.controlledTargetUnits)
-    });
-  }
-
-  /* 3. the allocation and the rounded result, against the published
+  /* 1. the allocation and the rounded result, against the published
         derivation. The note states the counts per type, the total, the total
         FTE, the average, and the product, so every input has a published
         counterpart and none of them can move alone. */

@@ -7,6 +7,11 @@
    astro:page-load; idempotent via #units-map dataset.wired; module state is
    reset on init for View-Transition safety. */
 import { el, div, showTip, hideTip, tipRow } from '../lib/chart-util';
+import { PARAMS_BY_ID } from '../lib/params';
+import {
+  allocateCounty, CONTROLLED_TARGET_UNITS, NETWORK_ABSORPTION, networkCost,
+  UNIT_TYPE_KEYS, UNIT_TYPES, type NetworkCost
+} from '../lib/units';
 
 const BASE = import.meta.env.BASE_URL;
 function $(id: string): HTMLElement | null { return document.getElementById(id); }
@@ -185,44 +190,17 @@ function renderUnitsMap(container: HTMLElement, statesGeo: StatesGeo,
  * ========================================================================= */
 interface UnitCounts { a: number; b: number; c: number; d: number; total: number }
 interface County { f: string; n: string; s: string; p: number; r: number; la: number; lo: number; units?: UnitCounts }
-interface UnitType {
-  key: string; name: string; color: string;
-  opLo: number; opMode: number; opHi: number; capital: number;
-  throughput: number; staff: string; role: string;
-}
 
-const UNIT_TYPES: Record<'a' | 'b' | 'c' | 'd', UnitType> = {
-  a: { key: 'a', name: 'Type A: Micro-unit',
-    color: 'var(--series-2)',
-    opLo: 0.30, opMode: 0.45, opHi: 0.65, capital: 0.25,
-    throughput: 15000, staff: '2–3 (nurse/tech + teleclinician link)',
-    role: 'Sits inside pharmacies, groceries, schools, workplaces, and transit hubs. Vitals, point-of-care tests, vaccinations, prescription refills, screening, and a teleclinician on screen for anything ambiguous.' },
-  b: { key: 'b', name: 'Type B: Neighborhood unit',
-    color: 'var(--series-1)',
-    opLo: 1.2, opMode: 1.6, opHi: 2.2, capital: 1.8,
-    throughput: 30000, staff: '~10 (physician or senior NP/PA lead, nurses, techs)',
-    role: 'The default urgent-care replacement and the network\'s workhorse: ECG, basic labs, X-ray, splinting, common procedures, uncomplicated respiratory/ENT/UTI/skin/musculoskeletal care, chronic-disease measurement and follow-up.' },
-  c: { key: 'c', name: 'Type C: Rural enhanced unit',
-    color: 'var(--series-3)',
-    opLo: 2.0, opMode: 2.6, opHi: 3.5, capital: 3.5,
-    throughput: 12000, staff: '~14 (adds observation nursing, ultrasound, EMS liaison)',
-    role: 'Everything Type B does, plus tele-specialty, longer observation, point-of-care ultrasound, limited IV therapy, EMS coordination, maternal and pediatric triage, and mobile outreach. Built to hold a patient safely when the nearest hospital is an hour away.' },
-  d: { key: 'd', name: 'Type D: Urban public-health unit',
-    color: 'var(--series-6)',
-    opLo: 2.5, opMode: 3.4, opHi: 4.5, capital: 4.5,
-    throughput: 40000, staff: '~20 (adds behavioral-health and public-health staff)',
-    role: 'High-volume urban front door: respiratory surge capacity, vaccines, STI and reproductive services, behavioral-health touchpoints, addiction-care linkage, wound care, heat/smoke/climate response, and neighborhood outreach.' }
-};
-
-let visitsPerCapita = 1.5;
+/* R185 [§S9b]: UNIT_TYPES, the visit splits, the population thresholds and the
+   absorption range used to be literals in this file, which meant they were
+   unreachable at build time and unreadable by anything that had to agree with
+   them. They are src/lib/units.ts now, with a confidence grade and a named
+   owner apiece, and the allocation rules moved with them so the page and the
+   build run the same code rather than two copies of it. */
+let visitsPerCapita = NETWORK_ABSORPTION.default;
 
 interface Totals { a: number; b: number; c: number; d: number; total: number; pop: number; floored: number }
-interface CostRow { op: number; opLo: number; opHi: number; capital: number }
-interface Costs {
-  a: CostRow; b: CostRow; c: CostRow; d: CostRow;
-  opTotal: number; opTotalLo: number; opTotalHi: number; capitalTotal: number;
-}
-interface Allocated { totals: Totals; costs: Costs }
+interface Allocated { totals: Totals; costs: NetworkCost }
 
 const DATA: { counties: County[] | null; states: StatesGeo | null; regions: RegionsData | null; error: string | null } =
   { counties: null, states: null, regions: null, error: null };
@@ -230,49 +208,16 @@ let typeFilter = 'all';
 let allocated: Allocated | null = null;
 
 function allocate(): void {
-  const T = UNIT_TYPES;
   const totals: Totals = { a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0, floored: 0 };
   DATA.counties!.forEach(function (c) {
-    const urbanPop = c.p * (1 - c.r), ruralPop = c.p * c.r;
-    const uv = urbanPop * visitsPerCapita, rv = ruralPop * visitsPerCapita;
-
-    let a = uv * 0.28 / T.a.throughput;
-    const dRaw = uv * 0.15;
-    let d = 0, bExtra = 0;
-    if (urbanPop >= 200000) d = dRaw / T.d.throughput;
-    else bExtra = dRaw; /* small-city D demand folds into B */
-    let b = (uv * 0.57 + bExtra + rv * 0.30) / T.b.throughput;
-    let cc = rv * 0.70 / T.c.throughput;
-
-    a = Math.round(a); b = Math.round(b); cc = Math.round(cc); d = Math.round(d);
-
-    /* rural access floor: majority-rural or small counties keep a C */
-    if ((c.r >= 0.5 || c.p < 20000) && ruralPop > 0 && cc === 0) { cc = 1; totals.floored++; }
-    /* every county gets at least one unit of its dominant character */
-    if (a + b + cc + d === 0) {
-      if (c.r >= 0.5) cc = 1; else b = 1;
-      totals.floored++;
-    }
-    c.units = { a: a, b: b, c: cc, d: d, total: a + b + cc + d };
-    totals.a += a; totals.b += b; totals.c += cc; totals.d += d;
-    totals.total += c.units.total; totals.pop += c.p;
+    const out = allocateCounty(c, visitsPerCapita);
+    c.units = out.units;
+    totals.a += out.units.a; totals.b += out.units.b;
+    totals.c += out.units.c; totals.d += out.units.d;
+    totals.total += out.units.total; totals.pop += c.p;
+    totals.floored += out.floored;
   });
-
-  const costs = {} as Costs;
-  (['a', 'b', 'c', 'd'] as const).forEach(function (k) {
-    costs[k] = {
-      op: totals[k] * T[k].opMode / 1000,       /* $B/yr */
-      opLo: totals[k] * T[k].opLo / 1000,
-      opHi: totals[k] * T[k].opHi / 1000,
-      capital: totals[k] * T[k].capital / 1000  /* $B one-time */
-    };
-  });
-  costs.opTotal = costs.a.op + costs.b.op + costs.c.op + costs.d.op;
-  costs.opTotalLo = costs.a.opLo + costs.b.opLo + costs.c.opLo + costs.d.opLo;
-  costs.opTotalHi = costs.a.opHi + costs.b.opHi + costs.c.opHi + costs.d.opHi;
-  costs.capitalTotal = costs.a.capital + costs.b.capital + costs.c.capital + costs.d.capital;
-
-  allocated = { totals: totals, costs: costs };
+  allocated = { totals: totals, costs: networkCost(totals) };
 }
 
 /* ---- renderers ---- */
@@ -282,7 +227,7 @@ function renderTypeCards(): void {
   const host = $('unit-type-cards');
   if (!host) return;
   host.innerHTML = '';
-  (['a', 'b', 'c', 'd'] as const).forEach(function (k) {
+  UNIT_TYPE_KEYS.forEach(function (k) {
     const t = UNIT_TYPES[k];
     const n = allocated!.totals[k];
     const card = document.createElement('div');
@@ -320,22 +265,51 @@ function renderTypeCards(): void {
   });
 }
 
+/* R188 [§S9b]: the two numbers this tile puts side by side.
+ *
+ * The page has always printed its own bottom-up operating total against the
+ * healthcare model's unit parameter, and both §BE7 and Part 1 read that as a
+ * top-down / bottom-up disagreement. It is not one. The parameter prices the
+ * controlled target; the bottom-up total prices the need-based count, which is
+ * larger. Scale the same type mix down to the target and the two agree.
+ *
+ * The parameter's range is READ from params.ts rather than retyped here. §S9a
+ * had to add a check because "$15-36B" was a hardcoded copy; a copy that is
+ * derived does not need one. */
+function unitsCostParam(): { low: number; high: number; mode: number } {
+  const p = PARAMS_BY_ID['unitsCost'];
+  return { low: p.low, high: p.high, mode: p.mode };
+}
+
 function renderVerdict(): void {
   const host = $('unit-verdict');
   if (!host) return;
   const t = allocated!.totals, c = allocated!.costs;
+  const param = unitsCostParam();
+  const target = CONTROLLED_TARGET_UNITS;
+  /* the same mix, at the controlled target */
+  const scale = t.total > 0 ? target / t.total : 0;
+  const atTarget = c.opTotal * scale;
   host.innerHTML = '';
   const tiles = [
     { label: 'Total units, need-based', value: t.total.toLocaleString('en-US'),
       range: 'at ' + visitsPerCapita.toFixed(2) + ' network visits/person/yr' },
-    { label: "Plan's minimum (SR-ACC-010)", value: '≥ 15,000',
-      range: t.total > 16500
-        ? 'the floor undercounts need by ~' + Math.round(100 * (t.total - 15000) / 15000) +
+    /* Golden rule 2 [§S9b]: this label carried the plan's internal requirement
+       identifier into rendered prose. The rule is site-wide and this page is
+       outside narrativeCatalogCodes' five surfaces, so nothing caught it. */
+    { label: "Plan's minimum", value: '≥ ' + target.toLocaleString('en-US'),
+      range: t.total > target * 1.1
+        ? 'the floor undercounts need by ~' + Math.round(100 * (t.total - target) / target) +
           '%; either build ~' + Math.round(t.total / 1000) + 'k or certify existing urgent-care/retail/FQHC sites into the network'
         : 'consistent with the need-based count at these assumptions' },
     { label: 'Network operating cost', value: fmtB(c.opTotal) + '/yr',
       range: fmtB(c.opTotalLo) + ' – ' + fmtB(c.opTotalHi) +
-        ' · healthcare model\'s parameter covers $15–36B' },
+        ' for these ' + t.total.toLocaleString('en-US') + ' units' },
+    { label: 'The same model at ' + (target / 1000) + 'k units',
+      value: fmtB(atTarget) + '/yr',
+      range: 'the healthcare model carries $' + param.low + '–' + param.high +
+        'B for this network, centred on $' + param.mode +
+        'B. The two price different counts, not different units.' },
     { label: 'One-time build-out', value: fmtB(c.capitalTotal),
       range: "part of the model's IT-and-infrastructure capital envelope" }
   ];
@@ -350,10 +324,12 @@ function renderVerdict(): void {
 }
 
 function typeColorsPlain(): TypeColors {
-  /* resolve CSS variables for SVG fills (SVG attr can use var(), but
-     resolve anyway for safety in older browsers) */
-  return { a: 'var(--series-2)', b: 'var(--series-1)',
-           c: 'var(--series-3)', d: 'var(--series-6)' };
+  /* SVG fill attributes take var() directly; read them from the unit model so
+     a recoloured type recolours the map and the cards together. */
+  return {
+    a: UNIT_TYPES.a.color, b: UNIT_TYPES.b.color,
+    c: UNIT_TYPES.c.color, d: UNIT_TYPES.d.color
+  };
 }
 
 function renderMapUnits(): void {
@@ -716,7 +692,7 @@ function initUnits(): void {
   guard.dataset.wired = '1';
 
   /* reset module state for a fresh page instance (View-Transition safe) */
-  visitsPerCapita = 1.5;
+  visitsPerCapita = NETWORK_ABSORPTION.default;
   typeFilter = 'all';
   selectedId = 'R01';
   allocated = null;

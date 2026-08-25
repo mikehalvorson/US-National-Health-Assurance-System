@@ -5,6 +5,7 @@
    new (long-term care aides) and is kept OUTSIDE the insurance-transition
    ledger above, whose entrant-pace math must not absorb millions of aides. */
 import { PARAMS_BY_ID, DEFLATOR_2023_TO_2024 } from './params';
+import { CONTROLLED_TARGET_UNITS, UNIT_TYPES, type UnitTypeKey } from './units';
 
 export type ScenarioId = 'low' | 'plan' | 'high';
 
@@ -483,23 +484,29 @@ export function createdGroupTotals(
    moving toward the need-based allocation; neither is derived here, and
    inventing a unit count for them would be tuning to a target. */
 export interface UnitTypeStaffing {
-  key: 'a' | 'b' | 'c' | 'd';
+  key: UnitTypeKey;
   label: string;
   allocated: number;  // units in the need-based county allocation
   fte: number;        // staffing per unit, from the unit model
 }
 
+/* R185 [§S9b]: the two inputs this ledger multiplies now come from the unit
+   model itself. The controlled target and the per-type FTE are read from
+   units.ts, so restaffing a type moves the workforce ledger by construction
+   rather than by a check noticing that a hand-copied figure drifted.
+   `allocated` stays AUTHORED, and is the side that can still disagree: it is
+   compared against the allocation actually produced by running the model over
+   the county file, which is a computation and not a restatement. */
 export const UNIT_MODEL: {
   controlledTargetUnits: number;
   allocation: UnitTypeStaffing[];
 } = {
-  /* the framework's controlled certified-unit count at maturity */
-  controlledTargetUnits: 15000,
+  controlledTargetUnits: CONTROLLED_TARGET_UNITS,
   allocation: [
-    { key: 'a', label: 'Micro-unit', allocated: 7470, fte: 2.5 },
-    { key: 'b', label: 'Neighborhood unit', allocated: 9055, fte: 10 },
-    { key: 'c', label: 'Rural enhanced unit', allocated: 6397, fte: 14 },
-    { key: 'd', label: 'Urban public-health unit', allocated: 1177, fte: 20 }
+    { key: 'a', label: UNIT_TYPES.a.shortName, allocated: 7470, fte: UNIT_TYPES.a.fte },
+    { key: 'b', label: UNIT_TYPES.b.shortName, allocated: 9055, fte: UNIT_TYPES.b.fte },
+    { key: 'c', label: UNIT_TYPES.c.shortName, allocated: 6397, fte: UNIT_TYPES.c.fte },
+    { key: 'd', label: UNIT_TYPES.d.shortName, allocated: 1177, fte: UNIT_TYPES.d.fte }
   ]
 };
 
