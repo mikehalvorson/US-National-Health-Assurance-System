@@ -3262,3 +3262,290 @@ STILL OPEN, NOT THIS SECTION'S: `R135`'s seven `low`-confidence parameters with
   migration hazard, now partly guarded by `R62` above. The three
   `medium`-confidence expansion parameters with empty `url` that `R168`
   identified as half of its own fix are `R135`'s.
+
+## P12 — §S9b Unit network & absorption · 2026-08-25 · branch `nha-remediation`
+STATUS: complete — three recommendations landed in one commit, plus a
+  repo-hygiene commit the handoff asked for that is not a §S9b row.
+
+ENTRY GATE: `## P11` (`§S9a`) `STATUS: complete` with `INVARIANTS AFTER`
+  accounting for all 23 ✅ · `check_audit_docs.py` exit 0 ✅ · `astro build`
+  passes ✅ · tree clean ✅ · `astro check` 0/0/1 hint, the pinned figure ✅
+
+LANDED:
+  - `c4e095e` repo hygiene — `.gitattributes`, and the two files whose prose
+    about the CRLF trap contained the trap
+  - `1c79188` `R185` `R186` `R187` `R188` — the unit model becomes graded data
+
+  **Four rows in one commit, deliberately.** The six assumptions cannot be
+  graded where they lived (bare literals inside a client-side function), the
+  reconciliation cannot be stated until the allocation is computable outside a
+  browser, and the absorption control's independence is only worth declaring
+  once both are true. Splitting it would produce states that do not build.
+
+SIX ASSUMPTIONS: all six, individually, and none was given an invented source.
+
+  absorption 1.5 (1.2-1.8)  -> graded `low`, owner: a substitution study.
+                               Nothing in the repository measures it, and it
+                               multiplies every other input.
+  throughputs 15k/30k/12k/40k -> graded `low`, owner: the visits-per-site and
+                               visits-per-clinical-FTE pull research/02
+                               proposed and never ran. **Comparator sourced**:
+                               HRSA UDS national rollup, about 121.8M in-person
+                               clinic visits across 16,200+ service delivery
+                               sites, roughly 7,500 per site per year. Every
+                               framework throughput is above it, Type A about
+                               double and Type B about four times. Stated
+                               beside them with the URL. Grade stays `low`
+                               because a comparator is not the plan's figure.
+  urban split 28/57/15      -> graded `low`, owner: the same substitution study
+  rural split 30/70         -> graded `low`, owner: the same study, run
+                               separately for rural counties
+  Type D threshold 200,000  -> graded `low`, owner: a siting study. The page
+                               already says it is a capacity plan and not one.
+  rural floor 0.50 / 20,000 -> graded `low`, owner: the access standard that
+                               sets it. A policy choice to ratify, not a figure
+                               to source. **And measured inert, see DISCREPANCY 3.**
+
+  ~1.1bn ambulatory encounters -> **removed, because nothing read it.** See
+                               DISCREPANCY 2.
+
+ABSORPTION SLIDER: **independent, and now declared.** `visitsPerCapita` is
+  module state in `units-client.ts` that reaches `allocateCounty` and nothing
+  else; `unitsCost` is a `PARAM_DEFS` entry the Monte Carlo samples. `§BD5`
+  suspected this and `§BE` did not confirm it. `R187` allows wiring them or
+  declaring the independence and declaring it is right: the count is a capacity
+  plan, the parameter is a sampled cost input with its own range.
+
+  Stated on `units.astro` and asserted two ways, because a declaration of
+  independence is only honest if the control does something: the control moves
+  the network 19,436 -> 28,889 units and $31B -> $46B/yr across its range, and
+  `unitsCost` is byte-identical either side of the move.
+
+UNITSCOST vs UNIT_TYPES: **they agree, and the gap the page advertised was a
+  count difference.** This is the section's main result and it contradicts the
+  premise Part 1 was scoped on.
+
+    need-based, 24,099 units   $38.5B/yr operating   [$28.8 - 52.5B]
+    same mix, 15,000 units     $24.0B/yr operating + $28.5B capital
+      capital over 10 years    $26.81B/yr
+      capital over 20 years    $25.38B/yr
+      capital over 30 years    $24.90B/yr
+    unitsCost                  $25B/yr, range $15 - 36B
+
+  Inside the parameter's range at every amortisation from ten to thirty years,
+  within 1.5% of its mode at twenty. `unitsCost` is labelled "15,000 units,
+  operating + amortized capital"; the page's bottom-up total prices the
+  need-based count. The tile says so in those words now.
+
+INVARIANTS BEFORE: 23 of 23. AFTER: 23 of 23, unchanged — `workforceSelfTests()`
+  is untouched. The registry moved 203 -> 207: five added, one deleted.
+
+RE-DERIVED: **none. No published figure moved anywhere in the application.**
+  `postP11` against `postP12`, six artifacts:
+
+  - headline `SCN-BASE` p50 identical to nine significant figures:
+    `matureToday` 5305.3529, `steadyTotal` 9210.9550, `newRevenue` 3409.3518,
+    `perCapita` 25648.5182, `gdpPct` 23.6965, `fedIncrease` 4648.4699.
+  - 727 published targets: 0 added, 0 removed, 0 moved.
+  - 1,170 interim target cells: 0 changed.
+  - 1,037 criticality positions: 0 moved, 0 RPN changes.
+  - the workforce ledger and the care dump are byte-identical apart from the
+    label and the timestamp. The tax dump differs on the self-test count only.
+
+  ⚠️ `postP11` records `selftests 202`, not the 203 the `## P11` entry states.
+  The label was taken before that section's own code-review commit `e660d10`.
+  So this diff spans four commits rather than two; every model output is
+  identical across all of them, so the conclusion holds either way. **Take the
+  after-label last** is the lesson, and it is the mirror of P11's "take a label
+  once".
+
+REGRESSIONS: none. Full suite 400 -> 418 passing, 57 files -> 58.
+
+DISCREPANCY: five.
+
+  1. 🛑 **`R188`'s premise is wrong, and so is `§BE7`'s reading of it.** Both
+     describe the unit page as printing a top-down / bottom-up cost
+     disagreement, and Part 1 was scoped around reconciling one. **There is no
+     disagreement.** The measurement is under `UNITSCOST vs UNIT_TYPES` above.
+     The two price different networks, and at the same count they agree to
+     within a couple of percent at any plausible capital amortisation. The
+     page was inviting a reader to compare 24,099 units' operating cost against
+     a parameter scoped to 15,000. **The code wins**, and the finding is
+     better than the row: nothing has to be rebuilt, and the sentence that
+     advertised the gap was the defect.
+
+     ⚠️ **The amortisation window is itself undeclared.** `unitsCost`'s label
+     says "amortized capital" and nothing anywhere states over how long.
+     `CAPITAL_AMORTISATION_YEARS` carries both ends for that reason: an
+     agreement that held at one horizon and not the others would be a
+     coincidence. It holds across all of them.
+
+  2. 🛑 **"~1.1 billion annual ambulatory encounters" is consumed by nothing.**
+     The method note said the model "converts the network's expected share" of
+     it into units. It does not. Demand is population times absorption. The
+     figure appeared **exactly once in the entire repository** — in the
+     sentence claiming the model used it — and at the default the network
+     places 510M visits, so the "share" would be 46% and no code computes that
+     either. `R186` asks for it to be sourced; sourcing a number nothing reads
+     would have been worse than removing it. **The code wins.** Replaced by a
+     cited national comparator with its year and its caveat: the survey counts
+     office-based physician visits, emergency and hospital outpatient are on
+     top, and the survey that counted those ended in 2022, so no single current
+     federal total for "ambulatory encounters" exists to cite.
+
+  3. 🛑 **The rural-share half of the access floor decides nothing, and
+     `§AI2`/`§BE6`'s rounding hazard cannot occur.** Both filed the county
+     file's two-decimal rural share against a boundary at exactly 0.50 as live:
+     a county at 0.495 rounds up and trips the floor. Measured over all 3,144
+     counties at every setting of the control: the floor fires on 491 counties
+     at the default, **all 491 also satisfy the population test**, and with the
+     population test removed entirely the share test adds **zero**. Twenty-five
+     counties sit exactly on the boundary and none of their allocations changes
+     at 0.51. A majority-rural county with enough people to miss the population
+     test already earns a Type C from demand. **The code wins.** The test is
+     kept — it states the policy and another county file could make it bite —
+     and recorded as inert so nobody treats it as a live guard.
+
+  4. **The last-resort floor's rural branch is unreachable.** `if (a+b+c+d ===
+     0) { if (r >= floorShare) c = 1; else b = 1; }` fires 1 to 7 times across
+     the control and **always takes the `b = 1` branch**, because any county
+     with rural population has already been given a Type C above. Same shape as
+     `§BU4`/`R275`'s unreachable "unassessable" branch in `fmea.ts`. Kept and
+     documented rather than deleted: it is a real guard for a county file this
+     one is not.
+
+  5. **`R186`'s count is wrong three times over.** The row says six, `§BE6`
+     corrected it to twelve, and the honest total is **sixteen**: four
+     throughputs, **five** visit splits (the row says three; the note lists
+     28/57/15 urban and 30/70 rural), three population thresholds, the
+     absorption default and its two control bounds, and the 1.1bn figure that
+     is in the code nowhere. Six graded ROWS cover all of them, because five
+     splits are two decisions and three bounds are one control.
+
+NEW FINDINGS: four, all landed rather than filed.
+
+  - 🔴 **The workforce chapter's unit-team headcount descended from a
+    computation that only ran in a browser.** `UNIT_MODEL.allocation` carried
+    7,470 / 9,055 / 6,397 / 1,177 as authored figures; they are the output of
+    `allocate()`, which lived in `units-client.ts` and fetched
+    `counties.json`, so nothing at build time could re-derive them. The
+    chapter's 138,000 unit-team positions rest on them. `allocateUnits()` is a
+    pure function now and the build re-runs it over every county. Both sides
+    stay independent: `allocated` is still authored.
+
+  - 🔴 **A visit split that stopped closing on 1 would have removed demand from
+    the country silently.** The five splits were bare literals inside one
+    arithmetic expression; editing 0.57 to 0.50 loses 7% of urban demand with
+    every test green. Both splits are now asserted to close.
+
+  - 🟡 **Golden rule 2, on the units page, unguarded.** The verdict tile read
+    "Plan's minimum (SR-ACC-010)" — the plan's internal requirement identifier
+    in rendered prose. `narrativeCatalogCodes` scans five surfaces and
+    `units.astro` and `units-client.ts` are not among them, so nothing caught
+    it. Removed. **The site-wide row is still nobody's.**
+
+  - 🟡 **The absorption control's own bounds were markup, not data.**
+    `min="1.2" max="1.8" step="0.05" value="1.5"` was typed into `units.astro`
+    beside a module-level `1.5` in the client. They are one declaration now,
+    and the page's statement of what the control spans is computed from it.
+
+TRAPS THAT FIRED THIS SESSION: six, four of them already on a previous
+  session's list.
+
+  - 🛑 **A `with open(..., "w")` truncated a 624 KB audit document to zero
+    bytes.** The stamping script encoded to UTF-8 *inside* the with-block, hit
+    a lone-surrogate error from an emoji written as `🔴` in the
+    source, and left the file empty. Recovered from the `.pre-P12.bak` taken
+    one command earlier — which is the only reason this is a footnote rather
+    than the end of the session. **Encode the payload BEFORE opening for
+    write, and take the backup first.** The script now does both.
+  - 🛑 **Non-ASCII in a Python `print` aborted the break-and-restore run
+    mid-break.** Already in memory as `nha-scripting-traps`. It fired on the
+    failure path, so it only appeared once a break actually failed, and it left
+    the tree mid-edit. `.encode("ascii", "replace")` on anything printed from a
+    build log.
+  - 🛑 **A bash heredoc refused a Python patch script** with `unexpected EOF
+    while looking for matching '`. Same family as the heredoc trap already
+    recorded. Every subsequent patch was written to a file and run.
+  - ⚠️ **Deleting the prose parser left `UNITS_PAGE_CLIENT` unused and took
+    `astro check` from 1 hint to 2.** Exactly P11's trap, on exactly the same
+    counter. Hints do not fail the build; reading the count against the pinned
+    figure is the only thing that catches it.
+  - ⚠️ **A shell-quoted `python -c` silently made zero replacements twice** and
+    reported success both times, because the escaping consumed the backslashes.
+    Once it wrote a literal newline into a string literal and produced a
+    `SyntaxError` the next run swallowed. Use the Edit tool or a file.
+  - ⚠️ **A break payload was stale on the first full run**, reported SKIP
+    rather than passing: the anchor `  ruralFloorPop: 20000,` had no trailing
+    comma in the file. That is the mechanism P11 added after shipping three
+    stale payloads, working.
+
+BREAK-AND-RESTORE: **15 breaks, all asserted by check NAME**, re-run in full
+  against the final tree. `prove_p12.py` in `baseline-P12/`. The ones worth
+  naming:
+
+  - a visit split set to 0.50, which no test before this section could see.
+  - an assumption row renamed, so the coverage check meets a table that is
+    present but wrong — the shape that reports "nothing ungraded" for a table
+    that has vanished.
+  - `unitsCost`'s bounds cut to 8/12/18, and separately a unit type repriced
+    3x: the reconciliation fails from either side.
+  - the controlled target moved to 24,000, which makes the two price the same
+    network and is therefore the break that proves the check is about the
+    count difference rather than about the numbers.
+  - the absorption control flattened to a single value, which is the only way
+    `R187`'s declaration could become dishonest.
+  - `R62`, `R179`, the README count and the file manifest all still fire.
+
+  **A sixteenth was written, ran, and is deliberately not in the set**: moving
+  `ruralFloorShare` from 0.50 to 0.51 breaks nothing. That is DISCREPANCY 3,
+  not a hole in the guard.
+
+COUNTS: self-tests **203 → 207** (five added, `unitsCostRangeDrift`'s row
+  deleted). `README.md` bumped in the same commit. Full suite **418** passing,
+  **58** files. `astro check` 0 errors, 0 warnings, **1 hint** — the same
+  `equations.ts:1252` unreachable `return NaN`. File manifest **122 → 123**:
+  `src/lib/units.ts`. `tests/lib/units.test.ts` is not in the manifest, which
+  covers `src/`, `tools/` and `research/` only.
+
+VERIFIED IN THE BROWSER: 3,144 county dots, 51 region paths, five verdict
+  tiles, the control driving 19,436 / 24,099 / 28,889 units at 1.20 / 1.50 /
+  1.80 while the 15,000-unit tile holds at $24B/yr throughout — which is the
+  independence, visible. No console errors, no failed requests.
+
+REPO HYGIENE (`c4e095e`), not a §S9b row: the handoff's item 5.
+
+  `core.autocrlf = true`, set at SYSTEM level — not in `.git/config`, not in
+  the user's global config, so it does not travel with a clone and CI does not
+  have it. `git ls-files --eol` before: 177 `i/lf w/crlf`, 67 `i/lf w/lf`,
+  **4 `i/lf w/mixed`**, 6 `-text`, 2 `none`. The index was already LF
+  throughout, so `* text=auto eol=lf` changes no blob — `git add --renormalize
+  .` touched nothing beyond the two files below, which is the evidence the
+  declaration matches what was committed. Working tree renormalised: **251
+  files `i/lf w/lf`**, no mixed, no text file classified binary.
+
+  **Two ASCII text files git had classified as binary**, and the reason is the
+  finding: `research/task_zero_findings.md` and `tools/extract_docx.mjs` both
+  carry the sentence *"Python's text-mode write translates \r\n to \r\r\n on
+  Windows"* and both wrote the escape sequences as **real CR and LF bytes**.
+  The document explaining the `\r\r\n` bug contained a `\r\r\n`. One lone CR
+  each, so git read them as binary: no diff, no merge, no normalisation.
+  `git diff` on either said "Binary files differ". Repaired byte-exact with a
+  single asserted match per file.
+
+CONTRADICTIONS: `§AZ3` versus golden rule 2 is still open and still nobody's
+  row, and this section adds a fourth instance to the pile — the units page had
+  a catalog code in a rendered tile label and is outside the five surfaces
+  `narrativeCatalogCodes` scans. **The scan's surface list is the problem, not
+  any one page.**
+
+STILL OPEN, NOT THIS SECTION'S: `R135`'s seven `low`-confidence parameters with
+  empty `url` (`§S11b`, twelfth session) — and `unitsCost` is one of the nine
+  `medium`/`low` empty-URL parameters, still empty, because this section
+  graded what feeds it rather than sourcing the parameter itself. `R168`'s
+  first test, the $50B/yr requirement citations, still not implemented and
+  still `§S11b`/`§S10`'s. `AE1` / `R70` / `R307` — `PA` still resolves to
+  *Physician assistant* in the region detail line; untouched, and `§S9c`'s.
+  `R245`'s 7 role-less `aria-label`led `<div>`s on `risk.astro` (`§S14`). The
+  14 non-finite equation cells. Golden rule 2 site-wide. `V19`'s twelve, which
+  `## P11` already recorded as understating a guard that is five relations.
