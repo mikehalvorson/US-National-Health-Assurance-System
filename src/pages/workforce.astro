@@ -9,7 +9,7 @@ import ChapterNav from '../components/ChapterNav.astro';
    rendered as static HTML, so it survives with no script and cannot drift
    from the counts a check reads. */
 import {
-  underSpecifiedAnnualB, underSpecifiedExpansions
+  requirementFamilyCounts, underSpecifiedAnnualB, underSpecifiedExpansions
 } from '../lib/manifest-check';
 
 /* Declaration order, not sorted: a row that shares a cost line has to appear
@@ -22,6 +22,11 @@ const UNDER_SPECIFIED_REQUIREMENTS = UNDER_SPECIFIED.reduce(
   (t, u) => t + u.requirements, 0);
 const UNDER_SPECIFIED_FAMILIES = UNDER_SPECIFIED.filter((u) => u.family).length;
 const UNGOVERNED = UNDER_SPECIFIED.filter((u) => !u.family).map((u) => u.domain);
+/* Code review [§S9a]: "fifteen" was typed here while the guard only asserted
+   the thickest family was at or above the threshold, so the sentence could go
+   stale at sixteen with nothing failing. That is the R64 defect class this
+   very section exists to close, committed on the page R64 landed on. */
+const THICKEST_FAMILY = Math.max(...requirementFamilyCounts().values());
 ---
 <BaseLayout title="National Health Assurance: Workforce">
   <main>
@@ -250,17 +255,15 @@ const UNGOVERNED = UNDER_SPECIFIED.filter((u) => !u.family).map((u) => u.domain)
       from the framework transcription at build time, not typed. -->
     <div class="workforce-scope-warning">
       <strong>The plan is thinnest where it spends most, and this is where that shows.</strong>
-      <p>The domains left out of the floor above are also the domains the
-        framework specifies least. The
-        {UNDER_SPECIFIED_FAMILIES} requirement families below carry
-        {UNDER_SPECIFIED_REQUIREMENTS} system requirements between them and
-        govern about ${UNDER_SPECIFIED_TOTAL}B a year of benefit spending,
-        {UNGOVERNED.length ? 'and ' + UNGOVERNED.join(' and ') +
-          ' has no requirement family at all. ' : '. '}
-        The most heavily specified families in the framework carry fifteen
-        each, and cost far less. Thin specification is not the same as low
-        importance, and it is why these workforce quantities are open rather
-        than estimated.</p>
+      <p>The domains left out of the floor above are also the domains the plan
+        specifies least. The {UNDER_SPECIFIED_FAMILIES} rule families below
+        carry {UNDER_SPECIFIED_REQUIREMENTS} requirements between them and
+        govern about ${UNDER_SPECIFIED_TOTAL}B a year of benefit
+        spending{UNGOVERNED.length ? ', and ' + UNGOVERNED.join(' and ') +
+          ' has no rule family at all' : ''}. The most heavily specified parts
+        of the plan carry {THICKEST_FAMILY} rules each, and cost far less.
+        Thin specification is not the same as low importance, and it is why
+        these workforce quantities are open rather than estimated.</p>
       <ul class="workforce-underspec-list">
         {UNDER_SPECIFIED.map((u) => (
           <li><b>{u.domain}</b>

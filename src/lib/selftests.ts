@@ -77,10 +77,11 @@ import {
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
-  anchoredOccupationCodes, requirementFamilyCounts, solvedResearchBlockers,
+  anchoredOccupationCodes, directCareHeadcountDrift, directCareSharedCount,
+  requirementFamilyCounts, solvedResearchBlockers,
   underSpecifiedExpansions, underSpecifiedRendered,
   UNITS_COST_STRESSORS, unitsCostRangeDrift, unitsCostStressorDrift,
-  supportRateDrift, unitModelDrift, workforceProseCoverage, workforceProseDrift,
+  supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
   unreadEngineConstants, unreadStructuralKnobs,
@@ -2497,12 +2498,18 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
     ]
   },
   {
-    /* R65 [§S9a]: the twelve cross-decomposition invariants reach the build.
-       They existed only in tests/lib/workforce.test.ts, as one boolean, so a
+    /* R65 [§S9a]: the cross-decomposition invariants reach the build. They
+       existed only in tests/lib/workforce.test.ts, as one boolean, so a
        broken workforce ledger failed `pnpm test` and passed `pnpm build` --
-       and the deploy workflow runs the build. Registered here as twelve named
-       rows because V19 and the audit both count them as twelve, and because a
-       row that cannot name the scenario it broke on is not serviceable. */
+       and the deploy workflow runs the build. Each is a named row, because a
+       row that cannot say which scenario it broke on is not serviceable.
+
+       Code review [§S9a]: this said "twelve named rows because V19 and the
+       audit both count them as twelve" while registering twenty-three, and
+       contradicted this section's own finding that the audit describes two
+       different twelves and that there are five relations, not four. The
+       count is deliberately not restated here: workforceSelfTests() is the
+       source and tests/lib/workforce.test.ts is where it is pinned. */
     surface: 'workforce.ts',
     rows: () => runGuardedList('workforce ledger invariants', workforceSelfTests).concat([
       /* R177 [§S9a]: and the rate that fourth relation compares against is
@@ -2538,6 +2545,19 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             .join(' | ') ||
             UNITS_COST_STRESSORS.length + ' scenarios stress unitsCost, ' +
             'which is still one blended network parameter'
+        };
+      }),
+      /* Code review [§S9a]: the fourth "Done when" clause, which the section
+         neither met nor disputed. Seven direct-care figures are authored
+         twice, in workforce.ts and ltc.ts, and nothing held them together.
+         Both stay authored; §S9d can collapse them knowing it is safe. */
+      runGuarded('The direct-care headcounts agree across the two chapters that carry them', () => {
+        const bad = directCareHeadcountDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.figure + ': workforce.ts ' + b.workforce +
+            ', ltc.ts ' + b.ltc).join(' | ') ||
+            directCareSharedCount() + ' figures shared, all agreeing'
         };
       }),
       /* R168 [§S9a]: requirement density runs inversely to cost. The four
@@ -2588,14 +2608,15 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          them at once, and this is what stops the tab inheriting the old
          feasibility argument when it lands. */
       runGuarded('Every figure the Workforce chapter states matches the ledger', () => {
-        const bad = workforceProseDrift();
-        /* counted after the run, not typed: the lists are the source */
-        const cov = workforceProseCoverage();
+        /* one run, and it returns its own coverage: no module state to
+           read before the check that fills it has run. */
+        const audit = workforceProseDrift();
+        const bad = audit.problems;
         return {
           ok: !bad.length,
           note: bad.map((b) => b.where + ' says ' + b.says + ', expected ' + b.expected)
             .join(' | ') ||
-            cov.fallbacks + ' no-script fallbacks and ' + cov.claims +
+            audit.fallbacks + ' no-script fallbacks and ' + audit.claims +
             ' stated claims agree with the plan case'
         };
       }),

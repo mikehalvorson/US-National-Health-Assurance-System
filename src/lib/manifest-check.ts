@@ -26,8 +26,9 @@ import {
   TOTAL_US_EMPLOYMENT_2024,
   DIRECT_PATIENT_CARE_PHYSICIANS, ANNUAL_TRAINING_TARGET,
   priorAuthReleasedFte, SCENARIOS, UNIT_MODEL, unitMixWeightedFte,
-  WORKER_SUPPORT_RATE, workforceLedgerFigures
+  LTC_WORKFORCE, WORKER_SUPPORT_RATE, workforceLedgerFigures
 } from './workforce';
+import { WORKFORCE_ASSESS } from './ltc';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
 
@@ -53,6 +54,27 @@ export function enumerateSourceFiles(root = REPO_ROOT): string[] {
   out.sort();
   fileCache.set(root, out);
   return out;
+}
+
+/* Code review [§S9a]: the same memoisation, for raw file text.
+ *
+ * §S9a added twelve checks that read markdown and source as text, each with
+ * its own `readFileSync`. Four of them re-read the same 20 KB methodology
+ * note and two re-read the framework transcription, once per self-test pass,
+ * against a repo convention that every filesystem read inside a self-test is
+ * cached. `renderedSource` could not be reused: it masks comments and strips
+ * imports, which is wrong for a prose document.
+ *
+ * Keyed on root + path, like every other cache in this file. */
+const textCache = new Map<string, string>();
+
+export function sourceText(rel: string, root = REPO_ROOT): string {
+  const key = root + '|' + rel;
+  const hit = textCache.get(key);
+  if (hit !== undefined) return hit;
+  const text = readFileSync(join(root, rel), 'utf8');
+  textCache.set(key, text);
+  return text;
 }
 
 function walk(dir: string, root: string, out: string[]): void {
@@ -1217,7 +1239,7 @@ function collapse(s: string): string {
 }
 
 export function careRequirementsNotInFramework(root = REPO_ROOT): string[] {
-  const text = collapse(readFileSync(join(root, FRAMEWORK_EXTRACT), 'utf8'));
+  const text = collapse(sourceText(FRAMEWORK_EXTRACT, root));
   const out: string[] = [];
   for (const card of CARE_SCENARIOS) {
     const f = card.nha.framework;
@@ -1463,7 +1485,7 @@ export interface UnitsCostRangeDrift {
 export function unitsCostRangeDrift(root = REPO_ROOT): UnitsCostRangeDrift[] {
   const param = PARAMS_BY_ID['unitsCost'];
   if (!param) return [];
-  const text = readFileSync(join(root, UNITS_PAGE_CLIENT), 'utf8');
+  const text = sourceText(UNITS_PAGE_CLIENT, root);
   /* the page writes an en dash between the bounds; accept either */
   const printed = text.match(
     /parameter covers \$(\d+(?:\.\d+)?)[-–—](\d+(?:\.\d+)?)B/);
@@ -1587,6 +1609,69 @@ export function unitsCostStressorDrift(): UnitsCostStressorDrift[] {
   return out;
 }
 
+/* Code review [§S9a]: the direct-care headcounts have one source.
+ *
+ * The §S9a prompt's "Done when" has four clauses and this was the one the
+ * section neither met nor disputed: "the direct-care headcounts have one
+ * source (coordinate with §S9d)". Found by the spec review, not by me.
+ *
+ * Seven figures are authored twice, independently: `LTC_WORKFORCE` in
+ * workforce.ts and `WORKFORCE_ASSESS` in ltc.ts. They agree today. Nothing
+ * held them together, which is `BW1`'s finding one layer down -- the LTC
+ * chapter attributes headcounts to "The Workforce model" while carrying its
+ * own copies.
+ *
+ * Merging them is a seam move and `ltc.ts` is §S9d's file, so this does what
+ * `ltcWageFloorCost()` does for the wage floor and what the prompt holds up
+ * as the pattern to copy: leaves both authored and asserts they agree. §S9d
+ * can then collapse them knowing the collapse is safe, and until it does, an
+ * edit to either side fails the build instead of splitting the two chapters.
+ *
+ * Read as data, not as text: both modules are importable here.
+ *
+ * Accessors rather than key names: `WORKFORCE_ASSESS` also holds a prose
+   `note` and a confidence grade, so indexing it by `keyof` yields a union and
+   the comparison needs an `as number` on both sides -- which trips
+   `primitiveAssertions`, correctly. A function per side is type-checked
+   without a cast, and a renamed field fails to compile rather than silently
+   reading `undefined`. */
+const DIRECT_CARE_SHARED: Array<[string, () => number, () => number]> = [
+  ['direct-care workers today (M)',
+    () => LTC_WORKFORCE.currentDirectCareM, () => WORKFORCE_ASSESS.directCare2024],
+  ['new jobs by 2034 (M)',
+    () => LTC_WORKFORCE.newJobs2034M, () => WORKFORCE_ASSESS.newJobs2034],
+  ['projected 2034 need (M)',
+    () => LTC_WORKFORCE.projected2034M, () => WORKFORCE_ASSESS.projected2034],
+  ['mature benefit need (M)',
+    () => LTC_WORKFORCE.matureFrameworkM, () => WORKFORCE_ASSESS.matureFramework],
+  ['total openings by 2034 (M)',
+    () => LTC_WORKFORCE.openings2034M, () => WORKFORCE_ASSESS.openings2034],
+  ['median wage now ($/hr)',
+    () => LTC_WORKFORCE.medianWageNow, () => WORKFORCE_ASSESS.medianWage2024],
+  ['home-care turnover (%)',
+    () => LTC_WORKFORCE.homeTurnoverPct, () => WORKFORCE_ASSESS.homeTurnover]
+];
+
+export interface DirectCareDisagreement {
+  figure: string;
+  workforce: number;
+  ltc: number;
+}
+
+export function directCareHeadcountDrift(): DirectCareDisagreement[] {
+  const out: DirectCareDisagreement[] = [];
+  for (const [label, fromWorkforce, fromLtc] of DIRECT_CARE_SHARED) {
+    const a = fromWorkforce();
+    const b = fromLtc();
+    if (a !== b) out.push({ figure: label, workforce: a, ltc: b });
+  }
+  return out;
+}
+
+export function directCareSharedCount(): number {
+  return DIRECT_CARE_SHARED.length;
+}
+
 /* R168 [§S9a]: requirement density runs inversely to cost, and the dashboard
  * should say so rather than leave it implicit.
  *
@@ -1611,7 +1696,7 @@ export function unitsCostStressorDrift(): UnitsCostStressorDrift[] {
 const UNDER_SPECIFIED_BELOW = 5;
 
 export function requirementFamilyCounts(root = REPO_ROOT): Map<string, number> {
-  const text = readFileSync(join(root, FRAMEWORK_EXTRACT), 'utf8');
+  const text = sourceText(FRAMEWORK_EXTRACT, root);
   const seen = new Map<string, Set<string>>();
   for (const m of text.matchAll(/\bSR-([A-Z]+)-(\d{3})\b/g)) {
     const family = 'SR-' + m[1];
@@ -1693,7 +1778,7 @@ export function underSpecifiedExpansions(root = REPO_ROOT): UnderSpecified[] {
    never mapping over the result is the "a mention is not a use" defect the
    §S7 review found and §S8 wrote again. */
 export function underSpecifiedRendered(root = REPO_ROOT): boolean {
-  const page = readFileSync(join(root, WORKFORCE_PAGE), 'utf8');
+  const page = sourceText(WORKFORCE_PAGE, root);
   return /underSpecifiedExpansions\s*\(/.test(page) &&
     /UNDER_SPECIFIED\.map\s*\(/.test(page);
 }
@@ -1731,7 +1816,7 @@ const SOC_CODE = /\b\d{2}-\d{4}\b/g;
 /* SOC codes the anchor table gives a count for, read from the table. */
 export function anchoredOccupationCodes(root = REPO_ROOT): Map<string, number> {
   const out = new Map<string, number>();
-  const note = readFileSync(join(root, UNIT_METHODOLOGY), 'utf8');
+  const note = sourceText(UNIT_METHODOLOGY, root);
   for (const m of note.matchAll(
     /\|[^|]*SOC (\d{2}-\d{4})\s*\|\s*([\d,]+)\s*\|/g)) {
     out.set(m[1], Number(m[2].split(',').join('')));
@@ -1753,7 +1838,7 @@ export function solvedResearchBlockers(root = REPO_ROOT): SolvedBlocker[] {
   for (const rel of enumerateSourceFiles(root)) {
     if (!rel.startsWith(RESEARCH_DIR + '/') || !rel.endsWith('.md')) continue;
     if (rel.endsWith('/' + UNIT_METHODOLOGY.split('/')[1])) continue;
-    for (const line of readFileSync(join(root, rel), 'utf8').split('\n')) {
+    for (const line of sourceText(rel, root).split('\n')) {
       const lower = line.toLowerCase();
       const marker = BLOCKER_MARKERS.filter((b) => lower.indexOf(b) >= 0)[0];
       if (!marker) continue;
@@ -1789,6 +1874,7 @@ export function solvedResearchBlockers(root = REPO_ROOT): SolvedBlocker[] {
  * sentence is not identifiable and matching one would pass on any other
  * sentence that happened to carry it. */
 const WORKFORCE_PAGE = 'src/pages/workforce.astro';
+const WORKFORCE_CLIENT = 'src/scripts/workforce-client.ts';
 const SCOPE_EXCLUSION_ELEMENT = 'wf-scope-exclusions';
 const EMPLOYMENT_SERIES_ELEMENT = 'wf-labor-series';
 
@@ -1805,11 +1891,6 @@ function formatFigure(value: number, format: FigureFormat): string {
   }
 }
 
-/* Filled by workforceProseDrift() on each run, so the coverage figure the
-   registered row prints is the length of the lists rather than a number
-   someone typed beside them. */
-let FALLBACK_COUNT = 0;
-let CLAIM_COUNT = 0;
 
 export interface WorkforceProseDisagreement {
   where: string;
@@ -1817,15 +1898,24 @@ export interface WorkforceProseDisagreement {
   expected: string;
 }
 
-/* How many typed figures this check actually covers, counted rather than
-   stated. The registered row said "22 no-script fallbacks and 15 stated
-   claims" and there are 14 claims: a hardcoded count in a note is the same
-   drift the rest of this file exists to catch, one layer down. */
-export function workforceProseCoverage(): { fallbacks: number; claims: number } {
-  return { fallbacks: FALLBACK_COUNT, claims: CLAIM_COUNT };
+export interface WorkforceProseAudit {
+  problems: WorkforceProseDisagreement[];
+  /* How many typed figures the run actually covered, counted rather than
+     stated. The registered row said "22 no-script fallbacks and 15 stated
+     claims" and there are 14: a hardcoded count in a note is the same drift
+     the rest of this file exists to catch, one layer down.
+
+     Code review [§S9a]: the first fix for that put the two counts in
+     module-level variables set as a SIDE EFFECT of the check, so reading them
+     before running it returned {0, 0} -- a figure that is wrong rather than
+     absent, which is worse than the typed count it replaced. They are
+     returned by the run that produced them now, and there is no shared
+     state to read early. */
+  fallbacks: number;
+  claims: number;
 }
 
-export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreement[] {
+export function workforceProseDrift(root = REPO_ROOT): WorkforceProseAudit {
   const out: WorkforceProseDisagreement[] = [];
   const f = workforceLedgerFigures('plan');
   const admin = createdGroupTotals(ADMINISTRATIVE_MATCH_IDS, 'plan');
@@ -1833,7 +1923,7 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
   const units = createdGroupTotals(['units'], 'plan');
   const rural = createdGroupTotals(['rural'], 'plan');
   const education = createdGroupTotals(['education'], 'plan');
-  const raw = readFileSync(join(root, WORKFORCE_PAGE), 'utf8');
+  const raw = sourceText(WORKFORCE_PAGE, root);
 
   /* 1. what a reader without JavaScript sees. The client writes the plan
         scenario on init, so the static content has to be the plan scenario. */
@@ -1861,7 +1951,6 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     ['wf-flow-external', f.externalPlacement, 'short'],
     ['wf-flow-gap', f.unresolvedGap, 'short']
   ];
-  FALLBACK_COUNT = fallbacks.length;
   for (const [id, value, format] of fallbacks) {
     const m = raw.match(new RegExp('id="' + id + '"[^>]*>([^<]*)<'));
     const wanted = formatFigure(value, format);
@@ -1906,7 +1995,6 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     ['the training-slot target',
       /the ([\d,]+) annual training slots/, ANNUAL_TRAINING_TARGET]
   ];
-  CLAIM_COUNT = claims.length;
   for (const [label, pattern, expected] of claims) {
     const m = raw.match(pattern);
     if (!m) {
@@ -1942,7 +2030,7 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
       expected: 'BLS industry employment, which includes the self-employed'
     });
   }
-  const anchorRow = readFileSync(join(root, UNIT_METHODOLOGY), 'utf8').match(
+  const anchorRow = sourceText(UNIT_METHODOLOGY, root).match(
     /\|\s*Total U\.S\. employment\s*\|\s*([\d,]+)\s*\|\s*(\d{4})\s*\|/);
   if (!anchorRow) {
     out.push({
@@ -1993,9 +2081,9 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     });
   }
   if (!/\bTOTAL_US_EMPLOYMENT_SERIES(?![A-Za-z0-9_])/.test(
-    renderedSource('src/scripts/workforce-client.ts', root))) {
+    renderedSource(WORKFORCE_CLIENT, root))) {
     out.push({
-      where: 'src/scripts/workforce-client.ts',
+      where: WORKFORCE_CLIENT,
       says: 'imports the series label without rendering it',
       expected: 'TOTAL_US_EMPLOYMENT_SERIES written to the page'
     });
@@ -2043,16 +2131,16 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
       expected: 'a rendered element for the declared exclusions'
     });
   }
-  const clientText = renderedSource('src/scripts/workforce-client.ts', root);
+  const clientText = renderedSource(WORKFORCE_CLIENT, root);
   if (!/\bcreatedScopeStatement\s*\(/.test(clientText)) {
     out.push({
-      where: 'src/scripts/workforce-client.ts',
+      where: WORKFORCE_CLIENT,
       says: 'imports the exclusion statement without rendering it',
       expected: 'createdScopeStatement() written to the page'
     });
   }
 
-  /* 4. the faculty row spells its figure out, so it needs its own comparison.
+  /* 5. the faculty row spells its figure out, so it needs its own comparison.
         Eleven is the only CREATED value small enough for the page to write in
         words, and a word does not drift the way a digit does -- which is
         exactly why it would go unnoticed. */
@@ -2074,7 +2162,7 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     });
   }
 
-  return out;
+  return { problems: out, fallbacks: fallbacks.length, claims: claims.length };
 }
 
 /* R179 [§S9a]: the unit model behind CREATED.units, joined to the two places
@@ -2096,14 +2184,13 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
  * others are written as "~N". Both forms are parsed and the parse is reported
  * in the check's note, so a failure says what it read rather than only that
  * it disagreed. */
-const UNIT_CLIENT = 'src/scripts/units-client.ts';
 const UNIT_METHODOLOGY = 'research/workforce_transition_methodology.md';
 
 /* leading "~7", "7", "2-3", "2en-dash-3", "2em-dash-3"; a range is midpointed */
 const STAFF_FIGURE = /^\s*~?(\d+(?:\.\d+)?)(?:\s*[-–—]\s*(\d+(?:\.\d+)?))?/;
 
 export function unitStaffFromClient(root = REPO_ROOT): Record<string, number | null> {
-  const text = maskComments(readFileSync(join(root, UNIT_CLIENT), 'utf8'));
+  const text = maskComments(sourceText(UNITS_PAGE_CLIENT, root));
   const out: Record<string, number | null> = {};
   for (const t of UNIT_MODEL.allocation) {
     const entry = text.match(new RegExp(
@@ -2132,13 +2219,13 @@ export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
     const read = staffed[t.key];
     if (read === null) {
       out.push({
-        where: UNIT_CLIENT + ' type ' + t.key,
+        where: UNITS_PAGE_CLIENT + ' type ' + t.key,
         says: 'no readable staffing figure',
         expected: t.fte + ' FTE'
       });
     } else if (read !== t.fte) {
       out.push({
-        where: UNIT_CLIENT + ' type ' + t.key,
+        where: UNITS_PAGE_CLIENT + ' type ' + t.key,
         says: read + ' FTE',
         expected: t.fte + ' FTE'
       });
@@ -2146,12 +2233,12 @@ export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
   }
 
   /* 2. the controlled target, against the floor the unit page states */
-  const client = readFileSync(join(root, UNIT_CLIENT), 'utf8');
+  const client = sourceText(UNITS_PAGE_CLIENT, root);
   const target = client.match(/'≥ ([\d,]+)'/);
   const statedTarget = target ? Number(target[1].split(',').join('')) : null;
   if (statedTarget !== UNIT_MODEL.controlledTargetUnits) {
     out.push({
-      where: UNIT_CLIENT + " plan's minimum",
+      where: UNITS_PAGE_CLIENT + " plan's minimum",
       says: statedTarget === null ? 'no stated minimum' : String(statedTarget),
       expected: String(UNIT_MODEL.controlledTargetUnits)
     });
@@ -2161,7 +2248,7 @@ export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
         derivation. The note states the counts per type, the total, the total
         FTE, the average, and the product, so every input has a published
         counterpart and none of them can move alone. */
-  const note = readFileSync(join(root, UNIT_METHODOLOGY), 'utf8');
+  const note = sourceText(UNIT_METHODOLOGY, root);
   for (const t of UNIT_MODEL.allocation) {
     const row = new RegExp('Type ' + t.key.toUpperCase() +
       ':\\s*([\\d,]+)\\s*units\\s*x\\s*([\\d.]+)\\s*FTE');
@@ -2270,9 +2357,6 @@ export function unitModelDrift(root = REPO_ROOT): UnitModelDisagreement[] {
  * The methodology row is the strongest of the three, because it carries the
  * base and the product as well as the rate: `760,000 x 75% = 570,000` cannot
  * survive an edit to plan `eliminated` or plan `supported` either. */
-const SUPPORT_RATE_METHODOLOGY = 'research/workforce_transition_methodology.md';
-const SUPPORT_RATE_PAGE = 'src/pages/workforce.astro';
-const SUPPORT_RATE_CLIENT = 'src/scripts/workforce-client.ts';
 const SUPPORT_BASIS_ELEMENT = 'wf-support-basis';
 
 export interface SupportRateDisagreement {
@@ -2291,7 +2375,7 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
         (TPP-3.6, PR-SCH-010) and matching a bare percentage would pass on any
         of them. Absence is drift -- a row that stops stating a threshold is
         how a check quietly turns itself off. */
-  const framework = readFileSync(join(root, FRAMEWORK_EXTRACT), 'utf8');
+  const framework = sourceText(FRAMEWORK_EXTRACT, root);
   const kppRows = framework.split('\n').filter(
     (l) => l.includes('KPP-W1') && />=\s*\d+(\.\d+)?%/.test(l));
   if (!kppRows.length) {
@@ -2314,12 +2398,12 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
   }
 
   /* 3. the derivation, base and product included */
-  const methodology = readFileSync(join(root, SUPPORT_RATE_METHODOLOGY), 'utf8');
+  const methodology = sourceText(UNIT_METHODOLOGY, root);
   const derivation = methodology.match(
     /([\d,]+)\s*x\s*(\d+(?:\.\d+)?)%\s*=\s*([\d,]+)/);
   if (!derivation) {
     out.push({
-      where: SUPPORT_RATE_METHODOLOGY,
+      where: UNIT_METHODOLOGY,
       says: 'no placement-floor derivation',
       expected: plan.eliminated * 1000 + ' x ' + declaredPct + '% = ' +
         plan.supported * 1000
@@ -2331,7 +2415,7 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
     if (base !== plan.eliminated * 1000 || pct !== declaredPct ||
       product !== plan.supported * 1000) {
       out.push({
-        where: SUPPORT_RATE_METHODOLOGY,
+        where: UNIT_METHODOLOGY,
         says: derivation[0],
         expected: plan.eliminated * 1000 + ' x ' + declaredPct + '% = ' +
           plan.supported * 1000
@@ -2341,11 +2425,11 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
 
   /* 4. what the chapter tells a reader. Comments and imports are stripped, so
         a provenance note explaining the rate is not mistaken for the label. */
-  const page = renderedSource(SUPPORT_RATE_PAGE, root);
+  const page = renderedSource(WORKFORCE_PAGE, root);
   const labels = Array.from(page.matchAll(/(\d+(?:\.\d+)?)%\s+(?:worker-protection\s+)?floor/g));
   if (!labels.length) {
     out.push({
-      where: SUPPORT_RATE_PAGE,
+      where: WORKFORCE_PAGE,
       says: 'the chapter states no support floor',
       expected: declaredPct + '% floor'
     });
@@ -2353,7 +2437,7 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
   for (const m of labels) {
     if (Number(m[1]) !== declaredPct) {
       out.push({
-        where: SUPPORT_RATE_PAGE,
+        where: WORKFORCE_PAGE,
         says: m[0],
         expected: declaredPct + '% floor'
       });
@@ -2365,17 +2449,17 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
         by the import line. renderedSource strips imports for exactly this
         reason, so deleting the setText call while leaving the import fails
         here. The page must also still carry the element it writes into. */
-  const client = renderedSource(SUPPORT_RATE_CLIENT, root);
+  const client = renderedSource(WORKFORCE_CLIENT, root);
   if (!/\bWORKER_SUPPORT_RATE_BASIS(?![A-Za-z0-9_])/.test(client)) {
     out.push({
-      where: SUPPORT_RATE_CLIENT,
+      where: WORKFORCE_CLIENT,
       says: 'imports the basis without rendering it',
       expected: 'WORKER_SUPPORT_RATE_BASIS written to the page'
     });
   }
   if (!page.includes(SUPPORT_BASIS_ELEMENT)) {
     out.push({
-      where: SUPPORT_RATE_PAGE,
+      where: WORKFORCE_PAGE,
       says: 'no ' + SUPPORT_BASIS_ELEMENT + ' element',
       expected: 'a rendered element for the placement floor basis'
     });

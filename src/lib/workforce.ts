@@ -592,12 +592,18 @@ export const WORKER_SUPPORT_RATE = 0.75;
 
 /* Rendered on the Workforce chapter under the placement tile. A rate with no
    visible basis is the defect this row was filed for; a basis that exists
-   only in the module is the same defect one layer down. */
+   only in the module is the same defect one layer down.
+
+   Code review [§S9a]: this said "the framework requires...", which breaks
+   golden rule 2 as squarely as a catalog code does. The rule is not only
+   about identifiers: "Never write 'the framework says/calls for...'. State
+   things directly as 'the plan' / 'the system.'" Fixed in the same pass that
+   found it. */
 export const WORKER_SUPPORT_RATE_BASIS =
-  'This floor is controlled, not assumed: the framework requires at least ' +
-  'three in four eligible displaced workers to be placed or enrolled in ' +
-  'approved training by Phase 8. Placement means paid work or approved ' +
-  'training with a verified start, not a referral or an application.';
+  'This floor is controlled, not assumed: the plan must place or enrol at ' +
+  'least three in four eligible displaced workers in approved training by ' +
+  'Phase 8. Placement means paid work or approved training with a verified ' +
+  'start, not a referral or an application.';
 
 interface CrossRelation {
   label: string;
