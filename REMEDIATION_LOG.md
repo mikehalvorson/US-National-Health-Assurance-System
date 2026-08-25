@@ -2842,3 +2842,344 @@ check on it rather than a sentence in a commit message.
 The break pass was re-run in full and one break was repaired mid-pass, which is
 how the dead comparison was found: it failed the build without naming its check,
 and the harness reports that as a failure rather than a pass.
+
+## P11 — §S9a Workforce & transition ledger · 2026-08-24 · branch `nha-remediation`
+STATUS: complete — all 12 recommendations landed across 12 commits. `R66` and
+  `R178` are the same defect and landed as one commit; `R188` is a scope
+  reduction for `§S9b` and landed as the check its own evidence needed.
+
+ENTRY GATE: `## P1` (`§S0`) and `## P2` (`§S1`) both `STATUS: complete` ✅ ·
+  a broken invariant fails `astro build`, proven and restored ✅ ·
+  `check_audit_docs.py` 35/35 exit 0 ✅ · tree clean ✅
+
+  Step 3 — "record the twelve workforce invariants passing before you start" —
+  could not be satisfied as written, and that is the finding the section opens
+  with. At the fixed point `a4d1f97` there were not twelve invariants. There
+  was **one boolean**. `preP11-workforce.json`, taken from a worktree at
+  `a4d1f97`, records `invariants=1/1`, note `"true"`. That is the whole of
+  what the before-state could say.
+
+  So the split landed first, before any number moved, and the before-state was
+  recorded from it: `splitP11-workforce.json`, **12 of 12**, each named, each
+  carrying both sides.
+
+    [low/plan/high]  sum(LEGACY.values) = eliminated    560 / 760 / 1000
+    [low/plan/high]  sum(CREATED.values) = created      390 / 510 / 650
+    [low/plan/high]  sum(CREATED.fills) = inside        270 / 360 / 460
+    [low/plan/high]  supported = eliminated x 0.75      420 / 570 / 750
+
+  Six artifacts at `NHA-Mental-Health/baseline-P11/`. Five are the P9/P10 set;
+  the sixth is new — `workforcedump.test.ts`, the workforce ledger in all three
+  scenarios, every LEGACY and CREATED row, the derived flow quantities, the LTC
+  block and every invariant with its note. Written as its own file so the P9
+  and P10 labels stay byte-comparable.
+
+LANDED:
+  - `fc84989` `R65`  — the twelve become twelve named checks, and reach the build
+  - `de88ac2` `R65`  — the second decomposition of `inside`, and "twelve" was two twelves
+  - `dab8403` `R177` — the 75% declared, sourced to KPP-W1, rendered, checked four ways
+  - `d0e7fef` `R179` — the unit model behind `CREATED.units` is data, and joined
+  - `d8adf17` `R64`  — every ledger figure the chapter states, held to one derivation
+  - `5ac55a4` `R67`  — the gross-position floor's scope exclusion is in the data
+  - `3ca4ced` `R66` + `R178` — the one non-monotone `fills`, declared; stale declarations fail too
+  - `c66c1ca` `R69`  — the denominator declares its BLS series and refuses the OEWS swap
+  - `3b31931` `R29`  — research/05's BLS blocker closed; a solved blocker cannot be re-advertised
+  - `d7d2fb7` `R168` — the plan is thinnest where it spends most, and the chapter says so
+  - `0b4cc5e` `R62`  — the three unit-cost stressors named, for the case `R60` cannot see
+  - `6bc00c9` `R188` — the printed reconciliation gap held to the range it prints against
+
+INVARIANTS BEFORE: **1 of 1** at `a4d1f97` (one boolean) · **12 of 12** after the
+  split, before any number moved.
+INVARIANTS AFTER: **23 of 23**, and the count is not a re-derivation of the
+  twelve. It is five relations across three scenarios (15), one monotonicity
+  row per CREATED item (7), and `R179`'s planning-case unit derivation (1).
+
+RE-DERIVED: **none.** No invariant that was true became false. No published
+  figure moved anywhere in the application.
+
+  - headline `SCN-BASE` p50: `matureToday` 5305.3529, `steadyTotal` 9210.9550,
+    `newRevenue` 3409.3518, `perCapita` 25648.5182, `gdpPct` 23.6965 — all
+    identical to nine significant figures.
+  - 727 published targets: 0 added, 0 removed, 0 moved.
+  - 1,170 interim target cells: 0 changed.
+  - 1,037 criticality positions: 0 moved, 0 RPN changes.
+  - the workforce ledger: `SCENARIOS`, `LEGACY`, `CREATED` and `LTC_WORKFORCE`
+    byte-identical between `preP11` and `postP11`. Every derived quantity
+    unchanged in all three scenarios: entrants 120 / 150 / 190, annual pace
+    10,000 / 12,500 / 15,833, training ratio 5.5x / 4.4x / 3.47x, labour share
+    0.0706% / 0.0883% / 0.1118%.
+
+  🛑 **This is the section's most important result and it contradicts the
+  prompt's central expectation.** `R179` predicted four broken invariants and
+  the prompt asked which four. **None broke, and none could have.** See
+  `DISCREPANCY 1`.
+
+REGRESSIONS: none.
+
+TOTAL_US_EMPLOYMENT_2024: **unchanged at 169,956,100, vintage labelled.** The
+  second of the two options `R69` allows. `TOTAL_US_EMPLOYMENT_SERIES` now
+  declares it as "BLS employment by industry, all industries, 2024" and the
+  chapter renders that under the labour-share tile. `OEWS_TOTAL_EMPLOYMENT_2024
+  = 155,495,730` is declared as the measure it must not become, and a check
+  refuses the swap by name. Updating from the industry series would need a
+  newer release of that specific table, which this section has no way to
+  verify.
+
+DISCREPANCY: eleven, and the first two change what the section is.
+
+  **Nine of the twelve rows needed correction, reinterpretation, or could not
+  be executed as written.** That is a higher rate than §S8's five of ten and
+  should be carried as a prior into §S9b:
+
+    wrong as stated          `R179` `R177` `R168` `R67`
+    one defect, two rows     `R66` + `R178`
+    not executable here      `R64` (needs Type E), `R62` (covered by `R60`
+                             except in one case), `R29` (its figures could
+                             not be verified)
+    correct as written       `R65` `R69` `R188`
+
+  Every one of them still landed. The point is not that the rows are bad, it
+  is that the row is a hypothesis and the code is the evidence.
+
+  1. 🛑 **`R179`'s four invariants cannot break in `§S9a`, and there are three
+     of them, not four.**
+
+     `R179` and `R64` are both conditional on Part 1 and Part 2 landing. Part 1
+     is `§S9b`'s (`R188` says so explicitly) and Type E is Part 2's. `§S9a`
+     lands neither. Measured: `UNIT_TYPES` in `units-client.ts` carries types
+     A to D and no fifth, so the recompute `R64` asks for has nothing to
+     recompute against.
+
+     And the count is wrong independently of that. `R179` says "the four
+     `CREATED.values` → `created` invariants". There are **three** — one per
+     scenario. `§AD4`'s own table lists five affected *quantities* (unit teams,
+     `created`, entrants, annual pace, training ratio), of which only `created`
+     is among the twelve; the other four live in self-test 2.
+
+     **The code wins.** What `§S9a` could do instead is make the break loud
+     when `§S9b` lands it, and that is what shipped: `CREATED.units` is joined
+     to the unit model's own inputs, and every figure the chapter types is
+     joined to the ledger. Before this section, restaffing a unit type changed
+     nothing downstream. It now fails the build and names the sentence.
+
+  2. 🛑 **The audit describes two different sets of twelve invariants, and the
+     section brief and the P11 prompt quote the one the code does not
+     implement.**
+
+       `§AD1`'s four relations        `§BA1`'s four relations
+       ---------------------------    ---------------------------
+       sum(LEGACY.values)             sum(LEGACY.values)
+       sum(CREATED.values)            sum(CREATED.values)
+       sum(CREATED.fills)             sum(CREATED.fills)
+       supported = eliminated x 0.75  sum(LEGACY.inside)        <- differs
+
+     They share three and disagree on the fourth. `§AD1`'s set is what the code
+     asserted. `§BA1` counts `sum(LEGACY.inside)` among "twelve passes" — an
+     invariant the same audit records at `§AD3`, as a red finding, as untested.
+     Both cannot be right. `§AD3` matches the code, which is why `R65` exists.
+
+     **The code wins**, and the honest count is five relations, four of them
+     decompositions. `V19`'s twelve is now wrong in the direction of
+     understating the guard.
+
+  3. **`R177` / `§BA3`: "it appears nowhere — not in the file, not on the tab,
+     not in `transitionTotal`'s source note."** Two of three hold. Genuinely
+     absent from `workforce.ts` and from `transitionTotal`'s source note. **Not
+     absent from the tab**: `workforce.astro` has said "controlled 75%
+     worker-protection floor" and "the 75% floor" since before this section.
+     What the tab lacked was the rate's *basis* — nothing said what
+     "controlled" meant, so a reader could not tell an obligation from a
+     modelling choice. **The code wins.**
+
+  4. **`R66` and `R178` are the same defect filed twice.** `R66` cites `AD5`.
+     `R178` cites `BA4` and `AD5`, and `BA4` is the pass that confirmed `AD5`.
+     Same three numbers, same fix. Third instance of the pattern Standing Order
+     0 already counts twice. Landed once.
+
+  5. **`R179`'s test as written would be a tautology.** "`CREATED.units` equals
+     unit count x mix-weighted FTE, both read from the unit model" — if
+     `CREATED.units` becomes that product, the assertion compares a value with
+     its own derivation. Same for `R177`'s "`supported` equals the declared
+     support rate x eliminated". **Both left AUTHORED**, with the derivation
+     compared against them. Nine authored inputs against one authored figure
+     can disagree; a value against its own derivation cannot. This is the
+     defect class `§S6a`, `§S7` and `§S8` each shipped an instance of.
+
+  6. **`R168` understates itself twice.** It names `SR-ARCH`, `SR-ADP` and
+     `SR-ACC` at 15 each; **`SR-IF` also carries 15** and it does not say so.
+     And **public health has no requirement family at all** — there is no
+     `SR-PH`. It is priced inside `emsPhExpansion`, has no cost line of its
+     own, and is governed by nothing. Both figures the row does give are exact:
+     ten requirements across the four thinnest families, $457B/yr.
+
+  7. **`R29`'s May 2025 counts are unverified and were not written.** The row
+     states 43-9041 = 214,260, 43-3021 = 404,060, 29-2072 = 194,720. The
+     repository holds the **May 2024** release — 229,070 / 417,500 / 194,570 —
+     and nothing in it can verify the 2025 figures. Standing Order 0 puts
+     counts first among the things this document has been wrong about. The row
+     is satisfiable without them: what it asks is that the blocker note stop
+     sending people after data the repo already has.
+
+  8. **`R62` is covered by `R60` except in the case Part 1 specifies.** `R60`
+     (`§S6b`) refuses an override keyed to a parameter that does not exist, at
+     module load. Part 1 `§1.2` says to keep `unitsCost` resolving to a shim —
+     which satisfies `R60` while the three scenarios go on multiplying a number
+     that no longer drives per-type cost. That half is now guarded.
+
+  9. **`AD6` / `R67` put the field one level too low.** Both ask for the scope
+     exclusion on `CREATED`. It is a property of the floor, not of any
+     operating function — no single `CREATED` row excludes behavioral health,
+     the total does. On the items it would mean the same sentence seven times
+     or six blanks. Landed at module level.
+
+  10. **The methodology note's `15,000 x 9.225 = 138,375` uses the ROUNDED
+      average.** The exact allocation gives 9.22540 and 138,381 — six FTE
+      apart, both rounding to the published 138,000. The check compares the
+      note's average against the model at the note's own precision and the
+      note's product against its own base times its own average, rather than
+      reporting a rounding as a disagreement.
+
+  11. **`R188` verifies in full, and its evidence rested on a hardcoded copy.**
+      `UNIT_TYPES` mode spread is 3.4 / 0.45 = 7.56x (the row says ~7.6x) and
+      `renderVerdict()` does print the gap. But the "$15–36B" it prints it
+      against is `unitsCost.low`/`.high` retyped into the client. Move a bound
+      and the page advertises a disagreement that is not the one that exists.
+
+NEW FINDINGS: five, all landed rather than filed.
+
+  - 🔴 **`workforce.ts` reached no build gate at all.** It was in no
+    `SELF_TEST_SOURCES` entry, so a broken workforce ledger failed `pnpm test`
+    and passed `pnpm build` — and `deploy.yml` runs the build. Registered.
+
+  - 🔴 **The per-type unit FTE existed in the codebase only as PROSE.** Inside
+    the `staff` strings of `UNIT_TYPES`: `'~10 (physician or senior NP/PA lead,
+    nurses, techs)'`. The allocation existed only in the methodology note, and
+    `units-client.ts` computes it at runtime from `counties.json`, so it is not
+    available at build time at all. The headline unit-workforce number was the
+    hand-typed result of a calculation none of whose inputs anything could
+    check. `unitModelDrift()` reads the prose, deliberately, because that is
+    where the numbers live and `§S9b` is going to edit those strings.
+
+  - 🟡 **The chapter published 138,000 twice, for two different reasons.**
+    `CREATED.units` plan is 138. The immigration tile says "138,000 of the gap
+    is unit-clinical and rural-clinical", which is units entrants 108 plus
+    rural entrants 30. Equal today; not equal after `§S9b`. Both checked
+    against their own derivations.
+
+  - 🟡 **The no-script fallbacks were unchecked.** 22 elements the client
+    overwrites on init carried static values nothing compared to the model.
+    A stale fallback is invisible to anyone testing in a browser, because the
+    client repaints it, and it is what a crawler indexes.
+
+  - 🟡 **One CREATED figure is written in words.** "Eleven thousand positions"
+    — the only value small enough for the page to spell out, and the one a
+    digit-only scan cannot see. Checked against `education.values`.
+
+CONTRADICTIONS: `§AZ3` versus golden rule 2 is still open and still nobody's
+  row (carried from `## P10`). `R177`'s catalog identifiers are kept in the
+  module comment rather than in the rendered basis string for exactly that
+  reason: `WORKER_SUPPORT_RATE_BASIS` is reader-facing prose and the site's
+  rule keeps catalog codes out of it. The tie to `KPP-W1` is checked instead —
+  `supportRateDrift()` reads the threshold out of the framework transcription.
+
+COUNTS: self-tests **172 → 202**. `README.md` bumped in every commit that moved
+  it. Full suite 400 passing, 57 files. `astro check` 0 errors, 0 warnings,
+  **1 hint** — the same `equations.ts:1252` unreachable `return NaN`; the
+  refactor in `R64` briefly took it to 4 by leaving three imports unused, and
+  they were removed. File manifest unchanged at 122 — no file was added under
+  `src/`, `tools/` or `research/`.
+
+BREAK-AND-RESTORE: **40 breaks, all asserted by check NAME**, re-run in full
+  against the final tree at section end, because a break payload goes stale
+  the moment a later commit edits its anchor. Three did: the README count in
+  the entry-gate break, and the registry figure the "delete a relation" break
+  expects, both of which this section moved seven times. `prove_p11.py` in
+  `baseline-P11/`. The ones worth naming:
+
+  - restaffing Type B from `~10` to `~12` in `units-client.ts` — `§S9b`'s edit
+    in miniature, and the break the whole of `R179` exists for. Before this
+    section the same edit changed nothing.
+  - swapping the OEWS total into `TOTAL_US_EMPLOYMENT_2024` — `R69`'s trap.
+  - rebasing `unitsCost`'s label while leaving the ID resolving — Part 1 `§1.2`
+    exactly, which `R60` alone passes.
+  - deleting a render call while leaving its import, three times, on three
+    different strings. That is the `§S7` review's defect, which `§S8` wrote
+    again.
+  - deleting a relation from the invariant table: caught at the registry count.
+  - a declared `fills` exception that is no longer an exception.
+  - each of the five relations broken on a DIFFERENT scenario, so the split is
+    shown to have actually separated them rather than merely renamed one
+    boolean.
+
+TRAPS THAT FIRED THIS SESSION: eight, six of them already on a previous
+  session's list.
+
+  - 🛑 **`sed -i` stripped `README.md` from CRLF to LF** on the whole file
+    while `git diff` showed a one-line change. Reverted with
+    `git checkout --` and redone with the Edit tool. Already in memory as
+    `nha-repo-crlf-trap`; fired anyway, in the first hour.
+  - 🛑 **A `*/` closed a comment block early**, in a `workforce.ts` comment,
+    leaving six lines of prose as syntax. `§S8` hit this twice. Caught by
+    reading the file back, not by the compiler, because the stray text
+    happened to parse.
+  - 🛑 **A duplicate `FRAMEWORK_EXTRACT` constant**, and a second name
+    (`SUPPORT_RATE_FRAMEWORK`) for the same path declared earlier in the same
+    section. `§S8`'s review found this shape three times. Grep before
+    declaring; I did not, twice.
+  - ⚠️ **The bare-integer-literal type trap was avoided, not found.**
+    `TOTAL_US_EMPLOYMENT_2024` and `OEWS_TOTAL_EMPLOYMENT_2024` are both
+    annotated `: number` because `169956100 !== 155495730` between two literal
+    types is a comparison `astro check` rejects as impossible, and the guard
+    would have been dead at compile time. `§S8` shipped that defect.
+  - ⚠️ **A refactor left three unused imports** and took `astro check` from
+    1 hint to 4. Hints do not fail the build, so the only thing that catches
+    this is reading the count against the handoff's pinned figure.
+  - ⚠️ **My own check flagged my own resolution note.** `R29`'s check looks for
+    blocker phrasing; the sentence explaining that the data *had* been
+    retrieved used the words "could not retrieve". Reworded rather than
+    teaching the check to skip lines marked RESOLVED — that exemption would
+    silence it on any line someone chose to label.
+  - ⚠️ **Guessing prose vocabulary from data produced two false failures.**
+    `R67`'s check derived the words to look for from each domain's name; the
+    page writes "EMS" for the full name and splits "dental, vision, and
+    hearing" on its Oxford comma into "and hearing". Declared as `pageWords`
+    instead. A check that has to guess what prose looks like is a check that
+    gets loosened until it passes.
+  - ⚠️ **Re-running a dump label overwrote the before-state.** Taking `preP11`
+    a second time to pick up a renamed constant destroyed the evidence it was
+    taken for. Regenerated from a detached worktree at `a4d1f97` — which is how
+    the "one boolean" figure above is a measurement rather than a recollection.
+    The worktree needed its `tsconfig.json` removed and only the `@lib` alias
+    repointed, because it has no `node_modules`.
+
+FOR §S9b, WHICH DEPENDS ON THIS SECTION: four tripwires are now aimed at it,
+  and all four are meant to fire.
+
+  - `unitModelDrift()` — the four per-type FTEs against `UNIT_TYPES`' staffing
+    prose, the controlled target against the unit page's floor, and the
+    allocation and its product against the methodology note. **If `§S9b` gives
+    `UNIT_TYPES` a typed `fte` field, retarget the check at the field and
+    delete the parser.** The comment says so.
+  - the sixteenth invariant — `CREATED.units` against `15,000 x mix-weighted
+    FTE`. Reworking the mix breaks it, which is correct, and the note prints
+    both sides.
+  - `workforceProseDrift()` — 22 no-script fallbacks and 14 stated claims.
+    Landing Type E moves all of them; the build names the sentences.
+  - `unitsCostStressorDrift()` — `SCN-UNIT-UNDER`, `SCN-AI-FAIL` and
+    `SCN-RURAL-STRESS`. Fires when `unitsCost` stops being one blended network
+    parameter, including when the ID is kept resolving.
+
+  **`R64`'s recompute is still open and is `§S9b`/Part 2's**: unit teams 138k →
+  ~197k, `created` 510k → ~570k, entrants 150k → ~210k, pace 12,500 → ~17,500,
+  training ratio **4.4x → ~3.1x**. That ratio is the chapter's central
+  feasibility argument. It must be restated, not inherited, and self-test 2
+  pins `entrants === 150` and `annualEntrants === 12500` and will fail —
+  correctly. Update the expected values deliberately; do not "fix" the test.
+
+STILL OPEN, NOT THIS SECTION'S: `R135`'s seven `low`-confidence parameters with
+  empty `url` (`§S11b`, eleventh session). `R245`'s 7 role-less `aria-label`led
+  `<div>`s on `risk.astro` (`§S14`). The 14 non-finite equation cells. Golden
+  rule 2 site-wide. `wealthTaxPotential`'s label. `§AC6`'s `unitsCost`
+  migration hazard, now partly guarded by `R62` above. The three
+  `medium`-confidence expansion parameters with empty `url` that `R168`
+  identified as half of its own fix are `R135`'s.
