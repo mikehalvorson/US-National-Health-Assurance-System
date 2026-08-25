@@ -18,6 +18,9 @@ import { fileURLToPath } from 'node:url';
 import { CARE_SCENARIOS } from './care';
 import { catalogCode, PARAMS_BY_ID } from './params';
 import {
+  SCENARIOS as MODEL_SCENARIOS, SCENARIOS_BY_ID
+} from './scenarios';
+import {
   ADMINISTRATIVE_MATCH_IDS, CLINICAL_ENTRANT_IDS, createdGroupTotals,
   CREATED_SCOPE_EXCLUSIONS, OEWS_TOTAL_EMPLOYMENT_2024,
   TOTAL_US_EMPLOYMENT_2024,
@@ -1430,6 +1433,110 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
     if (v >= RETAIL_BAND_LOW && v <= RETAIL_BAND_HIGH) found.push(m[0]);
   }
   return found;
+}
+
+/* R62 [§S9a]: the three scenarios that stress unit cost, named, so §S9b
+ * cannot deprecate `unitsCost` and leave them running while stressing
+ * nothing.
+ *
+ * Measured before writing this. R60 (§S6b) already refuses an override keyed
+ * to a parameter that does not exist, at module load, and it is the guard the
+ * instruction table says covers this row. It does cover the naive case: strip
+ * `unitsCost` out of PARAM_DEFS and the build throws with all three scenario
+ * ids in the message.
+ *
+ * It does not cover the case Part 1 actually specifies. §1.2 says to "keep
+ * the ID resolving to the new aggregate so nothing silently breaks", and the
+ * moment `unitsCost` resolves to a shim, R60 is satisfied and the three
+ * scenarios go on multiplying a number that no longer drives per-type cost.
+ * SCN-UNIT-UNDER would still slow the ramp through `unitsRampMult` and still
+ * appear in the catalog, while no longer raising cost at all -- which is the
+ * one thing its name promises.
+ *
+ * So this is the second half of R60, aimed at the case R60 cannot see. It is
+ * a build-time reader rather than an edit to scenarios.ts or params.ts:
+ * neither file is §S9a's, and the tripwire does not need to live in them.
+ *
+ * Three conditions, each able to fail on its own:
+ *
+ *   1. exactly these three scenarios override `unitsCost`. A fourth appearing
+ *      or one of them dropping it is a change to what the catalog stresses.
+ *   2. each override still moves the number. A `mult` of 1 is an override
+ *      that runs and does nothing, which is R60's silent-ignore failure
+ *      wearing a different hat.
+ *   3. `unitsCost` is still the single blended network parameter. Its label
+ *      names the whole four-unit network; when §S9b replaces it with a
+ *      per-type chain that label changes, and the failure carries the list of
+ *      scenarios that have to migrate with it. */
+export const UNITS_COST_STRESSORS = [
+  'SCN-UNIT-UNDER', 'SCN-AI-FAIL', 'SCN-RURAL-STRESS'
+];
+const UNITS_COST_PARAM = 'unitsCost';
+/* The label is the tell that it is still one blended parameter for the whole
+   network. §S9b replaces the basis, so it replaces this. */
+const UNITS_COST_BLENDED_LABEL = 'Four-unit diagnostic-treatment network';
+
+export interface UnitsCostStressorDrift {
+  where: string;
+  says: string;
+  expected: string;
+}
+
+export function unitsCostStressorDrift(): UnitsCostStressorDrift[] {
+  const out: UnitsCostStressorDrift[] = [];
+  const overriding = MODEL_SCENARIOS
+    .filter((s) => Object.keys(s.overrides).indexOf(UNITS_COST_PARAM) >= 0)
+    .map((s) => s.id);
+
+  for (const id of UNITS_COST_STRESSORS) {
+    if (overriding.indexOf(id) < 0) {
+      out.push({
+        where: id,
+        says: 'no longer overrides ' + UNITS_COST_PARAM,
+        expected: 'it stresses unit cost, or it stops claiming to'
+      });
+    }
+  }
+  for (const id of overriding) {
+    if (UNITS_COST_STRESSORS.indexOf(id) < 0) {
+      out.push({
+        where: id,
+        says: 'overrides ' + UNITS_COST_PARAM + ' and is not declared',
+        expected: 'UNITS_COST_STRESSORS lists every scenario §S9b must migrate'
+      });
+    }
+  }
+  for (const id of overriding) {
+    const override = SCENARIOS_BY_ID[id].overrides[UNITS_COST_PARAM] as
+      { mult?: number; to?: [number, number, number] };
+    if (override && override.mult === 1) {
+      out.push({
+        where: id,
+        says: 'multiplies ' + UNITS_COST_PARAM + ' by 1',
+        expected: 'an override that moves the number it names'
+      });
+    }
+  }
+
+  const param = PARAMS_BY_ID[UNITS_COST_PARAM];
+  if (!param) {
+    out.push({
+      where: UNITS_COST_PARAM,
+      says: 'the parameter is gone',
+      expected: 'these three scenarios migrate in the same commit: ' +
+        UNITS_COST_STRESSORS.join(', ')
+    });
+  } else if ((param.label || '').indexOf(UNITS_COST_BLENDED_LABEL) < 0) {
+    out.push({
+      where: UNITS_COST_PARAM + ' label',
+      says: param.label || '(no label)',
+      expected: 'still one blended network parameter, or these three ' +
+        'scenarios migrate to the per-type chain: ' +
+        UNITS_COST_STRESSORS.join(', ')
+    });
+  }
+
+  return out;
 }
 
 /* R168 [§S9a]: requirement density runs inversely to cost, and the dashboard

@@ -79,6 +79,7 @@ import {
   readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
   anchoredOccupationCodes, requirementFamilyCounts, solvedResearchBlockers,
   underSpecifiedExpansions, underSpecifiedRendered,
+  UNITS_COST_STRESSORS, unitsCostStressorDrift,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -2509,6 +2510,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          the methodology note, and the floor the chapter shows a reader.
          Without this, declaring WORKER_SUPPORT_RATE would only move the
          literal, not source it. */
+      /* R62 [§S9a]: R60 refuses an override keyed to a parameter that does
+         not exist. Part 1 specifies keeping `unitsCost` resolving to a shim,
+         which satisfies R60 while the three stress scenarios go on
+         multiplying a number that no longer drives per-type cost. This is the
+         half R60 cannot see. */
+      runGuarded('The scenarios that stress unit cost still do, and are named for §S9b', () => {
+        const bad = unitsCostStressorDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.where + ' ' + b.says + '; expected ' + b.expected)
+            .join(' | ') ||
+            UNITS_COST_STRESSORS.length + ' scenarios stress unitsCost, ' +
+            'which is still one blended network parameter'
+        };
+      }),
       /* R168 [§S9a]: requirement density runs inversely to cost. The four
          thinnest requirement families govern the benefit expansions, and the
          chapter has to keep saying so as long as it is true -- and stop when
