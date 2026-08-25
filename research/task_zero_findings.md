@@ -57,10 +57,7 @@ regenerate from the extract rather than existing as hand transcription.
 > **Settled 2026-08-16 (R131).** CPython is installed now, so `extract_docx.py` was run
 > for the first time and compared against the port. On all three `.docx` files the two
 > produce identical content, and the only divergence is line endings: Python's text-mode
-> write translates `
-` to `
-` on Windows, the port writes `
-`. The port is
+> write translates `\r\n` to `\r\r\n` on Windows, the port writes `\r\n`. The port is
 > faithful, and `extract_docx.py` is deleted rather than kept as a second implementation
 > of one job. The paragraphs above are left as the record of what was true at Task Zero.
 > Which runtime each remaining tool needs is declared in `src/lib/toolchain-check.ts`.

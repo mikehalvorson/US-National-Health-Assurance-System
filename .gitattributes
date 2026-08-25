@@ -1,0 +1,42 @@
+# Line endings, declared rather than inherited.
+#
+# Before this file the repository had none, and every line ending in a working
+# tree came from whatever `core.autocrlf` the machine happened to carry. Here
+# it was `true`, set at system level by the Git for Windows installer, so it is
+# neither in .git/config nor in the user's global config and does not travel
+# with a clone. The index was already LF throughout; the working tree was 177
+# files CRLF, 67 LF and 4 with BOTH inside one file.
+#
+# That combination produced a specific and repeatable trap. A tool that
+# rewrites a file with LF endings -- `sed -i`, a Python text-mode write, any
+# heredoc -- changes every line in the working tree while `git diff` shows only
+# the line the edit meant to change, because the diff is taken against a
+# normalised blob. The change is real, invisible, and lands in whatever the
+# next tool reads. It cost time in P8, in P10 and twice in P11.
+#
+# `eol=lf` ends it by making LF correct everywhere: index, working tree, and
+# whatever a tool writes back. Nothing in this repository reads a line ending
+# -- `grep -rnF '\r\n'` over src/, tools/ and tests/ finds three comments
+# describing this hazard and no code implementing anything against it.
+* text=auto eol=lf
+
+# Two ASCII text files carried a lone CR each, inside a sentence that meant to
+# print the escape sequence \r\n and printed the bytes instead. Git's binary
+# heuristic reads a lone CR as binary, so both were classified `-text`: no
+# diff, no merge, no normalisation. The bytes are repaired in the same commit
+# as this file; these entries mean a future one is diagnosed rather than
+# silently reclassified.
+*.md    text eol=lf
+*.mjs   text eol=lf
+
+# Declared binary. Without this git guesses from content, and it had already
+# guessed wrong twice above.
+*.docx  binary
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary

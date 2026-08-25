@@ -9,10 +9,7 @@
  * having never been run, so nothing had ever checked the port against its
  * original. Running both on all three .docx files in the repo settled it: the
  * content is byte for byte identical, and the only divergence is line endings -
- * Python's text-mode write translates 
- to 
- on Windows, this writes 
-.
+ * Python's text-mode write translates \r\n to \r\r\n on Windows, this writes \r\n.
  * On the framework document that is 1,614,507 bytes against 1,598,905, equal
  * after normalising newlines; the identifier, line and table-row counts agree
  * exactly on every file. The Python original is deleted rather than kept as a
