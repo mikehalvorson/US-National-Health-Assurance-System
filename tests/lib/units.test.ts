@@ -1,16 +1,19 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  absorptionSpan, countyDemand, unitAllocationDrift, unitAssumptionGaps,
-  UNIT_ASSUMPTION_IDS, unitsCostReconciliation, visitSplitClosure
+  absorptionSpan, countyDemand, gradedUnitRows, unitAllocationDrift,
+  unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
+  unitsCostReconciliation, visitSplitClosure
 } from '../../src/lib/manifest-check';
 import {
   allocateCounty, allocateUnits, ALLOCATION_THRESHOLDS, CONTROLLED_TARGET_UNITS,
-  NETWORK_ABSORPTION, networkCost, UNIT_ASSUMPTIONS, UNIT_TYPE_KEYS, UNIT_TYPES,
-  unitsCostComparison, VISIT_SPLITS
+  NATIONAL_COMPARATOR, NETWORK_ABSORPTION, networkCost, UNIT_ASSUMPTIONS,
+  UNIT_TYPE_KEYS, UNIT_TYPES, unitsCostComparison, VISIT_SPLITS
 } from '../../src/lib/units';
 import { PARAMS_BY_ID } from '../../src/lib/params';
-import { UNIT_MODEL } from '../../src/lib/workforce';
+import {
+  UNIT_MODEL, unitMixWeightedFte, unitTeamPositionsK
+} from '../../src/lib/workforce';
 
 /* R185 R186 R187 R188 [§S9b].
  *
@@ -33,11 +36,43 @@ describe('the unit model is data, and the data is graded', () => {
     expect(UNIT_ASSUMPTIONS.filter((a) => a.confidence !== 'low')).toEqual([]);
   });
 
-  test('the only assumption carrying a URL carries it as a comparator', () => {
+  test('the only model input carrying a URL carries it as a comparator', () => {
     const sourced = UNIT_ASSUMPTIONS.filter((a) => a.url);
     expect(sourced.map((a) => a.id)).toEqual(['throughput']);
     /* graded low anyway: the comparator is not the framework's own figure */
     expect(sourced[0].confidence).toBe('low');
+  });
+
+  /* Code review [§S9b]: the national comparator held a source and a URL
+     that the page never rendered, and sat outside the coverage check, so
+     emptying its url failed nothing. */
+  test('the national comparator is a graded row and carries its citation', () => {
+    const rows = gradedUnitRows();
+    expect(rows.length).toBe(UNIT_ASSUMPTIONS.length + 1);
+    const comparator = rows[rows.length - 1];
+    expect(comparator.id).toBe('national-comparator');
+    expect(comparator.url).toMatch(/^https:\/\//);
+    expect(comparator.confidence).not.toBe('low');
+  });
+
+  test('a comparator with no citation is caught', () => {
+    const saved = NATIONAL_COMPARATOR.url;
+    try {
+      NATIONAL_COMPARATOR.url = '';
+      expect(unitAssumptionGaps().map((g) => g.id)).toContain('national-comparator');
+    } finally {
+      NATIONAL_COMPARATOR.url = saved;
+    }
+  });
+
+  test('a model input graded above low is caught', () => {
+    const saved = UNIT_ASSUMPTIONS[0].confidence;
+    try {
+      (UNIT_ASSUMPTIONS[0] as { confidence: string }).confidence = 'high';
+      expect(unitAssumptionGaps().map((g) => g.id)).toContain(UNIT_ASSUMPTIONS[0].id);
+    } finally {
+      (UNIT_ASSUMPTIONS[0] as { confidence: string }).confidence = saved;
+    }
   });
 
   test('both visit splits close on the whole of their demand', () => {
@@ -90,6 +125,22 @@ describe('the allocation the workforce ledger multiplies', () => {
     expect(urbanTiny.units.b).toBe(1);
   });
 
+  /* Code review [§S9b]: the two floors were one counter, and the page
+     rendered the sum as if it were all the rural access floor. They are
+     different rules and this section's findings turn on telling them apart. */
+  test('the two floors are counted apart, and the last-resort one is rural-free', () => {
+    const totals = allocateUnits(countyDemand(), NETWORK_ABSORPTION.default);
+    expect(totals.flooredAccess).toBeGreaterThan(totals.flooredLastResort);
+    /* measured: 491 and 2 at the default */
+    expect(totals.flooredLastResort).toBeLessThan(10);
+    /* the last-resort floor only ever fires on a county with no rural
+       population, so its `r >= ruralFloorShare` branch is unreachable */
+    const rural = allocateCounty(
+      { p: 100, r: 0.9 }, NETWORK_ABSORPTION.default);
+    expect(rural.flooredAccess).toBe(1);
+    expect(rural.flooredLastResort).toBe(0);
+  });
+
   test('the rural floor triggers exactly at the declared share', () => {
     const at = allocateCounty(
       { p: 50000, r: ALLOCATION_THRESHOLDS.ruralFloorShare }, NETWORK_ABSORPTION.default);
@@ -105,6 +156,25 @@ describe('unitsCost and the per-type model price the same network', () => {
     /* measured: the bottom-up total at 15,000 units lands within a few percent
        of the parameter's centre across the whole amortisation window */
     expect(r.modeErrorPct).toBeLessThan(5);
+    /* and the check itself gates on that, rather than only on the ranges
+       overlapping -- code review [§S9b] */
+    expect(r.modeErrorPct).toBeLessThan(RECONCILIATION_MAX_ERROR_PCT);
+  });
+
+  test('a wide overlap alone is not treated as agreement', () => {
+    /* Reprice every type by a third: the annualised window still overlaps
+       unitsCost's $15-36B, and the check must fail anyway. */
+    const saved = UNIT_TYPE_KEYS.map((k) => UNIT_TYPES[k].opMode);
+    try {
+      UNIT_TYPE_KEYS.forEach((k) => { UNIT_TYPES[k].opMode *= 1.34; });
+      const r = unitsCostReconciliation();
+      expect(r.annualisedLong).toBeGreaterThan(r.paramLow);
+      expect(r.annualisedShort).toBeLessThan(r.paramHigh);
+      expect(r.modeErrorPct).toBeGreaterThan(RECONCILIATION_MAX_ERROR_PCT);
+      expect(r.ok).toBe(false);
+    } finally {
+      UNIT_TYPE_KEYS.forEach((k, i) => { UNIT_TYPES[k].opMode = saved[i]; });
+    }
   });
 
   test('the printed gap is a count difference, not a cost difference', () => {
@@ -156,12 +226,31 @@ describe('the absorption control', () => {
 });
 
 describe('the two modules that share the unit model do not hold two copies', () => {
-  test('the workforce ledger reads the per-type FTE from the unit model', () => {
-    for (const t of UNIT_MODEL.allocation) {
-      expect(t.fte).toBe(UNIT_TYPES[t.key].fte);
-      expect(t.label).toBe(UNIT_TYPES[t.key].shortName);
+  /* Code review [§S9b]: this used to assert `t.fte === UNIT_TYPES[t.key].fte`
+     while workforce.ts literally assigns `fte: UNIT_TYPES.a.fte`. The two
+     sides could not differ, which is the defect class this section exists to
+     close, shipped in the commit that closes it. What is worth pinning is not
+     that the values agree -- they are one value -- but that the ledger
+     RESPONDS to the unit model, which a future edit could undo by pasting a
+     literal back in. So the test moves the source and watches the consumer. */
+  test('restaffing a unit type moves the workforce ledger', () => {
+    const saved = UNIT_TYPES.c.fte;
+    const before = unitMixWeightedFte();
+    try {
+      UNIT_TYPES.c.fte = saved + 6;
+      expect(unitMixWeightedFte()).toBeGreaterThan(before);
+      expect(UNIT_MODEL.allocation.find((t) => t.key === 'c')!.fte).toBe(saved + 6);
+    } finally {
+      UNIT_TYPES.c.fte = saved;
     }
-    expect(UNIT_MODEL.controlledTargetUnits).toBe(CONTROLLED_TARGET_UNITS);
+    expect(unitMixWeightedFte()).toBe(before);
+  });
+
+  test('the ledger multiplies the controlled target, not a second copy of it', () => {
+    /* 15,000 x the mix-weighted average, rounded to thousands, is the figure
+       the workforce chapter publishes. Both inputs come from units.ts now. */
+    expect(unitTeamPositionsK()).toBe(
+      Math.round(CONTROLLED_TARGET_UNITS * unitMixWeightedFte() / 1000));
   });
 
   test('the type keys are the same four everywhere', () => {

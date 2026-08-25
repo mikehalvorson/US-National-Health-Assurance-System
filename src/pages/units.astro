@@ -9,11 +9,10 @@ import ChapterNav from '../components/ChapterNav.astro';
    crawler indexes and what a reader with no script sees. */
 import {
   ALLOCATION_THRESHOLDS, allocateUnits, NATIONAL_OFFICE_VISITS, NETWORK_ABSORPTION,
-  UNIT_ASSUMPTIONS, UNIT_TYPE_KEYS, UNIT_TYPES, VISIT_SPLITS
+  pct, UNIT_TYPE_KEYS, UNIT_TYPES, VISIT_SPLITS
 } from '../lib/units';
-import { countyDemand } from '../lib/manifest-check';
-
-const pct = (share: number) => Math.round(share * 100) + '%';
+import { countyDemand } from '../lib/counties';
+import { gradedUnitRows } from '../lib/manifest-check';
 const THROUGHPUTS = UNIT_TYPE_KEYS.map((k) => UNIT_TYPES[k].throughput / 1000 + 'k').join(' / ');
 const NATIONAL_BILLIONS = Math.round(NATIONAL_OFFICE_VISITS.visits / 1e8) / 10;
 
@@ -24,6 +23,8 @@ const COUNTIES = countyDemand();
 const ABSORPTION_LOW = allocateUnits(COUNTIES, NETWORK_ABSORPTION.min).total;
 const ABSORPTION_HIGH = allocateUnits(COUNTIES, NETWORK_ABSORPTION.max).total;
 const ABSORPTION_SPAN = ABSORPTION_HIGH - ABSORPTION_LOW;
+/* the six model inputs plus the national comparator, one list, checked */
+const GRADED = gradedUnitRows();
 ---
 <BaseLayout title="National Health Assurance: Physical Care">
   <main>
@@ -327,10 +328,11 @@ const ABSORPTION_SPAN = ABSORPTION_HIGH - ABSORPTION_LOW;
       absorption rate (Census 2024 estimates, 2020 rural classifications),
       splits it across the four unit types, and divides by per-unit
       throughput. Move the absorption slider to see how the count responds.
-      For scale, the federal ambulatory survey counted about {NATIONAL_BILLIONS} billion
-      {NATIONAL_OFFICE_VISITS.label} in {NATIONAL_OFFICE_VISITS.year}; emergency and
-      hospital outpatient visits are on top of that, and the survey that
-      counted those ended in 2022.</p>
+      For scale, the <a href={NATIONAL_OFFICE_VISITS.url} target="_blank"
+      rel="noopener">{NATIONAL_OFFICE_VISITS.source}</a> counted about
+      {NATIONAL_BILLIONS} billion {NATIONAL_OFFICE_VISITS.label} in
+      {NATIONAL_OFFICE_VISITS.year}; emergency and hospital outpatient visits
+      are on top of that, and the survey that counted those ended in 2022.</p>
     <div class="control" style="max-width:420px">
       <label>Network absorption at maturity
         <span class="val" id="units-vpc-val"></span></label>
@@ -363,16 +365,18 @@ const ABSORPTION_SPAN = ABSORPTION_HIGH - ABSORPTION_LOW;
       capacity plan needs a number and no published one existed. Saying which
       is which is more useful than presenting them all with equal weight, so
       each input carries a confidence grade and the specific work that would
-      raise it. Nothing here is graded above low, and the network cost, the
-      unit count, and the unit-team headcount on the workforce chapter all
-      descend from these {UNIT_ASSUMPTIONS.length} rows.</p>
+      raise it. The network cost, the unit count, and the unit-team headcount
+      on the workforce chapter all descend from these rows. <strong>Not one of
+      the model's own inputs is graded above low.</strong> The last row is the
+      exception and is not an input: it is a published figure, stated so the
+      network can be sized against something real.</p>
     <div class="tbl-scroll">
       <table class="data">
         <thead>
           <tr><th>Input</th><th>Value</th><th>Confidence</th><th>What it rests on</th><th>What would settle it</th></tr>
         </thead>
         <tbody>
-          {UNIT_ASSUMPTIONS.map((a) => (
+          {GRADED.map((a) => (
             <tr>
               <th scope="row">{a.label}</th>
               <td>{a.value}</td>
@@ -390,7 +394,15 @@ const ABSORPTION_SPAN = ABSORPTION_HIGH - ABSORPTION_LOW;
       every other input. Moving it from {NETWORK_ABSORPTION.min.toFixed(2)} to
       {NETWORK_ABSORPTION.max.toFixed(2)} on the control changes the network by
       {ABSORPTION_SPAN.toLocaleString('en-US')} units, which is
-      {Math.round(100 * ABSORPTION_SPAN / ABSORPTION_LOW)}% of the smaller network.</p>
+      {Math.round(100 * ABSORPTION_SPAN / ABSORPTION_LOW)}% of the smaller
+      network.</p>
+    <p class="note">The control moves this chapter's count and this chapter's
+      cost. It does <strong>not</strong> move the healthcare model's unit
+      spending, which is a separate sampled input with its own range and is
+      scoped to the certified network rather than to need. The two are
+      deliberately independent: this page is a capacity plan, and the model
+      prices a commitment. Comparing them means comparing the same number of
+      units on both sides, which is what the verdict tiles above do.</p>
   </section>
 
   <!-- The four types -->

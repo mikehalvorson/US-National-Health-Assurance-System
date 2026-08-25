@@ -16,9 +16,11 @@ import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { CARE_SCENARIOS } from './care';
+import { countyDemand } from './counties';
 import {
-  allocateUnits, CAPITAL_AMORTISATION_YEARS, NETWORK_ABSORPTION, networkCost,
-  UNIT_ASSUMPTIONS, unitsCostComparison, VISIT_SPLITS, type CountyDemand
+  allocateUnits, CAPITAL_AMORTISATION_YEARS, NATIONAL_COMPARATOR,
+  NETWORK_ABSORPTION, networkCost, UNIT_ASSUMPTIONS, unitsCostComparison,
+  VISIT_SPLITS, type UnitAssumption
 } from './units';
 import { catalogCode, PARAMS_BY_ID } from './params';
 import {
@@ -1483,20 +1485,11 @@ export function literalRetailTotals(root = REPO_ROOT): string[] {
  * is the finding. It fails in every direction that matters: restaff or
  * reprice a type, move either bound of unitsCost, or change the controlled
  * target, and the two stop meeting. */
-const COUNTY_DATA = 'public/data/counties.json';
-
-/* Memoised like every other filesystem read in a self-test. units.astro reads
-   this at build time too, so without the cache the county file is parsed once
-   per self-test pass and once per page render. */
-const countyCache = new Map<string, CountyDemand[]>();
-
-export function countyDemand(root = REPO_ROOT): CountyDemand[] {
-  const hit = countyCache.get(root);
-  if (hit) return hit;
-  const parsed = JSON.parse(sourceText(COUNTY_DATA, root)) as CountyDemand[];
-  countyCache.set(root, parsed);
-  return parsed;
-}
+/* Code review [§S9b]: `countyDemand` was declared here, which made
+   units.astro import the audit harness to render a page. It is
+   src/lib/counties.ts now, and re-exported for the callers that already had
+   it from this module. */
+export { countyDemand } from './counties';
 
 export interface UnitsCostReconciliation {
   targetUnits: number;
@@ -1512,6 +1505,16 @@ export interface UnitsCostReconciliation {
   modeErrorPct: number;
 }
 
+/* Code review [§S9b]: the check used to assert only that the annualised
+   window overlapped `unitsCost`'s range, which left the operating total free
+   to fall 40% or rise 34% while the self-test's own note advertised agreement
+   "within a couple of percent". `modeErrorPct` was computed, printed, and
+   never gated. The measured error is 3.4%; the gate is set at 10, which is
+   loose enough not to fire on a rounding change and tight enough that
+   repricing a type or moving the target trips it. Both conditions have to
+   hold: overlapping a wide range is not agreement. */
+export const RECONCILIATION_MAX_ERROR_PCT = 10;
+
 export function unitsCostReconciliation(root = REPO_ROOT): UnitsCostReconciliation {
   const param = PARAMS_BY_ID['unitsCost'];
   const totals = allocateUnits(countyDemand(root), NETWORK_ABSORPTION.default);
@@ -1526,7 +1529,8 @@ export function unitsCostReconciliation(root = REPO_ROOT): UnitsCostReconciliati
     paramLow: param.low, paramMode: param.mode, paramHigh: param.high,
     /* both ends of the window have to sit inside the parameter's range, or the
        agreement is a coincidence at one amortisation choice */
-    ok: annualisedLong >= param.low && annualisedShort <= param.high,
+    ok: annualisedLong >= param.low && annualisedShort <= param.high &&
+      100 * Math.abs(mid - param.mode) / param.mode <= RECONCILIATION_MAX_ERROR_PCT,
     modeErrorPct: 100 * Math.abs(mid - param.mode) / param.mode
   };
 }
@@ -1595,17 +1599,42 @@ export const UNIT_ASSUMPTION_IDS = [
 
 export interface AssumptionGap { id: string; missing: string }
 
+/* Every row the reader is shown: the six model inputs plus the national
+   comparator, which is rendered beside them and was previously covered by
+   nothing. */
+export function gradedUnitRows(): readonly UnitAssumption[] {
+  return [...UNIT_ASSUMPTIONS, NATIONAL_COMPARATOR];
+}
+
 export function unitAssumptionGaps(): AssumptionGap[] {
   const out: AssumptionGap[] = [];
   const seen = new Set<string>();
-  for (const a of UNIT_ASSUMPTIONS) {
+  for (const a of gradedUnitRows()) {
     seen.add(a.id);
     if (!a.basis.trim()) out.push({ id: a.id, missing: 'basis' });
     if (!a.owner.trim()) out.push({ id: a.id, missing: 'owner' });
     if (!a.value.trim()) out.push({ id: a.id, missing: 'value' });
-    if (!/^(low|medium|high)$/.test(a.confidence)) {
-      out.push({ id: a.id, missing: 'confidence' });
+    if (!a.label.trim()) out.push({ id: a.id, missing: 'label' });
+  }
+  /* Code review [§S9b]: a regex testing `confidence` against
+     low|medium|high was dead -- the field is typed as exactly those three, so
+     nothing could reach the branch. What actually needed asserting is the
+     claim the page and the self-test note both make: that nothing behind the
+     unit count is graded above `low`. The comparator is the one exception and
+     is named, because it is published and the inputs are not. */
+  for (const a of UNIT_ASSUMPTIONS) {
+    if (a.confidence !== 'low') {
+      out.push({ id: a.id, missing: 'a `low` grade, or a rewrite of the page note that says none is above it' });
     }
+  }
+  /* A row that carries a URL has to be a real one. */
+  for (const a of gradedUnitRows()) {
+    if (a.url && !/^https:\/\//.test(a.url)) {
+      out.push({ id: a.id, missing: 'an https source URL' });
+    }
+  }
+  if (!NATIONAL_COMPARATOR.url) {
+    out.push({ id: NATIONAL_COMPARATOR.id, missing: 'the citation it exists to carry' });
   }
   for (const id of UNIT_ASSUMPTION_IDS) {
     if (!seen.has(id)) out.push({ id, missing: 'the row itself' });

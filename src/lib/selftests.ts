@@ -81,8 +81,9 @@ import {
   requirementFamilyCounts, solvedResearchBlockers,
   underSpecifiedExpansions, underSpecifiedRendered,
   UNITS_COST_STRESSORS, unitsCostStressorDrift,
-  absorptionSpan, countyDemand, unitAllocationDrift, unitAssumptionGaps,
-  UNIT_ASSUMPTION_IDS, unitsCostReconciliation, visitSplitClosure,
+  absorptionSpan, countyDemand, gradedUnitRows, unitAllocationDrift,
+  unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
+  unitsCostReconciliation, visitSplitClosure,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -2533,7 +2534,8 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             r.targetUnits.toLocaleString('en-US') + ' costs $' + r.annualisedLong.toFixed(1) +
             '-' + r.annualisedShort.toFixed(1) + 'B/yr against the parameter\'s $' +
             r.paramLow + '-' + r.paramHigh + 'B, ' + r.modeErrorPct.toFixed(1) +
-            '% off its $' + r.paramMode + 'B centre'
+            '% off its $' + r.paramMode + 'B centre (gate: ' +
+            RECONCILIATION_MAX_ERROR_PCT + '%)'
         };
       }),
       /* R185 [§S9b]: the workforce ledger's per-type unit counts were the
@@ -2567,13 +2569,22 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: !bad.length,
           note: bad.map((b) => b.id + ' lacks ' + b.missing).join(' | ') ||
-            UNIT_ASSUMPTION_IDS.length + ' inputs graded, none above low'
+            UNIT_ASSUMPTION_IDS.length + ' inputs graded, none above low, plus ' +
+            (gradedUnitRows().length - UNIT_ASSUMPTION_IDS.length) +
+            ' cited comparator'
         };
       }),
       /* R187 [§S9b]: the absorption control moves the network and does not
          move unitsCost. Declared rather than wired, and the declaration is
          only honest if the control does something, so both halves are here. */
-      runGuarded('The absorption control moves the count, and not the modelled cost', () => {
+      /* Code review [§S9b]: the title used to end "and not the modelled
+         cost", which `ok` never checked -- unitsCost's independence is
+         structural (it is a sampled parameter; the control is client state)
+         and is asserted in tests/lib/units.test.ts by snapshotting the
+         parameter across the move. What this row can check, and the only
+         thing that makes declaring the independence honest, is that the
+         control does something. */
+      runGuarded('The absorption control moves the network across its whole range', () => {
         const a = absorptionSpan();
         const moves = a.highUnits > a.lowUnits && a.highOpB > a.lowOpB;
         return {
@@ -2582,7 +2593,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             a.lowUnits.toLocaleString('en-US') + '-' + a.highUnits.toLocaleString('en-US') +
             ' units and $' + a.lowOpB.toFixed(1) + '-' + a.highOpB.toFixed(1) +
             'B/yr on this page; the healthcare model holds $' + a.unitsCostMode +
-            'B either way'
+            'B either way, because it prices the certified network and not need'
         };
       }),
       /* R62 [§S9a]: R60 refuses an override keyed to a parameter that does

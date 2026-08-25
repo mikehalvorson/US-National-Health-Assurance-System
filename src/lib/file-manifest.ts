@@ -42,6 +42,7 @@ export const FILE_MANIFEST: string[] = [
   'src/lib/bridge.ts',
   'src/lib/care.ts',
   'src/lib/chart-util.ts',
+  'src/lib/counties.ts',
   'src/lib/data-phases-checks.ts',
   'src/lib/data-phases.ts',
   'src/lib/data-view.ts',

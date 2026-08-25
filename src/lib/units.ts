@@ -156,7 +156,7 @@ export const UNIT_ASSUMPTIONS: readonly UnitAssumption[] = [
     value: (UNIT_TYPES.a.throughput / 1000) + 'k / ' + (UNIT_TYPES.b.throughput / 1000) + 'k / ' +
       (UNIT_TYPES.c.throughput / 1000) + 'k / ' + (UNIT_TYPES.d.throughput / 1000) + 'k visits per unit per year',
     confidence: 'low',
-    basis: 'Chosen as design capacity, not observed. The closest published comparator is the federal health-centre programme: about 121.8 million in-person visits across more than 16,200 service delivery sites, roughly 7,500 visits per site per year. Every figure here is above that, Type A by about double and Type B by about four times.',
+    basis: 'Chosen as design capacity, not observed. The closest published comparator is the federal health-centre programme: its 2025 Uniform Data System reports about 121.8 million in-person clinic visits, spread across the more than 16,200 service delivery sites the programme currently publishes, or roughly 7,500 visits per site per year. Every figure here is above that, Type A by about double and Type B by about four times.',
     owner: 'The visits-per-site and visits-per-clinical-FTE pull that research/02 proposed and did not run.',
     url: 'https://data.hrsa.gov/topics/healthcenters/uds/overview/national'
   },
@@ -200,7 +200,9 @@ export const UNIT_ASSUMPTIONS: readonly UnitAssumption[] = [
   }
 ];
 
-function pct(share: number): string {
+/* Code review [§S9b]: units.astro had an identical copy of this.
+   One share, one rendering. */
+export function pct(share: number): string {
   return Math.round(share * 100) + '%';
 }
 
@@ -229,6 +231,21 @@ export const NATIONAL_OFFICE_VISITS: {
   confidence: 'medium'
 };
 
+/* Code review [§S9b]: the comparator held a source and a URL that the page
+   never rendered, and sat outside UNIT_ASSUMPTION_IDS, so emptying its url
+   failed nothing. It is a row now: cited to the reader, and covered by the
+   same grade-and-owner check as everything else the count rests on. */
+export const NATIONAL_COMPARATOR: UnitAssumption = {
+  id: 'national-comparator',
+  label: 'National ambulatory volume, for scale',
+  value: (NATIONAL_OFFICE_VISITS.visits / 1e9).toFixed(1) + ' billion ' +
+    NATIONAL_OFFICE_VISITS.label + ' (' + NATIONAL_OFFICE_VISITS.year + ')',
+  confidence: NATIONAL_OFFICE_VISITS.confidence,
+  basis: 'Published, and the only figure here that is. It is a comparator and not an input: nothing in the model reads it. The survey counts office-based visits, so emergency and hospital outpatient volume is on top of it, and the survey that counted those ended in 2022.',
+  owner: 'Nobody. It does not gate anything, and it is stated so a reader can size the network against something real.',
+  url: NATIONAL_OFFICE_VISITS.url
+};
+
 /* ---- the allocation ------------------------------------------------------ */
 
 export interface CountyDemand {
@@ -242,7 +259,14 @@ export interface UnitCounts { a: number; b: number; c: number; d: number; total:
 
 export interface AllocationTotals {
   a: number; b: number; c: number; d: number;
-  total: number; pop: number; floored: number;
+  total: number; pop: number;
+  /* Code review [§S9b]: these were one `floored` counter, and the page
+     rendered the sum as "counties reached only by the rural access floor".
+     They are two different rules with two different meanings -- 491 and 2 at
+     the default -- and this section's own findings about the second floor
+     being unreached depend on telling them apart. */
+  flooredAccess: number;
+  flooredLastResort: number;
   /* network visits placed, at the absorption used */
   visits: number;
 }
@@ -257,7 +281,7 @@ export interface NetworkCost {
 /* Units for one county. Pure, and separated from the sweep so the build can
    test a single county's rules without a data file. */
 export function allocateCounty(county: CountyDemand, absorption: number): {
-  units: UnitCounts; floored: number;
+  units: UnitCounts; flooredAccess: number; flooredLastResort: number;
 } {
   const T = UNIT_TYPES, S = VISIT_SPLITS, TH = ALLOCATION_THRESHOLDS;
   const urbanPop = county.p * (1 - county.r), ruralPop = county.p * county.r;
@@ -273,7 +297,7 @@ export function allocateCounty(county: CountyDemand, absorption: number): {
 
   a = Math.round(a); b = Math.round(b); c = Math.round(c); d = Math.round(d);
 
-  let floored = 0;
+  let flooredAccess = 0, flooredLastResort = 0;
   /* Rural access floor: majority-rural or small counties keep a Type C.
      R185 [§S9b], measured over the whole county file at every setting of the
      absorption control: the SHARE half of this test decides nothing. It floors
@@ -287,7 +311,7 @@ export function allocateCounty(county: CountyDemand, absorption: number): {
      it states the policy and a different county file could make it bite; it is
      recorded here as currently inert so nobody treats it as a live guard. */
   if ((county.r >= TH.ruralFloorShare || county.p < TH.ruralFloorPop) && ruralPop > 0 && c === 0) {
-    c = 1; floored++;
+    c = 1; flooredAccess++;
   }
   /* Every county gets at least one unit of its dominant character. Reached 1
      to 7 times across the control, and its rural branch NEVER: by the time
@@ -297,14 +321,19 @@ export function allocateCounty(county: CountyDemand, absorption: number): {
      read as load-bearing. */
   if (a + b + c + d === 0) {
     if (county.r >= TH.ruralFloorShare) c = 1; else b = 1;
-    floored++;
+    flooredLastResort++;
   }
-  return { units: { a, b, c, d, total: a + b + c + d }, floored };
+  return {
+    units: { a, b, c, d, total: a + b + c + d },
+    flooredAccess, flooredLastResort
+  };
 }
 
 export function allocateUnits(counties: CountyDemand[], absorption: number): AllocationTotals {
-  const totals: AllocationTotals =
-    { a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0, floored: 0, visits: 0 };
+  const totals: AllocationTotals = {
+    a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0,
+    flooredAccess: 0, flooredLastResort: 0, visits: 0
+  };
   for (const county of counties) {
     const out = allocateCounty(county, absorption);
     totals.a += out.units.a; totals.b += out.units.b;
@@ -312,7 +341,8 @@ export function allocateUnits(counties: CountyDemand[], absorption: number): All
     totals.total += out.units.total;
     totals.pop += county.p;
     totals.visits += county.p * absorption;
-    totals.floored += out.floored;
+    totals.flooredAccess += out.flooredAccess;
+    totals.flooredLastResort += out.flooredLastResort;
   }
   return totals;
 }

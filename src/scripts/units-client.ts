@@ -9,8 +9,9 @@
 import { el, div, showTip, hideTip, tipRow } from '../lib/chart-util';
 import { PARAMS_BY_ID } from '../lib/params';
 import {
-  allocateCounty, CONTROLLED_TARGET_UNITS, NETWORK_ABSORPTION, networkCost,
-  UNIT_TYPE_KEYS, UNIT_TYPES, type NetworkCost
+  allocateCounty, NETWORK_ABSORPTION, networkCost, UNIT_TYPE_KEYS, UNIT_TYPES,
+  unitsCostComparison,
+  type AllocationTotals, type NetworkCost, type UnitCounts
 } from '../lib/units';
 
 const BASE = import.meta.env.BASE_URL;
@@ -188,7 +189,6 @@ function renderUnitsMap(container: HTMLElement, statesGeo: StatesGeo,
 /* =========================================================================
  * County unit allocation (docs/js/unitsapp.js, verbatim)
  * ========================================================================= */
-interface UnitCounts { a: number; b: number; c: number; d: number; total: number }
 interface County { f: string; n: string; s: string; p: number; r: number; la: number; lo: number; units?: UnitCounts }
 
 /* R185 [§S9b]: UNIT_TYPES, the visit splits, the population thresholds and the
@@ -199,8 +199,9 @@ interface County { f: string; n: string; s: string; p: number; r: number; la: nu
    build run the same code rather than two copies of it. */
 let visitsPerCapita = NETWORK_ABSORPTION.default;
 
-interface Totals { a: number; b: number; c: number; d: number; total: number; pop: number; floored: number }
-interface Allocated { totals: Totals; costs: NetworkCost }
+/* Code review [§S9b]: `Totals` and `UnitCounts` were declared here as
+   well as in units.ts. One shape, one declaration. */
+interface Allocated { totals: AllocationTotals; costs: NetworkCost }
 
 const DATA: { counties: County[] | null; states: StatesGeo | null; regions: RegionsData | null; error: string | null } =
   { counties: null, states: null, regions: null, error: null };
@@ -208,14 +209,19 @@ let typeFilter = 'all';
 let allocated: Allocated | null = null;
 
 function allocate(): void {
-  const totals: Totals = { a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0, floored: 0 };
+  const totals: AllocationTotals = {
+    a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0,
+    flooredAccess: 0, flooredLastResort: 0, visits: 0
+  };
   DATA.counties!.forEach(function (c) {
     const out = allocateCounty(c, visitsPerCapita);
     c.units = out.units;
     totals.a += out.units.a; totals.b += out.units.b;
     totals.c += out.units.c; totals.d += out.units.d;
     totals.total += out.units.total; totals.pop += c.p;
-    totals.floored += out.floored;
+    totals.visits += c.p * visitsPerCapita;
+    totals.flooredAccess += out.flooredAccess;
+    totals.flooredLastResort += out.flooredLastResort;
   });
   allocated = { totals: totals, costs: networkCost(totals) };
 }
@@ -286,10 +292,14 @@ function renderVerdict(): void {
   if (!host) return;
   const t = allocated!.totals, c = allocated!.costs;
   const param = unitsCostParam();
-  const target = CONTROLLED_TARGET_UNITS;
-  /* the same mix, at the controlled target */
-  const scale = t.total > 0 ? target / t.total : 0;
-  const atTarget = c.opTotal * scale;
+  /* Code review [§S9b]: this recomputed the scaling inline while
+     unitsCostComparison() did the same arithmetic in units.ts, and the
+     self-test only ever exercised the units.ts path -- so the number a reader
+     saw was not the number the build checked. Done-when clause 2 asks for the
+     relationship "stated in one place". This is that one place. */
+  const cmp = unitsCostComparison(t);
+  const target = cmp.targetUnits;
+  const atTarget = cmp.targetOp;
   host.innerHTML = '';
   const tiles = [
     { label: 'Total units, need-based', value: t.total.toLocaleString('en-US'),
@@ -375,8 +385,11 @@ function renderIntegrity(): void {
   host.textContent =
     'Data integrity: ' + n.toLocaleString('en-US') + ' counties loaded · ' +
     (pop / 1e6).toFixed(1) + 'M people covered · every county has at least one unit: ' +
-    (allCovered ? 'yes' : 'NO (bug)') + ' · ' + allocated!.totals.floored +
-    ' counties reached only by the rural access floor.';
+    (allCovered ? 'yes' : 'NO (bug)') + ' · ' +
+    allocated!.totals.flooredAccess +
+    ' counties reached only by the rural access floor, ' +
+    allocated!.totals.flooredLastResort +
+    ' only by the last-resort floor.';
 }
 
 function refreshUnits(): void {

@@ -5,7 +5,9 @@
    new (long-term care aides) and is kept OUTSIDE the insurance-transition
    ledger above, whose entrant-pace math must not absorb millions of aides. */
 import { PARAMS_BY_ID, DEFLATOR_2023_TO_2024 } from './params';
-import { CONTROLLED_TARGET_UNITS, UNIT_TYPES, type UnitTypeKey } from './units';
+import {
+  CONTROLLED_TARGET_UNITS, UNIT_TYPE_KEYS, UNIT_TYPES, type UnitTypeKey
+} from './units';
 
 export type ScenarioId = 'low' | 'plan' | 'high';
 
@@ -497,17 +499,31 @@ export interface UnitTypeStaffing {
    `allocated` stays AUTHORED, and is the side that can still disagree: it is
    compared against the allocation actually produced by running the model over
    the county file, which is a computation and not a restatement. */
+/* The authored half. These four counts are this module's own claim about the
+   need-based allocation, and `unitAllocationDrift` in manifest-check.ts holds
+   them against the allocation computed over the county file. */
+const ALLOCATED_UNITS: Record<UnitTypeKey, number> =
+  { a: 7470, b: 9055, c: 6397, d: 1177 };
+
+/* Code review [§S9b]: `allocation` was an array literal that read
+   UNIT_TYPES at module load, so it was still a COPY -- taken once at import
+   rather than typed by hand, but a copy. A test that moved UNIT_TYPES and
+   watched the ledger caught it: nothing downstream moved. A getter makes the
+   derivation live, so the label and the FTE genuinely come from the unit
+   model and only `allocated` is authored here. */
 export const UNIT_MODEL: {
   controlledTargetUnits: number;
-  allocation: UnitTypeStaffing[];
+  readonly allocation: UnitTypeStaffing[];
 } = {
   controlledTargetUnits: CONTROLLED_TARGET_UNITS,
-  allocation: [
-    { key: 'a', label: UNIT_TYPES.a.shortName, allocated: 7470, fte: UNIT_TYPES.a.fte },
-    { key: 'b', label: UNIT_TYPES.b.shortName, allocated: 9055, fte: UNIT_TYPES.b.fte },
-    { key: 'c', label: UNIT_TYPES.c.shortName, allocated: 6397, fte: UNIT_TYPES.c.fte },
-    { key: 'd', label: UNIT_TYPES.d.shortName, allocated: 1177, fte: UNIT_TYPES.d.fte }
-  ]
+  get allocation(): UnitTypeStaffing[] {
+    return UNIT_TYPE_KEYS.map((key) => ({
+      key,
+      label: UNIT_TYPES[key].shortName,
+      allocated: ALLOCATED_UNITS[key],
+      fte: UNIT_TYPES[key].fte
+    }));
+  }
 };
 
 export function unitAllocationTotal(): number {
