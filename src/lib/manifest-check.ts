@@ -1805,10 +1805,24 @@ function formatFigure(value: number, format: FigureFormat): string {
   }
 }
 
+/* Filled by workforceProseDrift() on each run, so the coverage figure the
+   registered row prints is the length of the lists rather than a number
+   someone typed beside them. */
+let FALLBACK_COUNT = 0;
+let CLAIM_COUNT = 0;
+
 export interface WorkforceProseDisagreement {
   where: string;
   says: string;
   expected: string;
+}
+
+/* How many typed figures this check actually covers, counted rather than
+   stated. The registered row said "22 no-script fallbacks and 15 stated
+   claims" and there are 14 claims: a hardcoded count in a note is the same
+   drift the rest of this file exists to catch, one layer down. */
+export function workforceProseCoverage(): { fallbacks: number; claims: number } {
+  return { fallbacks: FALLBACK_COUNT, claims: CLAIM_COUNT };
 }
 
 export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreement[] {
@@ -1847,6 +1861,7 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     ['wf-flow-external', f.externalPlacement, 'short'],
     ['wf-flow-gap', f.unresolvedGap, 'short']
   ];
+  FALLBACK_COUNT = fallbacks.length;
   for (const [id, value, format] of fallbacks) {
     const m = raw.match(new RegExp('id="' + id + '"[^>]*>([^<]*)<'));
     const wanted = formatFigure(value, format);
@@ -1891,6 +1906,7 @@ export function workforceProseDrift(root = REPO_ROOT): WorkforceProseDisagreemen
     ['the training-slot target',
       /the ([\d,]+) annual training slots/, ANNUAL_TRAINING_TARGET]
   ];
+  CLAIM_COUNT = claims.length;
   for (const [label, pattern, expected] of claims) {
     const m = raw.match(pattern);
     if (!m) {

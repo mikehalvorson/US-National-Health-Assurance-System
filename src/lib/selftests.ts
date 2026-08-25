@@ -80,7 +80,7 @@ import {
   anchoredOccupationCodes, requirementFamilyCounts, solvedResearchBlockers,
   underSpecifiedExpansions, underSpecifiedRendered,
   UNITS_COST_STRESSORS, unitsCostRangeDrift, unitsCostStressorDrift,
-  supportRateDrift, unitModelDrift, workforceProseDrift,
+  supportRateDrift, unitModelDrift, workforceProseCoverage, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
   unreadEngineConstants, unreadStructuralKnobs,
@@ -2565,12 +2565,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          whoever reads it next a re-chase of a solved problem. */
       runGuarded('No research file reports a blocker for data the repo already holds', () => {
         const stale = solvedResearchBlockers();
+        /* The anchor table is the whole of what this check knows. With no
+           codes in it, solvedResearchBlockers() can only ever return an empty
+           list, and the row would report "no open blocker" for a table that
+           had disappeared -- a check that cannot fail once its data source
+           does. An empty table is drift, not success. */
+        const anchored = anchoredOccupationCodes().size;
         return {
-          ok: !stale.length,
+          ok: !stale.length && anchored > 0,
           note: stale.map((s) => s.file + ' says "' + s.marker + '" for SOC ' +
             s.code + ', which the anchor table gives as ' +
             s.count.toLocaleString('en-US')).join(' | ') ||
-            anchoredOccupationCodes().size + ' anchored occupation codes, no open blocker'
+            (anchored
+              ? anchored + ' anchored occupation codes, no open blocker'
+              : 'the anchor table lists no occupation code, so this check ' +
+                'has nothing to compare a blocker against')
         };
       }),
       /* R64 [§S9a]: every ledger figure the chapter types -- the no-script
@@ -2580,11 +2589,14 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          feasibility argument when it lands. */
       runGuarded('Every figure the Workforce chapter states matches the ledger', () => {
         const bad = workforceProseDrift();
+        /* counted after the run, not typed: the lists are the source */
+        const cov = workforceProseCoverage();
         return {
           ok: !bad.length,
           note: bad.map((b) => b.where + ' says ' + b.says + ', expected ' + b.expected)
             .join(' | ') ||
-            '22 no-script fallbacks and 15 stated claims agree with the plan case'
+            cov.fallbacks + ' no-script fallbacks and ' + cov.claims +
+            ' stated claims agree with the plan case'
         };
       }),
       /* R179 [§S9a]: and the unit model behind CREATED.units is joined to the
