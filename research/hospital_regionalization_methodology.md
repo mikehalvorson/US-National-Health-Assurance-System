@@ -93,11 +93,12 @@ the stronger ownership and charter design proposed here.
 
 ### Input
 
-`docs/data/counties.json` contains 3,144 county equivalents, 2024 Census
+`public/data/counties.json` contains 3,144 county equivalents, 2024 Census
 population estimates totaling 340,110,988 people, 2020 rural population
 shares, and Census internal-point coordinates. County values are aggregated to
-states before partitioning. `docs/data/SOURCES.md` documents the underlying
-Census files and reconciliation.
+states before partitioning. The file declares its own vintages in a `meta` block: population 2024,
+rural share 2020, coordinates 2024. `docs/data/SOURCES.md` documents the
+underlying Census files and the Connecticut reconciliation.
 
 ### Hard constraints
 
@@ -149,7 +150,64 @@ distance above 300 miles.
 | 15 | 0.088036 |
 | 16 | 0.110954 |
 
-Lower is better. The model selected 13 regions.
+Lower is better. The model scored 13 regions best, by 3.22% over the
+runner-up.
+
+### How much of that result is the scoring
+
+Three facts stated above, put together. Every candidate is a version of the
+13-region map: that map was drawn by hand, counts 10-12 merge its regions and
+counts 14-16 split them. And the administrative fragmentation term, 15% of the
+objective, is exactly `0.04 * (n - 13)^2` -- zero for the 13-region candidate
+and a penalty for every other one. So 15% of the score is defined relative to
+the candidate being scored best, and the U-shaped curve above is what this
+procedure produces whether or not 13 is the right answer.
+
+Moving one weight at a time and rescaling the other three:
+
+| Component | Weight | 13 regions wins while the weight is | |
+|---|---:|---|---|
+| Population scale | 45% | 0% to 81% | robust |
+| Geographic compactness | 25% | 0% to 92% | robust |
+| Rural workload balance | 15% | 0% to 20% | flips to 12 at +5 points |
+| Administrative fragmentation | 15% | 11% to 100% | flips to 12 at -5 points |
+
+The two largest terms are not what decides this. The two 15% terms are, and
+both sit within five points of a weighting that selects a different number of
+regions. Drop the fragmentation term entirely and 10 regions scores best.
+
+The honest statement of the result is therefore: **13 regions is a planning
+judgement that this scoring supports, not the output of a search over possible
+partitions.** The 3.22% margin cannot carry more than that. Independent
+candidate generation at each count, and an objective with no term anchored to
+a particular count, would be needed before the comparison could.
+
+The dashboard renders this table from the model file rather than restating it,
+so the two cannot disagree.
+
+### What the selected map achieved
+
+State integrity explains the regions above target. It does not explain the
+ones below it:
+
+| | Region | Population | Times target |
+|---|---|---:|---:|
+| Largest | R02 California and Hawaii | 40,877,409 | 1.56x |
+| | R04 Texas and Louisiana | 35,888,571 | 1.37x |
+| | R01 Northwest and Alaska | 16,697,154 | 0.64x |
+| Smallest | R13 New England | 15,386,085 | 0.59x |
+
+New England is further from the 26.2 million target than Texas and Louisiana
+is, and it is six small states that could have been merged with R12. That is
+an optimizer outcome, not a constraint outcome. Smallest to largest, the
+spread is 2.66x.
+
+Rural workload balance carries 15% of the objective specifically to avoid
+concentrating sparse-area obligations, and the selected map still runs from
+6.0% rural in R02 to 37.5% in R07, a 6.3x spread. Rural population is
+geographically clustered and states cannot be split, so some concentration is
+unavoidable under the hard constraints. The term reduces the spread; it does
+not remove it.
 
 | ID | Region | States/DC | Population | Rural share |
 |---|---|---|---:|---:|
@@ -163,7 +221,7 @@ Lower is better. The model selected 13 regions.
 | R08 | Great Lakes and Appalachia | MI, OH, WV | 23,793,742 | 27.3% |
 | R09 | Florida | FL | 23,372,215 | 8.6% |
 | R10 | South Atlantic | GA, NC, SC | 27,705,733 | 30.0% |
-| R11 | Chesapeake | DC, MD, PA, VA | 28,855,416 | 21.3% |
+| R11 | Mid-Atlantic | DC, MD, PA, VA | 28,855,416 | 21.3% |
 | R12 | Northeast Metro | DE, NJ, NY | 30,420,016 | 10.9% |
 | R13 | New England | CT, MA, ME, NH, RI, VT | 15,386,085 | 20.1% |
 
@@ -182,7 +240,11 @@ python tools/model_hospital_regions.py
 
 The script validates complete assignment and contiguity, recomputes every
 score, and prints the model output used in
-`docs/data/hospital-regions.json`.
+`public/data/hospital-regions.json`. That file now also carries the four
+objective components behind each candidate score, the state adjacency the
+contiguity constraint is enforced with, and the state name table, so a
+consumer can re-weight the objective and re-colour the map without this
+program.
 
 ### What the model does not do
 

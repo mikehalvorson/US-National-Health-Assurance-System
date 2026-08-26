@@ -85,7 +85,7 @@ import {
   absorptionSpan, countyDemand, gradedUnitRows, unitAllocationDrift,
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
-  countyFileAudit,
+  countyFileAudit, regionMethodologyDrift,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2825,6 +2825,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ' states, ' + a.population.toLocaleString('en-US') +
             ' people, population vintage ' + a.meta.population_vintage +
             ' and rural vintage ' + a.meta.rural_vintage
+        };
+      }),
+      /* R87 / R89 / R211: the published methodology carries the sweep, the
+         margin, the fragmentation coefficient and the thirteen region names
+         as prose. Every one of those was computed and then typed, which is
+         the trap that turns a derived figure into a stale one at the next
+         commit. Parsed and compared. */
+      runGuarded('The published region methodology matches the model it documents', () => {
+        const bad = regionMethodologyDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.where + ' says ' + b.says + ', expected ' + b.expected)
+            .join(' | ') ||
+            'the sweep, the margin, the fragmentation coefficient and all thirteen region names agree with the model file'
         };
       }),
       /* R70: the glossary keys that are also state abbreviations, pinned.

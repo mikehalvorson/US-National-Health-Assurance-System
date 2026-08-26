@@ -1879,6 +1879,113 @@ export function regionCountyAgreement(root = REPO_ROOT): RegionCountyAgreement {
   };
 }
 
+/* R87 / R89 / R211 [§S9c]: the region methodology's prose, against the model.
+ *
+ * The sweep this section added to research/hospital_regionalization_methodology.md
+ * is four intervals typed into a table. They were computed -- twice, once in
+ * Python and once here, agreeing -- but a computed figure typed into prose is
+ * a typed figure from the next commit onward, and that is trap D2: a number
+ * that inherits the credibility of the derived ones beside it. §S9a shipped
+ * one of those in the commit that closed the defect class.
+ *
+ * So the published table is parsed and compared against the intervals the
+ * build computes, along with the margin and the thirteen region names. The
+ * same shape as `unitModelDrift` above, for the same reason. */
+const REGION_METHODOLOGY = 'research/hospital_regionalization_methodology.md';
+
+const SWEEP_ROW_LABELS: Record<string, string> = {
+  'Population scale': 'population_scale',
+  'Geographic compactness': 'geographic_compactness',
+  'Rural workload balance': 'rural_workload',
+  'Administrative fragmentation': 'administrative_fragmentation'
+};
+
+export interface MethodologyDrift { where: string; says: string; expected: string }
+
+export function regionMethodologyDrift(root = REPO_ROOT): MethodologyDrift[] {
+  const out: MethodologyDrift[] = [];
+  const note = sourceText(REGION_METHODOLOGY, root);
+  const model = regionModel(root);
+  const intervals = weightIntervals(
+    model.model.tested_region_counts, model.model.weights, model.model.selected_region_count);
+
+  /* the sweep table: one row per objective term, weight and interval */
+  for (const [label, key] of Object.entries(SWEEP_ROW_LABELS)) {
+    const want = intervals.find((i) => i.weight === key)!;
+    const row = new RegExp('\\| ' + label +
+      ' \\| (\\d+)% \\| (\\d+)% to (\\d+)% \\|');
+    const m = note.match(row);
+    const expected = Math.round(want.authored * 100) + '%, ' +
+      Math.round(want.low * 100) + '% to ' + Math.round(want.high * 100) + '%';
+    if (!m) {
+      out.push({ where: REGION_METHODOLOGY + ' sweep row ' + label, says: 'no published row', expected });
+      continue;
+    }
+    const says = m[1] + '%, ' + m[2] + '% to ' + m[3] + '%';
+    if (says !== expected) {
+      out.push({ where: REGION_METHODOLOGY + ' sweep row ' + label, says, expected });
+    }
+  }
+
+  /* the margin over the runner-up */
+  const margin = selectionMargin(model.model.tested_region_counts, model.model.selected_region_count);
+  const mm = note.match(/best, by ([\d.]+)% over the/);
+  const wantMargin = margin.marginPct.toFixed(2) + '%';
+  if (!mm) {
+    out.push({ where: REGION_METHODOLOGY + ' margin', says: 'no published margin', expected: wantMargin });
+  } else if (mm[1] + '%' !== wantMargin) {
+    out.push({ where: REGION_METHODOLOGY + ' margin', says: mm[1] + '%', expected: wantMargin });
+  }
+
+  /* R89: the region table's names and populations. A rename that lands in the
+     model and not here leaves a public map and a published methodology
+     calling the same region two different things. */
+  for (const r of model.regions) {
+    const row = new RegExp('\\| ' + r.id + ' \\| ([^|]+?) \\| [^|]* \\| ([\\d,]+) \\|');
+    const m = note.match(row);
+    if (!m) {
+      out.push({ where: REGION_METHODOLOGY + ' ' + r.id, says: 'no published row', expected: r.name });
+      continue;
+    }
+    if (m[1].trim() !== r.name) {
+      out.push({ where: REGION_METHODOLOGY + ' ' + r.id, says: m[1].trim(), expected: r.name });
+    }
+    if (Number(m[2].split(',').join('')) !== r.population) {
+      out.push({
+        where: REGION_METHODOLOGY + ' ' + r.id + ' population',
+        says: m[2], expected: r.population.toLocaleString('en-US')
+      });
+    }
+  }
+
+  /* R211: the fragmentation coefficient the prose states */
+  const anchor = fragmentationAnchor(model.model.tested_region_counts);
+  const am = note.match(/exactly `([\d.]+) \* \(n - (\d+)\)\^2`/);
+  if (!anchor) {
+    if (am) {
+      out.push({
+        where: REGION_METHODOLOGY + ' fragmentation',
+        says: 'the term is ' + am[1] + ' * (n - ' + am[2] + ')^2',
+        expected: 'no anchored term; the paragraph must be rewritten'
+      });
+    }
+  } else if (!am) {
+    out.push({
+      where: REGION_METHODOLOGY + ' fragmentation',
+      says: 'no published coefficient',
+      expected: anchor.coefficient + ' * (n - ' + anchor.anchor + ')^2'
+    });
+  } else if (Number(am[1]) !== anchor.coefficient || Number(am[2]) !== anchor.anchor) {
+    out.push({
+      where: REGION_METHODOLOGY + ' fragmentation',
+      says: am[1] + ' * (n - ' + am[2] + ')^2',
+      expected: anchor.coefficient + ' * (n - ' + anchor.anchor + ')^2'
+    });
+  }
+
+  return out;
+}
+
 /* R90 / R92: the county file, audited.
  *
  * R90 is filed as an audit task -- "a shared dependency of two chapters,
