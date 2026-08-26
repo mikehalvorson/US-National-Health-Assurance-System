@@ -3971,8 +3971,10 @@ payloads shipping the way P11's did.
 
 `/code-review 66834a8`, pinned to exactly this section, run after the entry
 above was written and after the 24 break payloads were proven. **Standards
-returned 2 hard findings and 6 judgement calls; Spec returned 10.** All are
-addressed, in `489e240`.
+returned 2 hard findings and 6 judgement calls; Spec returned 10.** All were
+believed addressed in `489e240`. **One was not, and a second review found
+three further defects in the fixes themselves** — see `THE SECOND CODE REVIEW`
+below.
 
 **Four of them correct claims this entry made when it was written**, which is
 why the amendment reads as it does. Read the amendment, not just the entry.
@@ -4085,14 +4087,21 @@ section imports and edits it. The prompt was written before P12 and its
 "Where this code actually lives" block is stale. Standing Order 0, and it
 should have been recorded when it was noticed rather than only acted on.
 
-#### The rest, all fixed
+#### The rest
+
+⚠️ **This heading read "The rest, all fixed" and one of them was not.** See
+`THE SECOND CODE REVIEW` below: the `SOURCES.md` correction never reached the
+working tree, and this entry asserted it had.
 
 - **`R92` says every data file and this section did one.** `us-states.json`
   declares its geometry vintage, feature count and source now, and the county
   audit checks all three.
-- **The methodology moved the input path to `public/data/` and in the same
+- 🛑 **The methodology moved the input path to `public/data/` and in the same
   sentence still sent readers to `docs/data/SOURCES.md`** — the retired tree,
-  which now holds a differently shaped file.
+  which now holds a differently shaped file. **NOT FIXED HERE.** The edit was
+  made and then discarded by a `git checkout --` aimed at unrelated test
+  damage in the same file, and the verifying grep had already run. Fixed in
+  `dea30ca`.
 - 🆕 **`units-client.ts` carried a second acronym glossary and a second
   decorator.** Sixteen of its seventeen keys duplicated `src/lib/acronyms.ts`,
   which runs on every page under a MutationObserver, so it re-did work that
@@ -4149,6 +4158,157 @@ separators. Retargeted, not ignored.
   remedy for the clash check would have removed a payload's ability to fail.
   **When a review says a check cannot fail, break it and read the exit code
   before agreeing.**
+
+### THE SECOND CODE REVIEW
+
+`/code-review a61ce79`, pinned to the FIX RUN rather than to the section, on
+the reasoning that the code written in response to a review is the code
+nothing has reviewed. **Standards returned 4 hard findings, Spec returned 10.**
+All are addressed, in `dea30ca`.
+
+**It was worth running.** It found a fix that never landed, two more checks
+that cannot fail, and the R211 gate still backwards inside the commit that
+claimed to have straightened it.
+
+#### 🛑 A fix that never landed, claimed in the commit AND in the amendment above
+
+`docs/data/SOURCES.md` — the amendment above lists it under *"The rest, all
+fixed"*. **It was not fixed.** `git diff a61ce79...HEAD -- research/` was
+empty; the file still pointed readers at the retired tree.
+
+What happened is worth recording exactly. The fix was made. A later test left
+that same file dirty, and `git checkout -- research/hospital_regionalization_methodology.md`
+was run to undo the test's damage — which discarded the uncommitted fix along
+with it. **The grep used to verify the fix had run before the revert**, so the
+verification was true when it was taken and false by the time it was reported.
+
+🆕 **A destructive restore aimed at test damage also discards uncommitted real
+work in the same file.** Verify AFTER the revert, or commit the real change
+before running anything that will dirty the file. This is the second time this
+campaign has had a git operation silently empty work that was then reported as
+done; the first was `git stash push --staged` taking the whole index.
+
+**The amendment above is corrected on this point, and this is the third
+consecutive section whose log entry needed correcting after a review.** The
+pattern is not carelessness about the code — it is that the write-up is done
+last, from memory of what was intended, rather than from the diff.
+
+#### 🛑 Two MORE clauses that cannot fail, on the row that keeps producing them
+
+The first review called the clash check unfailable. The response kept it and
+added three conditions *"none of which the colourer can satisfy on its own"*.
+**Two of those three cannot fail either.**
+
+- **`distinctColors === REGION_PALETTE.length`.** Taking the least-used LEGAL
+  colour means a never-used colour is always available while one exists, so
+  with more regions than palette entries all eight are always used, whatever
+  the graph. Measured: eight with the real adjacency, **eight with an EMPTY
+  adjacency map**. The comment defending it as *"genuinely losable"* described
+  a first-fit colourer this repo does not have.
+- **`spare > 0`.** The palette can never be exhausted while the colourer
+  RETURNS: a region whose neighbours hold every colour is precisely the case
+  that throws, and `runGuarded` already turns a throw into a named failure. It
+  was a second copy of a gate that already existed. Measured across palette
+  sizes 8 down to 3: spare stays at 1 or 2, then the colourer throws.
+
+So this one row has now produced **three** unfailable clauses across two
+attempts to fix it, each written by the pass that was removing the previous
+one. `ok` is now the two things that move: `graphFaults`, which is about the
+data, and `clashes`, which is a regression test on the colourer. The
+comparative claim — that this strategy spreads wider than first-fit — is a
+unit test that colours the same graph both ways.
+
+🆕 **The break payload is what found `spare`.** Cutting the palette to five
+left the build green. Three is the real boundary. **A payload written from
+reasoning about where a gate fires is a hypothesis; running it is the
+measurement.**
+
+#### 🛑 The R211 gate was still backwards, in the fix for its being backwards
+
+`fragmentationClaimRendered` greped the page SOURCE for the disclosure
+sentence. That sentence lives inside `{ANCHOR && (...)}`, so it is present in
+the file whatever the model does — `claimed` was a constant `true`, and
+`ok: anchored === claimed` reduced to `ok: anchored`. **The original gate,
+verbatim, still reddening the build on the day R211 is satisfied.**
+
+What is checkable is whether the disclosure is still WIRED to the model, and
+that is what it asserts now: the sentence must sit inside the guard. It fails
+when someone moves it out — the page asserting something it cannot know — and
+stays green when the model is fixed.
+
+That needed a brace-depth scan rather than a search for `)}`, because the
+block's own `{Math.round(... * 100)}` closes first and reported a correctly
+guarded paragraph as unguarded. The build caught that within one run.
+
+#### The rest
+
+- **`markdownRows` was not total.** No fenced-block tracking — and this very
+  methodology file has a fence, around the reproduce command — and no
+  escaped-pipe handling, where one `\|` shifts every later cell so the region
+  table's population is read out of the wrong column and reported as a drift
+  that is not there. The audit's own recommendation table has six rows broken
+  by exactly that, which is how the hazard is known.
+- **`regionMethodologyDrift`'s `override?` was a test-only production
+  parameter.** It is a defaulted DATA parameter now, which is how every other
+  seam in that file is shaped: `statedChapterCountDrift(root, tabs = TABS)`,
+  `routeDrift(routes = pageRoutes(), tabs = TABS)`. **The repo already had an
+  idiom for this and the fix run invented a different one.**
+- **`spare` was palette minus DEGREE**, which is not what its own comment said
+  and not what the note rendered: the busiest region has 7 neighbours
+  consuming 6 colours between them, so the note told a reader the map was
+  "one border away from being uncolourable" when it was two.
+- **Stale prose after the glossary deletion**: the file header still credited
+  `docs/js/hospitalregions.js` with "acronym decoration", the section banner
+  still read "Acronym decoration", and a `});` was left mis-indented.
+- 🆕 **A NUL byte reached `src/lib/manifest-check.ts`** during the fix run and
+  made git classify the file as binary. Caught by grep reporting *"Binary file
+  ... matches"*, replaced with the escape sequence, and the whole of `src/`
+  swept for control bytes afterwards. **Trap C2 arriving from a new
+  direction** — not a lone CR in old data, but a control character written by
+  an edit.
+
+#### What the review checked and upheld
+
+Every figure in the amendment above: 0.412 / 0.562 / 0.372, the 21 shared
+borders and max degree 7, 8 distinct colours, `0.04 × (n − 13)²`, 216
+self-tests, `astro check` at 0/0/1. The page renders *"than Texas and
+Louisiana is"*. No regressions from the glossary deletion — no dangling
+references, and `physical-acronym` is still used by the hand-authored `<abbr>`
+elements on the page. The `meta` foreign member added to `us-states.json` is
+legal GeoJSON (RFC 7946 §6.1) and breaks no consumer. `outsizedComparator`
+returns R04, matching the row and the methodology, and `below[0]` is provably
+the most extreme.
+
+⚠️ One thing the review could **not** verify: the 29 break payloads, because
+`prove_p13.py` lives in the audit-document repository and not in this one. A
+reviewer working from this repo alone cannot check the campaign's central
+evidence. **Recorded as a gap, not resolved** — moving the harness here would
+put the audit's own scripts in the public tree, which is a decision this
+section does not own.
+
+#### Counts after the second review
+
+Self-tests **216**, unchanged — clauses removed from two rows, no rows added
+or removed. Full suite **475** passing, **59** files, up from 466. File
+manifest **126**, unchanged. `astro check` 0 errors, 0 warnings, **1 hint**.
+Break-and-restore **29 payloads, 29 pass, 0 skip, 0 fail** — three retargeted
+and **two RETIRED rather than left passing**, because the clauses they aimed
+at turned out to be unfailable and a payload against an unfailable clause
+passes for the wrong reason.
+
+#### 🧨 Traps to add
+
+- 🆕 **A destructive restore aimed at test damage discards uncommitted real
+  work in the same file.** Verify after the revert, not before.
+- 🆕 **A break payload is a hypothesis until it runs.** Two of this section's
+  payloads were written from reasoning about where a gate fires; running them
+  found that the gate could not fire at all.
+- 🆕 **A control character written by an edit makes git call a source file
+  binary.** Same consequence as the lone-CR trap, different cause. `grep`
+  saying "Binary file ... matches" is the tell.
+- 🆕 **Check whether the repo already has an idiom before inventing a seam.**
+  The test-only `override?` had three existing counterexamples in the same
+  file.
 
 ### STILL OPEN, NOT THIS SECTION'S
 
