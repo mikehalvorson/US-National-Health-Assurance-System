@@ -10,7 +10,7 @@ import {
   regionAdjacency, regionAssignmentFaults, reweight, scoreBarFraction,
   selectionMargin, stateCollisions, weightedTotal, weightIntervals,
   REGION_PALETTE, WEIGHT_COMPONENTS,
-  type ObjectiveWeights, type Region, type RegionScore
+  type Region, type RegionScore
 } from '../../src/lib/hospital-regions';
 import { regionModel, stateFeatureNames } from '../../src/lib/region-data';
 import { countyMeta } from '../../src/lib/counties';
