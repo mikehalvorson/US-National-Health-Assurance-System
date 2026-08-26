@@ -3698,13 +3698,22 @@ footer.site a { color: var(--text-muted); }
 .ltc-country-cards > .ltc-country-card:nth-child(3) { border-top-color: var(--series-2); }
 .ltc-country-cards > .ltc-country-card:nth-child(4) { border-top-color: var(--series-6); }
 .ltc-country-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  justify-content: space-between; gap: 10px;
 }
 .ltc-country-head strong {
   color: var(--text-primary); font-size: 16px; font-weight: 650;
 }
+/* The since value is sourced prose, not a fixed label: one country carries a
+   full clause there, 257px of it against a 258px card. `white-space: nowrap`
+   here was the overflow: it left the text no break point, so the head row
+   could not fit and the page scrolled sideways at 375px. Dropping it is the
+   fix, and measured sufficient on its own down to a 200px card.
+   `flex-wrap` on the row above is legibility, not the fix: it keeps the
+   country name whole on its own line instead of squeezing it into a narrow
+   column beside the clause. It does NOT prevent the overflow by itself. */
 .ltc-country-head span {
-  color: var(--text-muted); font-size: 11px; white-space: nowrap;
+  color: var(--text-muted); font-size: 11px;
 }
 .ltc-country-system {
   margin-top: 2px; color: var(--text-secondary); font-size: 12px;
