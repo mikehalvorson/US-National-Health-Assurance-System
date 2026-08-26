@@ -4342,7 +4342,11 @@ accepting thirteen as a policy choice in the text of the framework itself.
 
 ## P14 — §S9d Long-Term Care · 2026-08-26 · branch `nha-remediation`
 STATUS: complete — all 8 recommendations landed across 2 commits, plus `R180`,
-which belongs to no section and which `R285` could not be finished without.
+which belongs to no section and which `R285` could not be finished without,
+and a **fix run** (`0a5d9d1`) after a two-axis code review. ⚠️ **Read
+`### THE CODE REVIEW` at the end of this entry before believing anything
+above it**: three of the four checks this section wrote were measurably weaker
+than their own notes claimed, one of them in three separate ways.
 
 Written from `git diff fdd01a6..HEAD`, not from memory of what was intended.
 Three consecutive sections have needed their log entry corrected by a review
@@ -4423,7 +4427,12 @@ to *"The Workforce model"* is true for the first time.
 plan assumptions, and neither has an external source, which is now what the
 page says.** `matureFramework` is graded `low`, alone among the seven, with a
 `basis` string naming both inputs and stating that neither is a published
-figure. The chart renders all three bars' grades beneath them.
+figure. ⚠️ **As first written this met `R284`'s second declared test and broke
+it one level down** — the two inputs themselves carried no grade, only an
+explanation inside the parent figure's `basis`, which is exactly the
+sibling-inheritance the test forbids. Corrected in the fix run: both now carry
+their own `confidence` and `basis` in `LTC_WORKFORCE`, exported as
+`PLANNING_INPUTS`. The chart renders all three bars' grades beneath them.
 `ltcPlanningInputFaults()` pins `5.4 + 0.772 = 6.2` and `5.0 / 0.67 = 7.5`,
 which were comments beside the numbers they described, and asserts the
 methodology still states the grade the code publishes.
@@ -4463,8 +4472,9 @@ out to be live once you ask what a second page load does. `AE1` was the first,
 
 ### 🆕 Three checks this section wrote were wrong, and one measurement was
 
-All four were caught inside the section rather than by a review, which is the
-only difference from the last three sections. Each is commented where it was
+All four were caught inside the section rather than by a review. ⚠️ **Four
+more were not, and the review found them — including three separate weaknesses
+in one check. See `### THE CODE REVIEW` below.** Each is commented where it was
 fixed.
 
 1. **A grade clause that could not fail.** `ltcPlanningInputFaults` asserted
@@ -4573,3 +4583,111 @@ in vitest rather than in the self-test registry and are marked with a leading
   the surrounding narrative is not exhaustively swept. `R286` is a `§S9d` row
   scoped to the LTC chapter and `§BW1` widened it one page; widening it to
   every chapter is nobody's row.
+
+### THE CODE REVIEW
+
+Two agents, one on standards and one against the spec, both pinned at
+`fdd01a6`. The standards pass ran **mutation probes** against the new checks
+rather than reading them, which is how four of these were found. Fix run:
+`0a5d9d1`. Suite **486 → 488**; self-tests still 220; `astro check` 0/0/1.
+
+**Three of the four checks this section wrote were weaker than their notes.**
+
+`directCareHeadcountDrift`, in three ways at once, all under a green note
+reading *"12 figure-and-page pairs, every one interpolated from
+`LTC_WORKFORCE`"*:
+
+| probe | result | why |
+|---|---|---|
+| type `9.9 million` into a page | **GREEN** | needles built from the live model, so only today's digits were blocked — while the comment claimed *"a literal is the defect regardless of its value"* |
+| delete a figure from a page | **GREEN** | nothing verified interpolation at all |
+| the turnover figure | **GREEN** | `newJobs2034M` and `homeTurnoverPct` were dropped from the list, and `workforce.astro` hand-typed *"roughly 75% annual home-care turnover"* one div below the tile that interpolates it |
+| a comment quoting a figure | **RED, falsely** | the comment said `renderedSource` strips imports and masks comments; the code called `sourceText`, which does neither |
+
+And the `12` was six figures times two pages. Nine pairs exist. Rewritten as
+two halves — every figure must appear as an interpolation expression, and any
+literal *shaped* like a direct-care figure is a fault whatever its value.
+
+🆕 **One exemption in that rewrite is worth reading.** The shape scan found
+`169.96 million jobs nationally` hand-typed beside a share the model computes
+*from* `TOTAL_US_EMPLOYMENT_2024`. Interpolating it broke `workforceProseDrift`
+— an earlier section's check that **already gates that literal against the
+constant**. So the drift was defended, and rewriting a value gate into a shape
+gate to remove a literal it was watching would have been the worse trade.
+Reverted and exempted, with that as the stated reason. **An exemption is safe
+when another check holds it, and not otherwise.**
+
+`ltcRepeatedLiterals` pinned **hand-typed** needles (`'Denmark 3.2%'`), so
+correcting a share would have silently retired the guard for that country —
+the check would have gone green about a figure it had stopped watching.
+Derived from `LTC_GDP_2021` now. Its note claimed *"every repeated figure
+resolves to one exported field"* while watching five.
+
+`ltcOecdRangeDrift`'s retired-value clause matched only the paired form
+`2.0-4.4` while its message claimed *"no superseded OECD value anywhere in the
+source note"*. A bare `2.0%` beside the corrected range passed. The
+methodology **names** what it superseded, so the list is parsed from the
+document that retired them and extends itself.
+
+`gdpKindStyleFaults`' first clause cannot fire with the default arguments —
+`KIND_STYLE` is a `Record` over the same union the data's `kind` uses, so
+TypeScript has already refused the bad case. **That is P13's colourer finding
+again**: a live regression test on the function, blind to the data. Kept and
+now exercised through its injected arguments, rather than deleted, because
+deleting it would lose the payload that does fail.
+
+🛑 **`R282`'s defect, recreated by the commit that fixed `R282`.**
+`WORKFORCE_ASSESS.note` was exported with **no consumer anywhere in `src/`**,
+and it was *rewritten* by that commit. The page's paragraph is the published
+copy and now reads `LTC_WORKFORCE`, so the constant was the dead one. Deleted.
+**Naming the defect class does not immunise the next thing you write** — for
+the third campaign section running.
+
+🛑 **A citation for a number nobody read.** `gdpPc2021`'s **field** comment
+said `(World Bank)`. The eight values were back-solved; the block comment
+above disclosed that and the field comment did not, and a field comment is
+what a reader of the data sees. This is `BU4`/`R283`'s own pattern — a value
+attributed to a source it was not read from — **introduced by the row that
+removed an instance of it.** It says `implied` now, and the methodology
+publishes all eight figures so the arithmetic can be checked. The methodology
+also still called dollars-per-person *"the second reading in each tooltip"*
+after `R285` moved it onto the chart, in the file the chapter links as its
+sources.
+
+**Three more repeated figures `R286`'s first pass missed** — `$415B` of LTSS
+spending, the `$2,000` asset test, the `711,000`-person waiting list — each
+with one authored home now.
+
+**The source-shape test earned its keep only after being fixed.** It sliced on
+a function name and ran to EOF if that name moved, landing on
+`renderWorkforce`'s `role: 'img'` — which is **correct** there, that chart has
+no focusable children. Both anchors are asserted before the slice now.
+
+🆕 **Recorded, not fixed.** `role="img"` over `tabindex` with no `focus`
+handler survives in `tax-charts.ts` (**6 sites, 4 with tabindex**),
+`benchmark-chart.ts`, `financing-chart.ts` and `gov-client.ts`. `AW5`'s other
+sites; `§S9d` fixed its own. **Nobody's row.**
+
+🆕 **Two scope items the section should have recorded and did not.**
+`COST_IN_FRAMEWORK.body` was edited under a *"Do not touch"* heading — the
+parameter mechanism the prompt protects is untouched and `R286` names the
+string, but the prompt's own rule is to record every contradiction, and this
+entry listed four and not this one. And `.bench-row:focus-visible` in
+`global.css` is app-wide: `.bench-row` is also the tax and benchmark charts'
+row class, so focus styling changed on four chapters outside `§S9d`. Adding an
+outline where there was none is an improvement, and it is still scope.
+
+⚠️ **`R265`'s first declared test, re-judged.** The spec reviewer's objection
+is fair and is recorded rather than argued away: tying three statements with a
+gate is the same *"leaves both authored and asserts they agree"* shape this
+entry criticises elsewhere, and **moving `LTC_GDP_2021` to a leaf module both
+`params.ts` and `ltc.ts` could import was never evaluated.** Not done in the
+fix run — it moves a seam under the framework's largest expansion on a review
+comment, which is a `§S11b` decision, not a fix-run one. **Recorded as open.**
+
+🆕 **The proving harness grew from 22 payloads to 31**, six of them mutations
+the review found green. One of the six was itself a wrong payload first: it
+replaced one of **two** occurrences of an interpolation and read as CANNOT
+FAIL — the same mistake the `R288` kind-retirement payload made earlier in the
+section, in a different shape. **That is twice in one section for one error,
+which is the argument for `replace-all` being the default.**
