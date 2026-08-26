@@ -3676,3 +3676,323 @@ STILL OPEN, NOT THIS SECTION'S: `R135`'s seven `low`-confidence parameters with
   `R245`'s 7 role-less `aria-label`led `<div>`s on `risk.astro` (`§S14`). The
   14 non-finite equation cells. Golden rule 2 site-wide. `V19`'s twelve, which
   `## P11` already recorded as understating a guard that is five relations.
+
+## P13 — §S9c Hospital regions & maps · 2026-08-25 · branch `nha-remediation`
+STATUS: complete — all 15 recommendations landed across 5 commits
+
+ENTRY GATE: `## P1` and `## P2` both `STATUS: complete` ✅ ·
+  `RECONCILIATION_MAX_ERROR_PCT` cut from 10 to 1 made the build fail
+  ("Self-tests failed: 1 of 207") and was restored ✅ ·
+  `check_audit_docs.py` exit 0 ✅ · both trees clean ✅
+
+LANDED:
+  - `6acc083` — `R70` `R71` `R72` `R87` `R88` `R89` `R190` `R191` `R192`
+    `R193` `R211` `R212` `R213`, the map and the page
+  - `ca327b4` — `R90` `R92`, the county file
+  - `c7876af` — `R87` `R88` `R89` `R211` `R212` `R213`, the published
+    methodology and the check that keeps it honest
+  - `dcf1a84` + `e8bb467` — `tests/lib/hospital-regions.test.ts`
+
+### DISCREPANCY
+
+Five, three of them load-bearing.
+
+1. 🛑 **`AE1` is LIVE on the units page, not latent, and the audit's own
+   downgrade is what hid it.** `§BI3` reasoned at Pass 41 that
+   `decorateAcronyms` runs once at init against `R01`, whose states collide
+   with no acronym key. That is correct about `units-client.ts` and wrong
+   about the page, because it predates `src/scripts/acronyms-client.ts` —
+   which runs the site-wide glossary under a **MutationObserver on `<main>`
+   with `subtree: true`** and therefore re-decorates anything the tab
+   renders, 200ms after it renders it.
+
+   Reproduced against the dev server rather than argued. Selecting R11:
+
+   ```
+   <abbr class="acronym" title="Physician assistant"
+         aria-label="PA: Physician assistant">PA</abbr>
+   <abbr class="acronym" title="Department of Veterans Affairs"
+         aria-label="VA: Department of Veterans Affairs">VA</abbr>
+   ```
+
+   It is also **worse than `AE1` describes**. `AE1` reports a `title`, which
+   is a hover a mouse user might never trigger. The site-wide decorator adds
+   an `aria-label`, so a screen reader *announces* Pennsylvania as a clinical
+   job title inside a list of states. The finding's severity was downgraded
+   on the strength of a mechanism that a later file had already made
+   obsolete. **The code won.**
+
+2. 🆕 **A second live vector on the same page that no pass of the audit
+   reached.** `renderStateTable` renders **51 bare state codes** in column 0
+   of the allocation table, inside `<main>`, so PA and VA were decorated
+   there too — on every view with the `<details>` open, for every reader,
+   not only when R11 is selected. `AE1` names the region detail line and the
+   map tooltip and does not name this.
+
+3. **`R72`/`AE3` says "six colours are used twice". It is five.** 8 distinct
+   + 5 doubled = 13. `AE3`'s own table lists exactly five pairs (R01/R06,
+   R04/R10, R03/R13, R05/R11, R02/R09) directly under the prose that says
+   six.
+
+4. **`R72`/`R191`'s stated harm is not occurring.** Computed over the
+   model's own adjacency graph: of the five doubled colours, **zero pairs
+   are adjacent**. No border on the deployed map dissolves today. The row
+   reads as though it does. Same shape as `AE1` before this section — what
+   is wrong is that nothing enforces the property, not that the property is
+   violated. Recorded because the difference decides what the fix is: a
+   guard, not a repair.
+
+5. **`AH5`'s specific sensitivity guess is wrong.** It says "shifting
+   population scale from 0.45 to 0.40 could plausibly flip the answer". It
+   does not. Population scale can be weighted anywhere in **0% to 81%** and
+   13 regions still wins. The fragile weights are the two **15%** terms,
+   not the 45% one. The instinct behind `AH5` and `R87` was right and the
+   worked example was backwards.
+
+### AE1
+
+Fixed on this page, and the fix is not the one `R70` describes, because
+`R70`'s fix does not work.
+
+Emptying this module's acronym map — which `R70` asks for, and which is
+done — changes nothing on the deployed page, because the collision now
+arrives from `src/lib/acronyms.ts` through a different client script. What
+closes it is that the **three containers rendering bare state codes carry
+`data-no-acronyms`**: the region detail line, the region tooltip, and the
+state table's first column. `acronyms-client.ts` already honoured that
+attribute in its skip list; `units-client.ts`'s own decorator honours it
+now too, so the two agree about what counts as prose. The page declares
+which of its text is state codes, and every decorator present and future
+respects the declaration.
+
+Verified live: R11 renders `DC, MD, PA, VA` inside a `data-no-acronyms`
+span with **zero `<abbr>` elements**, and the state table with **zero**.
+
+**`§S13`/`R307` is still outstanding and still owns the site-wide half** —
+`PA` and `VA` remain in the shared glossary and any other page rendering a
+bare state code is still exposed. A self-test pins the collision set at
+exactly `{PA, VA}`, so a new colliding glossary entry fails the build, and
+so does *removing* one without updating the pin — which is how `R307` will
+show its work when it lands.
+
+### COLOURS
+
+13 regions now use **8 distinct colours** — the whole palette — and
+adjacency is respected: **y**.
+
+Adjacency is the model's own, not a second table. `tools/model_hospital_regions.py`
+already held a 51-state `ADJACENCY` map (it is what enforces the contiguity
+hard constraint) and now emits it, so the browser colours from the same
+graph the partition was built on. A second adjacency table in TypeScript
+would have been the drift this campaign keeps finding.
+
+`assignRegionColors` is greedy, highest-degree-first, with two objectives in
+strict order: never take a neighbour's colour, then among the legal ones
+take the least-used. The second half matters — plain first-fit is correct
+and produces a **four**-colour map, which is worse to look at than the
+eight-colour one it replaced. The region graph has 13 nodes, 21 shared
+borders and a maximum degree of 7 (R07).
+
+The clash check alone would have been unfailable, so the graph is checked
+for substance first: every region has a neighbour, the relation is
+symmetric, every assigned state has an adjacency entry. That is class B2
+and this campaign has now shipped it twice.
+
+### ASSIGNED-ONCE
+
+Test added; passes. `regionAssignmentFaults` checks all five ways the SVG
+description's claim can be false — a state in two rosters, a state in none,
+a roster naming a non-state, a GeoJSON feature resolving to no abbreviation
+(`R190`'s "Washington, D.C." case), and a feature drawn twice — against the
+shipped rosters **and** the shipped outlines.
+
+The data is correct and always was: 51 assigned exactly once, 51 features
+all resolving. `§AH1` established that by hand at Pass 14. Hand verification
+is not a guard, which is the whole of what `R71` asks for.
+
+The description now states what was drawn rather than what was intended,
+and a **sighted** reader gets the same information in a note beside the map
+— a screen-reader-only correction would leave the map looking complete to
+everyone else.
+
+### COUNTIES.JSON
+
+**Yes, `src/` uses it, at build time and at run time both.** This was
+"never established" for twelve sections and is settled: `src/lib/counties.ts`
+reads `public/data/counties.json` from disk for the page and the self-tests,
+and `src/scripts/units-client.ts` fetches the same file in the browser.
+`tools/model_hospital_regions.py` is the third reader. `docs/data/` is the
+retired tree and is not any of them.
+
+`R90` is filed as an audit task, and auditing it once would have closed the
+row and guarded nothing. It is a self-test: 3,144 records, 3,144 distinct
+FIPS, every FIPS prefix agreeing with its state code, 51 states, populations
+summing to 340,110,988, no rural share outside 0 to 1, no coordinate off the
+globe, Connecticut present as its 9 planning regions exactly as `SOURCES.md`
+describes. Clean.
+
+No fourth copy of the state table was added to do it. The FIPS prefix and
+the USPS code are both *in* the file, so the mapping is checked for
+self-consistency and the state set is checked against the region model's
+`state_names`.
+
+`R92`: the file is an object now, with a `meta` block declaring population
+vintage **2024**, rural vintage **2020**, geometry vintage 2024, the field
+glossary, the Census source per field, the record count and the population
+total. The array was wrapped **textually** — the 3,144 records copied byte
+for byte — because `json.dump` would have rewritten `1.00` as `1.0` and
+reformatted every record, burying the one change that matters in a
+3,144-line diff. Regression proof: the model tool reproduces the shipped
+`hospital-regions.json` byte for byte after the shape change.
+
+### THE 13-REGION RESULT
+
+`R87` has asked for a weight-sensitivity sweep since Pass 14 and nobody
+could run one, because the published file carried only the weighted total.
+The four components existed in the emitter the whole time. With them
+emitted, they reconstruct every published total exactly, and the sweep runs
+at build time:
+
+| Component | Weight | 13 wins while the weight is | |
+|---|---:|---|---|
+| Population scale | 45% | 0% to 81% | robust |
+| Geographic compactness | 25% | 0% to 92% | robust |
+| Rural workload balance | 15% | 0% to 20% | flips to 12 at +5 |
+| Administrative fragmentation | 15% | 11% to 100% | flips to 12 at −5 |
+
+**`R211` is right and stronger than filed.** The fragmentation term is
+exactly `0.04 × (n − 13)²` — zero for the candidate it scores best and a
+penalty for every other one. 15% of the objective is a parabola centred on
+the answer. Zero that weight and **10 regions** wins; drop it to 10% and
+**12** wins. The U-curve with its minimum at 13 is what this procedure
+produces whether or not 13 is optimal, which is exactly what `§BI1` said and
+could not demonstrate.
+
+`R212`'s margin was published in the methodology and withheld from the page:
+the tile carries it now, derived. `R88` and `R213`'s figures all verify
+against the audit — R13 at 0.59× target against R04 at 1.37×, spread 2.66×,
+rural 6.0% to 37.5% for a 6.3× spread.
+
+### CONTRADICTIONS
+
+Two, both between a row's declared test and what the row's own text asks
+for.
+
+- **`R70` declares `no acronym key collides with a US state abbreviation in
+  a geographic view`.** That test passes on this module today and the bug
+  was live anyway, because the glossary that produced it is not in a
+  geographic view — it is site-wide. The declared test is satisfiable
+  without fixing the defect. Implemented as written *and* fixed properly;
+  the discrepancy is recorded rather than routed around.
+- **`R191` declares `no two adjacent regions share a fill colour` and
+  offers "either add 13 distinct values or run a graph colouring".** The
+  first branch does not satisfy the test — 13 distinct values from a
+  palette of 8 is impossible, and 13 arbitrary distinct values would still
+  have no adjacency logic. Only the second branch implements the declared
+  test. Taken.
+
+### NEW FINDINGS
+
+Four.
+
+1. **The state allocation table's first column** — 51 bare state codes,
+   decorated by the site-wide glossary. Second live `AE1` vector, above.
+2. **`hospital-regions.json` shipped a stale `docs/data/` path** in its
+   `source` field. Three build gates fail on a `docs/` reference in source
+   and prose; none of them reads a data file. Corrected in the emitter, so
+   it is gone from the shipped data too.
+3. **`research/hospital_regionalization_methodology.md` carried two more**,
+   for the input and the output. Both corrected.
+4. **`#hospital-region-scores` was laid out as `repeat(7, ...)` in CSS**
+   because the model happens to score seven candidate counts. Scoring an
+   eighth would have overflowed the row silently. Driven from the data now.
+
+### INVARIANTS AFTER
+
+- Self-tests **207 → 216**. `README.md` bumped in the same edits, three
+  times, because the count moved three times.
+- Full suite **424 → 455** passing, **58 → 59** files
+  (`tests/lib/hospital-regions.test.ts`, 31 tests). `tests/` is not in the
+  manifest.
+- File manifest **124 → 126** (`src/lib/hospital-regions.ts`,
+  `src/lib/region-data.ts`), rebuilt with `node tools/build_file_manifest.mjs`.
+- `astro check`: 0 errors, 0 warnings, **1 hint** (`equations.ts:1252`).
+  It went to 2 in `dcf1a84` and was corrected in `e8bb467` — see the traps.
+- `V18` holds: thirteen region populations sum to **340,110,988**, and that
+  figure is now *compared* against the county file's independent total
+  rather than measured twice and never reconciled. The handoff called this
+  free and it was.
+- `tests/lib/kappa.test.ts`'s `KPP-C8` breach count did not fire: this
+  section moved no model output.
+- `tests/lib/workforce.test.ts`'s 23-row pin untouched.
+
+### BREAK-AND-RESTORE
+
+`baseline-P13/prove_p13.py`, **24 payloads, 24 pass, 0 skip, 0 fail.**
+
+Hardened against trap D8: every payload asserts the check **name** *and*
+that the failure output contains `self-tests failed`, so a payload that
+breaks the build for the wrong reason — a compile error, a plugin error —
+cannot score a pass by having the expected substring turn up in a
+compiler message.
+
+Four payloads reported SKIP on the first run, correctly: `"CT",\n "MA",`
+matches twice in the model file, because the region rosters and the
+`state_adjacency` block sit at the same indentation. Retargeted on the
+region name. That is trap C6 behaving as designed rather than three stale
+payloads shipping the way P11's did.
+
+### TRAPS THAT FIRED THIS SESSION
+
+- **A4 again, twice.** A shell heredoc carrying a Python payload ate the
+  backslashes: once turning `\n` into a literal newline inside a TypeScript
+  string literal, which esbuild rejected as `Unterminated string literal`,
+  and once silently matching zero times so an assertion fired instead of a
+  write. Fifth and sixth instance of A4 in the campaign. **Both were
+  recovered because the scripts assert their match count before writing.**
+  That pattern is now the thing that matters more than avoiding heredocs.
+- **C5.** `astro check` went 1 → 2 hints on an unused `type` import in the
+  test file, and the commit shipped before the count was read. Corrected in
+  the next commit. Third session running.
+- 🆕 **A check that cannot fail, written inside a measurement script.** The
+  first premise script ended with a FIPS/state cross-check whose expression
+  was `... and False`, so it reported "0 mismatches" over an empty set. It
+  was caught by reading the script, not by running it, and the real check
+  found 0 mismatches anyway. **Measurement scripts are code and get the same
+  class-B audit as shipped checks.**
+- 🆕 **`git stash push --staged -- <pathspec>` ignored the pathspecs** and
+  stashed the entire index, which silently emptied a commit that was about
+  to be made ("nothing to commit, working tree clean"). Nothing was lost —
+  it was all in the stash — but the failure mode is a commit that appears to
+  succeed while containing nothing. **Read `git status` after a partial
+  stash, before committing.**
+
+### STILL OPEN, NOT THIS SECTION'S
+
+`R307` / `§S13` — the site-wide half of `AE1`. `PA` and `VA` are still in
+`src/lib/acronyms.ts` and still expand on all fourteen pages; the units page
+is inoculated and no other page is. **The collision set is pinned, so
+`§S13` has a failing test waiting for it.**
+
+`R135`'s seven `low`-confidence parameters with empty `url` (`§S11b`,
+thirteenth session). `unitsCost` still among them; `§S9b` graded what feeds
+it, `§S9c` did not touch it. `R188`'s first test, still `§S11b`'s.
+`unitsCost`'s undeclared amortisation window. `R168`'s $50B/yr requirement
+citations. `R245`'s 7 role-less `aria-label`led `<div>`s on `risk.astro`
+(`§S14`). The 14 non-finite equation cells. `narrativeCatalogCodes` covering
+five of fourteen chapters.
+
+🆕 **The `docs/data/` tree and `public/data/` are no longer byte-identical.**
+`hospital-regions.json` and `counties.json` diverged here, deliberately:
+`docs/` is retired, three build gates fail on references to it, and
+regenerating it would re-bless a dead tree. `P2` recorded the two trees as
+byte-identical and that is no longer true for two of the three data files.
+Nothing gates on the identity.
+
+🆕 **The 13-region count now has a published sensitivity result saying it is
+not robust, and the framework still treats thirteen as settled** — thirteen
+RHAs, thirteen operating regions, the governance layer, the map. That is a
+substantive tension the dashboard now states honestly and does not resolve.
+Resolving it means either seeding candidates independently at each count or
+accepting thirteen as a policy choice in the text of the framework itself.
+**Nobody's row.**
