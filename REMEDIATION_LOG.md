@@ -4347,6 +4347,10 @@ and a **fix run** (`0a5d9d1`) after a two-axis code review. ⚠️ **Read
 `### THE CODE REVIEW` at the end of this entry before believing anything
 above it**: three of the four checks this section wrote were measurably weaker
 than their own notes claimed, one of them in three separate ways.
+⚠️ **A later commit (`2029a90`) fixed a pre-existing mobile overflow in
+this chapter**, found while verifying this section and left out of its diff as
+scope creep; see `### After the section closed` at the very end of this entry.
+Its first rationale was wrong in two of three claims.
 
 Written from `git diff fdd01a6..HEAD`, not from memory of what was intended.
 Three consecutive sections have needed their log entry corrected by a review
@@ -4691,3 +4695,102 @@ replaced one of **two** occurrences of an interpolation and read as CANNOT
 FAIL — the same mistake the `R288` kind-retirement payload made earlier in the
 section, in a different shape. **That is twice in one section for one error,
 which is the argument for `replace-all` being the default.**
+
+### 🆕 After the section closed: a pre-existing overflow, and a first fix whose rationale was wrong
+
+Found while verifying `§S9d` in the browser and deliberately left out of that
+section's diff as scope creep, then fixed on its own commit after the entry
+above was written. **Pre-existing, and that was checked rather than assumed:**
+`git diff fdd01a6..HEAD -- src/lib/ltc.ts` changes no `since:` field, and the
+`global.css` diff touches no `country-head` rule.
+
+At a 375px viewport the chapter scrolled sideways: `clientWidth` **375**
+against `scrollWidth` **396**. Exactly one element passed the viewport, the
+`since` span in the fourth country card, `COUNTRY_SYSTEMS[3]`, whose sourced
+text is a clause and not a year: *"Long-standing; reablement required since
+2015"*, **257px wide with its right edge at 396**.
+
+🛑 **The stated cause was wrong, and it is the cause everyone reaches for.**
+The overflow was attributed to a grid child's default `min-width: auto`, which
+is the usual explanation for this exact symptom. **`.ltc-country-card` already
+carries `min-width: 0`.** The grid was never at fault. The cause was
+`white-space: nowrap` on the span: as a flex item its automatic minimum was
+already its max-content width, and nowrap removed the last break point the row
+had.
+
+⚠️ **The first fix worked, and the rationale committed with it was wrong in
+two of its three claims.** It shipped `flex-wrap: wrap`, `min-width: 0` and the
+removal of nowrap, with a message asserting *"Both are needed. Wrapping alone
+still leaves a single item that cannot shrink below 257px on any narrower
+card."* That was reasoning, not measurement. Measured afterwards by toggling
+each declaration in the live page, at **card** widths (the 375px viewport
+renders a **258px** card content box, between the 280 and 320 columns):
+
+| configuration | 200px | 240px | 280px | 320px | 375px |
+|---|---|---|---|---|---|
+| **old**: nowrap, no flex-wrap | 168 | 128 | 88 | 48 | 0 |
+| drop nowrap only | **0** | **0** | **0** | **0** | **0** |
+| keep nowrap, add `flex-wrap` | 90 | 50 | 10 | 0 | 0 |
+| **shipped**: drop nowrap + `flex-wrap` | **0** | **0** | **0** | **0** | **0** |
+
+Worst pixels past the card content box; 0 is safe.
+
+1. **Dropping `white-space: nowrap` is necessary and sufficient**, alone, at
+   every width down to a 200px card.
+2. **`flex-wrap: wrap` alone does not fix it.** It still overflows below a
+   320px card. The commit message claimed the reverse of what the row three
+   measures.
+3. **`min-width: 0` was inert.** Identical geometry with and without it, in
+   both configurations, down to the pixel. Removed, and the page re-measured
+   afterwards to confirm the removal changed nothing: `minWidth` computes to
+   `auto`, head heights still 24 / 24 / 24 / 67, `scrollWidth` still 375.
+
+**The margin that produced the bug was one pixel.** The card content box is
+**258px** and the string's max-content width is **257px**. At desktop's 439px
+card the old head already fit only because the country name wrapped to two
+lines beside the pinned clause; it had a single pixel of room and nothing
+watching it.
+
+WHAT SHIPPED: the nowrap removal, which is the fix, plus `flex-wrap: wrap`,
+which is **legibility and not the fix** and now says so at the rule. It keeps
+*"Denmark and the Nordics"* whole on one line instead of squeezing it into a
+narrow column beside the clause. No `min-width`.
+
+MEASURED AFTER: at 375px, `scrollWidth` **375**, equal to `clientWidth`, and
+no element with a right edge past the viewport. The first three cards are
+untouched, heads one line at 24px with the value inline. A sweep from a 200px
+card to a 480px card finds zero overflow. Desktop moves from a 48px head (name
+wrapped to two lines, clause pinned right) to **51px** (name on one line,
+clause beneath): **+3px**, and the country name reads whole.
+
+**This is the entry above's own closing lesson, applied to the entry above.**
+`§S9d` recorded that *"naming the defect class does not immunise the next thing
+you write"* about a dead constant recreated by the commit that removed one.
+The first pass at this fix then shipped **a dead declaration and a comment
+claiming it did the work**, in the same chapter, one commit later. It was
+caught by toggling declarations rather than by re-reading the rule, which is
+the same thing the standards review's mutation probes did to this section's
+checks.
+
+### Deliberately not done
+
+- **No self-test for this.** A layout assertion needs a rendering engine and
+  the suite's environment is `node`; the checks that could run there would be
+  a character bound on the `since` strings or a scan for `nowrap` in the
+  stylesheet, and both gate the wrong thing. The durable guard is structural
+  instead: **the text can now break at any length**, so no bound on the
+  sourced string is needed to keep the page from scrolling. Recorded rather
+  than papered over with a check that would pass for the wrong reason.
+- **The other `nowrap` sites in `global.css` were not swept.** This row fixed
+  the one that overflowed. Whether any other holds sourced prose that could
+  grow is unmeasured, and is **nobody's row**.
+
+### Gates
+
+- Self-tests **220, unchanged**; no registry entry added, README untouched.
+- Full suite **488 passing, 59 files** — unchanged, and the change is
+  stylesheet-only so no test count could move.
+- `astro check`: **0 errors, 0 warnings, 1 hint** (`equations.ts:1252`).
+- `astro build`: 14 pages.
+- Verified in the running dev server at a 375px viewport, not from the built
+  output.
