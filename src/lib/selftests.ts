@@ -85,6 +85,7 @@ import {
   absorptionSpan, countyDemand, gradedUnitRows, unitAllocationDrift,
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
+  countyFileAudit,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2807,6 +2808,23 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               ? 'regions total ' + a.regionTotal + ', counties total ' + a.countyTotal
               : a.countyTotal.toLocaleString('en-US') +
                 ' people, summed thirteen ways and 3,144 ways')
+        };
+      }),
+      /* R90 / R92: the county file is the declared source for the regional
+         model and for the 24,099-unit network, and had never been examined.
+         It is examined on every build now, rather than once in a session
+         whose finding would have aged out. R92's vintage declaration is the
+         last group of faults, including the one that makes the two data files
+         agree in public about which Census releases they describe. */
+      runGuarded('The county file is internally consistent and declares its vintages', () => {
+        const a = countyFileAudit();
+        return {
+          ok: !a.faults.length,
+          note: a.faults.map((f) => f.what + ': ' + f.detail).join(' | ') ||
+            a.records.toLocaleString('en-US') + ' counties across ' + a.states +
+            ' states, ' + a.population.toLocaleString('en-US') +
+            ' people, population vintage ' + a.meta.population_vintage +
+            ' and rural vintage ' + a.meta.rural_vintage
         };
       }),
       /* R70: the glossary keys that are also state abbreviations, pinned.

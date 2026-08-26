@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 import { ACRONYMS as SITE_ACRONYMS } from './acronyms';
 import { CARE_SCENARIOS } from './care';
-import { countyDemand } from './counties';
+import { countyDemand, countyMeta, type CountyMeta } from './counties';
 import {
   assignRegionColors, bestCount, colorClashes, fragmentationAnchor,
   regionAdjacency, regionAssignmentFaults, scoreBarFraction, selectionMargin,
@@ -1877,6 +1877,105 @@ export function regionCountyAgreement(root = REPO_ROOT): RegionCountyAgreement {
     countyTotal: [...byState.values()].reduce((a, b) => a + b, 0),
     perRegion
   };
+}
+
+/* R90 / R92: the county file, audited.
+ *
+ * R90 is filed as an audit task -- "a shared dependency of two chapters,
+ * never examined". Reading it once and reporting that it was fine would have
+ * closed the row and guarded nothing, which is the failure mode this whole
+ * campaign keeps finding. So the audit is a check that runs on every build.
+ *
+ * The state table is not restated here. The 5-digit FIPS prefix and the USPS
+ * code are both IN the file, so the mapping between them is checked for
+ * self-consistency -- one prefix per state, one state per prefix -- and the
+ * set of state codes is checked against the region model's `state_names`,
+ * which is the authority. A fourth copy of the state list would be one more
+ * thing to drift.
+ *
+ * R92's half is the last group: the metadata has to declare a vintage for
+ * every field that varies with time, and the region model's own vintage claim
+ * has to agree with it. Those two files have described the same Census
+ * releases in prose, separately, since Pass 14. */
+export interface CountyFileFault { what: string; detail: string }
+
+export function countyFileAudit(root = REPO_ROOT): {
+  faults: CountyFileFault[]; records: number; population: number; states: number;
+  meta: CountyMeta;
+} {
+  const meta = countyMeta(root);
+  const rows = countyDemand(root);
+  const faults: CountyFileFault[] = [];
+
+  if (rows.length !== meta.records) {
+    faults.push({ what: 'record count', detail: rows.length + ' rows, metadata declares ' + meta.records });
+  }
+  const population = rows.reduce((a, c) => a + c.p, 0);
+  if (population !== meta.population_total) {
+    faults.push({ what: 'population total', detail: population + ' summed, metadata declares ' + meta.population_total });
+  }
+
+  const seen = new Set<string>();
+  const prefixToState = new Map<string, string>();
+  const stateToPrefix = new Map<string, string>();
+  let malformed = 0;
+  let badRural = 0;
+  let badPoint = 0;
+  for (const c of rows) {
+    if (!/^[0-9]{5}$/.test(c.f)) { malformed++; continue; }
+    if (seen.has(c.f)) faults.push({ what: 'duplicate FIPS', detail: c.f });
+    seen.add(c.f);
+    if (!(c.r >= 0 && c.r <= 1)) badRural++;
+    if (!(c.la >= -90 && c.la <= 90 && c.lo >= -180 && c.lo <= 180)) badPoint++;
+    if (c.p < 0) faults.push({ what: 'negative population', detail: c.f });
+    const prefix = c.f.slice(0, 2);
+    const priorState = prefixToState.get(prefix);
+    if (priorState && priorState !== c.s) {
+      faults.push({ what: 'FIPS prefix ' + prefix, detail: 'covers both ' + priorState + ' and ' + c.s });
+    } else prefixToState.set(prefix, c.s);
+    const priorPrefix = stateToPrefix.get(c.s);
+    if (priorPrefix && priorPrefix !== prefix) {
+      faults.push({ what: 'state ' + c.s, detail: 'spans FIPS prefixes ' + priorPrefix + ' and ' + prefix });
+    } else stateToPrefix.set(c.s, prefix);
+  }
+  if (malformed) faults.push({ what: 'malformed FIPS', detail: malformed + ' rows' });
+  if (badRural) faults.push({ what: 'rural share outside 0 to 1', detail: badRural + ' rows' });
+  if (badPoint) faults.push({ what: 'coordinates off the globe', detail: badPoint + ' rows' });
+
+  /* The authority on which states exist is the region model, which assigns
+     every one of them exactly once. */
+  const names = regionModel(root).model.state_names;
+  for (const s of stateToPrefix.keys()) {
+    if (!(s in names)) faults.push({ what: 'unknown state code', detail: s });
+  }
+  for (const s of Object.keys(names)) {
+    if (!stateToPrefix.has(s)) faults.push({ what: 'state with no counties', detail: s });
+  }
+
+  /* R92: every time-varying field declared, and the two files agreeing. */
+  for (const f of ['p', 'r', 'la', 'lo']) {
+    if (!meta.fields[f]) faults.push({ what: 'undeclared field', detail: f });
+  }
+  for (const v of [meta.population_vintage, meta.rural_vintage, meta.geometry_vintage]) {
+    if (!Number.isInteger(v) || v < 1990 || v > 2100) {
+      faults.push({ what: 'implausible vintage', detail: String(v) });
+    }
+  }
+  const claim = regionModel(root).model.source;
+  if (!claim.includes(String(meta.population_vintage))) {
+    faults.push({
+      what: 'vintage disagreement',
+      detail: 'the region model cites "' + claim + '" and the county file declares population vintage ' + meta.population_vintage
+    });
+  }
+  if (!claim.includes(String(meta.rural_vintage))) {
+    faults.push({
+      what: 'vintage disagreement',
+      detail: 'the region model cites "' + claim + '" and the county file declares rural vintage ' + meta.rural_vintage
+    });
+  }
+
+  return { faults, records: rows.length, population, states: stateToPrefix.size, meta };
 }
 
 /* R70: an acronym key that is also a US state abbreviation.

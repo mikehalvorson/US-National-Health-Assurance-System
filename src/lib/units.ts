@@ -265,8 +265,15 @@ export interface CountyDemand {
    built from. Two types rather than one optional field, so neither caller
    has to guard for a field the other guarantees. */
 export interface CountyRecord extends CountyDemand {
+  /* 5-digit county FIPS */
+  f: string;
+  /* county name, without the County/Parish/Borough suffix */
+  n: string;
   /* state USPS abbreviation */
   s: string;
+  /* internal-point latitude and longitude */
+  la: number;
+  lo: number;
 }
 
 export interface UnitCounts { a: number; b: number; c: number; d: number; total: number }

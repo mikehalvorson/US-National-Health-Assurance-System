@@ -100,7 +100,9 @@ def great_circle_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 
 def load_states() -> dict[str, dict[str, float]]:
-    counties = json.loads(COUNTIES.read_text(encoding="utf-8"))
+    # R92 (S9c): the file declares its own vintages now, so it is an object
+    # with a "counties" array rather than a bare array.
+    counties = json.loads(COUNTIES.read_text(encoding="utf-8"))["counties"]
     states: dict[str, dict[str, float]] = {}
     for county in counties:
         state = county["s"]

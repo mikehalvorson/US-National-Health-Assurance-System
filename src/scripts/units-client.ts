@@ -849,7 +849,11 @@ function initUnits(): void {
     });
     DATA.error = failed.length ? failed.join('; ') : null;
 
-    const counties = res[0].status === 'fulfilled' ? res[0].value as County[] : null;
+    /* R92 [§S9c]: counties.json declares its own vintages now, so it is an
+       object with a `counties` array rather than a bare array. */
+    const countyFile = res[0].status === 'fulfilled'
+      ? res[0].value as { meta: unknown; counties: County[] } : null;
+    const counties = countyFile ? countyFile.counties : null;
     const states = res[1].status === 'fulfilled' ? res[1].value as StatesGeo : null;
     const regions = res[2].status === 'fulfilled' ? res[2].value as RegionsData : null;
     if (counties) {
