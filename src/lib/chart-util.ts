@@ -45,9 +45,26 @@ export function niceTicks(min: number, max: number, count: number): number[] {
 /* Shared tooltip singleton */
 let tip: HTMLElement | null = null;
 
-/** (charts.js:62-67) */
+/** (charts.js:62-67)
+ *
+ * R180 [landed in §S9d]: `!tip.isConnected` is the whole fix, and it is not
+ * a precaution. Measured in the browser on the long-term-care chart: click
+ * one nav link and come back, and `tip` still points at a node Astro's
+ * <ClientRouter /> has thrown away with the old <body>. `tooltip()` then
+ * returned that detached node, `showTip` filled it and set display:block on
+ * it, and nothing appeared. Hover produced zero tooltips; so did focus.
+ *
+ * Every chart in the app shares this singleton, so every tooltip in the
+ * application stopped working after the first in-app navigation. §BB filed
+ * R180 on inference from reading the code and no section owns it; §S9d
+ * reproduced it while checking whether R285's new focus handler actually
+ * showed anything, and it did not. Fixing it here rather than filing it
+ * again, because R285 is not done otherwise.
+ *
+ * `isConnected` rather than `document.body.contains(tip)`: the same test,
+ * and it stays true for a node moved between documents. */
 export function tooltip(): HTMLElement {
-  if (!tip) {
+  if (!tip || !tip.isConnected) {
     tip = div('nha-tooltip', document.body);
     tip.style.display = 'none';
   }

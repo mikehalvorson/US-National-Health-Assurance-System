@@ -2421,67 +2421,154 @@ export function unitsCostStressorDrift(): UnitsCostStressorDrift[] {
   return out;
 }
 
-/* Code review [§S9a]: the direct-care headcounts have one source.
+/* R283 [§S9d]: the direct-care headcounts, after the collapse.
  *
- * The §S9a prompt's "Done when" has four clauses and this was the one the
- * section neither met nor disputed: "the direct-care headcounts have one
- * source (coordinate with §S9d)". Found by the spec review, not by me.
+ * §S9a's review found seven figures authored twice -- `LTC_WORKFORCE` in
+ * workforce.ts and `WORKFORCE_ASSESS` in ltc.ts -- with nothing holding them
+ * together, and added a check comparing the two objects field by field. Its
+ * own comment said "§S9d can then collapse them knowing the collapse is
+ * safe". §S9d has: WORKFORCE_ASSESS now reads LTC_WORKFORCE.
  *
- * Seven figures are authored twice, independently: `LTC_WORKFORCE` in
- * workforce.ts and `WORKFORCE_ASSESS` in ltc.ts. They agree today. Nothing
- * held them together, which is `BW1`'s finding one layer down -- the LTC
- * chapter attributes headcounts to "The Workforce model" while carrying its
- * own copies.
+ * WHICH MAKES THAT CHECK UNFAILABLE. Both sides of every pair became the same
+ * expression. Comparing `LTC_WORKFORCE.currentDirectCareM` with a field
+ * initialised from `LTC_WORKFORCE.currentDirectCareM` is a tautology, and a
+ * tautology that reports "7 figures shared, all agreeing" reads exactly like
+ * a check doing its job. Two consecutive code reviews in this campaign have
+ * removed clauses of that shape; this one is removed by the pass that created
+ * it rather than by the review after.
  *
- * Merging them is a seam move and `ltc.ts` is §S9d's file, so this does what
- * `ltcWageFloorCost()` does for the wage floor and what the prompt holds up
- * as the pattern to copy: leaves both authored and asserts they agree. §S9d
- * can then collapse them knowing the collapse is safe, and until it does, an
- * edit to either side fails the build instead of splitting the two chapters.
+ * The coverage is not dropped, it is re-pointed. What can still go wrong once
+ * the modules are wired is a PAGE going back to a literal. Both chapters
+ * state these figures in prose and in stat tiles, both now interpolate them,
+ * and an editor "simplifying" `{dc.openings2034M} million` back to
+ * `9.7 million` would restore the original defect silently. So the check
+ * reads the two pages and fails on the digits.
  *
- * Read as data, not as text: both modules are importable here.
+ * It fails in both directions, which is the point: move the model and a page
+ * still carrying the old digits fails; type a figure into a page and it fails
+ * whether or not the model agrees, because a literal is the defect regardless
+ * of its value.
  *
- * Accessors rather than key names: `WORKFORCE_ASSESS` also holds a prose
-   `note` and a confidence grade, so indexing it by `keyof` yields a union and
-   the comparison needs an `as number` on both sides -- which trips
-   `primitiveAssertions`, correctly. A function per side is type-checked
-   without a cast, and a renamed field fails to compile rather than silently
-   reading `undefined`. */
-const DIRECT_CARE_SHARED: Array<[string, () => number, () => number]> = [
-  ['direct-care workers today (M)',
-    () => LTC_WORKFORCE.currentDirectCareM, () => WORKFORCE_ASSESS.directCare2024],
-  ['new jobs by 2034 (M)',
-    () => LTC_WORKFORCE.newJobs2034M, () => WORKFORCE_ASSESS.newJobs2034],
-  ['projected 2034 need (M)',
-    () => LTC_WORKFORCE.projected2034M, () => WORKFORCE_ASSESS.projected2034],
-  ['mature benefit need (M)',
-    () => LTC_WORKFORCE.matureFrameworkM, () => WORKFORCE_ASSESS.matureFramework],
-  ['total openings by 2034 (M)',
-    () => LTC_WORKFORCE.openings2034M, () => WORKFORCE_ASSESS.openings2034],
-  ['median wage now ($/hr)',
-    () => LTC_WORKFORCE.medianWageNow, () => WORKFORCE_ASSESS.medianWage2024],
-  ['home-care turnover (%)',
-    () => LTC_WORKFORCE.homeTurnoverPct, () => WORKFORCE_ASSESS.homeTurnover]
-];
+ * `9.7` is deliberately in the table even though it is never drawn as a bar
+ * (`BK5`, `BV9`): being quoted only in prose is what makes it the easiest of
+ * the seven to retype.
+ */
+const DIRECT_CARE_PAGES = ['src/pages/ltc.astro', 'src/pages/workforce.astro'];
+
+/* Written as the page would write them, not as raw numbers: "5.4" appears in
+   both files in unrelated contexts, "5.4 million" does not. */
+function directCareLiterals(): Array<[string, string]> {
+  const w = LTC_WORKFORCE;
+  return [
+    ['direct-care workers today', w.currentDirectCareM + ' million'],
+    ['home-care share', w.homeCareM + ' million'],
+    ['projected 2034 need', w.projected2034M + ' million'],
+    ['mature benefit need', w.matureFrameworkM + ' million'],
+    ['total openings by 2034', w.openings2034M + ' million'],
+    ['median wage now', '$' + w.medianWageNow.toFixed(2)]
+  ];
+}
 
 export interface DirectCareDisagreement {
   figure: string;
-  workforce: number;
-  ltc: number;
+  where: string;
+  literal: string;
 }
 
-export function directCareHeadcountDrift(): DirectCareDisagreement[] {
+export function directCareHeadcountDrift(root = REPO_ROOT): DirectCareDisagreement[] {
   const out: DirectCareDisagreement[] = [];
-  for (const [label, fromWorkforce, fromLtc] of DIRECT_CARE_SHARED) {
-    const a = fromWorkforce();
-    const b = fromLtc();
-    if (a !== b) out.push({ figure: label, workforce: a, ltc: b });
+  for (const page of DIRECT_CARE_PAGES) {
+    /* renderedSource strips the frontmatter's import lines for the reason
+       §S7's review gave: otherwise the import satisfies the scan. Here the
+       body is what matters -- an interpolation reads `{dc.openings2034M}`,
+       a regression reads `9.7 million`. */
+    const body = flowed(sourceText(page, root));
+    for (const [figure, literal] of directCareLiterals()) {
+      if (body.includes(literal)) {
+        out.push({ figure, where: page, literal });
+      }
+    }
   }
   return out;
 }
 
 export function directCareSharedCount(): number {
-  return DIRECT_CARE_SHARED.length;
+  return directCareLiterals().length * DIRECT_CARE_PAGES.length;
+}
+
+export interface PlanningInputFault { figure: string; says: string; expected: string }
+
+/* R284 [§S9d]: the arithmetic under the two headcounts that are derived
+ * rather than measured, and the grade the derived one publishes.
+ *
+ * `projected2034M` is stated in its own comment as `5.4 + 0.772`, and
+ * `matureFrameworkM` as `coveredFteM / fteFraction`. Both were comments, so
+ * both could have gone stale against the number beside them.
+ *
+ * The grade clause is the substance of the row. The methodology has graded
+ * the maturity figure `low` all along, and gives the reason -- "the FTE count
+ * and part-time fraction are planning assumptions" -- while the code
+ * published it under one object-level `medium` shared with four PHI
+ * measurements. This asserts the code carries the grade the methodology
+ * states, so raising it in either place without the other fails.
+ */
+export function ltcPlanningInputFaults(root = REPO_ROOT): PlanningInputFault[] {
+  const out: PlanningInputFault[] = [];
+  const w = LTC_WORKFORCE;
+
+  const sum = Math.round((w.currentDirectCareM + w.newJobs2034M) * 10) / 10;
+  if (sum !== w.projected2034M) {
+    out.push({
+      figure: 'projected2034M',
+      says: String(w.projected2034M),
+      expected: w.currentDirectCareM + ' + ' + w.newJobs2034M + ' = ' + sum
+    });
+  }
+
+  const derived = Math.round((w.coveredFteM / w.fteFraction) * 10) / 10;
+  if (derived !== w.matureFrameworkM) {
+    out.push({
+      figure: 'matureFrameworkM',
+      says: String(w.matureFrameworkM),
+      expected: w.coveredFteM + ' / ' + w.fteFraction + ' = ' + derived
+    });
+  }
+
+  if (WORKFORCE_ASSESS.matureFramework.confidence !== 'low') {
+    out.push({
+      figure: 'matureFramework grade',
+      says: WORKFORCE_ASSESS.matureFramework.confidence,
+      expected: 'low, which is what the methodology grades it'
+    });
+  }
+  /* Bounded to the bullet, and this is why. The first version of this clause
+     ran `/Universal benefit at maturity[^|]*?Confidence: low/` over the whole
+     flowed file. There are TWO "Confidence: low" grades in it -- the maturity
+     figure's and the wage floor's, twenty lines apart -- so the pattern
+     matched the second one no matter what the first said, and downgrading the
+     maturity bullet to `high` left the check green. Measured, not reasoned
+     about: prove_p14.py's payload reported it CANNOT FAIL. */
+  const note = flowed(sourceText(LTC_METHODOLOGY, root));
+  const bullet = note.match(
+    /\*\*Universal benefit at maturity.*?(?=- \*\*|## )/);
+  if (!bullet) {
+    out.push({
+      figure: 'the methodology bullet for the maturity figure',
+      says: 'no bullet found',
+      expected: 'a "Universal benefit at maturity" bullet stating a grade'
+    });
+  } else if (!/Confidence: low/.test(bullet[0])) {
+    /* No `as string` here. The first version reached for one to squeeze the
+       grade out of a match in a single expression, and primitiveAssertions
+       failed the build for it -- correctly, and by name. */
+    const stated = bullet[0].match(/Confidence: (\w+)/);
+    out.push({
+      figure: 'the methodology bullet for the maturity figure',
+      says: stated ? stated[1] : 'no grade at all',
+      expected: 'low, the grade the code publishes for this figure'
+    });
+  }
+  return out;
 }
 
 /* R168 [§S9a]: requirement density runs inversely to cost, and the dashboard
@@ -3237,6 +3324,7 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
 
 const LTC_METHODOLOGY = 'research/long_term_care_methodology.md';
 const LTC_PAGE = 'src/pages/ltc.astro';
+const LTC_DATA = 'src/lib/ltc.ts';
 
 export interface KindStyleFault { kind: string; problem: string }
 
@@ -3279,6 +3367,51 @@ export function gdpKindStyleFaults(
   for (const [color, kinds] of byColor) {
     if (kinds.length > 1) {
       out.push({ kind: kinds.join(' + '), problem: 'share ' + color + ', so the chart draws them as one category' });
+    }
+  }
+  return out;
+}
+
+export interface RepeatedLiteral { figure: string; where: string; times: number }
+
+/* R286 [§S9d]: the figures this chapter states more than once.
+ *
+ * `BV6` counted five typed copies of $600B and six of $17.36, two of them
+ * beside canonical fields sitting unused in the same file, plus the Nordic
+ * and Dutch GDP shares retyped inside COUNTRY_SYSTEMS while living in
+ * LTC_GDP_2021. Measured here before the fix: $600B six times across ltc.ts
+ * and ltc.astro, $17.36 eight times once workforce.astro is counted.
+ *
+ * Each of these now has exactly one authored home and every other appearance
+ * is an interpolation, so the literal should not appear in the source at all.
+ * Zero, not one: the declaration is `UNPAID_FAMILY_CARE_B = 600`, which is
+ * not the string `$600B`, and `pct: 4.4` is not the string `4.4%`.
+ *
+ * ltc.astro is scanned for the money figures but NOT for the GDP shares: it
+ * states the 2.2% to 4.4% range in prose deliberately, and that sentence is
+ * held to LTC_GDP_2021 by ltcOecdRangeDrift instead.
+ */
+const LTC_REPEATED: Array<{ figure: string; literal: string; files: string[] }> = [
+  { figure: 'unpaid family care', literal: '$600B',
+    files: [LTC_DATA, LTC_PAGE] },
+  /* The GDP shares carry their context, and this is not fussiness. The first
+     version of this table listed a bare '3.4%', and the check went red on
+     Germany's payroll contribution -- "about 3.4% of wages in 2024" -- which
+     is a different quantity that happens to share two digits with Sweden's
+     share of GDP. A percentage is not identified by its digits. */
+  { figure: 'Netherlands share', literal: '4.4% of GDP', files: [LTC_DATA] },
+  { figure: 'Denmark share', literal: 'Denmark 3.2%', files: [LTC_DATA] },
+  { figure: 'Sweden share', literal: 'Sweden 3.4%', files: [LTC_DATA] },
+  { figure: 'Norway share', literal: 'Norway 3.5%', files: [LTC_DATA] }
+];
+
+export function ltcRepeatedLiterals(root = REPO_ROOT): RepeatedLiteral[] {
+  const out: RepeatedLiteral[] = [];
+  for (const item of LTC_REPEATED) {
+    for (const file of item.files) {
+      const text = sourceText(file, root);
+      const times = text.split(item.literal).length - 1;
+      if (times > 0) out.push({ figure: item.figure, where: file, times });
     }
   }
   return out;

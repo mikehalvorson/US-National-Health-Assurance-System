@@ -9,6 +9,7 @@ import {
 } from './model';
 import { FRAGILE_WITHIN, REGION_PALETTE } from './hospital-regions';
 import { KIND_STYLE } from './ltc';
+import { LTC_WORKFORCE as LTC_WORKFORCE_FIGURES } from './workforce';
 import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
@@ -87,7 +88,7 @@ import {
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
   countyFileAudit, fragmentationClaimGuard, regionMethodologyDrift,
-  gdpKindStyleFaults, ltcOecdRangeDrift,
+  gdpKindStyleFaults, ltcOecdRangeDrift, ltcPlanningInputFaults, ltcRepeatedLiterals,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2617,17 +2618,37 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             'which is still one blended network parameter'
         };
       }),
-      /* Code review [§S9a]: the fourth "Done when" clause, which the section
-         neither met nor disputed. Seven direct-care figures are authored
-         twice, in workforce.ts and ltc.ts, and nothing held them together.
-         Both stay authored; §S9d can collapse them knowing it is safe. */
-      runGuarded('The direct-care headcounts agree across the two chapters that carry them', () => {
+      /* R283 [§S9d]: §S9a's review left the two copies authored and asserted
+         they agreed, saying §S9d could collapse them safely. It did, which
+         made that assertion a tautology -- so this now checks the thing the
+         collapse cannot make safe: a page going back to a hand-typed figure.
+         Both chapters interpolate all six; a literal is the defect whatever
+         its value. */
+      runGuarded('Neither chapter hand-types a direct-care figure the model owns', () => {
         const bad = directCareHeadcountDrift();
         return {
           ok: !bad.length,
-          note: bad.map((b) => b.figure + ': ' + b.workforce +
-            ' vs ' + b.ltc).join(' | ') ||
-            directCareSharedCount() + ' figures shared, all agreeing'
+          note: bad.map((b) => b.where + ' types ' + b.literal +
+            ' for ' + b.figure).join(' | ') ||
+            directCareSharedCount() + ' figure-and-page pairs, every one ' +
+            'interpolated from LTC_WORKFORCE'
+        };
+      }),
+      /* R284 [§S9d]: the two headcounts that are derived rather than measured,
+         and the grade the derived one publishes. 7.5M is the largest bar on
+         the chart and the whole of the chapter's answer to "can we staff it?",
+         and its two inputs are plan assumptions. The methodology has graded it
+         low all along; the code published it under a shared medium. */
+      runGuarded('The derived direct-care headcounts reproduce, and the planning inputs are graded low', () => {
+        const bad = ltcPlanningInputFaults();
+        const w = LTC_WORKFORCE_FIGURES;
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.figure + ' says ' + b.says + ', expected ' +
+            b.expected).join(' | ') ||
+            w.currentDirectCareM + ' + ' + w.newJobs2034M + ' = ' +
+            w.projected2034M + 'M; ' + w.coveredFteM + ' / ' + w.fteFraction +
+            ' = ' + w.matureFrameworkM + 'M, graded low'
         };
       }),
       /* R265 [§S9d]: the OECD long-term-care range, quoted in the parameter's
@@ -2643,6 +2664,20 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             b.expected).join(' | ') ||
             'params.ts, ltc.astro and the methodology all state the range ' +
             'LTC_GDP_2021 computes'
+        };
+      }),
+      /* R286 [§S9d]: the figures this chapter used to state more than once.
+         BV6 counted five typed copies of $600B and six of $17.36, two of them
+         beside canonical fields sitting unused in the same file. Each has one
+         authored home now and every other appearance is interpolated, so the
+         literal should not appear in the source at all. */
+      runGuarded('No long-term-care figure is typed more than once across the chapter', () => {
+        const bad = ltcRepeatedLiterals();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.where + ' types ' + b.figure + ' ' +
+            b.times + 'x').join(' | ') ||
+            'every repeated figure resolves to one exported field'
         };
       }),
       /* R288 [§S9d]: the chart's categorical encoding. The OECD average, an

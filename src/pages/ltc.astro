@@ -6,8 +6,23 @@ import ChapterNav from '../components/ChapterNav.astro';
    phase that carries long-term care. */
 import { calendarYear, LTC_BENEFIT_PHASE } from '../lib/rollout';
 import { START_YEAR } from '../lib/params';
+/* R283/R286 [§S9d]: the direct-care figures this page states in prose are the
+   workforce model's, and the page says so in the same paragraph. They used to
+   be hand-typed here, which made the attribution a claim rather than a wire
+   and put five figures a third and fourth time in the chapter. Read at build
+   time so the sentences are static HTML with no script. */
+import { LTC_WORKFORCE } from '../lib/workforce';
+/* R282 [§S9d]: both of these were exported, never rendered, and had already
+   drifted from the copies typed into this page. The page's wording was the
+   better of the two and is what now lives in the constant. */
+/* R285/R286 [S9d]: the US per-capita figure, stated in this note and computed
+   from the chart's own data rather than typed a second time. */
+import { WHAT_WORKS, MEDICARE_GAP, UNPAID_FAMILY_CARE_B, LTC_GDP_2021 } from '../lib/ltc';
 const ltcPhase = LTC_BENEFIT_PHASE!;
 const ltcStartYear = calendarYear(ltcPhase.year);
+const wf = LTC_WORKFORCE;
+const usPerCapita = LTC_GDP_2021.find((r) => r.kind === 'us')!.perCapita
+  .toLocaleString('en-US');
 ---
 <BaseLayout title="National Health Assurance: Long-Term Care">
   <main>
@@ -41,13 +56,8 @@ const ltcStartYear = calendarYear(ltcPhase.year);
 
   <section class="card ltc-medicare">
     <span class="ltc-kicker">The gap most people discover too late</span>
-    <h2>Medicare does not pay for long-term custodial care</h2>
-    <p class="desc">Medicare covers up to 100 days of skilled care after a
-      qualifying hospital stay, then stops. Ongoing help with daily living is
-      not a Medicare benefit. Families learn this at the worst possible moment,
-      then spend their savings down to about $2,000 in assets to qualify for
-      Medicaid, the only public program that pays for this care, and the largest
-      single payer of it in the country.</p>
+    <h2>{MEDICARE_GAP.headline}</h2>
+    <p class="desc">{MEDICARE_GAP.body}</p>
     <div class="ltc-impacts">
       <article>
         <h3>Impoverishment by design</h3>
@@ -61,14 +71,14 @@ const ltcStartYear = calendarYear(ltcPhase.year);
       </article>
       <article>
         <h3>Cost shifted onto families</h3>
-        <p>Thirty-eight million relatives provide unpaid care worth about $600B
+        <p>Thirty-eight million relatives provide unpaid care worth about ${UNPAID_FAMILY_CARE_B}B
           a year (AARP, 2021), often cutting their own hours, pay, and health to
           do it.</p>
       </article>
       <article>
         <h3>A workforce that cannot hold</h3>
-        <p>Aides earn a median of $17.36 an hour; home-care turnover runs near
-          75% (PHI, 2025), so the person who knows a client keeps disappearing.</p>
+        <p>Aides earn a median of ${wf.medianWageNow.toFixed(2)} an hour; home-care turnover runs near
+          {wf.homeTurnoverPct}% (PHI, 2025), so the person who knows a client keeps disappearing.</p>
       </article>
     </div>
     <p class="note"><b>Sources.</b> Medicare's 100-day skilled-care limit and the
@@ -89,15 +99,15 @@ const ltcStartYear = calendarYear(ltcPhase.year);
       <div id="ltc-gdp-chart"></div>
       <div id="ltc-gdp-legend" class="ltc-legend"></div>
     </div>
-    <p class="note">Each bar's tooltip carries two readings. Share of GDP shows
-      how much of a whole economy goes to care: the United States commits the
+    <p class="note">Each bar carries two readings, both on the chart. Share of
+      GDP shows how much of a whole economy goes to care: the United States commits the
       least, 1.3%, against 2.2% to 4.4% in the countries that cover everyone.
-      Dollars per person shows the raw amount, and here the gap narrows, because
-      the United States is a wealthy country. It spends about $929 a head, near
+      Dollars per person, in the right-hand column, shows the raw amount, and here the gap narrows, because
+      the United States is a wealthy country. It spends about ${usPerCapita} a head, near
       the OECD average, while the top spenders reach two to three times that. So
       the problem is not simply that America spends too few dollars. It is that
       the dollars it does spend are means-tested and rationed, and neither reading
-      counts the roughly $600B of care that families provide unpaid.</p>
+      counts the roughly ${UNPAID_FAMILY_CARE_B}B of care that families provide unpaid.</p>
     <p class="note"><b>Sources.</b> Long-term care as a share of GDP, 2021: OECD
       Health at a Glance 2023 (total public and private long-term care). Dollars
       per person: that share applied to World Bank GDP per capita, price-adjusted,
@@ -120,15 +130,7 @@ const ltcStartYear = calendarYear(ltcPhase.year);
     <span class="ltc-kicker">What they have in common</span>
     <h2>The pattern behind every system that works</h2>
     <ul class="ltc-thread-list">
-      <li>Coverage is universal and automatic, not a means-tested trapdoor that
-        requires going broke first.</li>
-      <li>Financing is a dedicated, predictable stream, so the benefit is a
-        right rather than an annual budget fight.</li>
-      <li>The benefit is home-first by design, because most people want to stay
-        home and home care usually costs less than an institution.</li>
-      <li>Family caregivers are paid or supported, not treated as free labor.</li>
-      <li>One accountable public body plans the capacity and the workforce,
-        instead of leaving it to a collapsed private market.</li>
+      {WHAT_WORKS.map((thread) => <li>{thread}</li>)}
     </ul>
   </section>
 
@@ -166,6 +168,7 @@ const ltcStartYear = calendarYear(ltcPhase.year);
       the country, and already short, and a universal benefit adds demand on top
       of that.</p>
     <div id="ltc-workforce-fig"></div>
+    <div id="ltc-workforce-grades" class="ltc-workforce-grades"></div>
     <p class="note">These bars are headcounts of direct-care workers at three
       moments: how many are employed today, how many the current system already
       needs by 2034 just to keep pace with aging, and how many a universal
@@ -179,19 +182,19 @@ const ltcStartYear = calendarYear(ltcPhase.year);
       projection window closes. So the third bar is not a 2034 quantity at all;
       it is the level the workforce has to reach once the benefit matures, and
       nothing here claims the country gets there by 2034. A separate, larger
-      figure, roughly 9.7 million, counts every hire needed across the whole
+      figure, roughly {wf.openings2034M} million, counts every hire needed across the whole
       decade including all the workers who leave and must be replaced; that is a
       flow of job openings, not a headcount at any one time, so it is described
       here rather than drawn as a bar.</p>
     <div class="ltc-workforce-assess">
       <h3>How this squares with the Workforce and immigration plans</h3>
       <p>The Workforce model sizes the direct-care aide workforce as its
-        own block, separate from the insurance-transition ledger: about 5.4
-        million aides today, roughly 6.2 million needed by 2034 just to keep pace
-        with aging, and on the order of 7.5 million once a universal benefit
+        own block, separate from the insurance-transition ledger: about {wf.currentDirectCareM}
+        million aides today, roughly {wf.projected2034M} million needed by 2034 just to keep pace
+        with aging, and on the order of {wf.matureFrameworkM} million once a universal benefit
         matures. Filling those seats and replacing everyone who leaves adds up to
-        about 9.7 million total hires over the decade. The plan sets a wage floor
-        that lifts aide pay above today's $17.36-an-hour median, and the net-new
+        about {wf.openings2034M} million total hires over the decade. The plan sets a wage floor
+        that lifts aide pay above today's ${wf.medianWageNow.toFixed(2)}-an-hour median, and the net-new
         compensation that floor costs is carried in the framework cost model on
         the Healthcare tab, which is what the Tax tab has to raise. The merit
         immigration pathway lists direct-care roles alongside physicians and
