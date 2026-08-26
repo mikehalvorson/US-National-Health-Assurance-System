@@ -85,7 +85,7 @@ import {
   absorptionSpan, countyDemand, gradedUnitRows, unitAllocationDrift,
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
-  countyFileAudit, regionMethodologyDrift,
+  countyFileAudit, fragmentationClaimRendered, regionMethodologyDrift,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2736,15 +2736,36 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          was luck. It happened to hold. The graph is checked before the
          clashes, because a clash check over an empty graph passes forever --
          which is the shape two previous sections shipped. */
-      runGuarded('No two regions that share a border share a color', () => {
+      /* Code review [§S9c]: the title used to be "No two regions that share a
+         border share a color", and `ok` turned on `!c.clashes.length` --
+         which `assignRegionColors` makes impossible, since it never takes a
+         neighbour's colour and throws when it cannot. The row asserted a
+         tautology under a name that told a reader it was a guard.
+
+         The adjacency property is asserted against a colouring the checker
+         did not produce, in tests/lib/hospital-regions.test.ts. What this row
+         holds is the three things that CAN change: a graph with substance to
+         colour, a palette with room to spare over the busiest region, and
+         thirteen regions still spread across all eight entries rather than
+         collapsed onto the four a first-fit colourer would use. */
+      runGuarded('The region map has a real graph to colour and a palette with room', () => {
         const c = regionColoring();
+        const wide = c.distinctColors === REGION_PALETTE.length;
         return {
-          ok: !c.clashes.length && !c.graphFaults.length,
+          ok: !c.graphFaults.length && c.spare > 0 && wide && !c.clashes.length,
           note: c.graphFaults.join(' | ') ||
-            c.clashes.map((x) => x.a + ' and ' + x.b + ' both ' + x.color).join(' | ') ||
-            c.regions + ' regions, ' + c.edges + ' shared borders, busiest has ' +
-            c.maxDegree + ' neighbors, coloured with ' + c.distinctColors +
-            ' of ' + REGION_PALETTE.length + ' palette entries'
+            (c.clashes.length
+              ? c.clashes.map((x) => x.a + ' and ' + x.b + ' both ' + x.color).join(' | ')
+              : c.spare <= 0
+              ? 'the busiest region has ' + c.maxDegree + ' neighbors against a palette of ' +
+                REGION_PALETTE.length + ', so the map is one border away from being uncolourable'
+              : !wide
+                ? 'thirteen regions collapsed onto ' + c.distinctColors + ' of ' +
+                  REGION_PALETTE.length + ' colours; adjacency is satisfied and the map is harder to read'
+                : c.regions + ' regions, ' + c.edges + ' shared borders, busiest has ' +
+                  c.maxDegree + ' neighbors, coloured with ' + c.distinctColors +
+                  ' of ' + REGION_PALETTE.length + ' palette entries and ' + c.clashes.length +
+                  ' adjacent pairs sharing one')
         };
       }),
       /* R192: the composite score is lower-is-better and the bar was
@@ -2779,20 +2800,37 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
                 Math.round(FRAGILE_WITHIN * 100) + ' points')
         };
       }),
-      /* R211: the page states that the fragmentation term is a penalty on
-         distance from the selected count. It renders that paragraph only
-         while `fragmentationAnchor` returns one, so this asserts the
-         condition the prose is written under rather than the prose. */
-      runGuarded('The fragmentation term is still anchored on the selected count', () => {
+      /* R211: the page and the methodology both state that the fragmentation
+         term is a penalty on distance from the selected count.
+
+         Code review [§S9c]: this row used to fail when the anchor was ABSENT,
+         which pinned the very defect R211 exists to remove -- its declared
+         test is `no objective term is anchored to the selected candidate`, so
+         a future section that fixes the model would have been met with a red
+         build. That is backwards.
+
+         What the build can honestly hold is that the documents and the model
+         agree about which state they are in: if the term is anchored, both
+         must say so; if it stops being anchored, neither may keep claiming it.
+         `regionMethodologyDrift` enforces the same agreement for the
+         methodology's coefficient, and it reports the anchor's disappearance
+         as prose that must be rewritten rather than as a modelling failure. */
+      runGuarded('The pages describe the fragmentation term the model actually has', () => {
         const s = regionSelection();
+        const claimed = fragmentationClaimRendered();
+        const anchored = !!s.anchor && s.anchor.anchor === s.declaredWinner;
         return {
-          ok: !!s.anchor && s.anchor.anchor === s.declaredWinner,
-          note: !s.anchor
-            ? 'the fragmentation penalty is no longer a squared distance from one count, and the page paragraph saying it is must be rewritten'
-            : s.anchor.anchor === s.declaredWinner
-              ? 'zero at ' + s.anchor.zeroAt + ' regions, ' +
-                s.anchor.coefficient.toFixed(2) + ' times the squared distance elsewhere'
-              : 'anchored at ' + s.anchor.anchor + ' while ' + s.declaredWinner + ' is selected'
+          ok: anchored === claimed,
+          note: anchored === claimed
+            ? (anchored
+              ? 'zero at ' + s.anchor!.zeroAt + ' regions and ' +
+                s.anchor!.coefficient.toFixed(2) +
+                ' times the squared distance elsewhere, and both pages say so'
+              : 'no term is anchored to the selected count, and no page claims one is: R211 is satisfied')
+            : anchored
+              ? 'the fragmentation term is anchored at ' + s.anchor!.anchor +
+                ' and the chapter no longer discloses it'
+              : 'no term is anchored to the selected count any more, so the paragraph claiming one must be rewritten'
         };
       }),
       /* V18 + R88 / R213: the region file and the county file describe the

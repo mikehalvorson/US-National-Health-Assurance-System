@@ -71,6 +71,21 @@ export const WEIGHT_COMPONENTS: ReadonlyArray<
   ['administrative_fragmentation', 'fragmentation']
 ] as const;
 
+/* Code review [§S9c]: one label per weight, exported.
+ *
+ * §S9c had two copies -- `WEIGHT_LABELS` in units.astro rendering the sweep
+ * table, and `SWEEP_ROW_LABELS` in manifest-check.ts PARSING the published
+ * methodology by label. The check compared the methodology against a label
+ * map that was not the one the page renders, so renaming a row in one place
+ * would have made the check quietly compare against a stale string instead of
+ * reporting a drift. */
+export const WEIGHT_LABELS: Record<keyof ObjectiveWeights, string> = {
+  population_scale: 'Population scale',
+  geographic_compactness: 'Geographic compactness',
+  rural_workload: 'Rural workload balance',
+  administrative_fragmentation: 'Administrative fragmentation'
+};
+
 export function weightedTotal(score: RegionScore, weights: ObjectiveWeights): number {
   let sum = 0;
   /* every RegionScore field is a number, so no assertion is needed here --
@@ -359,6 +374,14 @@ export function colorClashes(
  * R88 / R213 — what the selected map actually achieved
  * ------------------------------------------------------------------------- */
 
+export interface RegionSize {
+  region: Region;
+  /* population over the equal-population target */
+  ratio: number;
+  /* how far from target, in either direction: |ratio - 1| */
+  distance: number;
+}
+
 export interface RegionGeometry {
   total: number;
   target: number;
@@ -366,9 +389,9 @@ export interface RegionGeometry {
   smallest: Region;
   /* largest population over smallest */
   spread: number;
-  /* regions below and above target, by how much, most extreme first */
-  below: { region: Region; ratio: number }[];
-  above: { region: Region; ratio: number }[];
+  /* regions below and above target, most extreme first */
+  below: RegionSize[];
+  above: RegionSize[];
   ruralLow: Region;
   ruralHigh: Region;
   ruralSpread: number;
@@ -379,19 +402,44 @@ export function regionGeometry(regions: readonly Region[]): RegionGeometry {
   const target = total / regions.length;
   const byPop = [...regions].sort((a, b) => a.population - b.population);
   const byRural = [...regions].sort((a, b) => a.rural_share - b.rural_share);
-  const ratio = (r: Region) => r.population / target;
+  const size = (r: Region): RegionSize => ({
+    region: r,
+    ratio: r.population / target,
+    distance: Math.abs(r.population / target - 1)
+  });
   return {
     total, target,
     largest: byPop[byPop.length - 1],
     smallest: byPop[0],
     spread: byPop[byPop.length - 1].population / byPop[0].population,
-    below: byPop.filter((r) => r.population < target).map((r) => ({ region: r, ratio: ratio(r) })),
-    above: [...byPop].reverse().filter((r) => r.population >= target)
-      .map((r) => ({ region: r, ratio: ratio(r) })),
+    below: byPop.filter((r) => r.population < target).map(size),
+    above: [...byPop].reverse().filter((r) => r.population >= target).map(size),
     ruralLow: byRural[0],
     ruralHigh: byRural[byRural.length - 1],
     ruralSpread: byRural[byRural.length - 1].rural_share / byRural[0].rural_share
   };
+}
+
+/* Code review [§S9c]: the page's "the smallest region is further from target
+ * than <a large one> is" sentence, with the large one COMPUTED rather than
+ * picked by index.
+ *
+ * §S9c shipped it as `LARGEST[0]`, which is the largest region by population
+ * and therefore the one furthest from target in the other direction, so the
+ * sentence rendered was false: New England sits 0.412 from target and
+ * California and Hawaii 0.562. `R88`'s own text compares R13 against **R04**,
+ * the second entry, and the published methodology says Texas and Louisiana.
+ * Only the page was wrong, and only the page had no check.
+ *
+ * Returns the LARGEST above-target region the smallest one still beats, so
+ * the comparison is the strongest true one, and null when there is none --
+ * in which case the page renders no claim at all rather than a false one. */
+export function outsizedComparator(geo: RegionGeometry): RegionSize | null {
+  if (!geo.below.length) return null;
+  const worstSmall = geo.below[0];
+  /* `above` runs largest first, so the first match is the biggest region
+     whose distance from target is still smaller. */
+  return geo.above.find((a) => a.distance < worstSmall.distance) ?? null;
 }
 
 /* ---------------------------------------------------------------------------

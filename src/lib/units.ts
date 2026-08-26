@@ -67,7 +67,7 @@ export const UNIT_TYPES: Record<UnitTypeKey, UnitType> = {
     opLo: 2.0, opMode: 2.6, opHi: 3.5, capital: 3.5,
     throughput: 12000, fte: 14,
     staff: '~14 (adds observation nursing, ultrasound, EMS liaison)',
-    role: 'Everything Type B does, plus tele-specialty, longer observation, point-of-care ultrasound, limited IV therapy, EMS coordination, maternal and pediatric triage, and mobile outreach. Built to hold a patient safely when the nearest hospital is an hour away.'
+    role: 'Everything Type B does, plus tele-specialty, longer observation, point-of-care ultrasound, limited intravenous therapy, EMS coordination, maternal and pediatric triage, and mobile outreach. Built to hold a patient safely when the nearest hospital is an hour away.'
   },
   d: {
     key: 'd', name: 'Type D: Urban public-health unit', shortName: 'Urban public-health unit',
@@ -257,7 +257,7 @@ export interface CountyDemand {
 
 /* R88/R213 [§S9c]: what public/data/counties.json actually carries, as
    against what the allocation reads.
-   
+
    `allocateCounty` takes `CountyDemand` and reads exactly two fields, which
    is why it can be called with an object literal in a test. The file has more
    -- the state code above all, which is how the region model's thirteen

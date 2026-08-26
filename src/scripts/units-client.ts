@@ -411,7 +411,6 @@ function refreshUnits(): void {
   renderMapUnits();
   renderStateTable();
   renderIntegrity();
-  decorateAcronyms(mainEl());
 }
 
 /* ---- controls ---- */
@@ -545,6 +544,9 @@ function renderRegionMap(): void {
   const featureNames = DATA.states!.features.map(stateNameOf);
   const faults = regionAssignmentFaults(
     model.regions, model.model.state_names, featureNames);
+  /* Code review [§S9c]: read once. The same 51-entry key walk appeared
+     four times in this function. */
+  const jurisdictions = Object.keys(model.model.state_names).length;
 
   const svg = el('svg', {
     viewBox: '0 0 ' + width + ' ' + height,
@@ -559,11 +561,11 @@ function renderRegionMap(): void {
   /* The description states what was drawn. It used to state what was intended,
      which is the same sentence exactly as long as nothing has gone wrong. */
   desc.textContent = faults.length
-    ? Object.keys(model.model.state_names).length + ' state-level jurisdictions were expected; ' +
+    ? jurisdictions + ' state-level jurisdictions were expected; ' +
       faults.length + ' could not be placed and are missing from this map: ' +
       faults.map(function (f) { return f.state + ' ' + f.problem; }).join('; ') +
       '. Hover or focus a state for its region, population, and rural share.'
-    : Object.keys(model.model.state_names).length +
+    : jurisdictions +
       ' state-level jurisdictions, the fifty states and the District of Columbia, each assigned to exactly one region and each drawn once. ' +
       'Hover or focus a state for its region, population, and rural share.';
 
@@ -625,10 +627,10 @@ function renderRegionMap(): void {
   if (note) {
     note.textContent = faults.length
       ? 'Map integrity: ' + faults.length + ' of ' +
-        Object.keys(model.model.state_names).length +
+        jurisdictions +
         ' states could not be placed and are missing from the map above (' +
         faults.map(function (f) { return f.state + ' ' + f.problem; }).join('; ') + ').'
-      : 'Map integrity: all ' + Object.keys(model.model.state_names).length +
+      : 'Map integrity: all ' + jurisdictions +
         ' state-level jurisdictions are assigned to exactly one of the ' +
         model.regions.length + ' regions and drawn exactly once, checked against the ' +
         featureNames.length + ' outlines on this map. No two regions that share a border share a color.';
@@ -705,106 +707,50 @@ function renderScores(): void {
 }
 
 /* =========================================================================
- * Acronym decoration (docs/js/hospitalregions.js, verbatim)
+ * Acronym decoration
  * ========================================================================= */
-/* R70 [§S9c]: `'PA': 'Physician assistant'` is gone from this map.
+/* R70 [§S9c] + code review: this module used to carry its own 17-entry
+ * acronym glossary and its own decorator, ported from
+ * docs/js/hospitalregions.js. Both are gone.
  *
- * On a page whose subject is geography, every two-letter key is a hazard: the
- * decorator matches `\b(PA)\b` against arbitrary prose, and a list of states
- * is arbitrary prose. `PA` was the only key that collided; `VA`, `IN`, `OR`,
- * `ID`, `ME` and `HI` are all expansions someone could reasonably add later.
+ * Sixteen of the seventeen keys duplicated src/lib/acronyms.ts, which
+ * src/scripts/acronyms-client.ts already applies to every page under a
+ * MutationObserver -- so this module's decorator was re-doing work that had
+ * already happened, 200ms earlier, on the same nodes. The seventeenth, IV,
+ * moved into the site-wide glossary, which is what that file's own header
+ * says to do with a tab-local entry.
  *
- * Deleting the entry is half the fix and was never the live half. See
- * ACRONYM_SAFE below. */
-const ACRONYMS: Record<string, string> = {
-  'CMS': 'Centers for Medicare & Medicaid Services',
-  'DOJ': 'Department of Justice',
-  'ECG': 'Electrocardiogram',
-  'ED': 'Emergency department',
-  'EMS': 'Emergency medical services',
-  'ENT': 'Ear, nose, and throat',
-  'FQHC': 'Federally Qualified Health Center',
-  'FTC': 'Federal Trade Commission',
-  'HHS': 'Department of Health and Human Services',
-  'ICU': 'Intensive care unit',
-  'IV': 'Intravenous',
-  'NHSA': 'National Hospital Stewardship Authority',
-  'NP': 'Nurse practitioner',
-  'RHA': 'Regional Health Administrators',
-  'STI': 'Sexually transmitted infection',
-  'UTI': 'Urinary tract infection',
-  'VHA': 'Veterans Health Administration'
-};
+ * It also mattered for R70. `stateAcronymCollisions` pins the set of glossary
+ * keys that collide with US state abbreviations, and it reads
+ * src/lib/acronyms.ts -- so a second glossary here sat outside the tripwire,
+ * and a future `'OR': 'Operating room'` added to it would not have failed the
+ * build. One glossary, one decorator, one pin.
+ *
+ * What stays is the part that fixes the live bug: the containers rendering
+ * bare state codes mark themselves, and the site-wide decorator skips them.
+ */
 
-/* The attribute src/scripts/acronyms-client.ts already honours in its skip
- * list. Marking a container with it is the half of R70 that fixes the live
- * bug, and the reason it is needed is worth stating plainly:
+/* The attribute src/scripts/acronyms-client.ts honours in its skip list.
+ * Marking a container with it is what actually closes R70, and the reason it
+ * is needed is worth stating plainly:
  *
- * emptying this module's own map does nothing on the deployed page. The
- * site-wide glossary in src/lib/acronyms.ts also defines `PA` as
- * "Physician assistant" and `VA` as "Department of Veterans Affairs", and
- * acronyms-client.ts runs a MutationObserver over <main> -- so it re-decorates
- * anything this file renders, 200ms after it renders it, whatever this file's
- * vocabulary says. The audit downgraded the Pennsylvania collision to latent
- * on the grounds that decoration ran once at init against a region whose
- * states do not collide. With that observer in place it is not latent: select
- * R11 and the detail line comes back with PA and VA wrapped, aria-label and
- * all, which reads them out to a screen reader as job titles.
+ * the site-wide glossary defines `PA` as "Physician assistant" and `VA` as
+ * "Department of Veterans Affairs", and acronyms-client.ts runs a
+ * MutationObserver over <main> -- so it decorates anything this file renders,
+ * 200ms after it renders it. The audit downgraded the Pennsylvania collision
+ * to latent on the grounds that decoration ran once at init against a region
+ * whose states do not collide. With that observer in place it is not latent:
+ * select R11 and the detail line comes back with PA and VA wrapped,
+ * aria-label and all, which reads them out to a screen reader as job titles.
  *
- * So the containers that render bare state codes declare themselves. Both
- * decorators respect the declaration, and so will the next one. */
+ * So the containers that render bare state codes declare themselves. The
+ * decorator respects the declaration, and so will the next one. */
 const ACRONYM_SAFE = 'data-no-acronyms';
 
 /* Marks an element as state codes rather than prose, and returns it. */
 function stateCodeHost<T extends HTMLElement>(node: T): T {
   node.setAttribute(ACRONYM_SAFE, '');
   return node;
-}
-
-const acronymPattern = new RegExp('\\b(' + Object.keys(ACRONYMS).join('|') + ')\\b', 'g');
-let decorating = false;
-
-function decorateAcronyms(root: HTMLElement | null): void {
-  if (!root || decorating) return;
-  decorating = true;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const nodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    /* `[data-no-acronyms]` is in this skip list as well as the site-wide
-       decorator's, so the two agree about what is prose. */
-    if (!parent || parent.closest('abbr, script, style, option, [' + ACRONYM_SAFE + ']') ||
-        !acronymPattern.test(node.nodeValue || '')) {
-      acronymPattern.lastIndex = 0;
-      continue;
-    }
-    acronymPattern.lastIndex = 0;
-    nodes.push(node);
-  }
-  nodes.forEach(function (node) {
-    const fragment = document.createDocumentFragment();
-    const value = node.nodeValue || '';
-    let last = 0;
-    value.replace(acronymPattern, function (match: string, acronym: string, offset: number): string {
-      fragment.appendChild(document.createTextNode(value.slice(last, offset)));
-      const abbr = document.createElement('abbr');
-      abbr.className = 'physical-acronym';
-      abbr.title = ACRONYMS[acronym];
-      abbr.textContent = acronym;
-      fragment.appendChild(abbr);
-      last = offset + match.length;
-      return match;
-    });
-    fragment.appendChild(document.createTextNode(value.slice(last)));
-    node.parentNode!.replaceChild(fragment, node);
-    acronymPattern.lastIndex = 0;
-  });
-  decorating = false;
-}
-
-function mainEl(): HTMLElement | null {
-  return document.querySelector('main');
 }
 
 /* =========================================================================
@@ -822,9 +768,6 @@ function initUnits(): void {
   selectedId = 'R01';
   allocated = null;
   DATA.counties = null; DATA.states = null; DATA.regions = null; DATA.error = null;
-
-  const main = mainEl();
-  decorateAcronyms(main);
 
   /* R193 [§S9c]: three files, two independent sections, and it used to be one
    * Promise.all with one .catch that wrote the same error into both maps. A
@@ -892,8 +835,7 @@ function initUnits(): void {
         renderScores();
       }
     }
-    decorateAcronyms(mainEl());
-  });
+    });
 }
 
 /* Also init on first load without waiting for astro:page-load: if this module

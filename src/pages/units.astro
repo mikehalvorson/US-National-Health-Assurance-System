@@ -19,8 +19,8 @@ import { gradedUnitRows } from '../lib/manifest-check';
    audit could check. */
 import { regionModel } from '../lib/region-data';
 import {
-  fragmentationAnchor, regionGeometry, selectionMargin, weightIntervals,
-  FRAGILE_WITHIN
+  fragmentationAnchor, outsizedComparator, regionGeometry, selectionMargin,
+  weightIntervals, FRAGILE_WITHIN, WEIGHT_LABELS
 } from '../lib/hospital-regions';
 const THROUGHPUTS = UNIT_TYPE_KEYS.map((k) => UNIT_TYPES[k].throughput / 1000 + 'k').join(' / ');
 const NATIONAL_BILLIONS = Math.round(NATIONAL_OFFICE_VISITS.visits / 1e8) / 10;
@@ -33,17 +33,12 @@ const ANCHOR = fragmentationAnchor(MODEL.tested_region_counts);
 const INTERVALS = weightIntervals(
   MODEL.tested_region_counts, MODEL.weights, MODEL.selected_region_count);
 const FRAGILE = INTERVALS.filter((i) => i.fragile);
-const WEIGHT_LABELS: Record<string, string> = {
-  population_scale: 'Population scale',
-  geographic_compactness: 'Geographic compactness',
-  rural_workload: 'Rural workload balance',
-  administrative_fragmentation: 'Administrative fragmentation'
-};
 /* The two regions furthest below target, which the page named neither of. */
 const SMALLEST = GEO.below.slice(0, 2);
 const LARGEST = GEO.above.slice(0, 2);
-const M = (n: number) => (n / 1e6).toFixed(1) + 'M';
-const MILLION = (n: number) => (n / 1e6).toFixed(1) + ' million';
+/* Code review [§S9c]: computed, not `LARGEST[0]`. See outsizedComparator. */
+const OUTSIZED = outsizedComparator(GEO);
+const M = (n: number, unit = 'M') => (n / 1e6).toFixed(1) + unit;
 
 /* Both ends of the absorption control, run over the same county file the
    client fetches. Typed prose here would be a figure nothing could check --
@@ -250,7 +245,7 @@ const GRADED = gradedUnitRows();
       state and the District of Columbia is assigned once; state boundaries
       stay intact. The model scored {MODEL.selected_region_count} regions best.
       {LARGEST[0].region.name} and {LARGEST[1].region.name} remain above the
-      {MILLION(GEO.target)} target because state integrity is a hard
+      {M(GEO.target, ' million')} target because state integrity is a hard
       constraint, so each would use internal operating districts.</p>
     <div class="tiles hospital-model-tiles">
       {/* R212: the tile used to show the winning score with no runner-up and
@@ -341,9 +336,10 @@ const GRADED = gradedUnitRows();
       explains the large regions: {LARGEST.map((r) => r.region.name + ' at ' +
       r.ratio.toFixed(2) + 'x target').join(' and ')}. It does not explain the
       small ones. {SMALLEST.map((r) => r.region.name + ' is ' +
-      r.ratio.toFixed(2) + 'x').join(' and ')}, and
-      {SMALLEST[0].region.name} is further from target than
-      {LARGEST[0].region.name} is. Those are optimizer outcomes, not
+      r.ratio.toFixed(2) + 'x').join(' and ')}{OUTSIZED && (
+        <Fragment>, and {SMALLEST[0].region.name} is further from target than
+        {' ' + OUTSIZED.region.name} is</Fragment>
+      )}. Those are optimizer outcomes, not
       constraint outcomes: the small regions could have been merged with a
       neighbor and were not. Smallest to largest, the spread is
       {GEO.spread.toFixed(2)}x. On rural workload, which carries

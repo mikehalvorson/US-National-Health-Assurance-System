@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
+import { readFileSync } from 'node:fs';
+
 import {
-  countyFileAudit, regionAssignmentReport, regionColoring, regionCountyAgreement,
-  regionMethodologyDrift, regionSelection, scoreChartEncoding, stateAcronymCollisions,
-  KNOWN_STATE_ACRONYM_COLLISIONS
+  countyFileAudit, flowed, markdownRows, regionAssignmentReport, regionColoring,
+  regionCountyAgreement, regionMethodologyDrift, regionSelection,
+  scoreChartEncoding, stateAcronymCollisions, KNOWN_STATE_ACRONYM_COLLISIONS
 } from '../../src/lib/manifest-check';
 import {
   assignRegionColors, bestCount, colorClashes, fragmentationAnchor,
@@ -305,33 +307,122 @@ describe('R70 -- an acronym key that is also a state', () => {
     expect(stateCollisions(['CMS', 'ICU'], names)).toEqual([]);
   });
 
-  test('the units page module no longer expands PA', async () => {
-    /* R70 asks for the vocabulary; the live fix is data-no-acronyms on the
-       containers, because the site-wide glossary is a different file and
-       still carries PA. Both halves matter, so both are asserted. */
+  test('the units page carries no second glossary of its own', async () => {
+    /* Code review [§S9c]: it used to, with sixteen of seventeen keys
+       duplicating src/lib/acronyms.ts. The duplicate mattered because
+       `stateAcronymCollisions` reads only the site-wide file, so a
+       PA-shaped collision added to the local map would not have failed the
+       build. One glossary, one decorator, one pin. */
     const src = await import('node:fs').then((fs) => fs.readFileSync(
       new URL('../../src/scripts/units-client.ts', import.meta.url), 'utf8'));
-    /* the KEYS of the map, not the text of the file -- the comment above the
-       map quotes the entry it removed, and a text search matches that. */
-    const block = src.slice(src.indexOf('const ACRONYMS: Record<string, string> = {'));
-    const keys = block.slice(0, block.indexOf('\n};'))
-      .match(/^\s*'([A-Z]+)':/gm)!.map((k) => k.trim().slice(1, -2));
-    expect(keys.length).toBeGreaterThan(10);
-    expect(stateCollisions(keys, MODEL.model.state_names)).toEqual([]);
+    expect(src).not.toContain('const ACRONYMS');
+    expect(src).not.toContain('decorateAcronyms');
     /* the three containers that render bare state codes: the region detail
        line, the region tooltip, and the state allocation table's first
        column. The declaration is `stateCodeHost<T extends...`, so it is not
        one of these three matches. */
     expect(src.match(/stateCodeHost\(/g)).toHaveLength(3);
     expect(src).toContain("const ACRONYM_SAFE = 'data-no-acronyms'");
-    /* and this module's own decorator honours it too, or the two decorators
-       disagree about what counts as prose */
-    expect(src).toMatch(/closest\('abbr[^']*\[' \+ ACRONYM_SAFE \+ '\]'\)/);
+  });
+
+  test('the site-wide decorator skips the marked containers', async () => {
+    /* what actually keeps the state codes undecorated */
+    const client = await import('node:fs').then((fs) => fs.readFileSync(
+      new URL('../../src/scripts/acronyms-client.ts', import.meta.url), 'utf8'));
+    expect(client).toContain('[data-no-acronyms]');
+    expect(client).toMatch(/parent\.closest\(SKIP\)/);
+  });
+
+  test('the one key the deleted glossary held alone is spelled out instead', async () => {
+    /* Sixteen of the seventeen keys duplicated the site-wide glossary. The
+       seventeenth was IV, and moving it there is not available: an existing
+       test excludes IV on purpose, because it shadows a legislative Title IV.
+       So the Type C description says "intravenous", which needs no hover and
+       no second glossary. */
+    const { ACRONYMS } = await import('../../src/lib/acronyms');
+    expect(ACRONYMS['IV']).toBeUndefined();
+    const { UNIT_TYPES } = await import('../../src/lib/units');
+    expect(UNIT_TYPES.c.role).toContain('intravenous');
+    expect(UNIT_TYPES.c.role).not.toMatch(/IV/);
   });
 });
 
 describe('R87 R89 R211 -- the published methodology tracks the model', () => {
   test('the sweep, the margin, the coefficient and thirteen names all agree', () => {
     expect(regionMethodologyDrift()).toEqual([]);
+  });
+
+  /* Code review [§S9c]: the first version matched rows with regexes that
+     hard-coded a single space either side of each pipe, so padding a table
+     cell -- what every markdown formatter does -- reported "no published
+     row" for all four sweep rows. A check that produces false failures gets
+     loosened until it stops firing, which is how a real drift ships.
+
+     These reformat the file the way a human or a formatter would and assert
+     the check stays silent. Restores the file even when an assertion throws. */
+  const PUBLISHED = readFileSync(
+    new URL('../../research/hospital_regionalization_methodology.md', import.meta.url),
+    'utf8');
+
+  /* The real file, reformatted, passed in rather than written to disk: the
+     repo's own documentation should not be mutated by a test run, and
+     `sourceText` memoises so a second reading would come back cached anyway. */
+  const drift = (edit: (s: string) => string) =>
+    regionMethodologyDrift(undefined, edit(PUBLISHED));
+
+  test('padding table cells is not a drift', () => {
+    expect(drift((s) => s.replace(
+      /^\| (Population scale|Geographic compactness|Rural workload balance|Administrative fragmentation) \| /gm,
+      '|  $1  |  '))).toEqual([]);
+  });
+
+  test('aligning a whole table is not a drift', () => {
+    expect(drift((s) => s.replace(/^\| R(\d\d) \| /gm, '| R$1   |   '))).toEqual([]);
+  });
+
+  test('re-wrapping the margin sentence is not a drift', () => {
+    const edited = (s: string) => s.replace(
+      'best, by 3.22% over the\nrunner-up.', 'best,\n   by 3.22%   over the runner-up.');
+    expect(edited(PUBLISHED)).not.toBe(PUBLISHED);
+    expect(drift(edited)).toEqual([]);
+  });
+
+  test('respacing the fragmentation expression is not a drift', () => {
+    const edited = (s: string) => s.replace('`0.04 * (n - 13)^2`', '`0.04*(n-13)^2`');
+    expect(edited(PUBLISHED)).not.toBe(PUBLISHED);
+    expect(drift(edited)).toEqual([]);
+  });
+
+  test('but a real drift is still caught', () => {
+    const bad = drift((s) => s.replace(
+      '| Rural workload balance | 15% | 0% to 20% |',
+      '| Rural workload balance | 15% | 0% to 35% |'));
+    expect(bad).toHaveLength(1);
+    expect(bad[0].says).toContain('35%');
+  });
+
+  test('a rename that reaches the model and not the methodology is caught', () => {
+    const bad = drift((s) => s.replace('| R11 | Mid-Atlantic |', '| R11 | Chesapeake |'));
+    expect(bad).toHaveLength(1);
+    expect(bad[0].says).toBe('Chesapeake');
+    expect(bad[0].expected).toBe('Mid-Atlantic');
+  });
+
+  test('the sweep table is told apart from the objective table', () => {
+    /* both start with the same four labels; only one carries an interval.
+       Matching on the label alone picks the wrong one. */
+    const rows = markdownRows(PUBLISHED)
+      .filter((c) => c[0] === 'Population scale');
+    expect(rows.length).toBeGreaterThan(1);
+    expect(rows.filter((c) => /^\d+% to \d+%$/.test(c[2] ?? ''))).toHaveLength(1);
+  });
+
+  test('markdownRows trims cells and drops separator rows', () => {
+    expect(markdownRows('|  a  |  b |\n|---|:--:|\n| c | d |'))
+      .toEqual([['a', 'b'], ['c', 'd']]);
+  });
+
+  test('flowed collapses any run of whitespace', () => {
+    expect(flowed('a  b\n   c\n\nd')).toBe('a b c d');
   });
 });

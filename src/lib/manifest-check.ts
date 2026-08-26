@@ -21,11 +21,11 @@ import { countyDemand, countyMeta, type CountyMeta } from './counties';
 import {
   assignRegionColors, bestCount, colorClashes, fragmentationAnchor,
   regionAdjacency, regionAssignmentFaults, scoreBarFraction, selectionMargin,
-  stateCollisions, weightedTotal, weightIntervals,
+  stateCollisions, weightedTotal, weightIntervals, REGION_PALETTE, WEIGHT_LABELS,
   type AssignmentFault, type ColorClash, type FragmentationAnchor,
   type SelectionMargin, type WeightInterval
 } from './hospital-regions';
-import { regionModel, stateFeatureNames } from './region-data';
+import { regionModel, statesGeoMeta, stateFeatureNames, STATES_GEO } from './region-data';
 import {
   allocateUnits, CAPITAL_AMORTISATION_YEARS, NATIONAL_COMPARATOR,
   NETWORK_ABSORPTION, networkCost, UNIT_ASSUMPTIONS, unitsCostComparison,
@@ -1717,11 +1717,42 @@ export function regionAssignmentReport(root = REPO_ROOT): {
 
 /* R72 / R191: no two regions that share a border share a fill.
  *
- * Two halves, because the first without the second is the shape §S9a and
- * §S9b both shipped and their reviews both caught: a clash check over an
- * empty adjacency graph reports "no clashes" forever. So the graph is checked
- * for substance first -- every region has at least one neighbour, the
- * relation is symmetric -- and only then for clashes. */
+ * Code review [§S9c]: this row shipped the defect class it belongs to.
+ *
+ * §S9c asserted `colorClashes(adjacency, assignRegionColors(...))` and nothing
+ * else, which is a property checked against the function that enforces it.
+ * The review called it unfailable. Measured, that is half right and the half
+ * matters: breaking `assignRegionColors` so it ignores its neighbours DOES
+ * fail the build, so the assertion is a live regression test on the colourer.
+ * What it cannot do is notice anything about the DATA, because the colourer
+ * adapts to whatever graph it is handed -- and the row is about the map, not
+ * about one function.
+ *
+ * Both halves are gated now. Dropping the clash assertion, which is what the
+ * review proposed, was tried and reverted: the break-and-restore pass caught
+ * it immediately, because a payload that used to fail the build stopped
+ * failing it. A guard that fires on a real regression is not a guard to
+ * delete; it is a guard to put something beside.
+ *
+ * What the rest of it holds, none of which the colourer can satisfy on its
+ * own:
+ *
+ *   1. the adjacency graph having substance -- every region has a neighbour,
+ *      the relation is symmetric, every assigned state has an entry. A clash
+ *      check over an empty graph passes forever, which is the shape §S9a and
+ *      §S9b both shipped;
+ *   2. the palette still being large enough that the colouring is a real
+ *      constraint rather than the last resort before the throw. `spare` is
+ *      how many palette entries the busiest region did NOT need; if it
+ *      reaches zero the map is one added border away from being uncolourable,
+ *      and the throw would take the page down rather than degrade it;
+ *   3. thirteen regions still spreading across the whole palette, which is
+ *      the legibility half and is genuinely losable -- a first-fit colourer
+ *      satisfies the adjacency property with four colours.
+ *
+ * The property is ALSO asserted against a colouring this function did not
+ * produce, in tests/lib/hospital-regions.test.ts, so `colorClashes` itself is
+ * shown to be capable of returning something. */
 export interface RegionColoring {
   clashes: ColorClash[];
   graphFaults: string[];
@@ -1729,6 +1760,8 @@ export interface RegionColoring {
   regions: number;
   edges: number;
   maxDegree: number;
+  /* palette entries beyond what the busiest region's neighbours consume */
+  spare: number;
 }
 
 export function regionColoring(root = REPO_ROOT): RegionColoring {
@@ -1764,7 +1797,8 @@ export function regionColoring(root = REPO_ROOT): RegionColoring {
     distinctColors: new Set(colors.values()).size,
     regions: model.regions.length,
     edges: edges / 2,
-    maxDegree
+    maxDegree,
+    spare: REGION_PALETTE.length - maxDegree
   };
 }
 
@@ -1832,15 +1866,17 @@ export function regionSelection(root = REPO_ROOT): RegionSelectionCheck {
   }
   const sumW = Object.values(model.weights).reduce((a, b) => a + b, 0);
   if (Math.abs(sumW - 1) > 1e-9) faults.push('the four weights sum to ' + sumW + ', not 1');
+  /* Code review [§S9c]: computed once. The sweep is 4 weights x 201 steps x a
+     bestCount over seven candidates, and it was being run twice per call. */
+  const intervals = weightIntervals(scores, model.weights, model.selected_region_count);
   return {
     reconstructionFaults: faults,
     declaredWinner: model.selected_region_count,
     computedWinner: bestCount(scores, model.weights),
     margin: selectionMargin(scores, model.selected_region_count),
     anchor: fragmentationAnchor(scores),
-    fragile: weightIntervals(scores, model.weights, model.selected_region_count)
-      .filter((i) => i.fragile),
-    intervals: weightIntervals(scores, model.weights, model.selected_region_count)
+    fragile: intervals.filter((i) => i.fragile),
+    intervals
   };
 }
 
@@ -1893,35 +1929,107 @@ export function regionCountyAgreement(root = REPO_ROOT): RegionCountyAgreement {
  * same shape as `unitModelDrift` above, for the same reason. */
 const REGION_METHODOLOGY = 'research/hospital_regionalization_methodology.md';
 
-const SWEEP_ROW_LABELS: Record<string, string> = {
-  'Population scale': 'population_scale',
-  'Geographic compactness': 'geographic_compactness',
-  'Rural workload balance': 'rural_workload',
-  'Administrative fragmentation': 'administrative_fragmentation'
-};
-
 export interface MethodologyDrift { where: string; says: string; expected: string }
 
-export function regionMethodologyDrift(root = REPO_ROOT): MethodologyDrift[] {
+/* Code review [§S9c]: every markdown table in the file, as trimmed cells.
+ *
+ * §S9c matched rows with regexes that hard-coded a single space either side
+ * of each pipe. Measured against the shipped file: padding the sweep table's
+ * cells -- which is what every markdown formatter does -- turned all four
+ * rows into "no published row", and one extra space in a region row did the
+ * same. That is a FALSE FAILURE, and a check that produces false failures
+ * gets loosened until it stops firing, which is how a real drift ships.
+ *
+ * Splitting on the pipe and trimming makes the check indifferent to
+ * whitespace and to column alignment, which is the only thing about the
+ * file's formatting a human should be free to change. */
+export function markdownRows(text: string): string[][] {
+  const rows: string[][] = [];
+  for (const line of text.split('\n')) {
+    const t = line.trim();
+    if (!t.startsWith('|')) continue;
+    const cells = t.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+    /* the |---|---| separator carries no content */
+    if (cells.every((c) => /^:?-+:?$/.test(c))) continue;
+    rows.push(cells);
+  }
+  return rows;
+}
+
+/* Prose, with every run of whitespace flattened, so re-wrapping a paragraph
+   is not a drift. */
+export function flowed(text: string): string {
+  return text.replace(/\s+/g, ' ');
+}
+
+/* Code review [§S9c]: whether the Physical Care chapter still tells a reader
+ * that an objective term is anchored to the selected count.
+ *
+ * The page renders that paragraph inside `{ANCHOR && (...)}`, so it appears
+ * exactly while `fragmentationAnchor` returns one. Reading the source for the
+ * sentence is what lets the self-test compare the CLAIM against the MODEL
+ * instead of asserting that the defect is still present. */
+const UNITS_PAGE = 'src/pages/units.astro';
+
+export const FRAGMENTATION_CLAIM = 'the score is defined relative to the answer';
+
+export function fragmentationClaimRendered(root = REPO_ROOT): boolean {
+  /* flattened first, so re-wrapping the paragraph is not a change of claim */
+  return flowed(sourceText(UNITS_PAGE, root)).includes(FRAGMENTATION_CLAIM);
+}
+
+/* `override` exists for the tests, which reformat the published prose the way
+   a markdown formatter would and assert this stays silent. `sourceText`
+   memoises per file, so a test cannot get a second reading of the real file
+   in one process, and rewriting the repo's own documentation from a test is
+   worse than passing the text in. */
+export function regionMethodologyDrift(
+  root = REPO_ROOT, override?: string
+): MethodologyDrift[] {
   const out: MethodologyDrift[] = [];
-  const note = sourceText(REGION_METHODOLOGY, root);
+  const note = override ?? sourceText(REGION_METHODOLOGY, root);
+  const rows = markdownRows(note);
+  const prose = flowed(note);
   const model = regionModel(root);
   const intervals = weightIntervals(
     model.model.tested_region_counts, model.model.weights, model.model.selected_region_count);
 
-  /* the sweep table: one row per objective term, weight and interval */
-  for (const [label, key] of Object.entries(SWEEP_ROW_LABELS)) {
-    const want = intervals.find((i) => i.weight === key)!;
-    const row = new RegExp('\\| ' + label +
-      ' \\| (\\d+)% \\| (\\d+)% to (\\d+)% \\|');
-    const m = note.match(row);
-    const expected = Math.round(want.authored * 100) + '%, ' +
-      Math.round(want.low * 100) + '% to ' + Math.round(want.high * 100) + '%';
-    if (!m) {
-      out.push({ where: REGION_METHODOLOGY + ' sweep row ' + label, says: 'no published row', expected });
+  /* The sweep table: one row per objective term, weight and interval. Keyed
+     on the label the PAGE renders, so the two cannot name a row differently.
+
+     TWO tables in this file start with the weight label -- the objective
+     components table ("Population scale | 45% | Avoid regions too small...")
+     and the sweep. Matching on the label alone picks whichever comes first,
+     which is the wrong one; the interval shape in the third cell is what
+     tells them apart. The regexes this replaced disambiguated by accident,
+     which is not the same as disambiguating. */
+  const INTERVAL = /^(\d+)%\s*to\s*(\d+)%$/;
+  for (const i of intervals) {
+    const label = WEIGHT_LABELS[i.weight];
+    const matching = rows.filter((c) => c[0] === label && c.length >= 3);
+    const row = matching.find((c) => INTERVAL.test(c[2]));
+    const expected = Math.round(i.authored * 100) + '%, ' +
+      Math.round(i.low * 100) + '% to ' + Math.round(i.high * 100) + '%';
+    if (!row) {
+      out.push({
+        where: REGION_METHODOLOGY + ' sweep row ' + label,
+        says: matching.length
+          ? 'no row carrying an interval; found ' + matching.length + ' other row(s) with this label'
+          : 'no published row',
+        expected
+      });
       continue;
     }
-    const says = m[1] + '%, ' + m[2] + '% to ' + m[3] + '%';
+    const bounds = row[2].match(INTERVAL)!;
+    const weight = row[1].match(/(\d+)%/);
+    if (!weight) {
+      out.push({
+        where: REGION_METHODOLOGY + ' sweep row ' + label,
+        says: 'weight cell reads ' + row[1], expected
+      });
+      continue;
+    }
+    const says = weight[1] + '%, ' + bounds[1] + '% to ' + bounds[2] + '%';
     if (says !== expected) {
       out.push({ where: REGION_METHODOLOGY + ' sweep row ' + label, says, expected });
     }
@@ -1929,7 +2037,7 @@ export function regionMethodologyDrift(root = REPO_ROOT): MethodologyDrift[] {
 
   /* the margin over the runner-up */
   const margin = selectionMargin(model.model.tested_region_counts, model.model.selected_region_count);
-  const mm = note.match(/best, by ([\d.]+)% over the/);
+  const mm = prose.match(/best, by ([\d.]+)% over the/);
   const wantMargin = margin.marginPct.toFixed(2) + '%';
   if (!mm) {
     out.push({ where: REGION_METHODOLOGY + ' margin', says: 'no published margin', expected: wantMargin });
@@ -1941,26 +2049,26 @@ export function regionMethodologyDrift(root = REPO_ROOT): MethodologyDrift[] {
      model and not here leaves a public map and a published methodology
      calling the same region two different things. */
   for (const r of model.regions) {
-    const row = new RegExp('\\| ' + r.id + ' \\| ([^|]+?) \\| [^|]* \\| ([\\d,]+) \\|');
-    const m = note.match(row);
-    if (!m) {
+    const row = rows.find((c) => c[0] === r.id);
+    if (!row || row.length < 4) {
       out.push({ where: REGION_METHODOLOGY + ' ' + r.id, says: 'no published row', expected: r.name });
       continue;
     }
-    if (m[1].trim() !== r.name) {
-      out.push({ where: REGION_METHODOLOGY + ' ' + r.id, says: m[1].trim(), expected: r.name });
+    if (row[1] !== r.name) {
+      out.push({ where: REGION_METHODOLOGY + ' ' + r.id, says: row[1], expected: r.name });
     }
-    if (Number(m[2].split(',').join('')) !== r.population) {
+    if (Number(row[3].split(',').join('')) !== r.population) {
       out.push({
         where: REGION_METHODOLOGY + ' ' + r.id + ' population',
-        says: m[2], expected: r.population.toLocaleString('en-US')
+        says: row[3], expected: r.population.toLocaleString('en-US')
       });
     }
   }
 
-  /* R211: the fragmentation coefficient the prose states */
+  /* R211: the fragmentation coefficient the prose states. Spacing inside the
+     expression is not a drift either. */
   const anchor = fragmentationAnchor(model.model.tested_region_counts);
-  const am = note.match(/exactly `([\d.]+) \* \(n - (\d+)\)\^2`/);
+  const am = prose.match(/exactly\s*`?\s*([\d.]+)\s*\*\s*\(\s*n\s*-\s*(\d+)\s*\)\s*\^\s*2/);
   if (!anchor) {
     if (am) {
       out.push({
@@ -2062,6 +2170,25 @@ export function countyFileAudit(root = REPO_ROOT): {
   /* R92: every time-varying field declared, and the two files agreeing. */
   for (const f of ['p', 'r', 'la', 'lo']) {
     if (!meta.fields[f]) faults.push({ what: 'undeclared field', detail: f });
+  }
+  /* Code review [§S9c]: the row says EVERY data file, and §S9c did only this
+     one. The third file the units page fetches carries geometry, which is
+     time-varying too -- boundary files get re-issued and re-simplified. */
+  const geoMeta = statesGeoMeta(root);
+  if (!Number.isInteger(geoMeta.geometry_vintage) ||
+      geoMeta.geometry_vintage < 1990 || geoMeta.geometry_vintage > 2100) {
+    faults.push({
+      what: 'implausible vintage', detail: STATES_GEO + ' says ' + geoMeta.geometry_vintage
+    });
+  }
+  if (geoMeta.features !== stateFeatureNames(root).length) {
+    faults.push({
+      what: 'feature count', detail: STATES_GEO + ' declares ' + geoMeta.features +
+        ' and holds ' + stateFeatureNames(root).length
+    });
+  }
+  if (!/^https:\/\//.test(geoMeta.url)) {
+    faults.push({ what: 'source URL', detail: STATES_GEO + ' has no https source' });
   }
   for (const v of [meta.population_vintage, meta.rural_vintage, meta.geometry_vintage]) {
     if (!Number.isInteger(v) || v < 1990 || v > 2100) {
