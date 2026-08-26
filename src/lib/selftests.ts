@@ -85,7 +85,7 @@ import {
   absorptionSpan, countyDemand, gradedUnitRows, unitAllocationDrift,
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
-  countyFileAudit, fragmentationClaimRendered, regionMethodologyDrift,
+  countyFileAudit, fragmentationClaimGuard, regionMethodologyDrift,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2748,24 +2748,43 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          colour, a palette with room to spare over the busiest region, and
          thirteen regions still spread across all eight entries rather than
          collapsed onto the four a first-fit colourer would use. */
+      /* Second code review [§S9c]: `distinctColors === REGION_PALETTE.length`
+         was in `ok` and CANNOT FAIL. `assignRegionColors` takes the least-used
+         legal colour, and a colour nothing has used yet is never one a
+         neighbour holds -- so with more regions than palette entries the first
+         eight assignments always take eight distinct colours, whatever the
+         graph. Measured: eight with the real adjacency, eight with an EMPTY
+         adjacency map. The comment defending it described a first-fit colourer
+         this repo does not have.
+
+         It is reported, not gated. Where the spread genuinely can fail is
+         against a different colouring strategy, and that is a unit test:
+         tests/lib/hospital-regions.test.ts colours the same graph first-fit
+         and asserts it does worse.
+
+         `spare > 0` went the same way, and measuring is what found it: the
+         palette can never be exhausted while the colourer RETURNS, because a
+         region whose neighbours held every colour is exactly the case that
+         throws. Measured across palette sizes 8 down to 3: spare stays at 1
+         or 2 and then the colourer throws. `runGuarded` turns that throw into
+         a named failure, so the palette gate already existed and this clause
+         was a second copy of it that could not fire.
+
+         What is left in `ok` is the two things that can: the graph having
+         substance, which is about the DATA, and no adjacent pair sharing a
+         colour, which is a regression test on the colourer. */
       runGuarded('The region map has a real graph to colour and a palette with room', () => {
         const c = regionColoring();
-        const wide = c.distinctColors === REGION_PALETTE.length;
         return {
-          ok: !c.graphFaults.length && c.spare > 0 && wide && !c.clashes.length,
+          ok: !c.graphFaults.length && !c.clashes.length,
           note: c.graphFaults.join(' | ') ||
             (c.clashes.length
               ? c.clashes.map((x) => x.a + ' and ' + x.b + ' both ' + x.color).join(' | ')
-              : c.spare <= 0
-              ? 'the busiest region has ' + c.maxDegree + ' neighbors against a palette of ' +
-                REGION_PALETTE.length + ', so the map is one border away from being uncolourable'
-              : !wide
-                ? 'thirteen regions collapsed onto ' + c.distinctColors + ' of ' +
-                  REGION_PALETTE.length + ' colours; adjacency is satisfied and the map is harder to read'
-                : c.regions + ' regions, ' + c.edges + ' shared borders, busiest has ' +
-                  c.maxDegree + ' neighbors, coloured with ' + c.distinctColors +
-                  ' of ' + REGION_PALETTE.length + ' palette entries and ' + c.clashes.length +
-                  ' adjacent pairs sharing one')
+              : c.regions + ' regions, ' + c.edges + ' shared borders, busiest has ' +
+                  c.maxDegree + ' neighbors consuming ' +
+                  (REGION_PALETTE.length - c.spare) + ' colours, coloured with ' +
+                  c.distinctColors + ' of ' + REGION_PALETTE.length +
+                  ' palette entries and ' + c.clashes.length + ' adjacent pairs sharing one')
         };
       }),
       /* R192: the composite score is lower-is-better and the bar was
@@ -2815,22 +2834,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          `regionMethodologyDrift` enforces the same agreement for the
          methodology's coefficient, and it reports the anchor's disappearance
          as prose that must be rewritten rather than as a modelling failure. */
-      runGuarded('The pages describe the fragmentation term the model actually has', () => {
+      runGuarded('The chapter discloses the anchored term only while the model has one', () => {
         const s = regionSelection();
-        const claimed = fragmentationClaimRendered();
+        const g = fragmentationClaimGuard();
         const anchored = !!s.anchor && s.anchor.anchor === s.declaredWinner;
         return {
-          ok: anchored === claimed,
-          note: anchored === claimed
-            ? (anchored
-              ? 'zero at ' + s.anchor!.zeroAt + ' regions and ' +
-                s.anchor!.coefficient.toFixed(2) +
-                ' times the squared distance elsewhere, and both pages say so'
-              : 'no term is anchored to the selected count, and no page claims one is: R211 is satisfied')
-            : anchored
-              ? 'the fragmentation term is anchored at ' + s.anchor!.anchor +
-                ' and the chapter no longer discloses it'
-              : 'no term is anchored to the selected count any more, so the paragraph claiming one must be rewritten'
+          ok: g.present && g.guarded,
+          note: !g.present
+            ? 'the chapter no longer discloses that an objective term is anchored to the selected count'
+            : !g.guarded
+              ? 'the disclosure has been moved outside its `{ANCHOR && ...}` guard, so the page would assert an anchored term whether or not the model has one'
+              : (anchored
+                ? 'zero at ' + s.anchor!.zeroAt + ' regions and ' +
+                  s.anchor!.coefficient.toFixed(2) +
+                  ' times the squared distance elsewhere, disclosed under a guard that drops the paragraph if that stops being true'
+                : 'no term is anchored to the selected count, and the guarded paragraph is not rendered: R211 is satisfied')
         };
       }),
       /* V18 + R88 / R213: the region file and the county file describe the

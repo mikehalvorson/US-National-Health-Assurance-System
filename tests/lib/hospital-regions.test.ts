@@ -9,9 +9,9 @@ import {
 } from '../../src/lib/manifest-check';
 import {
   assignRegionColors, bestCount, colorClashes, fragmentationAnchor,
-  regionAdjacency, regionAssignmentFaults, reweight, scoreBarFraction,
-  selectionMargin, stateCollisions, weightedTotal, weightIntervals,
-  REGION_PALETTE, WEIGHT_COMPONENTS,
+  outsizedComparator, regionAdjacency, regionAssignmentFaults, regionGeometry,
+  reweight, scoreBarFraction, selectionMargin, stateCollisions, weightedTotal,
+  weightIntervals, REGION_PALETTE, WEIGHT_COMPONENTS,
   type Region, type RegionScore
 } from '../../src/lib/hospital-regions';
 import { regionModel, stateFeatureNames } from '../../src/lib/region-data';
@@ -200,9 +200,58 @@ describe('R72 R191 -- colour by adjacency', () => {
   });
 
   test('thirteen regions still take all eight palette entries', () => {
-    /* correctness is the first objective and legibility the second; a plain
-       first-fit would be correct and would collapse onto four colours. */
     expect(regionColoring().distinctColors).toBe(REGION_PALETTE.length);
+  });
+
+  /* Second code review [§S9c]: the line above was in the self-test's `ok` and
+     CANNOT FAIL. Taking the least-used legal colour means a never-used colour
+     is always available while one exists, so with more regions than palette
+     entries all eight are always used, whatever the graph -- eight even with
+     an EMPTY adjacency map. It is reported, not gated.
+
+     The claim that survives is comparative: the strategy this module uses
+     spreads wider than the obvious alternative. That can fail, because
+     somebody can change the strategy. */
+  test('the least-used strategy spreads wider than first-fit', () => {
+    const firstFit = (regions: typeof MODEL.regions, adj: Map<string, Set<string>>) => {
+      const order = regions.map((r) => r.id).sort((a, b) =>
+        (adj.get(b)?.size ?? 0) - (adj.get(a)?.size ?? 0) || (a < b ? -1 : 1));
+      const out = new Map<string, string>();
+      for (const id of order) {
+        const taken = new Set([...(adj.get(id) ?? [])].map((n) => out.get(n)).filter(Boolean));
+        out.set(id, REGION_PALETTE.find((c) => !taken.has(c))!);
+      }
+      return out;
+    };
+    const naive = firstFit(MODEL.regions, ADJ);
+    /* first-fit is CORRECT -- it never takes a neighbour's colour ... */
+    expect(colorClashes(ADJ, naive)).toEqual([]);
+    /* ... and it is the worse map, which is the whole reason for the
+       least-used rule. Four colours over thirteen regions. */
+    expect(new Set(naive.values()).size).toBeLessThan(REGION_PALETTE.length);
+    expect(new Set(assignRegionColors(MODEL.regions, ADJ).values()).size)
+      .toBeGreaterThan(new Set(naive.values()).size);
+  });
+
+  test('distinctColors is 8 for any graph, which is why it is not gated', () => {
+    const empty = new Map(MODEL.regions.map((r) => [r.id, new Set<string>()]));
+    expect(new Set(assignRegionColors(MODEL.regions, empty).values()).size)
+      .toBe(REGION_PALETTE.length);
+  });
+
+  test('spare counts colours consumed, not neighbours', () => {
+    /* `palette - maxDegree` was the first attempt and is not the same number:
+       the busiest region has more neighbours than they have colours between
+       them, so degree understates the room left and the gate fired early. */
+    const c = regionColoring();
+    const colors = assignRegionColors(MODEL.regions, ADJ);
+    let consumed = 0;
+    for (const [, ns] of ADJ) {
+      consumed = Math.max(consumed,
+        new Set([...ns].map((n) => colors.get(n)).filter(Boolean)).size);
+    }
+    expect(REGION_PALETTE.length - c.spare).toBe(consumed);
+    expect(consumed).toBeLessThan(c.maxDegree);
   });
 
   test('the colouring is deterministic', () => {
@@ -252,6 +301,39 @@ describe('R192 -- the score chart encodes better as taller', () => {
   test('a flat set of candidates does not divide by zero', () => {
     expect(scoreBarFraction(2, 2, 2)).toBe(0);
     expect(Number.isFinite(scoreBarFraction(2, 2, 2))).toBe(true);
+  });
+});
+
+describe('R88 -- the comparison the page draws, not just its numbers', () => {
+  /* Second code review [§S9c]: `outsizedComparator` had no test, and the
+     sentence it feeds was the worst finding of the first review. */
+  test('it names a region the smallest one genuinely beats', () => {
+    const geo = regionGeometry(MODEL.regions);
+    const c = outsizedComparator(geo)!;
+    expect(c).not.toBeNull();
+    expect(c.distance).toBeLessThan(geo.below[0].distance);
+    /* R04 Texas and Louisiana, which is what R88's own text names and what
+       the published methodology says. NOT R02, which is what the page shipped. */
+    expect(c.region.id).toBe('R04');
+    expect(geo.below[0].region.id).toBe('R13');
+  });
+
+  test('it takes the largest such region, so the claim is the strongest true one', () => {
+    const geo = regionGeometry(MODEL.regions);
+    const c = outsizedComparator(geo)!;
+    const bigger = geo.above.filter((a) => a.region.population > c.region.population);
+    /* everything larger is further from target than the smallest region is,
+       which is why it was skipped */
+    for (const b of bigger) expect(b.distance).toBeGreaterThan(geo.below[0].distance);
+  });
+
+  test('no above-target region beating the smallest means no claim at all', () => {
+    /* the page renders nothing rather than something false */
+    const geo = regionGeometry([
+      region('R1', ['AA'], 10, 0), region('R2', ['BB'], 10, 0),
+      region('R3', ['CC'], 1000, 0)
+    ]);
+    expect(outsizedComparator(geo)).toBeNull();
   });
 });
 
@@ -420,6 +502,26 @@ describe('R87 R89 R211 -- the published methodology tracks the model', () => {
   test('markdownRows trims cells and drops separator rows', () => {
     expect(markdownRows('|  a  |  b |\n|---|:--:|\n| c | d |'))
       .toEqual([['a', 'b'], ['c', 'd']]);
+  });
+
+  /* Second code review [§S9c]: the splitter was not total. */
+  test('an escaped pipe stays inside its cell', () => {
+    /* one `\|` used to shift every later cell, so the region table's
+       population would be read out of the wrong column and reported as a
+       drift that is not there. The audit's own recommendation table has six
+       rows broken by exactly this. */
+    expect(markdownRows('| a \\| b | c |')).toEqual([['a | b', 'c']]);
+  });
+
+  test('a fenced block is not a table', () => {
+    expect(markdownRows('| a | b |\n```text\n| not a row |\n```\n| c | d |'))
+      .toEqual([['a', 'b'], ['c', 'd']]);
+  });
+
+  test('the published file has a fenced block that would otherwise parse', () => {
+    /* the reproduce command. Proves the fence handling is load-bearing here
+       and not a hypothetical. */
+    expect(PUBLISHED).toContain('```text');
   });
 
   test('flowed collapses any run of whitespace', () => {

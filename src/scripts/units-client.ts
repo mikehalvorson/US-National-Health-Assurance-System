@@ -1,8 +1,10 @@
 /* Physical Care tab client. Ports docs/js/unitsmap.js (Albers composite US
    projection + county dot map), docs/js/hospitalregions.js (13-region
-   administration map, controls, scores, acronym decoration), and
-   docs/js/unitsapp.js (need-based county unit allocation, verdict, type
-   cards, state table, integrity). Data is fetched from public/data at the
+   administration map, controls, scores) and docs/js/unitsapp.js (need-based
+   county unit allocation, verdict, type cards, state table, integrity).
+   The acronym decoration this file used to port is gone: one glossary and
+   one decorator, site-wide, in src/lib/acronyms.ts and
+   src/scripts/acronyms-client.ts. Data is fetched from public/data at the
    configured base path rather than reproduced into a module. init on
    astro:page-load; idempotent via #units-map dataset.wired; module state is
    reset on init for View-Transition safety. */
@@ -707,7 +709,7 @@ function renderScores(): void {
 }
 
 /* =========================================================================
- * Acronym decoration
+ * State codes are not acronyms
  * ========================================================================= */
 /* R70 [§S9c] + code review: this module used to carry its own 17-entry
  * acronym glossary and its own decorator, ported from
@@ -835,7 +837,7 @@ function initUnits(): void {
         renderScores();
       }
     }
-    });
+  });
 }
 
 /* Also init on first load without waiting for astro:page-load: if this module

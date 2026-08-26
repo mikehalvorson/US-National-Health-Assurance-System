@@ -1760,7 +1760,9 @@ export interface RegionColoring {
   regions: number;
   edges: number;
   maxDegree: number;
-  /* palette entries beyond what the busiest region's neighbours consume */
+  /* palette entries beyond the most any one region's neighbours actually
+     consume. NOT palette minus degree: neighbours share colours, so degree
+     overstates what is consumed and understates the room left. */
   spare: number;
 }
 
@@ -1791,6 +1793,23 @@ export function regionColoring(root = REPO_ROOT): RegionColoring {
       }
     }
   }
+  /* Second code review [§S9c]: `spare` was `palette - maxDegree`, which is
+     not what its own comment said and not what the note rendered. The busiest
+     region has 7 neighbours but they consume only 6 distinct colours between
+     them, so the real room is 2 and the gate was firing a border early while
+     the page told a reader the map was "one border away from being
+     uncolourable". Count the colours, not the neighbours. */
+  let consumed = 0;
+  for (const [id, neighbours] of adjacency) {
+    void id;
+    const used = new Set<string>();
+    for (const n of neighbours) {
+      const c = colors.get(n);
+      if (c) used.add(c);
+    }
+    consumed = Math.max(consumed, used.size);
+  }
+
   return {
     clashes: colorClashes(adjacency, colors),
     graphFaults,
@@ -1798,7 +1817,7 @@ export function regionColoring(root = REPO_ROOT): RegionColoring {
     regions: model.regions.length,
     edges: edges / 2,
     maxDegree,
-    spare: REGION_PALETTE.length - maxDegree
+    spare: REGION_PALETTE.length - consumed
   };
 }
 
@@ -1943,12 +1962,28 @@ export interface MethodologyDrift { where: string; says: string; expected: strin
  * Splitting on the pipe and trimming makes the check indifferent to
  * whitespace and to column alignment, which is the only thing about the
  * file's formatting a human should be free to change. */
+/* Second code review [§S9c]: a placeholder no markdown cell can contain, so an
+   escaped pipe survives the split and is put back afterwards. */
+const ESCAPED_PIPE = '\u0000';
+
 export function markdownRows(text: string): string[][] {
   const rows: string[][] = [];
+  let fenced = false;
   for (const line of text.split('\n')) {
     const t = line.trim();
-    if (!t.startsWith('|')) continue;
-    const cells = t.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+    /* A fenced block can hold anything, including a pipe-leading line. This
+       very file has one, around the reproduce command. */
+    if (t.startsWith('```')) { fenced = !fenced; continue; }
+    if (fenced || !t.startsWith('|')) continue;
+    /* `\|` inside a cell is an escaped pipe, not a column boundary. Splitting
+       on it shifts every later cell, so the region table's population would be
+       read out of the wrong column and reported as a drift that is not there.
+       The audit's own recommendation table has six rows broken by exactly
+       this, which is how the hazard is known. */
+    const cells = t.replace(/^\|/, '').replace(/\|$/, '')
+      .split('\\|').join(ESCAPED_PIPE)
+      .split('|')
+      .map((c) => c.split(ESCAPED_PIPE).join('|').trim());
     /* the |---|---| separator carries no content */
     if (cells.every((c) => /^:?-+:?$/.test(c))) continue;
     rows.push(cells);
@@ -1962,20 +1997,60 @@ export function flowed(text: string): string {
   return text.replace(/\s+/g, ' ');
 }
 
-/* Code review [§S9c]: whether the Physical Care chapter still tells a reader
- * that an objective term is anchored to the selected count.
+/* Second code review [§S9c]: whether the chapter's disclosure of the anchored
+ * term is still WIRED to the model, rather than merely present.
  *
- * The page renders that paragraph inside `{ANCHOR && (...)}`, so it appears
- * exactly while `fragmentationAnchor` returns one. Reading the source for the
- * sentence is what lets the self-test compare the CLAIM against the MODEL
- * instead of asserting that the defect is still present. */
+ * The first attempt at this greped the page source for the sentence and
+ * compared that against the model. It could not work, and it recreated the
+ * defect it was written to remove. The sentence lives inside
+ * `{ANCHOR && (...)}`, so the page already stops rendering it the moment
+ * `fragmentationAnchor` returns null -- but the SOURCE still contains it, so
+ * the grep returned `true` unconditionally and `anchored === claimed` reduced
+ * to `anchored`. That is the original backwards gate verbatim: satisfying
+ * R211 would have turned the build red.
+ *
+ * What is actually checkable, and is the failure mode worth catching, is
+ * whether the sentence is still INSIDE the guard. A disclosure moved out of
+ * the guard would be rendered whether or not the model still has an anchored
+ * term, which is the page asserting something it cannot know. That can fail,
+ * it fails for the right reason, and it stays green on the day R211 is
+ * finally satisfied. */
 const UNITS_PAGE = 'src/pages/units.astro';
 
 export const FRAGMENTATION_CLAIM = 'the score is defined relative to the answer';
+const ANCHOR_GUARD_OPEN = '{ANCHOR &&';
 
-export function fragmentationClaimRendered(root = REPO_ROOT): boolean {
-  /* flattened first, so re-wrapping the paragraph is not a change of claim */
-  return flowed(sourceText(UNITS_PAGE, root)).includes(FRAGMENTATION_CLAIM);
+export interface ClaimGuard {
+  /* the sentence appears in the page at all */
+  present: boolean;
+  /* it appears inside the `{ANCHOR && (...)}` block */
+  guarded: boolean;
+}
+
+/* The end of the `{...}` expression that starts at `open`, by brace depth.
+   Scanning for the first `)}` does not work: the block's own
+   `{Math.round(... * 100)}` closes before the sentence does, which made the
+   first version of this report a guarded paragraph as unguarded. */
+function braceBlockEnd(src: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+export function fragmentationClaimGuard(root = REPO_ROOT): ClaimGuard {
+  const src = sourceText(UNITS_PAGE, root);
+  const at = src.indexOf(FRAGMENTATION_CLAIM);
+  if (at < 0) return { present: false, guarded: false };
+  const open = src.lastIndexOf(ANCHOR_GUARD_OPEN, at);
+  if (open < 0) return { present: true, guarded: false };
+  const end = braceBlockEnd(src, open);
+  return { present: true, guarded: end > at };
 }
 
 /* `override` exists for the tests, which reformat the published prose the way

@@ -96,9 +96,11 @@ the stronger ownership and charter design proposed here.
 `public/data/counties.json` contains 3,144 county equivalents, 2024 Census
 population estimates totaling 340,110,988 people, 2020 rural population
 shares, and Census internal-point coordinates. County values are aggregated to
-states before partitioning. The file declares its own vintages in a `meta` block: population 2024,
-rural share 2020, coordinates 2024. `docs/data/SOURCES.md` documents the
-underlying Census files and the Connecticut reconciliation.
+states before partitioning. The file declares its own vintages and its Census sources in a `meta` block:
+population 2024, rural share 2020, coordinates 2024, one source line per
+field, and the Connecticut reconciliation note. Read the file's own metadata
+rather than the copy of `SOURCES.md` in the retired `docs/` tree, which
+documents an earlier shape of this data.
 
 ### Hard constraints
 
