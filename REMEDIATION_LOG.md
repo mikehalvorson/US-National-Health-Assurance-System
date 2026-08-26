@@ -3967,6 +3967,189 @@ payloads shipping the way P11's did.
   succeed while containing nothing. **Read `git status` after a partial
   stash, before committing.**
 
+### THE CODE REVIEW
+
+`/code-review 66834a8`, pinned to exactly this section, run after the entry
+above was written and after the 24 break payloads were proven. **Standards
+returned 2 hard findings and 6 judgement calls; Spec returned 10.** All are
+addressed, in `489e240`.
+
+**Four of them correct claims this entry made when it was written**, which is
+why the amendment reads as it does. Read the amendment, not just the entry.
+
+#### 🛑 The section rendered a false sentence, in the paragraph R88 exists to fix
+
+`units.astro` printed *"New England is further from target than California and
+Hawaii is."* New England sits **0.412** from the equal-population target and
+California and Hawaii **0.562**. The claim is false. It is true against Texas
+and Louisiana at 0.372, which is what `R88`'s own text says and what the
+methodology file says three feet away.
+
+The page picked `LARGEST[0]` — the largest region by population, and therefore
+the one furthest from target in the other direction. **The entry above claims
+"R88 and R213's figures all verify". The figures did; the sentence built out of
+them did not.**
+
+The fix is not a different index. `outsizedComparator` returns the largest
+above-target region the smallest one still beats, and null when there is none,
+in which case the page renders no claim at all rather than a false one.
+
+**This is `D2` in a form the trap catalogue does not yet describe.** Every
+number in that sentence was derived. The *comparison between them* was
+authored, and it inherited the credibility of the derived figures around it.
+🆕 **A derived figure is not the same as a derived claim.**
+
+#### 🛑 The clash check, and where the review was half wrong
+
+The review called `colorClashes(adjacency, assignRegionColors(...))`
+unfailable, since the colourer never takes a neighbour's colour and throws
+when it cannot.
+
+**Measured, and it fires.** Breaking `assignRegionColors` to ignore its
+neighbours fails the build — that payload has been in `prove_p13.py` since the
+section landed. It is a live regression test on the colourer. What it cannot
+do is notice anything about the **data**, because the colourer adapts to
+whatever graph it is handed.
+
+Dropping it from `ok`, which the review proposed, was tried and **reverted**:
+the break-and-restore pass caught the regression within one run, because a
+payload that used to fail the build stopped failing it. 🆕 **A guard that
+fires on a real regression is not a guard to delete; it is a guard to put
+something beside.** Three conditions were added alongside it, none satisfiable
+by the colourer: the graph has substance, the palette has room to spare over
+the busiest region (7 neighbours against 8 colours — one added border from the
+throw), and thirteen regions still spread across all eight entries rather than
+the four a first-fit colourer would use.
+
+**The entry above lists this row's B1 risk as "mitigated, not removed" and
+flagged it for the review. The review found it; the review's remedy was
+wrong; the harness settled it.**
+
+#### 🛑 A check that produced false failures
+
+`regionMethodologyDrift` matched markdown rows with regexes hard-coding a
+single space either side of each pipe. Reproduced before accepting: padding
+one table cell, which every markdown formatter does, turned **all four** sweep
+rows into "no published row". Also re-wrapping the margin sentence, and
+closing the spaces in `0.04 * (n - 13)^2`.
+
+That is class `D4`, and it was shipped in the commit whose message argues for
+gating prose. It splits on the pipe and trims now, and flattens whitespace
+before matching prose.
+
+**The rewrite immediately failed the build for a reason the regexes had been
+hiding.** Two tables in that file begin with the weight label — the objective
+components table and the sweep — so matching on the label alone picks
+whichever comes first. 🆕 **The old regexes disambiguated by accident, which
+is not the same as disambiguating**, and replacing an accidental correctness
+with an explicit one is what surfaced it.
+
+#### 🛑 A gate that pinned the defect its own row asks to remove
+
+`R211`'s declared test is `no objective term is anchored to the selected
+candidate`. The self-test this section shipped failed when the anchor was
+**absent** — so a future section that fixed the model would have been met with
+a red build, by a check written to support that row.
+
+It holds the documents and the model to the same story now: if the term is
+anchored, the chapter must disclose it; if it stops being anchored, no page
+may keep claiming one. It breaks in both directions and both are proven.
+
+🆕 **A tripwire that pins a defect in place is not the same as a tripwire that
+pins a disclosure.** `R70`'s pin is the second kind and was written knowingly;
+this one was the first kind and was not.
+
+#### Corrections to CONTRADICTIONS above, which was incomplete
+
+The section disclosed both of these in the row stamps in
+`CLAUDE_CODE_INSTRUCTIONS.md` and **left them out of the log's own
+CONTRADICTIONS list**, which is the list a later session reads.
+
+- **`R71` declares `render throws otherwise`. It does not throw.** Faults are
+  counted and displayed, which is what `R190` asks for and is strictly more
+  informative — a throw would blank a correct 50-state map over one bad row.
+  Defensible, and it was disclosed in the wrong place.
+- **`R211`'s two declared tests are not implemented**, and `STATUS: complete`
+  sits above a section that delivered disclosure instead. Candidate maps are
+  still merges and splits of the 13-seed, and the fragmentation term is still
+  anchored. Both are modelling changes that would move the published result
+  and no row authorises them. **Recorded here as unmet rather than left to be
+  inferred from a stamp.**
+
+#### A fifth DISCREPANCY the entry missed
+
+**The P13 prompt asserts `src/lib/units.ts` and `src/lib/hospital-regions.ts`
+"do not exist — both 404" and instructs "do not go looking for a
+`hospital-regions` module".** `units.ts` exists — `§S9b` created it — and this
+section imports and edits it. The prompt was written before P12 and its
+"Where this code actually lives" block is stale. Standing Order 0, and it
+should have been recorded when it was noticed rather than only acted on.
+
+#### The rest, all fixed
+
+- **`R92` says every data file and this section did one.** `us-states.json`
+  declares its geometry vintage, feature count and source now, and the county
+  audit checks all three.
+- **The methodology moved the input path to `public/data/` and in the same
+  sentence still sent readers to `docs/data/SOURCES.md`** — the retired tree,
+  which now holds a differently shaped file.
+- 🆕 **`units-client.ts` carried a second acronym glossary and a second
+  decorator.** Sixteen of its seventeen keys duplicated `src/lib/acronyms.ts`,
+  which runs on every page under a MutationObserver, so it re-did work that
+  had already happened on the same nodes 200ms earlier. **It also sat outside
+  `KNOWN_STATE_ACRONYM_COLLISIONS`**, so a future `'OR': 'Operating room'`
+  added there would not have failed the build — the pin this section added did
+  not cover the map this section kept. Deleted.
+
+  The seventeenth key was `IV`, and moving it site-wide is **not available**:
+  `tests/lib/acronyms.test.ts` excludes `IV` on purpose because it shadows a
+  legislative Title IV, and **that test caught the attempt**. The Type C
+  description reads "intravenous" now, which needs no hover and no second
+  glossary. 🆕 **An existing test knew something this section did not; the
+  right response to a red test is to read it, not to route around it.**
+- **Two `WEIGHT_LABELS` maps**, and the drift check parsed the methodology by
+  *its* copy while the page rendered the other, so a rename in one place would
+  have compared against a stale string instead of reporting a drift. One map,
+  exported from the pure module.
+- `weightIntervals` ran twice per `regionSelection()`; `M`/`MILLION` merged; a
+  51-key walk hoisted out of four call sites; trailing whitespace.
+
+#### Verified and upheld
+
+Every other number in the entry above and in `6acc083`'s body, re-derived by
+both axes: `V18` at 340,110,988 from both files, the 3.2219% margin, 8 distinct
+colours and 0 clashes over 21 shared borders, the four sweep intervals, the
+`0.04 × (n − 13)²` coefficient, 216 self-tests, the 207 → 216 arithmetic, and
+the `COUNTIES.JSON` report answer. **The region map's keyboard support is
+untouched, as the prompt requires**: county dots `tabindex: -1`, region paths
+`tabindex: "0"` with a live focus handler.
+
+#### Counts after the review
+
+Self-tests **216**, unchanged — rows reshaped, none added or removed. Full
+suite **466** passing, **59** files, up from 455. File manifest **126**,
+unchanged. `astro check` 0 errors, 0 warnings, **1 hint**.
+Break-and-restore **29 payloads, 29 pass, 0 skip, 0 fail** — five new, and the
+two `us-states.json` payloads reported SKIP on their first run because the
+metadata is written with `json.dumps`' default spacing rather than compact
+separators. Retargeted, not ignored.
+
+#### 🧨 Traps to add to the P13 list above
+
+- 🆕 **A derived figure is not a derived claim.** Every number in the false
+  sentence was computed; the comparison drawn between them was authored, and
+  read as derived because of its neighbours. **Extends `D2`.**
+- 🆕 **Replacing an accidental correctness with an explicit one surfaces what
+  the accident was hiding.** The regex rewrite failed instantly on a table
+  ambiguity the regexes had been masking.
+- 🆕 **A tripwire can pin a defect instead of a disclosure.** Check which one
+  you have written by asking what happens on the day the row is finally
+  satisfied.
+- 🆕 **A guard that fires is not a guard to delete.** The review's proposed
+  remedy for the clash check would have removed a payload's ability to fail.
+  **When a review says a check cannot fail, break it and read the exit code
+  before agreeing.**
+
 ### STILL OPEN, NOT THIS SECTION'S
 
 `R307` / `§S13` — the site-wide half of `AE1`. `PA` and `VA` are still in
