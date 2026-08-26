@@ -12,9 +12,21 @@ import { LTC_WORKFORCE } from './workforce';
 
 export type Conf = 'high' | 'medium' | 'low';
 
-/* R286 [§S9d]: the unpaid family care figure, which was typed six times across
-   this file and the page. AARP, Valuing the Invaluable, 2021 value. */
-export const UNPAID_FAMILY_CARE_B = 600;
+/* R286 [§S9d]: the figures this chapter states in more than one place, each
+   with one authored home. UNPAID_FAMILY_CARE_B was typed six times across
+   this file and the page; the other three were missed by the first pass and
+   found by the section's code review, which is why they are here rather than
+   in the original commit. */
+export const UNPAID_FAMILY_CARE_B = 600;        // AARP, Valuing the Invaluable, 2021 value
+export const LTSS_SPEND_2022_B = 415;           // KFF and Medicaid.gov, 2022
+export const MEDICAID_ASSET_TEST = 2000;        // $ in countable assets, CMS and Medicaid.gov
+export const HCBS_WAITING_LIST = 711000;        // KFF, 2024
+
+/* Written the way the prose writes them, so a page interpolates one
+   expression rather than repeating the formatting decision. */
+export const MEDICAID_ASSET_TEST_TEXT =
+  '$' + MEDICAID_ASSET_TEST.toLocaleString('en-US');
+export const HCBS_WAITING_LIST_TEXT = HCBS_WAITING_LIST.toLocaleString('en-US');
 
 /* ---- What today's benefit costs a family, and the country as a whole ---- */
 export interface CostStat {
@@ -25,7 +37,7 @@ export interface CostStat {
 }
 
 export const US_FAILURE_STATS: CostStat[] = [
-  { value: '$415B', label: 'spent on long-term care in 2022, and it still leaves most families exposed',
+  { value: '$' + LTSS_SPEND_2022_B + 'B', label: 'spent on long-term care in 2022, and it still leaves most families exposed',
     note: 'Medicaid paid 61%, out-of-pocket 17%; $284B went to home and community care, $131B to nursing facilities. KFF and Medicaid.gov, 2022.',
     confidence: 'high' },
   { value: '$127,750', label: 'median cost of one year in a private nursing-home room, 2024',
@@ -34,7 +46,7 @@ export const US_FAILURE_STATS: CostStat[] = [
   { value: '70%', label: 'of people who reach 65 will need long-term care before they die',
     note: 'Women need it 3.7 years on average, men 2.2 years; about one in seven spends over two years in a nursing home. HHS ASPE, 2022.',
     confidence: 'high' },
-  { value: '~711,000', label: 'people stuck on Medicaid waiting lists for home and community care in 2024',
+  { value: '~' + HCBS_WAITING_LIST_TEXT, label: 'people stuck on Medicaid waiting lists for home and community care in 2024',
     note: 'The average wait was about 40 months, up from 36 the year before. The waiting list is the visible edge of far larger unmet need. KFF, 2024.',
     confidence: 'high' },
   { value: '$' + UNPAID_FAMILY_CARE_B + 'B', label: 'unpaid care that 38 million family members provided in one year',
@@ -61,7 +73,7 @@ export const MEDICARE_GAP = {
   body: 'Medicare covers up to 100 days of skilled care after a qualifying ' +
     'hospital stay, then stops. Ongoing help with daily living is not a ' +
     'Medicare benefit. Families learn this at the worst possible moment, ' +
-    'then spend their savings down to about $2,000 in assets to qualify for ' +
+    'then spend their savings down to about ' + MEDICAID_ASSET_TEST_TEXT + ' in assets to qualify for ' +
     'Medicaid, the only public program that pays for this care, and the ' +
     'largest single payer of it in the country.',
   confidence: 'high' as Conf
@@ -118,7 +130,13 @@ export const UNIVERSAL_COVERAGE_KINDS: GdpKind[] = ['insurance', 'tax'];
 export interface GdpBarInput {
   country: string;
   pct: number;              // total LTC spending, % of GDP, 2021 (OECD HaG 2023)
-  gdpPc2021: number;        // GDP per capita, USD PPP, 2021 (World Bank)
+  /* The GDP per capita each published perCapita/pct pair already encoded,
+     to the nearest $10. Consistent with World Bank NY.GDP.PCAP.PP.CD 2021,
+     which is the series the methodology names, and NOT independently
+     re-read from it -- so this comment says implied, not sourced. The
+     eight values are published in the methodology so a reader can audit
+     the arithmetic. */
+  gdpPc2021: number;        // GDP per capita, USD PPP, 2021 (implied)
   kind: GdpKind;
   confidence: Conf;
   note: string;
@@ -244,7 +262,7 @@ export interface Pillar {
 export const PLAN_PILLARS: Pillar[] = [
   {
     title: 'A universal benefit, no spend-down',
-    body: 'Everyone is covered for assessed long-term care needs through the National Long-Term Care Authority, with $0 at the point of care. No one has to exhaust their savings to $2,000 to qualify, and the private long-term-care insurance market\'s job disappears.',
+    body: 'Everyone is covered for assessed long-term care needs through the National Long-Term Care Authority, with $0 at the point of care. No one has to exhaust their savings to ' + MEDICAID_ASSET_TEST_TEXT + ' to qualify, and the private long-term-care insurance market\'s job disappears.',
     borrows: 'Germany and Japan: universal social insurance instead of a poverty test.'
   },
   {
@@ -295,6 +313,22 @@ export interface GradedFigure {
   basis: string;
 }
 
+/* R284 [§S9d, fix run]: the two planning inputs, published as figures in
+   their own right rather than explained inside the figure they produce. The
+   row's second declared test is "no figure inherits a grade from a sibling";
+   the section's first pass met that for the seven headcounts and then broke
+   it one level down, by giving the two inputs no grade of their own. */
+export const PLANNING_INPUTS: GradedFigure[] = [
+  {
+    value: LTC_WORKFORCE.coveredFteM, confidence: LTC_WORKFORCE.coveredFteMConfidence as Conf,
+    basis: LTC_WORKFORCE.coveredFteMBasis
+  },
+  {
+    value: LTC_WORKFORCE.fteFraction, confidence: LTC_WORKFORCE.fteFractionConfidence as Conf,
+    basis: LTC_WORKFORCE.fteFractionBasis
+  }
+];
+
 export const WORKFORCE_ASSESS = {
   directCare2024: {
     value: LTC_WORKFORCE.currentDirectCareM, confidence: 'high' as Conf,
@@ -313,8 +347,8 @@ export const WORKFORCE_ASSESS = {
     basis: 'a planning estimate, not a measurement: about ' +
       LTC_WORKFORCE.coveredFteM.toFixed(1) + ' million covered full-time-equivalent aides ' +
       'divided by a full-time fraction of about ' + LTC_WORKFORCE.fteFraction +
-      '. Both inputs are assumptions this plan makes, and neither is a ' +
-      'published figure, which is why this is the only graded low'
+      '. Both inputs are graded low in their own right and neither is a ' +
+      'published figure, which is why this is the only headcount graded low'
   } as GradedFigure,
   openings2034: {
     value: LTC_WORKFORCE.openings2034M, confidence: 'high' as Conf,
@@ -328,18 +362,13 @@ export const WORKFORCE_ASSESS = {
     value: LTC_WORKFORCE.homeTurnoverPct, confidence: 'high' as Conf,
     basis: 'annual home-care turnover (PHI 2025)'
   } as GradedFigure,
-  note: 'Direct-care aides are the workforce that actually delivers a home-first ' +
-    'benefit. The country employs about ' + LTC_WORKFORCE.currentDirectCareM +
-    ' million of them today, and the current system already needs roughly ' +
-    LTC_WORKFORCE.projected2034M + ' million by 2034 just to keep pace ' +
-    'with aging. A universal benefit that also reaches people now turned away ' +
-    'needs on the order of ' + LTC_WORKFORCE.matureFrameworkM +
-    ' million at maturity. Turnover near ' + LTC_WORKFORCE.homeTurnoverPct +
-    '% and a median wage of $' + LTC_WORKFORCE.medianWageNow.toFixed(2) +
-    ' an hour are why the constraint is pay and retention, ' +
-    'not just headcount. The wage floor that addresses this is costed in the ' +
-    'framework total, and the merit immigration pathway now lists direct-care ' +
-    'roles alongside physicians and nurses.'
+  /* The `note` field that stood here is gone. It was exported with no
+     consumer anywhere in src/, which is exactly the defect R282 was filed
+     for -- and it was REWRITTEN by the commit that fixed R282, so this
+     section recreated the shape it was removing. The page's "How this
+     squares with the Workforce and immigration plans" paragraph is the
+     published copy, says the same things, and now reads LTC_WORKFORCE
+     directly. Found by the section's code review. */
 };
 
 /* ---- Cost, read from the fiscal model so it can never drift ---- */
@@ -356,7 +385,7 @@ export const LTC_COST_2024 = ltcParam(); // { low, mode, high } in $B, 2024 scal
 
 export const COST_IN_FRAMEWORK = {
   headline: 'The largest single new benefit, and its price is already inside the plan total',
-  body: 'Start with what happens now. The country already spends about $415B a ' +
+  body: 'Start with what happens now. The country already spends about $' + LTSS_SPEND_2022_B + 'B a ' +
     'year on long-term care, most of it through Medicaid and only after a family ' +
     'has spent almost everything it saved. On top of that, relatives provide ' +
     'roughly $' + UNPAID_FAMILY_CARE_B + 'B a year in care for free. A universal benefit would add about ' +

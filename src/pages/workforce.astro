@@ -374,7 +374,7 @@ const THICKEST_FAMILY = Math.max(...requirementFamilyCounts().values());
     </div>
     <div class="workforce-pay-guardrail workforce-ltc-comp">
       <strong>A wage floor lifts aide pay toward $22 an hour, and that cost is in the framework total.</strong>
-      <p id="wf-ltc-comp-formula">About 5.0 million covered aides, lifted toward a
+      <p id="wf-ltc-comp-formula">About {dc.coveredFteM.toFixed(1)} million covered aides, lifted toward a
         living-wage floor, adds roughly $53B a year.</p>
       <p>Net-new aide compensation at maturity:
         <b id="wf-ltc-comp">$53B/yr</b>. This is separate from the base
@@ -385,7 +385,7 @@ const THICKEST_FAMILY = Math.max(...requirementFamilyCounts().values());
     </div>
     <div class="workforce-risk-matrix">
       <span class="workforce-section-label">Why raising aide pay is the load-bearing move</span>
-      <div class="workforce-risk-row"><strong>Turnover, not headcount, is the crisis</strong><b data-level="high">Load-bearing</b><span>At roughly 75% annual home-care turnover, the same clients keep losing the aide who knows them. A wage floor is the most direct lever on retention.</span></div>
+      <div class="workforce-risk-row"><strong>Turnover, not headcount, is the crisis</strong><b data-level="high">Load-bearing</b><span>At roughly {dc.homeTurnoverPct}% annual home-care turnover, the same clients keep losing the aide who knows them. A wage floor is the most direct lever on retention.</span></div>
       <div class="workforce-risk-row"><strong>Demand rises faster than supply</strong><b data-level="tight">Constrained</b><span>A universal home-first benefit adds demand on top of {dc.openings2034M} million openings already projected. Pay and recruitment have to scale with it.</span></div>
       <div class="workforce-risk-row"><strong>Scope floors extend reach</strong><b data-level="strong">Enabler</b><span>National scope-of-practice floors let aides and home-care nurses work to their training everywhere, stretching a scarce workforce safely.</span></div>
     </div>

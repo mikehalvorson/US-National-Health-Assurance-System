@@ -6,8 +6,10 @@ const PROJECTION_WINDOW_END = 2034;
 import {
   COUNTRY_SYSTEMS, LTC_GDP_2021, US_FAILURE_STATS, PLAN_PILLARS,
   LTC_COST_2024, COST_IN_FRAMEWORK, WORKFORCE_ASSESS, WHAT_WORKS, MEDICARE_GAP,
-  KIND_STYLE, UNPAID_FAMILY_CARE_B, perCapitaSpend
+  KIND_STYLE, UNPAID_FAMILY_CARE_B, perCapitaSpend, PLANNING_INPUTS,
+  type GdpKind
 } from '../../src/lib/ltc';
+import { gdpKindStyleFaults } from '../../src/lib/manifest-check';
 import { LTC_WORKFORCE } from '../../src/lib/workforce';
 import { PARAMS_BY_ID, DEFLATOR_2023_TO_2024 } from '../../src/lib/params';
 
@@ -50,8 +52,11 @@ test('R283: every direct-care figure reads the workforce model', () => {
   expect(w.openings2034.value).toBe(LTC_WORKFORCE.openings2034M);
   expect(w.medianWage2024.value).toBe(LTC_WORKFORCE.medianWageNow);
   expect(w.homeTurnover.value).toBe(LTC_WORKFORCE.homeTurnoverPct);
-  // and the prose the page renders is built from them, not retyped
-  expect(w.note).toContain(String(LTC_WORKFORCE.matureFrameworkM) + ' million');
+  /* The `note` field this used to assert on is gone. The code review found
+     it had no consumer anywhere in src/ -- R282's own defect, recreated by
+     the commit that fixed R282. The page's paragraph is the published copy
+     and tests/pages/ltc.test.ts asserts it reads the model. */
+  expect('note' in w).toBe(false);
 });
 
 /* R284 [S9d]: one grade per figure. The maturity figure is a planning
@@ -68,6 +73,25 @@ test('R284: the maturity headcount is graded low, alone among the seven', () => 
   expect(w.matureFramework.basis).toContain(String(LTC_WORKFORCE.fteFraction));
   // WORKFORCE_ASSESS no longer carries one grade for all seven
   expect('confidence' in w).toBe(false);
+});
+
+/* R284 [S9d, fix run] first declared test: "every input to a published figure
+   carries its own source and grade". The section's first pass met the second
+   test ("no figure inherits a grade from a sibling") for the seven headcounts
+   and then broke it one level down: the two inputs BEHIND the maturity figure
+   were explained only inside that figure's own `basis`, which is inheritance
+   from a parent rather than a grade of their own. Found by the code review. */
+test('R284: the two planning inputs are graded in their own right', () => {
+  expect(PLANNING_INPUTS).toHaveLength(2);
+  expect(PLANNING_INPUTS.map((f) => f.value))
+    .toEqual([LTC_WORKFORCE.coveredFteM, LTC_WORKFORCE.fteFraction]);
+  // both low, and each says why in its own words
+  expect(PLANNING_INPUTS.every((f) => f.confidence === 'low')).toBe(true);
+  expect(PLANNING_INPUTS.every((f) => /not a published figure/.test(f.basis))).toBe(true);
+  // and the figure they produce reproduces from them
+  const derived = Math.round(
+    (LTC_WORKFORCE.coveredFteM / LTC_WORKFORCE.fteFraction) * 10) / 10;
+  expect(derived).toBe(WORKFORCE_ASSESS.matureFramework.value);
 });
 
 /* R282 [S9d]: both constants were exported, never rendered, and had already
@@ -108,6 +132,29 @@ test('R288: every funding kind has a distinct colour and its own legend label', 
   const oecd = LTC_GDP_2021.find((r) => /OECD/.test(r.country))!;
   expect(oecd.kind).toBe('benchmark');
   expect(KIND_STYLE.benchmark.color).not.toBe(KIND_STYLE.tax.color);
+});
+
+/* R288 [S9d, fix run]: gdpKindStyleFaults' first clause -- a kind with no
+   style -- cannot fire with the default arguments, because KIND_STYLE is a
+   Record over the same union the data's `kind` uses and TypeScript has
+   already refused the bad case. The section's code review measured that.
+   The clause still guards against a cast or a widened read reaching the
+   function, so it is exercised HERE through the injected arguments rather
+   than deleted: a check nothing can make fail is worth as much as its
+   payload, and this is the payload. */
+test('R288: gdpKindStyleFaults catches a kind that reached the data by a cast', () => {
+  const rogue = [{ country: 'Nowhere', kind: 'mutual' as GdpKind }];
+  const faults = gdpKindStyleFaults(rogue.concat(LTC_GDP_2021), KIND_STYLE);
+  expect(faults.some((f) => f.kind === 'mutual')).toBe(true);
+  // a styled kind nothing draws is the other direction
+  const thin = LTC_GDP_2021.filter((r) => r.kind === 'us');
+  expect(gdpKindStyleFaults(thin, KIND_STYLE).length).toBeGreaterThan(0);
+  // and two kinds sharing a colour merges two categories on the chart
+  const merged = { ...KIND_STYLE, tax: { ...KIND_STYLE.tax, color: KIND_STYLE.insurance.color } };
+  expect(gdpKindStyleFaults(LTC_GDP_2021, merged)
+    .some((f) => f.problem.includes('one category'))).toBe(true);
+  // the shipped data is clean
+  expect(gdpKindStyleFaults()).toEqual([]);
 });
 
 /* R286 [S9d]: five typed copies of $600B and six of $17.36, with canonical
@@ -190,8 +237,16 @@ test('R262: the benefit starts two years after the projection window closes', ()
 test('R285: the GDP chart is a group, is keyboard-reachable, and draws per-capita', async () => {
   const src = await import('node:fs').then((fs) =>
     fs.readFileSync(new URL('../../src/scripts/ltc-client.ts', import.meta.url), 'utf8'));
-  const chart = src.slice(src.indexOf('function renderGdpChart'),
-    src.indexOf('function renderCountryCards'));
+  /* Both anchors are asserted before the slice. Without that, renaming
+     renderCountryCards makes indexOf return -1, slice(start, -1) runs to
+     EOF, and the not.toContain below fails on renderWorkforce's role: 'img'
+     -- which is CORRECT there, that chart has no focusable children. A test
+     that fails for an unrelated reason is not a passing test with a caveat. */
+  const start = src.indexOf('function renderGdpChart');
+  const stop = src.indexOf('function renderCountryCards');
+  expect(start).toBeGreaterThan(-1);
+  expect(stop).toBeGreaterThan(start);
+  const chart = src.slice(start, stop);
   expect(chart).toContain("role: 'group'");
   expect(chart).not.toContain("role: 'img'");
   // focus and blur alongside the pointer pair, not instead of it

@@ -88,7 +88,8 @@ import {
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
   countyFileAudit, fragmentationClaimGuard, regionMethodologyDrift,
-  gdpKindStyleFaults, ltcOecdRangeDrift, ltcPlanningInputFaults, ltcRepeatedLiterals,
+  gdpKindStyleFaults, ltcOecdRangeDrift, ltcPlanningInputFaults,
+  ltcRepeatedLiterals, ltcRepeatedWatched,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2630,8 +2631,8 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !bad.length,
           note: bad.map((b) => b.where + ' types ' + b.literal +
             ' for ' + b.figure).join(' | ') ||
-            directCareSharedCount() + ' figure-and-page pairs, every one ' +
-            'interpolated from LTC_WORKFORCE'
+            directCareSharedCount() + ' interpolations present, and no ' +
+            'literal shaped like a direct-care figure in either page'
         };
       }),
       /* R284 [§S9d]: the two headcounts that are derived rather than measured,
@@ -2677,7 +2678,8 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !bad.length,
           note: bad.map((b) => b.where + ' types ' + b.figure + ' ' +
             b.times + 'x').join(' | ') ||
-            'every repeated figure resolves to one exported field'
+            ltcRepeatedWatched() + ' figure-and-file pairs watched, none ' +
+            'of them typed'
         };
       }),
       /* R288 [§S9d]: the chart's categorical encoding. The OECD average, an

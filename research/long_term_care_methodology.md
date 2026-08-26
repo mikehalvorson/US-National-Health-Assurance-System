@@ -106,11 +106,19 @@ of their source year; the fiscal model's net-new LTC cost is carried in real
   Glance 2023, "Long-term care spending and unit costs"; cross-checked against
   the A-Mark Foundation's HaG 2023 digest.
 
-- **Dollars per person (the second reading in each tooltip).** Long-term care
-  spending per person is derived transparently as (share of GDP) x (GDP per
+- **Dollars per person (the second reading on each bar).** Long-term care
+  spending per person is computed as (share of GDP) x (GDP per
   capita, USD PPP, 2021, World Bank NY.GDP.PCAP.PP.CD): Norway ~$3,227,
   Netherlands ~$3,017, Denmark ~$2,218, Sweden ~$2,114, Germany ~$1,566, Japan
-  ~$1,012, United States ~$929, OECD average ~$922. This is the same spending
+  ~$1,012, United States ~$929, OECD average ~$922. The GDP-per-capita
+  figures used, to the nearest $10, are Norway 92,200, Denmark 69,310,
+  Netherlands 68,570, United States 71,460, Germany 62,640, Sweden 62,180,
+  OECD average 51,220 and Japan 46,000. These are the values the published
+  pairs imply and are consistent with the World Bank series named above;
+  they have not been independently re-read from it, and they are stated
+  here so the arithmetic can be checked. The chart computes each dollar
+  figure from the share and the GDP per capita rather than storing it, so
+  correcting a country's share corrects its dollars with it. This is the same spending
   divided by population, so it is a same-unit (per-person) comparison, not a
   cross-scale one. The point it makes: in raw price-adjusted dollars the U.S.
   sits near the OECD average, because the U.S. economy is large; the failure is

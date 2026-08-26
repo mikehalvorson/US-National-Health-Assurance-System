@@ -17,7 +17,10 @@ import { LTC_WORKFORCE } from '../lib/workforce';
    better of the two and is what now lives in the constant. */
 /* R285/R286 [S9d]: the US per-capita figure, stated in this note and computed
    from the chart's own data rather than typed a second time. */
-import { WHAT_WORKS, MEDICARE_GAP, UNPAID_FAMILY_CARE_B, LTC_GDP_2021 } from '../lib/ltc';
+import {
+  WHAT_WORKS, MEDICARE_GAP, UNPAID_FAMILY_CARE_B, LTC_GDP_2021,
+  LTSS_SPEND_2022_B, MEDICAID_ASSET_TEST_TEXT, HCBS_WAITING_LIST_TEXT
+} from '../lib/ltc';
 const ltcPhase = LTC_BENEFIT_PHASE!;
 const ltcStartYear = calendarYear(ltcPhase.year);
 const wf = LTC_WORKFORCE;
@@ -66,7 +69,7 @@ const usPerCapita = LTC_GDP_2021.find((r) => r.kind === 'us')!.perCapita
       </article>
       <article>
         <h3>Care rationed by waiting</h3>
-        <p>About 711,000 people sit on state waiting lists for home and
+        <p>About {HCBS_WAITING_LIST_TEXT} people sit on state waiting lists for home and
           community care, waiting roughly 40 months on average (KFF, 2024).</p>
       </article>
       <article>
@@ -82,7 +85,7 @@ const usPerCapita = LTC_GDP_2021.find((r) => r.kind === 'us')!.perCapita
       </article>
     </div>
     <p class="note"><b>Sources.</b> Medicare's 100-day skilled-care limit and the
-      roughly $2,000 Medicaid asset test: CMS and Medicaid.gov. Waiting lists:
+      roughly {MEDICAID_ASSET_TEST_TEXT} Medicaid asset test: CMS and Medicaid.gov. Waiting lists:
       KFF, 2024. Unpaid family care: AARP, 2021. Aide pay and turnover: PHI, 2025.</p>
   </section>
 
@@ -150,7 +153,7 @@ const usPerCapita = LTC_GDP_2021.find((r) => r.kind === 'us')!.perCapita
     <span class="ltc-kicker">What it costs, and where the cost already lives</span>
     <h2>The largest single benefit expansion, already inside the total</h2>
     <p id="ltc-cost-note" class="desc"></p>
-    <p class="note"><b>Sources.</b> Today's $415B in long-term care spending: KFF
+    <p class="note"><b>Sources.</b> Today's ${LTSS_SPEND_2022_B}B in long-term care spending: KFF
       and Medicaid.gov, 2022. The added cost of a universal benefit is the
       framework's own estimate, anchored to the Congressional Budget Office's
       comprehensive long-term-care option; it is carried inside the plan total and

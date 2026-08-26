@@ -45,7 +45,8 @@ import {
 } from './workforce';
 import {
   WORKFORCE_ASSESS, LTC_GDP_2021, KIND_STYLE, UNIVERSAL_COVERAGE_KINDS,
-  type GdpKind
+  UNPAID_FAMILY_CARE_B, LTSS_SPEND_2022_B, MEDICAID_ASSET_TEST_TEXT,
+  HCBS_WAITING_LIST_TEXT, type GdpKind
 } from './ltc';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
@@ -2433,41 +2434,77 @@ export function unitsCostStressorDrift(): UnitsCostStressorDrift[] {
  * expression. Comparing `LTC_WORKFORCE.currentDirectCareM` with a field
  * initialised from `LTC_WORKFORCE.currentDirectCareM` is a tautology, and a
  * tautology that reports "7 figures shared, all agreeing" reads exactly like
- * a check doing its job. Two consecutive code reviews in this campaign have
- * removed clauses of that shape; this one is removed by the pass that created
- * it rather than by the review after.
+ * a check doing its job.
  *
- * The coverage is not dropped, it is re-pointed. What can still go wrong once
- * the modules are wired is a PAGE going back to a literal. Both chapters
- * state these figures in prose and in stat tiles, both now interpolate them,
- * and an editor "simplifying" `{dc.openings2034M} million` back to
- * `9.7 million` would restore the original defect silently. So the check
- * reads the two pages and fails on the digits.
+ * The coverage is re-pointed at what can still go wrong once the modules are
+ * wired: a PAGE going back to a hand-typed figure.
  *
- * It fails in both directions, which is the point: move the model and a page
- * still carrying the old digits fails; type a figure into a page and it fails
- * whether or not the model agrees, because a literal is the defect regardless
- * of its value.
+ * ⚠️ THE FIRST VERSION OF THIS REPLACEMENT WAS ALSO TOO WEAK, and the section
+ * code review measured it rather than reading it. It searched each page for
+ * the model's CURRENT value written out -- so typing `9.9 million` passed,
+ * deleting a figure entirely passed, and the row still reported "every one
+ * interpolated". Both halves below exist because of that.
  *
- * `9.7` is deliberately in the table even though it is never drawn as a bar
- * (`BK5`, `BV9`): being quoted only in prose is what makes it the easiest of
- * the seven to retype.
+ * POSITIVE half: every figure must still appear as an interpolation
+ * expression in the page that states it. Delete one and this fails. That is
+ * the half the value-matching version had no way to do.
+ *
+ * NEGATIVE half: any literal of the SHAPE these figures take, anywhere in
+ * either page, is a fault whatever its value -- because a literal is the
+ * defect regardless of whether it currently agrees. The allowlist is the
+ * honest cost of that: two figures on the Workforce page genuinely belong to
+ * other models and are written the same way. An allowlist entry that stops
+ * matching is itself a fault, so a stale exemption cannot hide.
+ *
+ * renderedSource, not sourceText: it masks comments and strips import lines.
+ * The first version's comment claimed this and the code called sourceText, so
+ * a comment quoting "5.4 million" would have failed the build.
  */
 const DIRECT_CARE_PAGES = ['src/pages/ltc.astro', 'src/pages/workforce.astro'];
 
-/* Written as the page would write them, not as raw numbers: "5.4" appears in
-   both files in unrelated contexts, "5.4 million" does not. */
-function directCareLiterals(): Array<[string, string]> {
-  const w = LTC_WORKFORCE;
-  return [
-    ['direct-care workers today', w.currentDirectCareM + ' million'],
-    ['home-care share', w.homeCareM + ' million'],
-    ['projected 2034 need', w.projected2034M + ' million'],
-    ['mature benefit need', w.matureFrameworkM + ' million'],
-    ['total openings by 2034', w.openings2034M + ' million'],
-    ['median wage now', '$' + w.medianWageNow.toFixed(2)]
-  ];
-}
+/* The interpolation each page is expected to carry. `frontmatterName` is what
+   the page aliases LTC_WORKFORCE to; both pages alias it, to different names,
+   which is why this is a table rather than a prefix. */
+const DIRECT_CARE_INTERPOLATIONS: Array<{ field: string; page: string; alias: string }> = [
+  { field: 'currentDirectCareM', page: 'src/pages/ltc.astro', alias: 'wf' },
+  { field: 'projected2034M', page: 'src/pages/ltc.astro', alias: 'wf' },
+  { field: 'matureFrameworkM', page: 'src/pages/ltc.astro', alias: 'wf' },
+  { field: 'openings2034M', page: 'src/pages/ltc.astro', alias: 'wf' },
+  { field: 'medianWageNow', page: 'src/pages/ltc.astro', alias: 'wf' },
+  { field: 'homeTurnoverPct', page: 'src/pages/ltc.astro', alias: 'wf' },
+  { field: 'currentDirectCareM', page: 'src/pages/workforce.astro', alias: 'dc' },
+  { field: 'homeCareM', page: 'src/pages/workforce.astro', alias: 'dc' },
+  { field: 'openings2034M', page: 'src/pages/workforce.astro', alias: 'dc' },
+  { field: 'medianWageNow', page: 'src/pages/workforce.astro', alias: 'dc' },
+  { field: 'homeTurnoverPct', page: 'src/pages/workforce.astro', alias: 'dc' },
+  { field: 'coveredFteM', page: 'src/pages/workforce.astro', alias: 'dc' }
+];
+
+/* Literals shaped like a direct-care figure. Deliberately value-blind. */
+const DIRECT_CARE_SHAPES: Array<[string, RegExp]> = [
+  ['a headcount in millions', /\b\d+\.\d+ million\b/g],
+  ['an hourly wage', /\$\d+\.\d\d\b/g],
+  ['a turnover rate', /\b\d{1,3}% annual home-care turnover\b/g]
+];
+
+/* Figures on the Workforce page that match a shape above and belong to a
+   DIFFERENT model, so interpolating them from LTC_WORKFORCE would be wrong.
+   Each is checked to still be present: an exemption nothing needs is a fault,
+   so this list cannot quietly grow stale or over-broad. */
+const DIRECT_CARE_SHAPE_EXEMPTIONS: Array<[string, string]> = [
+  /* All healthcare occupation openings (BLS). A labour-market total, not a
+     direct-care headcount. */
+  ['src/pages/workforce.astro', '1.9 million'],
+  /* Total US employment, the denominator of the labour-share tile beside it.
+     This one was interpolated from TOTAL_US_EMPLOYMENT_2024 during the fix
+     run and then put back, because `workforceProseDrift` ALREADY gates the
+     literal against that constant -- so the drift was defended, and rewriting
+     an earlier section's value gate into a shape gate to remove a literal it
+     was watching would have been a worse trade. The exemption is safe because
+     another check holds it, which is the only reason an exemption should be
+     safe. */
+  ['src/pages/workforce.astro', '169.96 million']
+];
 
 export interface DirectCareDisagreement {
   figure: string;
@@ -2477,23 +2514,46 @@ export interface DirectCareDisagreement {
 
 export function directCareHeadcountDrift(root = REPO_ROOT): DirectCareDisagreement[] {
   const out: DirectCareDisagreement[] = [];
+
+  for (const want of DIRECT_CARE_INTERPOLATIONS) {
+    const body = renderedSource(want.page, root);
+    if (!body.includes('{' + want.alias + '.' + want.field)) {
+      out.push({
+        figure: want.field,
+        where: want.page,
+        literal: 'no {' + want.alias + '.' + want.field + '} interpolation'
+      });
+    }
+  }
+
   for (const page of DIRECT_CARE_PAGES) {
-    /* renderedSource strips the frontmatter's import lines for the reason
-       §S7's review gave: otherwise the import satisfies the scan. Here the
-       body is what matters -- an interpolation reads `{dc.openings2034M}`,
-       a regression reads `9.7 million`. */
-    const body = flowed(sourceText(page, root));
-    for (const [figure, literal] of directCareLiterals()) {
-      if (body.includes(literal)) {
-        out.push({ figure, where: page, literal });
+    const body = renderedSource(page, root);
+    const exempt = DIRECT_CARE_SHAPE_EXEMPTIONS
+      .filter((e) => e[0] === page).map((e) => e[1]);
+    for (const [shape, pattern] of DIRECT_CARE_SHAPES) {
+      for (const m of body.matchAll(pattern)) {
+        if (exempt.includes(m[0])) continue;
+        out.push({ figure: shape, where: page, literal: m[0] });
       }
+    }
+  }
+
+  for (const [page, literal] of DIRECT_CARE_SHAPE_EXEMPTIONS) {
+    if (!renderedSource(page, root).includes(literal)) {
+      out.push({
+        figure: 'a stale exemption',
+        where: page,
+        literal: literal + ' is exempted and no longer appears'
+      });
     }
   }
   return out;
 }
 
+/* The number the self-test row reports. It used to multiply six figures by
+   two pages and report 12 -- a figure nothing produced, for nine real pairs. */
 export function directCareSharedCount(): number {
-  return directCareLiterals().length * DIRECT_CARE_PAGES.length;
+  return DIRECT_CARE_INTERPOLATIONS.length;
 }
 
 export interface PlanningInputFault { figure: string; says: string; expected: string }
@@ -3334,7 +3394,15 @@ export interface KindStyleFault { kind: string; problem: string }
  * looked for a missing entry could not fail while the types held -- the
  * shape this campaign has now shipped three times. These three can:
  *
- *   1. a kind reaching the data through a cast or a widened read,
+ *   1. a kind reaching the data through a cast or a widened read. ⚠️ The
+ *      section's code review measured this clause AS CALLED and found it
+ *      cannot fire: KIND_STYLE is a Record over the same union LTC_GDP_2021's
+ *      `kind` uses, so with the default arguments TypeScript has already
+ *      refused the bad case. That is P13's colourer finding again -- the
+ *      clause is a live regression test on THIS FUNCTION, exercised through
+ *      the injected arguments in tests/lib/ltc.test.ts, and what it cannot do
+ *      is notice anything about the shipped data. Kept and tested rather than
+ *      deleted, because deleting it would lose the payload that does fail;
  *   2. a KIND_STYLE entry no row uses, which puts an unexplained swatch in a
  *      legend derived from the table rather than from the data,
  *   3. two kinds sharing a colour, which silently merges two categories on
@@ -3391,30 +3459,53 @@ export interface RepeatedLiteral { figure: string; where: string; times: number 
  * states the 2.2% to 4.4% range in prose deliberately, and that sentence is
  * held to LTC_GDP_2021 by ltcOecdRangeDrift instead.
  */
-const LTC_REPEATED: Array<{ figure: string; literal: string; files: string[] }> = [
-  { figure: 'unpaid family care', literal: '$600B',
-    files: [LTC_DATA, LTC_PAGE] },
-  /* The GDP shares carry their context, and this is not fussiness. The first
-     version of this table listed a bare '3.4%', and the check went red on
-     Germany's payroll contribution -- "about 3.4% of wages in 2024" -- which
-     is a different quantity that happens to share two digits with Sweden's
-     share of GDP. A percentage is not identified by its digits. */
-  { figure: 'Netherlands share', literal: '4.4% of GDP', files: [LTC_DATA] },
-  { figure: 'Denmark share', literal: 'Denmark 3.2%', files: [LTC_DATA] },
-  { figure: 'Sweden share', literal: 'Sweden 3.4%', files: [LTC_DATA] },
-  { figure: 'Norway share', literal: 'Norway 3.5%', files: [LTC_DATA] }
-];
+/* Derived from the data, not hand-typed. The first version listed literal
+   needles ('Denmark 3.2%', '4.4% of GDP'), so correcting a share silently
+   retired the guard for that country -- the check would have gone green
+   about a figure it had stopped watching. Both forms keep the context that
+   stops Germany's payroll contribution of 3.4% OF WAGES matching Sweden's
+   3.4% of GDP: a percentage is not identified by its digits. */
+function gdpShareNeedles(): Array<{ figure: string; literal: string; files: string[] }> {
+  const out: Array<{ figure: string; literal: string; files: string[] }> = [];
+  for (const row of LTC_GDP_2021) {
+    const pct = row.pct.toFixed(1) + '%';
+    out.push({ figure: row.country + ' share', literal: pct + ' of GDP', files: [LTC_DATA] });
+    out.push({ figure: row.country + ' share', literal: row.country + ' ' + pct, files: [LTC_DATA] });
+  }
+  return out;
+}
+
+function ltcRepeatedTable(): Array<{ figure: string; literal: string; files: string[] }> {
+  return [
+    { figure: 'unpaid family care', literal: '$' + UNPAID_FAMILY_CARE_B + 'B',
+      files: [LTC_DATA, LTC_PAGE] },
+    { figure: 'LTSS spending 2022', literal: '$' + LTSS_SPEND_2022_B + 'B',
+      files: [LTC_DATA, LTC_PAGE] },
+    { figure: 'the Medicaid asset test', literal: MEDICAID_ASSET_TEST_TEXT,
+      files: [LTC_DATA, LTC_PAGE] },
+    { figure: 'the HCBS waiting list', literal: HCBS_WAITING_LIST_TEXT,
+      files: [LTC_DATA, LTC_PAGE] }
+  ].concat(gdpShareNeedles());
+}
 
 export function ltcRepeatedLiterals(root = REPO_ROOT): RepeatedLiteral[] {
   const out: RepeatedLiteral[] = [];
-  for (const item of LTC_REPEATED) {
+  for (const item of ltcRepeatedTable()) {
     for (const file of item.files) {
-      const text = sourceText(file, root);
+      /* renderedSource so a comment naming a figure is not a false failure --
+         the same correction M9 forced on directCareHeadcountDrift. */
+      const text = renderedSource(file, root);
       const times = text.split(item.literal).length - 1;
       if (times > 0) out.push({ figure: item.figure, where: file, times });
     }
   }
   return out;
+}
+
+/* What the green note is allowed to claim: the number of figure-and-file
+   pairs this check actually watches, not "every repeated figure". */
+export function ltcRepeatedWatched(): number {
+  return ltcRepeatedTable().reduce((n, i) => n + i.files.length, 0);
 }
 
 export interface RangeDrift { where: string; says: string; expected: string }
@@ -3500,15 +3591,38 @@ export function ltcOecdRangeDrift(root = REPO_ROOT): RangeDrift[] {
     });
   }
 
-  /* The retired value itself. The range clause could be corrected while 2.0
-     survived elsewhere in the same string -- which is the shape of the defect
-     that produced this row. */
-  if (/\b2\.0%? *(?:-|to) *4\.4/.test(source)) {
+  /* The retired values themselves, PARSED FROM THE METHODOLOGY rather than
+     hard-coded. The methodology records the correction in its own words --
+     "an earlier mix that had Germany at 2.1%, Japan at 2.0%, and a public-only
+     U.S. figure of 1.0%" -- so the list of what must not survive comes from
+     the document that retired them, and a future correction extends it
+     without anyone editing this function.
+
+     The first version tested only the PAIRED form `2.0-4.4`, while telling
+     the reader it enforced "no superseded OECD value anywhere in the source
+     note". A bare 2.0% reintroduced beside the corrected range passed. The
+     message now matches what the code does, and the code does more. */
+  const superseded = note.match(/replaces an earlier mix that had (.*?)the single-series/);
+  const retired = superseded
+    ? Array.from(superseded[1].matchAll(/(\d+\.\d+)%/g)).map((m) => m[1])
+    : [];
+  if (!retired.length) {
     out.push({
-      where: 'params.ts ltcExpansion.source',
-      says: 'still carries the retired 2.0 low end',
-      expected: 'no superseded OECD value anywhere in the source note'
+      where: LTC_METHODOLOGY,
+      says: 'no longer records which OECD values it superseded',
+      expected: 'the "replaces an earlier mix" clause, which is what names them'
     });
+  }
+  for (const value of retired) {
+    /* Bounded to a percentage, so a retired 2.0 does not match an unrelated
+       "2.0" elsewhere in a long prose string. */
+    if (new RegExp('\\b' + value.replace('.', '\\.') + '%').test(source)) {
+      out.push({
+        where: 'params.ts ltcExpansion.source',
+        says: 'still carries ' + value + '%, which the methodology retired',
+        expected: 'no superseded OECD value anywhere in the source note'
+      });
+    }
   }
   return out;
 }

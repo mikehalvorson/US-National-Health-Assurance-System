@@ -766,8 +766,22 @@ export const LTC_WORKFORCE = {
   medianWageNow: 17.36,      // $/hr median, 2024 (PHI 2025)
   wageFloorTarget: 22.00,    // $/hr living-wage floor (plan design)
   homeTurnoverPct: 75,       // home-care annual turnover, % (PHI 2025)
-  coveredFteM: 5.0,          // covered direct-care FTE at maturity (planning)
-  fteFraction: 0.67,         // full-time-equivalent per worker (direct care is heavily part-time)
+  /* R284 [§S9d, fix run]: these two carry their own grade, because they are
+     the only inputs in this block that are not measured. Everything else here
+     is PHI 2025 on BLS data; these are assumptions the plan makes, and the
+     section's first pass explained them only inside the DERIVED figure's
+     `basis` -- which is the sibling-inheritance the row's second test
+     objects to, one level up. */
+  coveredFteM: 5.0,          // covered direct-care FTE at maturity
+  coveredFteMBasis: 'a plan design assumption, not a published figure: the ' +
+    'direct-care workforce this benefit is costed to cover. Carried in the ' +
+    'model as params.ltcWageFloor, whose range spans 4-6M.',
+  coveredFteMConfidence: 'low',
+  fteFraction: 0.67,         // full-time-equivalent per worker
+  fteFractionBasis: 'a plan design assumption, not a published figure: direct ' +
+    'care is heavily part-time, so headcount exceeds full-time-equivalents. ' +
+    'No published national figure for this ratio was located.',
+  fteFractionConfidence: 'low',
   matureFrameworkM: 7.5,     // workers a universal home-first benefit needs at maturity ~= coveredFteM / fteFraction (planning, low confidence)
   hoursPerFteYear: 2080,     // full-time-equivalent hours
   loadedUpliftPerHour: 5.00  // loaded $/hr lift toward the floor (incl. benefits allowance)
