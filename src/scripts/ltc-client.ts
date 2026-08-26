@@ -3,7 +3,7 @@
    dependencies. Runs on astro:page-load; idempotent via dataset.wired. */
 import { el, div, showTip, hideTip, tipRow, niceTicks, barPath, legend } from '../lib/chart-util';
 import { LTC_GDP_2021, COUNTRY_SYSTEMS, WORKFORCE_ASSESS, US_FAILURE_STATS,
-  PLAN_PILLARS, COST_IN_FRAMEWORK, type GdpBar } from '../lib/ltc';
+  PLAN_PILLARS, COST_IN_FRAMEWORK, KIND_STYLE, type GdpKind } from '../lib/ltc';
 
 /* ---- Cost, read from the fiscal model so the figure cannot drift ---- */
 function renderCost(): void {
@@ -60,10 +60,12 @@ function renderPillars(): void {
   });
 }
 
-function kindColor(k: GdpBar['kind']): string {
-  return k === 'us' ? 'var(--series-5)'
-    : k === 'insurance' ? 'var(--series-1)'
-    : 'var(--series-3)';
+/* R288 [§S9d]: was a ternary whose last branch returned the tax-funded colour
+   for every value it did not name, so a new or misspelled kind rendered as
+   tax-funded and said nothing. KIND_STYLE is a Record over the union, so a
+   kind with no styling is a type error instead. */
+function kindColor(k: GdpKind): string {
+  return KIND_STYLE[k].color;
 }
 
 /* ---- Long-term care spending, % of GDP ---- */
@@ -111,14 +113,18 @@ function renderGdpChart(): void {
     g.addEventListener('pointerleave', hideTip);
   });
 
+  /* R288 [§S9d]: derived from the kinds actually present, in the order the
+     bars appear, rather than three entries hand-listed beside a data field
+     that can carry more. Adding a country with a new kind now adds its
+     legend entry; it used to add an unexplained colour. */
   const leg = document.getElementById('ltc-gdp-legend');
   if (leg) {
     leg.innerHTML = '';
-    legend(leg, [
-      { label: 'Social insurance', color: 'var(--series-1)' },
-      { label: 'Tax-funded', color: 'var(--series-3)' },
-      { label: 'United States', color: 'var(--series-5)' }
-    ]);
+    const seen: GdpKind[] = [];
+    rows.forEach(function (r) { if (seen.indexOf(r.kind) < 0) seen.push(r.kind); });
+    legend(leg, seen.map(function (k) {
+      return { label: KIND_STYLE[k].label, color: KIND_STYLE[k].color };
+    }));
   }
 }
 

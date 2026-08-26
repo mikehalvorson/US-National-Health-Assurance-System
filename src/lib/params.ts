@@ -501,7 +501,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Long-term care benefit expansion (home-first universal LTC)",
     low: 150, mode: 230, high: 330,
     confidence: "medium",
-    source: "Net new national spending for a universal, home-first long-term care benefit, above the ~$415B already spent on LTSS in 2022 (Medicaid 61%, out-of-pocket 17%). CBO's comprehensive-LTSS option raises NHE ~4.4% (≈$215B on the 2023 base) and anchors the mode. The specific plan drives the range up: a 70% home-and-community target that pays for care now given unpaid ($600B/yr, AARP 2023), eliminating the ~711,000-person HCBS waiting list (KFF 2024), and a direct-care wage floor above the $17.36/hr 2024 median (PHI). Peer systems that cover this benefit spend 2.0-4.4% of GDP on it (OECD). Largest single expansion in the framework.",
+    source: "Net new national spending for a universal, home-first long-term care benefit, above the ~$415B already spent on LTSS in 2022 (Medicaid 61%, out-of-pocket 17%). CBO's comprehensive-LTSS option raises NHE ~4.4% (≈$215B on the 2023 base) and anchors the mode. The specific plan drives the range up: a 70% home-and-community target that pays for care now given unpaid ($600B/yr, AARP 2023), eliminating the ~711,000-person HCBS waiting list (KFF 2024), and a direct-care wage floor above the $17.36/hr 2024 median (PHI). Peer systems that cover this benefit spend 2.2-4.4% of GDP on it (OECD). Largest single expansion in the framework.",
     url: "https://www.cbo.gov/publication/56811",
     adjustable: true, sliderMin: 50, sliderMax: 450
   },

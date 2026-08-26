@@ -43,7 +43,10 @@ import {
   priorAuthReleasedFte, SCENARIOS, UNIT_MODEL, unitMixWeightedFte,
   LTC_WORKFORCE, WORKER_SUPPORT_RATE, workforceLedgerFigures
 } from './workforce';
-import { WORKFORCE_ASSESS } from './ltc';
+import {
+  WORKFORCE_ASSESS, LTC_GDP_2021, KIND_STYLE, UNIVERSAL_COVERAGE_KINDS,
+  type GdpKind
+} from './ltc';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
 
@@ -3227,5 +3230,152 @@ export function supportRateDrift(root = REPO_ROOT): SupportRateDisagreement[] {
     });
   }
 
+  return out;
+}
+
+/* ---- Long-term care chapter [§S9d] ------------------------------------- */
+
+const LTC_METHODOLOGY = 'research/long_term_care_methodology.md';
+const LTC_PAGE = 'src/pages/ltc.astro';
+
+export interface KindStyleFault { kind: string; problem: string }
+
+/* R288 [§S9d]: what `Record<GdpKind, ...>` cannot catch.
+ *
+ * The type already refuses a kind with no styling, so a check that only
+ * looked for a missing entry could not fail while the types held -- the
+ * shape this campaign has now shipped three times. These three can:
+ *
+ *   1. a kind reaching the data through a cast or a widened read,
+ *   2. a KIND_STYLE entry no row uses, which puts an unexplained swatch in a
+ *      legend derived from the table rather than from the data,
+ *   3. two kinds sharing a colour, which silently merges two categories on
+ *      the chart and in the legend. This is the defect R288 was filed for,
+ *      generalised: the OECD average shared the tax-funded colour.
+ */
+export function gdpKindStyleFaults(
+  rows: { country: string; kind: GdpKind }[] = LTC_GDP_2021,
+  style: Record<string, { color: string; label: string }> = KIND_STYLE
+): KindStyleFault[] {
+  const out: KindStyleFault[] = [];
+  const used = new Set<string>();
+  for (const r of rows) {
+    used.add(r.kind);
+    if (!style[r.kind]) {
+      out.push({ kind: r.kind, problem: r.country + ' carries a kind with no colour or legend entry' });
+    }
+  }
+  for (const k of Object.keys(style)) {
+    if (!used.has(k)) {
+      out.push({ kind: k, problem: 'styled but no row uses it, so the legend would carry a swatch nothing draws' });
+    }
+  }
+  const byColor = new Map<string, string[]>();
+  for (const k of Object.keys(style)) {
+    const list = byColor.get(style[k].color) ?? [];
+    list.push(k);
+    byColor.set(style[k].color, list);
+  }
+  for (const [color, kinds] of byColor) {
+    if (kinds.length > 1) {
+      out.push({ kind: kinds.join(' + '), problem: 'share ' + color + ', so the chart draws them as one category' });
+    }
+  }
+  return out;
+}
+
+export interface RangeDrift { where: string; says: string; expected: string }
+
+/* R265 [§S9d]: the OECD long-term-care range, stated in four places.
+ *
+ * The methodology recorded correcting Japan from 2.0% to 2.2%. That
+ * correction reached the data file, the derived per-capita figure and the
+ * public page, and stopped at params.ts, which went on citing a value its own
+ * methodology had retired. Nothing connected the four statements, so nothing
+ * reported it for as long as it stood.
+ *
+ * LTC_GDP_2021 is the one series. The cluster is the countries that cover the
+ * benefit universally -- which is why UNIVERSAL_COVERAGE_KINDS excludes the
+ * United States and the OECD average rather than a hand-written country list
+ * that would have to be edited alongside the data.
+ *
+ * Both directions fail: editing any of the three statements fails here, and
+ * so does moving a country's pct without restating them.
+ */
+export function ltcOecdRangeDrift(root = REPO_ROOT): RangeDrift[] {
+  const out: RangeDrift[] = [];
+  const cluster = LTC_GDP_2021.filter((r) => UNIVERSAL_COVERAGE_KINDS.includes(r.kind));
+  const us = LTC_GDP_2021.find((r) => r.kind === 'us');
+  if (!cluster.length || !us) {
+    out.push({
+      where: 'src/lib/ltc.ts',
+      says: cluster.length + ' universal-coverage rows, ' + (us ? 'a' : 'no') + ' United States row',
+      expected: 'a United States row and at least one universal-coverage row to quote a range from'
+    });
+    return out;
+  }
+  const lo = Math.min(...cluster.map((r) => r.pct)).toFixed(1);
+  const hi = Math.max(...cluster.map((r) => r.pct)).toFixed(1);
+
+  /* `source` is optional on the parameter type, and an ltcExpansion with no
+     source note at all would satisfy every check below by vacuum. */
+  const source = PARAMS_BY_ID['ltcExpansion'].source ?? '';
+  const inParams = source.match(/spend ([\d.]+)-([\d.]+)% of GDP/);
+  if (!inParams) {
+    out.push({
+      where: 'params.ts ltcExpansion.source',
+      says: 'no "spend L-H% of GDP" clause',
+      expected: 'spend ' + lo + '-' + hi + '% of GDP'
+    });
+  } else if (inParams[1] !== lo || inParams[2] !== hi) {
+    out.push({
+      where: 'params.ts ltcExpansion.source',
+      says: inParams[1] + '-' + inParams[2] + '%',
+      expected: lo + '-' + hi + '%'
+    });
+  }
+
+  const page = flowed(sourceText(LTC_PAGE, root));
+  const inPage = page.match(/least, ([\d.]+)%, against ([\d.]+)% to ([\d.]+)%/);
+  if (!inPage) {
+    out.push({
+      where: LTC_PAGE,
+      says: 'no "least, U%, against L% to H%" sentence',
+      expected: 'least, ' + us.pct.toFixed(1) + '%, against ' + lo + '% to ' + hi + '%'
+    });
+  } else if (inPage[1] !== us.pct.toFixed(1) || inPage[2] !== lo || inPage[3] !== hi) {
+    out.push({
+      where: LTC_PAGE,
+      says: inPage[1] + '% against ' + inPage[2] + '-' + inPage[3] + '%',
+      expected: us.pct.toFixed(1) + '% against ' + lo + '-' + hi + '%'
+    });
+  }
+
+  const note = flowed(sourceText(LTC_METHODOLOGY, root));
+  const inNote = note.match(/cluster at ([\d.]+)-([\d.]+)%/);
+  if (!inNote) {
+    out.push({
+      where: LTC_METHODOLOGY,
+      says: 'no "cluster at L-H%" clause',
+      expected: 'cluster at ' + lo + '-' + hi + '%'
+    });
+  } else if (inNote[1] !== lo || inNote[2] !== hi) {
+    out.push({
+      where: LTC_METHODOLOGY,
+      says: inNote[1] + '-' + inNote[2] + '%',
+      expected: lo + '-' + hi + '%'
+    });
+  }
+
+  /* The retired value itself. The range clause could be corrected while 2.0
+     survived elsewhere in the same string -- which is the shape of the defect
+     that produced this row. */
+  if (/\b2\.0%? *(?:-|to) *4\.4/.test(source)) {
+    out.push({
+      where: 'params.ts ltcExpansion.source',
+      says: 'still carries the retired 2.0 low end',
+      expected: 'no superseded OECD value anywhere in the source note'
+    });
+  }
   return out;
 }

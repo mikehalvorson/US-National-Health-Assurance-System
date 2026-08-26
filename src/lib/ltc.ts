@@ -54,11 +54,40 @@ export const MEDICARE_GAP = {
    perCapita is derived transparently as pct x GDP per capita (USD, adjusted
    for local prices, World Bank 2021); it is not a cross-scale comparison
    because every figure is the same unit, spending per person. ---- */
+/* R288 [§S9d]: 'benchmark' exists because the OECD average was carried as
+   'tax' and therefore drew in the tax-funded colour under a legend that
+   labelled that swatch "Tax-funded". The OECD average is an aggregate across
+   insurance-funded and tax-funded systems alike, so a reader saw it in the
+   same colour as Sweden, Norway and Denmark and could reasonably infer a
+   funding model for it. It is not a funding model and gets the neutral
+   swatch the app already uses for a reference line. */
+export type GdpKind = 'insurance' | 'tax' | 'us' | 'benchmark';
+
+/* One table for the colour AND the legend label of every kind.
+   Before this, `kindColor` was a ternary whose final branch returned the
+   tax-funded colour for anything it did not recognise, and the legend was
+   three hand-listed entries beside a data field that can carry more. Both
+   halves now derive from here, and `Record<GdpKind, ...>` means adding a kind
+   without styling it fails `astro check` rather than rendering as tax-funded.
+   `gdpKindStyleFaults()` covers what the type cannot: a dead entry, a shared
+   colour, and a kind that reached the data through a cast. */
+export const KIND_STYLE: Record<GdpKind, { color: string; label: string }> = {
+  insurance: { color: 'var(--series-1)', label: 'Social insurance' },
+  tax: { color: 'var(--series-3)', label: 'Tax-funded' },
+  us: { color: 'var(--series-5)', label: 'United States' },
+  benchmark: { color: 'var(--baseline-series)', label: 'OECD average (all funding models)' }
+};
+
+/* The kinds that describe a country covering the benefit universally. The
+   OECD average is an aggregate and the United States does not cover
+   universally, so neither belongs in the cluster the range is quoted from. */
+export const UNIVERSAL_COVERAGE_KINDS: GdpKind[] = ['insurance', 'tax'];
+
 export interface GdpBar {
   country: string;
   pct: number;              // total LTC spending, % of GDP, 2021 (OECD HaG 2023)
   perCapita: number;        // LTC spending per person, USD PPP, 2021 (derived)
-  kind: 'insurance' | 'tax' | 'us';
+  kind: GdpKind;
   confidence: Conf;
   note: string;
 }
@@ -76,8 +105,8 @@ export const LTC_GDP_2021: GdpBar[] = [
     note: 'Mandatory insurance from age 40, with a home and community-based tilt.' },
   { country: 'Germany', pct: 2.5, perCapita: 1566, kind: 'insurance', confidence: 'high',
     note: 'Statutory insurance since 1995, with a cash option for family caregivers.' },
-  { country: 'OECD average', pct: 1.8, perCapita: 922, kind: 'tax', confidence: 'high',
-    note: 'The average across OECD countries in 2021.' },
+  { country: 'OECD average', pct: 1.8, perCapita: 922, kind: 'benchmark', confidence: 'high',
+    note: 'The average across OECD countries in 2021, spanning insurance-funded and tax-funded systems alike. It is a reference line, not a funding model.' },
   { country: 'United States', pct: 1.3, perCapita: 929, kind: 'us', confidence: 'high',
     note: 'The lowest share of any country shown, yet close to the OECD average in raw dollars per person, because the U.S. economy is large. The money is means-tested and rationed, and this figure still leaves out the roughly $600B in unpaid family care.' }
 ];

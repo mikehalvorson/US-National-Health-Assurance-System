@@ -8,6 +8,7 @@ import {
   PROGRAM_INPUT_REAL_GROWTH, runPath, sampleParams, selfTest
 } from './model';
 import { FRAGILE_WITHIN, REGION_PALETTE } from './hospital-regions';
+import { KIND_STYLE } from './ltc';
 import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
@@ -86,6 +87,7 @@ import {
   unitAssumptionGaps, RECONCILIATION_MAX_ERROR_PCT, UNIT_ASSUMPTION_IDS,
   unitsCostReconciliation, visitSplitClosure,
   countyFileAudit, fragmentationClaimGuard, regionMethodologyDrift,
+  gdpKindStyleFaults, ltcOecdRangeDrift,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2623,9 +2625,36 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         const bad = directCareHeadcountDrift();
         return {
           ok: !bad.length,
-          note: bad.map((b) => b.figure + ': workforce.ts ' + b.workforce +
-            ', ltc.ts ' + b.ltc).join(' | ') ||
+          note: bad.map((b) => b.figure + ': ' + b.workforce +
+            ' vs ' + b.ltc).join(' | ') ||
             directCareSharedCount() + ' figures shared, all agreeing'
+        };
+      }),
+      /* R265 [§S9d]: the OECD long-term-care range, quoted in the parameter's
+         source note, on the page and in the methodology, all derived from the
+         one series in ltc.ts. The methodology corrected Japan from 2.0% to
+         2.2%, three of the four statements followed, and params.ts went on
+         citing the retired value because nothing tied them together. */
+      runGuarded('The OECD long-term-care range agrees wherever it is quoted', () => {
+        const bad = ltcOecdRangeDrift();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.where + ' says ' + b.says + ', expected ' +
+            b.expected).join(' | ') ||
+            'params.ts, ltc.astro and the methodology all state the range ' +
+            'LTC_GDP_2021 computes'
+        };
+      }),
+      /* R288 [§S9d]: the chart's categorical encoding. The OECD average, an
+         aggregate across funding models, drew in the tax-funded colour under
+         a legend that labelled that swatch "Tax-funded". */
+      runGuarded('Every long-term-care funding kind has its own colour and legend entry', () => {
+        const bad = gdpKindStyleFaults();
+        return {
+          ok: !bad.length,
+          note: bad.map((b) => b.kind + ': ' + b.problem).join(' | ') ||
+            Object.keys(KIND_STYLE).length + ' kinds, each with a distinct ' +
+            'colour and a legend entry the chart derives from the data'
         };
       }),
       /* R168 [§S9a]: requirement density runs inversely to cost. The four
