@@ -4339,3 +4339,237 @@ substantive tension the dashboard now states honestly and does not resolve.
 Resolving it means either seeding candidates independently at each count or
 accepting thirteen as a policy choice in the text of the framework itself.
 **Nobody's row.**
+
+## P14 — §S9d Long-Term Care · 2026-08-26 · branch `nha-remediation`
+STATUS: complete — all 8 recommendations landed across 2 commits, plus `R180`,
+which belongs to no section and which `R285` could not be finished without.
+
+Written from `git diff fdd01a6..HEAD`, not from memory of what was intended.
+Three consecutive sections have needed their log entry corrected by a review
+for exactly that reason.
+
+DISCREPANCY: **four, and two of them change what the row is.**
+
+1. 🛑 **`R265`'s premise is true and its framing is misleading, and correcting
+   it answers the prompt's Report question.** The prompt and `§BV1` both say
+   the correction *"reached the methodology, the data file and the public page
+   and stopped before the model"*, which reads as though the model was
+   sampling from a range floored on a withdrawn value. **Measured: the
+   "2.0-4.4%" lives inside the `source:` prose string. `ltcExpansion` samples
+   `low: 150, mode: 230, high: 330` and always did.** The correction moved the
+   sampled range by **zero**. It is a provenance defect on the framework's
+   largest expansion — worth fixing, and not an arithmetic one. **The code
+   won.**
+2. 🛑 **`R283`'s open question resolves to the branch neither the row nor
+   `§BW1` expected, and the entry gate's item 2 with it.** `workforce.ts`
+   **does** hold all three headcounts, in `LTC_WORKFORCE`, plus openings, the
+   median wage and the turnover rate. `§BW1` established that
+   `workforce.astro` — the **page** — does not, and the row then framed the
+   open question as *"either duplicated with no assertion, or the attribution
+   is false"*. It was neither: `§S9b`'s code review had already found the
+   duplication and added `directCareHeadcountDrift` to hold the copies level,
+   with a comment saying `§S9d` could collapse them safely. **The code won,
+   and the previous section's review had already answered the gate.**
+3. ⚠️ **`R284` is half wrong in the repository's favour.** It says the two
+   inputs behind `7.5M` *"carry no source and no separate grade"*.
+   `research/long_term_care_methodology.md` grades the figure **`Confidence:
+   low (the FTE count and part-time fraction are planning assumptions)`** and
+   names both inputs. The grade existed and never reached the code or the
+   reader. **The fix is to carry the grade, not to invent a source.**
+4. ⚠️ **`R286` undercounts.** It says `$600B` appears five times and `$17.36`
+   six. Measured: **six** and **eight**. The row was scoped before
+   `workforce.astro` was counted, which `§BW1` later widened it to include.
+
+LANDED:
+- `R265` `R288` — `47144bc`
+- `R283` `R284` `R285` `R282` `R286` `R287`, and `R180` — `b1f5301`
+
+**Two commits, not eight, and both orderings are deliberate.** `R288` landed
+**before** `R265` although the prompt orders `R265` first: `R265`'s gate
+expresses the universal-coverage cluster as a predicate over `kind`, and until
+`'benchmark'` exists there is no kind separating the OECD average from the
+tax-funded countries — the gate would have computed 1.8-4.4%. The six rows in
+`b1f5301` touch one data shape (`WORKFORCE_ASSESS` gaining per-figure grades
+while losing its literals) and could not be usefully split.
+
+OECD RANGE: `params.ts` **2.0-4.4% → 2.2-4.4%**; effect on `ltcExpansion`
+sampling: **none, and this is the finding.** The range is prose inside
+`source:`; the sampled distribution is `150 / 230 / 330` in 2023 dollars and
+did not move. `ltcOecdRangeDrift()` now ties four statements to
+`LTC_GDP_2021`: the parameter's source note, `ltc.astro`'s sentence (its
+`1.3%` too), the methodology's cluster clause, and a refusal of the retired
+`2.0` anywhere in the source string — because the range clause could be
+corrected while `2.0` survived beside it, which is the shape of the defect
+that produced the row.
+
+DEAD CONSTANTS: `WHAT_WORKS` **rendered**; `MEDICARE_GAP` **rendered**. Both
+from `ltc.astro`'s frontmatter at build time, so they stay in the static HTML
+— client rendering would have cost that. The constants carry the page's
+published wording, since that is what readers have seen. **The merge was not
+lossless in either direction and both halves are recorded at the constants:**
+the page's *"and the largest single payer of it in the country"* is kept; the
+constant's *"an insurance contribution or a tax"* is **restored**; the
+constant's *"bathing, dressing, eating, and supervision"* is **dropped** for
+the page's *"daily living"*, because the chapter's opening paragraph already
+spells that list out.
+
+HEADCOUNTS: **wired to `workforce.ts`** — `5.4M / 6.2M / 7.5M`, and `9.7M`,
+`$17.36` and `75%` with them, now sourced from `LTC_WORKFORCE` in
+`src/lib/workforce.ts`. `WORKFORCE_ASSESS` reads it; `ltc.astro` and
+`workforce.astro` interpolate it in their frontmatter. The page's attribution
+to *"The Workforce model"* is true for the first time.
+
+7.5M INPUTS: `~5.0M covered FTE` / `~0.67 full-time fraction` — **both are
+plan assumptions, and neither has an external source, which is now what the
+page says.** `matureFramework` is graded `low`, alone among the seven, with a
+`basis` string naming both inputs and stating that neither is a published
+figure. The chart renders all three bars' grades beneath them.
+`ltcPlanningInputFaults()` pins `5.4 + 0.772 = 6.2` and `5.0 / 0.67 = 7.5`,
+which were comments beside the numbers they described, and asserts the
+methodology still states the grade the code publishes.
+
+CONTRADICTIONS: the four DISCREPANCY items above, plus `V18` re-verified —
+`ltcWageFloor` 29/52/94 still matches `params.ts` to the dollar, and nothing
+in this section touched `ltcWageFloorCost()`.
+
+### 🆕 The finding this section did not come for: `R180` is live, and every chart in the application was affected
+
+`§BB` filed `R180` on inference from reading `chart-util.ts`, `R285` cited it
+as a compounding risk (*"the series **may** be unreachable by any input at
+all"*), and no section owns it. It is not a risk. Reproduced in a browser:
+
+| after one in-app navigation | before the fix | after |
+|---|---|---|
+| `.nha-tooltip` nodes in the document on **hover** | **0** | 1 |
+| `.nha-tooltip` nodes in the document on **focus** | **0** | 1 |
+| the node the singleton points at, still in the document | **false** | true |
+
+`tooltip()` memoised its node in a module-level `tip` and returned it whenever
+`tip` was truthy. `<ClientRouter />` replaces `<body>` on every in-app
+navigation, so from the second page onward it returned a node the router had
+discarded: `showTip` filled it, set `display: block` on it, and nothing
+appeared. **Every chart in the application shares that one singleton.**
+
+`!tip.isConnected` is the whole fix. It landed here because **`R285` is not
+finished without it** — the focus handler `R285` adds showed nothing at all.
+Regression test in `tests/lib/chart-util.test.ts`, run against a document stub
+because the suite's environment is `node`; the test fails with the guard
+removed.
+
+**This is the third instance of the pattern the P13 handoff named:** a finding
+downgraded or softened because a mechanism *"only runs once at init"* turns
+out to be live once you ask what a second page load does. `AE1` was the first,
+`R70` the second.
+
+### 🆕 Three checks this section wrote were wrong, and one measurement was
+
+All four were caught inside the section rather than by a review, which is the
+only difference from the last three sections. Each is commented where it was
+fixed.
+
+1. **A grade clause that could not fail.** `ltcPlanningInputFaults` asserted
+   the methodology still grades the maturity figure `low`, with
+   `/Universal benefit at maturity[^|]*?Confidence: low/` over the flowed
+   file. **There are two `Confidence: low` grades in that file** — the
+   maturity figure's and the wage floor's, twenty lines apart — so the pattern
+   matched the second one whatever the first said. Downgrading the maturity
+   bullet to `high` left the check green. Found by `prove_p14.py` reporting
+   **CANNOT FAIL**, not by reading it again. Bounded to the bullet now.
+2. **A literal scan that identified a percentage by its digits.**
+   `ltcRepeatedLiterals` listed a bare `'3.4%'` for Sweden's share of GDP and
+   went red on Germany's payroll contribution of *3.4% **of wages***. Two
+   different quantities, two shared digits. The literals carry their context
+   now — and the check caught its own defect on the first run, which is the
+   argument for writing it at all.
+3. **A cast the repo already forbids.** The same clause reached for
+   `(match ?? [, 'no grade'])[1] as string` to squeeze a value out in one
+   expression, and `primitiveAssertions` failed the build **by name**. An
+   existing check catching a new one.
+4. **Two measurements in `measure_s9d.py` that reported comfortable answers.**
+   A `confidence` regex matched the **first** `as Conf` in `ltc.ts`, which is
+   `MEDICARE_GAP`'s, and reported `WORKFORCE_ASSESS` as `high` when it is
+   `medium` — it would have made `R284` look wrong. A single-line search for
+   the methodology's grade reported `False` for a grade that sits three lines
+   below its figure — it would have made `R284` look right for the wrong
+   reason. **A measurement is a hypothesis too**, and both errors pointed the
+   same way: toward less work.
+
+### 🆕 The harness was blind, and every payload looked broken
+
+`prove_p14.py`'s first oracle ran vitest and grepped its output for the
+failing self-test's name. **Vitest truncates `assertSelfTestsPass`'s thrown
+message to about forty characters before it reaches stdout — in the default,
+`basic` **and** `json` reporters alike.** The row name never appears. All
+seven early payloads reported *"the suite failed, but on some other test"*,
+which reads as seven broken payloads rather than one blind harness.
+
+The oracle asks the registry directly now, through a probe test file written
+and removed in a `try`/`finally` (vitest's `include` is `tests/**/*.test.ts`
+and nothing else in the repo executes TypeScript; `tests/` is not in the file
+manifest, so nothing else notices).
+
+A second harness error in the same file: the payload that retires a `kind`
+used `str.replace(old, new, 1)` and moved **Norway only**, leaving Sweden and
+Denmark on `'tax'`. The check correctly stayed green and was reported as
+**CANNOT FAIL**. **A payload that does not do what its name says is
+indistinguishable from a check that does not work.** Replacement is now
+global.
+
+### What was measured, and what it changed
+
+`baseline-P14/measure_s9d.py`, run before any implementation, with its output
+in `baseline-P14/preP14-measure.txt`. Six of eight rows confirmed as written;
+`R265` and `R283` confirmed in fact but wrong in framing; `R284` half wrong;
+`R286` undercounted.
+
+**`R287` had the cleanest measured answer in the section.** `perCapita` was
+eight typed literals under a header calling them derived. Back-solving
+`perCapita / (pct/100)` for each row and rounding to the nearest **$10**
+reproduces **all eight published figures exactly**, so the switch to a
+computed field changed no number a reader has seen. At $100 rounding four of
+the eight would have shifted by $1; the finer precision was chosen to avoid
+churning published figures for a structural gain. Three back-solve to exactly
+round values — Norway 92,200, Japan 46,000, Germany 62,640 — which
+corroborates that the original author used the real World Bank
+`NY.GDP.PCAP.PP.CD` 2021 series the methodology names. ⚠️ **Not independently
+re-verified against the live World Bank series**, and the comment in `ltc.ts`
+says so rather than claiming a lookup that did not happen.
+
+### Gates
+
+- Self-tests **216 → 220** (`ltcOecdRangeDrift`, `gdpKindStyleFaults`,
+  `ltcPlanningInputFaults`, `ltcRepeatedLiterals`; `directCareHeadcountDrift`
+  re-pointed rather than added). README bumped in the same commits — it moved
+  three times during the section.
+- Full suite **475 → 486 passing, 59 files**. File manifest unchanged at
+  **126** — no new files under `src/`, `tools/` or `research/`.
+- `astro check`: **0 errors, 0 warnings, 1 hint** (`equations.ts:1252`), read
+  and confirmed rather than assumed.
+- `tests/lib/kappa.test.ts`'s `KPP-C8` breach count did not fire: no model
+  output moved. Correct — `ltcExpansion`'s distribution is untouched.
+- `src/` swept for bytes `< 0x09` after every scripted edit: none.
+- `python check_audit_docs.py` exits 0, 35 passed.
+
+### Proof
+
+`baseline-P14/prove_p14.py` — **22 payloads, every one turning its intended
+check red**; output in `baseline-P14/postP14-prove-run.txt`. Six are asserted
+in vitest rather than in the self-test registry and are marked with a leading
+`!`, because the probe cannot see those.
+
+### Deliberately not done
+
+- **`R265`'s first declared test in its literal form** — *"the OECD LTC range
+  appears **once**, as a parameter, with both the page and the model reading
+  it."* `params.ts` cannot import `ltc.ts` without a cycle, so the single
+  source is `LTC_GDP_2021` and a build gate is what makes all three quote it.
+  Met in substance, not in form, and recorded rather than glossed.
+- **`R285`'s tooltip is still `chart-util`'s body-level singleton.** `R180`'s
+  fix makes it work; it does not make it per-chart. The row's *"every tooltip
+  is reachable by keyboard focus"* is met; the singleton design is not this
+  row's to change.
+- **`workforce.astro`'s remaining prose figures** beyond the six the check
+  covers. The stat tiles, the risk rows and the wage table are interpolated;
+  the surrounding narrative is not exhaustively swept. `R286` is a `§S9d` row
+  scoped to the LTC chapter and `§BW1` widened it one page; widening it to
+  every chapter is nobody's row.
