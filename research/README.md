@@ -49,6 +49,29 @@ from 002 onward, and `CP-BH-003` means two different parameters in the two
 places. Match on the description and confirm the entry states the row's
 number. Repairing the namespace itself belongs to `§S10`.
 
+**Some `source_url`s point at a living page, and the row says so.** A
+publisher that maintains one URL across editions - AHA Fast Facts, CareScout
+Cost of Care, the CMS NHE fact sheet, a CDC budget index - will not show the
+year the row states. Two cases were measured on 2026-08-27 and both are
+disclosed in the row's `notes` rather than papered over:
+
+- `CP-HOSP-001` states **6,120** hospitals for 2024; AHA Fast Facts now shows
+  **6,100** for its 2026 edition at the same URL. Nothing is wrong with either
+  number and a reader following the link will think one of them is.
+- `CP-LTC-001` through `CP-LTC-003` verify exactly against CareScout, which
+  carries a 2024 and a 2025 column - but it publishes **monthly** medians
+  ($9,277 semi-private, 2024) where the rows state **annual** ones
+  ($111,325 = 9,277 x 12). The arithmetic is the row's, not the publisher's.
+
+Neither is fixed by swapping the URL, because no archived per-edition link
+exists in this repo for either publisher. **A citation is finished when the
+row tells the reader what they will actually find.**
+
+**A 403 is a bot block, not a dead link.** `cbo.gov` direct PDFs,
+`bhw.hrsa.gov`, `gao.gov/products`, `jamanetwork.com`, `congress.gov` and
+`mercatus.org` all refuse automated fetch. Their URLs are correct. Do not
+"repair" one.
+
 **`year` is a data vintage, never a placeholder.** No row reads `recent`,
 `estimate`, `historical`, `ongoing` or `various` any more. A row whose value
 genuinely spans years carries a declared span (`2024-2025`, `2022-2031`) and

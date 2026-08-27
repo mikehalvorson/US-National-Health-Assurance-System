@@ -4936,7 +4936,12 @@ checks.
 
 ## P15 — §S11a Seed CSV & research sourcing · 2026-08-26 · branch `nha-remediation`
 STATUS: complete — all 14 recommendations resolved, four of them by measuring
-that the row's premise was false rather than by changing code.
+that the row's premise was false rather than by changing code, plus **two fix
+runs** after a review of the section's own commit.
+⚠️ **Read  at the end of this
+entry before believing anything above it.** It found seven defects, **all seven
+written by this section**, and every one of them was a citation that did not
+support the row it was attached to.
 
 DISCREPANCY: **ten, and four of them change what the row is.**
 
@@ -5254,3 +5259,82 @@ built output: `dist/index.html` carries the new front-page text and
   code 0 says both commands succeeded; it does not say the hint count is 1.
   The gate is *read the count*, and piping to `tail` is how the count stops
   being readable. Re-run without the pipe.
+
+### THE REVIEW OF THE SECTION, AND THE FIX RUNS
+
+Pinned at `6155cac`, so the diff reviewed was exactly what P15 committed. Run
+inline rather than through review sub-agents, which this session was told not
+to spawn.
+
+**Seven defects. All seven were written by this section**, and all seven were
+found by the same move: **fetching what the section had cited and reading what
+came back.** The section's own stated rule was *"a URL is only a citation if
+the entry it sits in states the row's number"*, and it then broke that rule
+seven times in the act of enforcing it 46 times.
+
+That is this campaign's signature failure arriving on schedule — the fifth
+section running where the pass removing a defect authors a fresh one — with
+one difference worth keeping: **the check that caught them is the check the
+section should have run before committing, not after.** `check_urls.py` takes
+under two minutes.
+
+#### Fix run 1 (`6155cac`..): three citations that did not support their row
+
+| row | what shipped | why it is a defect |
+|---|---|---|
+| `CP-UNIT-002` | `urgentcareassociation.org/wp-content/uploads/Finance-v9.pdf` | **404.** It came from `research/02`'s own source line, so a repo-internal citation was dead and nothing had ever fetched it. Replaced with UCA's 2023 Industry White Paper, same publisher, 200. |
+| `CP-EMS-001` | `cms.gov/.../nhe-fact-sheet` | Resolves to **"NHE Fact Sheet \| CMS"**, which is national health expenditure and says nothing about ground-ambulance cost. **A citation that resolves and does not support its number is worse than an empty cell, because it looks finished.** The real page exists: `cms.gov/medicare/payment/fee-schedules/ambulance/medicare-ground-ambulance-data-collection-system`, verified by title. |
+| `CP-DX-003` | `healthleadersmedia.com/...` | A trade-press summary of a JAMA paper — **`R9`'s and `R10`'s exact defect, written into a row while fixing two others.** Replaced with `doi.org/10.1001/jama.2019.13978`, confirmed against Crossref as Shrank, Rogstad and Parekh, JAMA, 2019-10-15. |
+
+`CP-EMS-001` is the instructive one. The section *knew* the URL was weak — the
+note it shipped said "the URL is the CMS data landing page; GADCS has no
+stable public report URL recorded anywhere in this repo." **The note was
+honest and the fix was three searches away, and writing the disclosure
+substituted for doing the work.** A disclosure is not a licence.
+
+#### Fix run 2: living pages cited for dated figures
+
+A class the section never considered. Several backfills point at a page the
+publisher maintains rather than publishes once, so the number the row states
+is not the number a reader following the link will see.
+
+- **`CP-HOSP-001`** states **6,120** hospitals for 2024. AHA Fast Facts at the
+  same URL now shows **6,100** for its 2026 edition. Both numbers are right
+  and a reader will conclude one of them is wrong.
+- **`CP-LTC-001`–`CP-LTC-003`** verify *exactly* — CareScout carries a 2024
+  and a 2025 column, and $9,277/mo semi-private for 2024 annualises to
+  $111,324 against the row's $111,325. But **CareScout publishes monthly
+  medians and the rows state annual ones.** The x12 is the row's arithmetic,
+  not the publisher's, and nothing said so.
+
+Neither is fixed by swapping the URL: no archived per-edition link exists in
+this repo for either publisher. Both are fixed by the row telling the reader
+what they will actually find. The rule is now in `research/README.md`:
+**a citation is finished when the row says what the reader will see.**
+
+#### What the review checked and did not find
+
+- **No grade was raised.** Re-verified against the pre-P15 file after both fix
+  runs: 12 down, 0 up.
+- **No row was added, removed or renumbered**, so nothing collides with
+  `§S10`. `diff_seed.py` asserts the id set is unchanged and it holds.
+- **Every remaining empty `source_url` is graded below `medium`** — three
+  rows, and each says in `notes` why nothing citable exists.
+- **The three LTC values now verify against the live publisher**, which is
+  more than the section claimed for them when it committed.
+- Structure re-checked after each fix run: 80 rows, all 81 lines at exactly 11
+  fields, no control bytes, LF only.
+
+#### Carried forward
+
+- ⚠️ **`check_urls.py` is a script, not a gate.** Nothing in the build fails if
+  a `source_url` 404s, and one already had. The seed is in
+  `src/lib/file-manifest.ts`, so a build-time check could read it — but it
+  would need the network, which no other check in this repo does, and a
+  network-dependent build gate is a worse problem than the one it solves.
+  **Recorded as a decision, not an oversight.**
+- ⚠️ **The living-page problem is not fully swept.** Two cases were measured
+  because two rows were spot-checked. `cvs.com/minuteclinic/services/price-lists`,
+  `officeofbudget.od.nih.gov/`, `cdc.gov/budget/` and the KFF pages are the
+  same shape and were not each compared against their row. **Nobody's row
+  yet.**
