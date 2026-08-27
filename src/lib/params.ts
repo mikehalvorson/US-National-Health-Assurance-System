@@ -359,7 +359,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Utilization increase at mature NHA (universal coverage + zero point-of-care cost)",
     low: 6, mode: 10, high: 16,
     confidence: "low",
-    source: "DERIVED; no direct citation exists for this exact policy. Anchors: RAND Health Insurance Experiment arc elasticity ≈ −0.2; OOP is ~10.4% of NHE today; CBO single-payer working paper demand-increase discussion; 26.7M uninsured gaining full coverage (KFF 2024). Flagged in BUILD-BRIEF.md as the model's most consequential assumption.",
+    source: "DERIVED; no direct citation exists for this exact policy. Anchors: RAND Health Insurance Experiment arc elasticity ≈ −0.2; OOP is ~10.4% of NHE today; CBO single-payer working paper demand-increase discussion; 26.7M uninsured under 65 gaining full coverage (KFF analysis of Census ACS, 2024). Flagged in BUILD-BRIEF.md as the model's most consequential assumption.",
     url: "https://www.rand.org/health-care/projects/hie.html",
     adjustable: true, sliderMin: 0, sliderMax: 30
   },

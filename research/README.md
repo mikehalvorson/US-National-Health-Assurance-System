@@ -81,9 +81,37 @@ its `notes` say what the endpoints are. A span is not an uncertainty band.
 
 | `use_as` | Means | Rule |
 |---|---|---|
-| `calibration` | A level that participates in the **2023** base-year identity | May be summed with other `calibration` rows |
-| `trend` | A growth rate, a projection, or a figure whose content is a change over time | Used to move a figure between years, never summed |
-| `benchmark` | Everything else: comparators, unit prices, ratios, analogues, and levels at a year that is not 2023 | Never summed into a national total |
+| `calibration` | A level or ratio measured at the **2023** base year | Same-year, so safe to combine - **but see the two traps below** |
+| `trend` | A growth rate or a **forward** projection: a figure about a year that has not happened | Never summed into a single-year total |
+| `benchmark` | Everything else: comparators, unit prices, ratios, analogues, levels at a year that is not 2023, and **backward** multi-year windows | Never summed into a national total |
+
+🛑 **`calibration` does not mean "addable". Two traps inside the class:**
+
+1. **A total and its own components are both `calibration`.** `CP-TOT-001` is
+   total NHE at $4,866.5B; `CP-TOT-004a` through `CP-TOT-004f` and `CP-TOT-005`
+   are lines *inside* it, and `CP-FIN-002`, `CP-FIN-004` and `CP-PH-001` are
+   cuts of it on a different axis. **Adding the total to its parts
+   double-counts.** Pick one level of the hierarchy.
+2. **Two `calibration` rows are not levels at all.** `CP-TOT-002` is a percent
+   and `CP-TOT-003` is a per-capita figure. They belong to the 2023 identity
+   and are the right things to *check* a sum against; they can never be
+   summands.
+
+What the column actually guarantees is narrower than "may be summed" and is
+the thing `R8` asked for: **no row in `calibration` is from a year other than
+2023**, so nothing in that class can drag a 2024 or 2025 figure into a
+single-year total by accident. Whether two same-year rows *should* be added is
+still a question about what they measure, and the column does not answer it.
+
+The forward/backward split is what separates `trend` from `benchmark` when
+both carry a year range. `CP-OFF-003a`, `CP-OFF-003b`, `CP-FIN-016a` and
+`CP-FIN-016b` are all forward budget-window scores and are all `trend`.
+`CP-OFF-002` (2003-2018), `CP-PH-003` (1994-2023) and `CP-RD-002` (2019-2021)
+are backward windows over work already published, and are `benchmark`.
+
+⚠️ **Nothing enforces any of this.** No build check reads this file or the
+seed. The column is a convention a reader has to honour, and it was
+inconsistent across four rows for a day before a review caught it.
 
 **`confidence` is load-bearing beyond this file.** The published FMEA borrows
 cost-parameter occurrence from these grades, so a row graded high on no
@@ -114,20 +142,25 @@ under the same caution: the model's `BASE2023` uses 2023 GDP ($27,720B), and
 
 ### The 26.7M uninsured headline
 
-The front page states **26.7M people uninsured**. That number is real and is
-the KFF/Census-ACS count of the uninsured **under age 65** in 2024, at a 9.8%
-rate (seed row `CP-POP-004b`). The dashboard pairs it with **8.0%**, which is
-the Census CPS ASEC **all-ages** rate (seed row `CP-POP-004a`), and
-`src/lib/equations.ts` describes the pair as "26.7M of 334M".
+The front page carries **26.7M**. That number is real and is the KFF/Census-ACS
+count of the uninsured **under age 65** in 2024, at a 9.8% rate (seed row
+`CP-POP-004b`). The dashboard pairs it with **8.0%**, which is the Census CPS
+ASEC **all-ages** rate (seed row `CP-POP-004a`).
 
 `26.7 / 334.0` does come to 8.0%, so the arithmetic is self-consistent - but
-the two inputs measure different populations, and `CP-POP-004a`'s own note has
-said "two incompatible measures exist" since the seed was written. The label
-was corrected on 2026-08-26 to say which measure each figure is. **The model's
-8.0% demand input was deliberately not changed**, because moving it moves
-scenario economics, and this is a labelling defect rather than an arithmetic
-one. Making the headline *derive* from a declared parameter rather than being a
-string literal is still open.
+the two inputs measure different populations, and `CP-POP-004a`'s note says
+"two incompatible measures exist". Until 2026-08-26 the front page called it
+"people uninsured" and `src/lib/equations.ts` described the pair as
+"26.7M of 334M"; both now name the measure. **The model's 8.0% demand input was
+deliberately not changed**, because moving it moves scenario economics, and
+this is a labelling defect rather than an arithmetic one.
+
+**Three sites carried the defect and the first pass corrected two.** The third,
+found by a review the next day, was the row for `KPP-A1` in
+`quality-equation-methodology.md`, which documented the derivation as
+"26.7M uninsured / 334M population" and graded it `high`. Making the headline
+*derive* from a declared parameter rather than being a string literal is still
+open, so nothing yet prevents a fourth site.
 
 ## Calibration base year - do not sum across vintages
 

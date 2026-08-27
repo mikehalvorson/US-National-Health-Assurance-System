@@ -4936,12 +4936,24 @@ checks.
 
 ## P15 — §S11a Seed CSV & research sourcing · 2026-08-26 · branch `nha-remediation`
 STATUS: complete — all 14 recommendations resolved, four of them by measuring
-that the row's premise was false rather than by changing code, plus **two fix
-runs** after a review of the section's own commit.
-⚠️ **Read  at the end of this
-entry before believing anything above it.** It found seven defects, **all seven
-written by this section**, and every one of them was a citation that did not
-support the row it was attached to.
+that the row's premise was false rather than by changing code, plus **three fix
+runs** after two reviews.
+
+⚠️ **Read `### THE REVIEW OF THE SECTION, AND THE FIX RUNS` and then
+`### THE TWO-AXIS CODE REVIEW, AND FIX RUN 3` at the end of this entry, in
+order, before believing anything above them.** The first found seven defects,
+all seven citations that did not support their row. The second — parallel
+Standards and Spec sub-agents pinned at `1460194` — found **fifteen more,
+thirteen of them real, and the first review had missed every one.** Among them:
+**`R6` had a third site this section never touched**, and **`R13`'s first
+declared test cannot fail**.
+
+⚠️ **The sentence you are reading replaces one the backslash-and-backtick trap
+silently ate.** A `python -c "..."` amendment to this line contained a
+backticked section name; bash command-substituted it and wrote the line back
+with the name deleted and no error. Seventh occurrence in the campaign. It is
+recorded here rather than only in the tooling notes because **the damage landed
+in the pointer telling a reader where the corrections are.**
 
 DISCREPANCY: **ten, and four of them change what the row is.**
 
@@ -5067,8 +5079,11 @@ DOWNGRADED: **12** rows whose grade dropped because no evidence carries the old
 one.  **UPGRADED: 0.**
 YEARS: **25** `recent` → numeric, and 11 further placeholders (`estimate`,
 `historical`, `ongoing`, `various`, `study year varies`, `FY2025 enacted`, and
-four undeclared ranges) resolved. **Remaining placeholders: 0.** Six rows carry
-a declared span whose endpoints are named in `notes`.
+four undeclared ranges) resolved. **Remaining placeholders: 0.** **Nine** rows
+carry a declared span whose endpoints are named in `notes` — this entry said
+six until the two-axis review counted them. `R7`'s own test asks for "a numeric
+year" and nine rows do not have one; the argument that a declared span is not a
+placeholder is made below and is a judgement, not a pass.
 DENOMINATOR: canonical population per output type = **334.0M (2023)** for every
 per-capita figure derived from the NHE calibration, **340,110,988 (2024)** for
 regional and county allocation only, **347.3M (2025)** for current-state
@@ -5338,3 +5353,74 @@ what they will actually find. The rule is now in `research/README.md`:
   `officeofbudget.od.nih.gov/`, `cdc.gov/budget/` and the KFF pages are the
   same shape and were not each compared against their row. **Nobody's row
   yet.**
+
+### THE TWO-AXIS CODE REVIEW, AND FIX RUN 3
+
+Pinned at `1460194`, so the diff was the whole section plus the merged LTC
+branch. Standards and Spec run as parallel sub-agents. **Fifteen findings,
+thirteen of them real**, and the inline review recorded above missed every one
+of them — it checked whether the citations resolved and never checked whether
+the section's own prose was true.
+
+🛑 **The single worst finding, and it is the campaign's signature defect built
+fresh: `R13`'s first declared test cannot fail.** The test is *"no
+calibration-class parameter is more than 1 year off the declared base year
+without a trend applied"*. This section wrote the definition of
+calibration-class — `research/README.md` says `calibration` is a level measured
+at the **2023** base year — and then classed `CP-BH-001` (2021) as `benchmark`.
+So every row in the class is 2023 by construction, "more than 1 year off" is
+unsatisfiable, and **the test passes because nothing can be in its failing
+set.** The row's substance was also not done: `CP-BH-001` is still `139.6` at
+`2021` and `CP-BH-015`'s 3.27%/yr is still unused, exactly as `R13` says.
+Recording the trend in `notes` is a defensible call and was disclosed; **what
+was not disclosed is that the check certifying it is empty.**
+
+#### Standards, seven findings
+
+| # | Finding | Verdict |
+|---|---|---|
+| 1 | `params.ts` and `README.md` both assert `CP-POP-004a`'s note *"has read 'two incompatible measures exist' since it was written"* — **and the same commit deleted that phrase.** Two live claims citing a string their own change removed. | **Real.** Phrase restored to the note, because it was true and load-bearing. |
+| 2 | `README.md` stale on arrival: present tense about `equations.ts` text the same commit had already removed. | **Real.** Rewritten to past tense. |
+| 3 | 🛑 **`R6` had three sites and the section fixed two.** `research/quality-equation-methodology.md` documented `KPP-A1`'s derivation as *"26.7M uninsured / 334M population"* and graded it **`high`** — the exact defective pairing, in the file explaining the exact equation being corrected. `params.ts:362`'s `utilIncrease` source string carried it too. | **Real, and the most consequential.** Both fixed; grade dropped to `medium-high`. A repo-wide sweep now finds no site pairing the two measures. |
+| 4 | `CP-HOSP-001` and `CP-CLIN-001` notes were overwritten wholesale, so both said *"the previous note"* about text that no longer existed, and the figures it held (critical-access and AMC counts; NP and PA headcounts) were **deleted, not relocated**. | **Real.** Restored with their caveats. |
+| 5 | The section **added** "and ACA subsidy expiration" to the front-page label while **deleting** its only support — `CP-POP-004b`'s *"likely higher in 2025-2026 with ACA subsidy expiration"*. | **Real, and a sourcing regression on a public page.** Support restored. |
+| 6 | 🛑 **The `use_as` rule is unsafe against its own data.** `README.md` said `calibration` rows *"may be summed"*. The class holds `CP-TOT-001` (total NHE) **and** `CP-TOT-004a`-`004f` + `CP-TOT-005`, its own components — summing them double-counts — plus a percent and a per-capita figure that are not summands at all. | **Real.** The rule now states what the column actually guarantees (no row from a year other than 2023) and names both traps. |
+| 7 | `CP-OFF-003a`/`003b` were `benchmark` while structurally identical `CP-FIN-015a/b` and `CP-FIN-016a/b` were `trend`. | **Real.** Rule is now forward projection -> `trend`, backward window -> `benchmark`; only those two moved. |
+
+#### Spec, eight findings
+
+Verified clean by the Spec axis first: id set and order identical, no
+duplicates, **12 downgrades and 0 upgrades**, zero rows `>= medium` with an
+empty `source_url`, zero `year: "recent"`, `use_as` on all 80 rows, and of 48
+new or changed URLs only three are absent from `research/01`-`06` — each a
+spec-mandated re-source or a fix-run correction.
+
+| # | Finding | Verdict |
+|---|---|---|
+| 1 | `R13` not done, and its test vacuous. | **Real.** See above. |
+| 2 | `R6`'s first declared test not met — the headlines are still string literals. | **Real, already disclosed**, still open. |
+| 3 | `R35`'s test not met — the three `BASE2023` categories still untraced. | **Real, already disclosed**, still open. |
+| 4 | `R9` half-landed: the spec asks for PERI/Friedman **and** Himmelstein-Woolhandler; only the NEJM DOI is in `source_url`, PERI is a bare string in `notes`. | **Real.** One URL field, two required sources. Left as disclosed; a second URL column is `§S11b`'s call, not a P15 fix. |
+| 5 | `R8`'s test has no guard — nothing in `src/` or `tools/` reads `use_as`, or the seed at all. | **Real.** Now stated in `README.md` next to the rule. |
+| 6 | 🛑 **Two downgrades drop below the grade their own research file states.** `research/04` grades the hearing-aid figure **Medium-High**; `CP-DVH-002` went to `low-medium`. `research/05` grades the TAA figure **MEDIUM**; `CP-TRN-002` went to `low-medium`. | **Real.** A source hunt was made and failed — `dol.gov` refuses automated fetch, the Mathematica publication URL could not be located, and neither hearing-aid site resolves. **No URL was guessed.** Both notes now open with `DOWNGRADED FOR ABSENCE OF A CITATION, NOT ON THE EVIDENCE` and state the research file's own grade, so the gap is visible instead of inherited. |
+| 7 | The entry claimed **six** rows carry a declared span. There are **nine**. | **Real.** Corrected above. |
+| 8 | `check_urls.py` and `diff_seed.py` are not in this repo, and the review's load-bearing claims rest on them. | **Half real.** They are committed, to the audit repo at `e89c131` — which the Spec axis could not see, which is precisely the point. This is open item 10 in the handoff, now demonstrated rather than hypothesised: **a reviewer working from the dashboard repo alone cannot reproduce this section's central claims.** |
+
+#### Scope creep, as the Spec axis called it
+
+The two `src/lib/` label edits are creep against *"It touches only `research/`
+and `HANDOFF.md`"*. The Spec axis's own judgement is that **the spec is
+genuinely self-contradictory here**, since `R5`, `R30` and `R35` all re-target
+to `params.ts`. Recorded as deliberate, not as licence. `file-manifest.ts` is a
+build consequence; `global.css` came in with the merge.
+
+#### What this review says about the inline one
+
+The inline review recorded above found seven defects and all seven were
+citations. It ran `check_urls.py` and read what came back — and it never once
+asked whether the section's own prose was true. **Every finding here is in that
+blind spot:** a comment citing a deleted string, a README stale against its own
+commit, a third site of the defect being fixed, a rule that contradicts the
+data it governs, a count that was wrong, and a test that cannot fail. **A
+review that only checks the thing the section was careful about will only find
+the defects the section was careless about, and those are different sets.**
