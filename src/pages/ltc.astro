@@ -19,7 +19,8 @@ import { LTC_WORKFORCE } from '../lib/workforce';
    from the chart's own data rather than typed a second time. */
 import {
   WHAT_WORKS, MEDICARE_GAP, UNPAID_FAMILY_CARE_B, LTC_GDP_2021,
-  LTSS_SPEND_2022_B, MEDICAID_ASSET_TEST_TEXT, HCBS_WAITING_LIST_TEXT
+  LTSS_SPEND_2022_B, MEDICAID_ASSET_TEST_TEXT, HCBS_WAITING_LIST_TEXT,
+  PLANNING_INPUTS
 } from '../lib/ltc';
 const ltcPhase = LTC_BENEFIT_PHASE!;
 const ltcStartYear = calendarYear(ltcPhase.year);
@@ -172,6 +173,21 @@ const usPerCapita = LTC_GDP_2021.find((r) => r.kind === 'us')!.perCapita
       of that.</p>
     <div id="ltc-workforce-fig"></div>
     <div id="ltc-workforce-grades" class="ltc-workforce-grades"></div>
+    <p class="note"><b>What the maturity figure rests on.</b> The third bar is
+      not measured. It divides the plan's covered full-time-equivalent aides by
+      an assumed full-time fraction, and both of those are assumptions this
+      plan makes rather than published figures, which is why the bar is graded
+      low. Each is stated here with its own grade rather than folded into the
+      figure it produces.</p>
+    <ul class="ltc-planning-inputs">
+      {PLANNING_INPUTS.map((input) => (
+        <li>
+          <b>{input.label}: {input.display}</b>
+          <span class={'conf ' + input.confidence}>{input.confidence}</span>
+          <small>{input.basis}.</small>
+        </li>
+      ))}
+    </ul>
     <p class="note">These bars are headcounts of direct-care workers at three
       moments: how many are employed today, how many the current system already
       needs by 2034 just to keep pace with aging, and how many a universal

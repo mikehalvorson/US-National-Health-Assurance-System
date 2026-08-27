@@ -2462,9 +2462,9 @@ export function unitsCostStressorDrift(): UnitsCostStressorDrift[] {
  */
 const DIRECT_CARE_PAGES = ['src/pages/ltc.astro', 'src/pages/workforce.astro'];
 
-/* The interpolation each page is expected to carry. `frontmatterName` is what
-   the page aliases LTC_WORKFORCE to; both pages alias it, to different names,
-   which is why this is a table rather than a prefix. */
+/* The interpolation each page is expected to carry. `alias` is what the page
+   aliases LTC_WORKFORCE to in its frontmatter; the two pages use different
+   names, which is why this is a table rather than a prefix. */
 const DIRECT_CARE_INTERPOLATIONS: Array<{ field: string; page: string; alias: string }> = [
   { field: 'currentDirectCareM', page: 'src/pages/ltc.astro', alias: 'wf' },
   { field: 'projected2034M', page: 'src/pages/ltc.astro', alias: 'wf' },
@@ -2480,21 +2480,46 @@ const DIRECT_CARE_INTERPOLATIONS: Array<{ field: string; page: string; alias: st
   { field: 'coveredFteM', page: 'src/pages/workforce.astro', alias: 'dc' }
 ];
 
-/* Literals shaped like a direct-care figure. Deliberately value-blind. */
-const DIRECT_CARE_SHAPES: Array<[string, RegExp]> = [
-  ['a headcount in millions', /\b\d+\.\d+ million\b/g],
-  ['an hourly wage', /\$\d+\.\d\d\b/g],
-  ['a turnover rate', /\b\d{1,3}% annual home-care turnover\b/g]
-];
+/* Literals shaped like a direct-care figure. Deliberately value-blind.
+ *
+ * ⚠️ The turnover entry used to read `/\b\d{1,3}% annual home-care turnover\b/`
+ * -- the Workforce page's own SENTENCE with the digits blanked. It could not
+ * fire at either site that actually states the figure: the tile writes
+ * `~75%/yr` and the LTC page writes "turnover runs near 75%". A shape copied
+ * from one occurrence is not a shape, it is that occurrence.
+ *
+ * Built fresh per call rather than shared at module scope. `matchAll` clones
+ * its regex and never writes back, so a shared one is safe TODAY -- measured
+ * -- but one `.test()` or `.exec()` on it anywhere would leave `lastIndex`
+ * non-zero and make `matchAll` silently skip the first match. That is a
+ * silent pass waiting for an unrelated edit.
+ */
+function directCareShapes(): Array<[string, RegExp]> {
+  return [
+    ['a headcount in millions', /\b\d+\.\d+ million\b/g],
+    ['an hourly wage', /\$\d+\.\d\d\b/g],
+    /* Any percentage written as a yearly rate, or within forty characters of
+       the word "turnover" on either side. Value-blind, and it covers all
+       three phrasings the two pages use. */
+    ['a turnover rate', /\b\d{1,3}%\/yr\b/g],
+    ['a turnover rate', /\b\d{1,3}%[^.]{0,40}turnover|turnover[^.]{0,40}\b\d{1,3}%/g]
+  ];
+}
 
 /* Figures on the Workforce page that match a shape above and belong to a
    DIFFERENT model, so interpolating them from LTC_WORKFORCE would be wrong.
    Each is checked to still be present: an exemption nothing needs is a fault,
    so this list cannot quietly grow stale or over-broad. */
-const DIRECT_CARE_SHAPE_EXEMPTIONS: Array<[string, string]> = [
+interface ShapeExemption { page: string; literal: string; times: number }
+
+/* ⚠️ Counted, not matched. The first version skipped every occurrence of an
+   exempt string anywhere in the page, so a SECOND, unrelated "1.9 million"
+   would have been waved through with the first. An exemption is for one known
+   occurrence; a new one is a new fault. */
+const DIRECT_CARE_SHAPE_EXEMPTIONS: ShapeExemption[] = [
   /* All healthcare occupation openings (BLS). A labour-market total, not a
      direct-care headcount. */
-  ['src/pages/workforce.astro', '1.9 million'],
+  { page: 'src/pages/workforce.astro', literal: '1.9 million', times: 1 },
   /* Total US employment, the denominator of the labour-share tile beside it.
      This one was interpolated from TOTAL_US_EMPLOYMENT_2024 during the fix
      run and then put back, because `workforceProseDrift` ALREADY gates the
@@ -2503,7 +2528,7 @@ const DIRECT_CARE_SHAPE_EXEMPTIONS: Array<[string, string]> = [
      was watching would have been a worse trade. The exemption is safe because
      another check holds it, which is the only reason an exemption should be
      safe. */
-  ['src/pages/workforce.astro', '169.96 million']
+  { page: 'src/pages/workforce.astro', literal: '169.96 million', times: 1 }
 ];
 
 export interface DirectCareDisagreement {
@@ -2527,24 +2552,38 @@ export function directCareHeadcountDrift(root = REPO_ROOT): DirectCareDisagreeme
   }
 
   for (const page of DIRECT_CARE_PAGES) {
-    const body = renderedSource(page, root);
-    const exempt = DIRECT_CARE_SHAPE_EXEMPTIONS
-      .filter((e) => e[0] === page).map((e) => e[1]);
-    for (const [shape, pattern] of DIRECT_CARE_SHAPES) {
+    /* ⚠️ flowed(), and this is a regression the section's first fix run
+       introduced. The line read `flowed(sourceText(page, root))`; correcting
+       sourceText to renderedSource dropped the flatten with it, while every
+       shape above hard-codes a single space. `5.4\n        million` was
+       therefore invisible -- and ltc.astro already wraps in exactly that
+       shape. renderedSource for the comment masking, flowed for the wraps;
+       the two fixes are independent and both are needed. */
+    const body = flowed(renderedSource(page, root));
+    const budget = new Map<string, number>();
+    for (const e of DIRECT_CARE_SHAPE_EXEMPTIONS) {
+      if (e.page === page) budget.set(e.literal, e.times);
+    }
+    for (const [shape, pattern] of directCareShapes()) {
       for (const m of body.matchAll(pattern)) {
-        if (exempt.includes(m[0])) continue;
+        const left = budget.get(m[0]);
+        if (left !== undefined && left > 0) {
+          budget.set(m[0], left - 1);
+          continue;
+        }
         out.push({ figure: shape, where: page, literal: m[0] });
       }
     }
-  }
-
-  for (const [page, literal] of DIRECT_CARE_SHAPE_EXEMPTIONS) {
-    if (!renderedSource(page, root).includes(literal)) {
-      out.push({
-        figure: 'a stale exemption',
-        where: page,
-        literal: literal + ' is exempted and no longer appears'
-      });
+    /* An exemption nothing spent is an exemption for a literal that has gone,
+       so the entry is stale and the list has stopped describing the page. */
+    for (const [literal, left] of budget) {
+      if (left > 0) {
+        out.push({
+          figure: 'a stale exemption',
+          where: page,
+          literal: literal + ' is exempted ' + left + ' more time(s) than it appears'
+        });
+      }
     }
   }
   return out;
@@ -3502,10 +3541,18 @@ export function ltcRepeatedLiterals(root = REPO_ROOT): RepeatedLiteral[] {
   return out;
 }
 
-/* What the green note is allowed to claim: the number of figure-and-file
-   pairs this check actually watches, not "every repeated figure". */
+/* What the green note is allowed to claim: the number of DISTINCT
+   figure-and-file pairs this check watches.
+   ⚠️ This returned 24 for 16 pairs, because each country contributes two
+   needles and the sum counted needles. The same fix run removed
+   directCareSharedCount's `6 figures x 2 pages = 12` over-count and shipped
+   `12 x 2 = 24` next door, in the function it was writing at the time. */
 export function ltcRepeatedWatched(): number {
-  return ltcRepeatedTable().reduce((n, i) => n + i.files.length, 0);
+  const pairs = new Set<string>();
+  for (const item of ltcRepeatedTable()) {
+    for (const file of item.files) pairs.add(item.figure + '|' + file);
+  }
+  return pairs.size;
 }
 
 export interface RangeDrift { where: string; says: string; expected: string }
@@ -3613,16 +3660,98 @@ export function ltcOecdRangeDrift(root = REPO_ROOT): RangeDrift[] {
       expected: 'the "replaces an earlier mix" clause, which is what names them'
     });
   }
+  /* ⚠️ A retired value that is ALSO a current one is not evidence of
+     anything, and the list above extends itself, so this guard is not
+     hypothetical: the day the methodology's "earlier mix" clause names 4.4,
+     a bare digit test fires against ltcExpansion.source's "raises NHE ~4.4%"
+     -- a share of NATIONAL HEALTH EXPENDITURE, not of GDP -- and reddens the
+     build over a correct number. `gdpShareNeedles` says a percentage is not
+     identified by its digits six hundred lines from here, and the first
+     version of this clause did exactly that. */
+  /* A value cannot be both retired and current, and THIS is what stops
+     the digit collision: when the self-extending list above names 4.4,
+     the Netherlands' live share is 4.4 too, so it is skipped before it
+     can match ltcExpansion.source's "raises NHE ~4.4%" -- a share of
+     national health expenditure, not of GDP. */
+  const current = new Set(LTC_GDP_2021.map((r) => r.pct.toFixed(1)));
   for (const value of retired) {
-    /* Bounded to a percentage, so a retired 2.0 does not match an unrelated
-       "2.0" elsewhere in a long prose string. */
-    if (new RegExp('\\b' + value.replace('.', '\\.') + '%').test(source)) {
+    if (current.has(value)) continue;
+    /* Bounded to a percentage and nothing more. A first attempt also
+       required the match to read as a share of GDP; measured, that made
+       the payload for this row's own declared test pass -- a bare
+       ", up from 2.0% (OECD)" reintroduced beside the corrected range
+       went green. The `current` guard above was already doing the work
+       the context regex was added for, so it cost a real payload and
+       bought nothing. */
+    const digits = value.replace('.', '\\.');
+    if (new RegExp('\\b' + digits + '%').test(source)) {
       out.push({
         where: 'params.ts ltcExpansion.source',
         says: 'still carries ' + value + '%, which the methodology retired',
         expected: 'no superseded OECD value anywhere in the source note'
       });
     }
+  }
+  return out;
+}
+
+export interface DeadExport { name: string; where: string }
+
+/* R282 [§S9d, second fix run]: every exported content constant in the LTC
+ * chapter has at least one consumer.
+ *
+ * This is the row's FIRST declared test, and until now nothing enforced it.
+ * The cost of that shows in the history: `WHAT_WORKS` and `MEDICARE_GAP` were
+ * exported and dead when the row was filed; the commit that fixed them
+ * authored `WORKFORCE_ASSESS.note`, exported and dead; the commit that
+ * deleted THAT authored `PLANNING_INPUTS`, exported and dead. Three
+ * generations of the same defect, each written by the pass removing the
+ * previous one, and every one of them found by a human review rather than by
+ * the build.
+ *
+ * Scoped to ltc.ts on purpose. A repo-wide sweep would need an allowlist for
+ * every constant a test or a generator legitimately reads, and an allowlist
+ * is what this check exists to avoid. One chapter, no exemptions.
+ *
+ * A TEST is not a consumer. That is the whole point: `PLANNING_INPUTS` was
+ * imported by tests/lib/ltc.test.ts and by nothing that reaches a reader, and
+ * it read as covered.
+ */
+const LTC_EXPORT_CONSUMERS = ['src/pages', 'src/scripts', 'src/lib', 'src/components'];
+
+export function deadLtcExports(root = REPO_ROOT): DeadExport[] {
+  const out: DeadExport[] = [];
+  const declared = renderedSource(LTC_DATA, root)
+    .matchAll(/^export (?:const|function) ([A-Za-z_][A-Za-z0-9_]*)/gm);
+
+  const files: string[] = [];
+  for (const dir of LTC_EXPORT_CONSUMERS) walk(join(root, dir), root, files);
+  /* ltc.ts itself is a reader, with its own declarations stripped. A constant
+     that only feeds another constant in the same module has a consumer; the
+     defect this row names is one that NOTHING reads. Measured: without this,
+     perCapitaSpend and LTC_COST_2024 both read as dead, and both are used one
+     screen from where they are declared. */
+  const readers: string[] = [
+    renderedSource(LTC_DATA, root)
+      .replace(/^export (?:const|function) [A-Za-z_][A-Za-z0-9_]*/gm, ' ')
+  ];
+  for (const rel of files) {
+    if (rel === LTC_DATA) continue;
+    if (!/\.(ts|astro)$/.test(rel)) continue;
+    readers.push(renderedSource(rel, root));
+  }
+
+  for (const m of declared) {
+    const name = m[1];
+    const used = readers.some((body) =>
+      /* Two backslashes. A shell heredoc collapsed the pair when this
+         function was appended, leaving a single backslash before the b -- which in a JS STRING
+         literal is U+0008, backspace, not a word boundary. The pattern
+         became BACKSPACE + name + BACKSPACE, matched nothing, and every
+         export in the file read as dead. The check was wrong, not the
+         code it was accusing. */
+      new RegExp('\\b' + name + '\\b').test(body));
+    if (!used) out.push({ name, where: LTC_DATA });
   }
   return out;
 }

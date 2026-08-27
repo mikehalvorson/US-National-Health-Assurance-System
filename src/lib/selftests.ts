@@ -89,7 +89,7 @@ import {
   unitsCostReconciliation, visitSplitClosure,
   countyFileAudit, fragmentationClaimGuard, regionMethodologyDrift,
   gdpKindStyleFaults, ltcOecdRangeDrift, ltcPlanningInputFaults,
-  ltcRepeatedLiterals, ltcRepeatedWatched,
+  ltcRepeatedLiterals, ltcRepeatedWatched, deadLtcExports,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
   regionSelection, scoreChartEncoding, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
@@ -2665,6 +2665,22 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             b.expected).join(' | ') ||
             'params.ts, ltc.astro and the methodology all state the range ' +
             'LTC_GDP_2021 computes'
+        };
+      }),
+      /* R282 [§S9d, second fix run]: the row's FIRST declared test, which
+         nothing enforced until now. Three generations of the same dead
+         constant shipped without it -- WHAT_WORKS and MEDICARE_GAP, then
+         WORKFORCE_ASSESS.note authored by the pass that fixed them, then
+         PLANNING_INPUTS authored by the pass that deleted that. A test is
+         deliberately NOT counted as a consumer: PLANNING_INPUTS was imported
+         by one and read as covered. */
+      runGuarded('Every exported constant in the long-term-care chapter has a consumer', () => {
+        const dead = deadLtcExports();
+        return {
+          ok: !dead.length,
+          note: dead.map((d) => d.name + ' is exported from ' + d.where +
+            ' and nothing under src/ reads it').join(' | ') ||
+            'no exported constant in ltc.ts is dead'
         };
       }),
       /* R286 [§S9d]: the figures this chapter used to state more than once.

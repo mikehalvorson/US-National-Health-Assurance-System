@@ -87,6 +87,13 @@ test('R284: the two planning inputs are graded in their own right', () => {
     .toEqual([LTC_WORKFORCE.coveredFteM, LTC_WORKFORCE.fteFraction]);
   // both low, and each says why in its own words
   expect(PLANNING_INPUTS.every((f) => f.confidence === 'low')).toBe(true);
+  /* Rendered with its unit. Without a display string 5.0 reaches the page as
+     "5", and the two inputs are in different units, so one format cannot
+     serve both. Measured in the browser before this was added. */
+  expect(PLANNING_INPUTS[0].display).toBe(
+    LTC_WORKFORCE.coveredFteM.toFixed(1) + ' million');
+  expect(PLANNING_INPUTS[1].display).toBe(LTC_WORKFORCE.fteFraction.toFixed(2));
+  expect(PLANNING_INPUTS.every((f) => /\d/.test(f.display))).toBe(true);
   expect(PLANNING_INPUTS.every((f) => /not a published figure/.test(f.basis))).toBe(true);
   // and the figure they produce reproduces from them
   const derived = Math.round(

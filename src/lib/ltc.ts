@@ -19,8 +19,10 @@ export type Conf = 'high' | 'medium' | 'low';
    in the original commit. */
 export const UNPAID_FAMILY_CARE_B = 600;        // AARP, Valuing the Invaluable, 2021 value
 export const LTSS_SPEND_2022_B = 415;           // KFF and Medicaid.gov, 2022
-export const MEDICAID_ASSET_TEST = 2000;        // $ in countable assets, CMS and Medicaid.gov
-export const HCBS_WAITING_LIST = 711000;        // KFF, 2024
+/* Not exported: only the _TEXT forms below have consumers, and an exported
+   constant nothing reads is the defect R282 was filed for. */
+const MEDICAID_ASSET_TEST = 2000;               // $ in countable assets, CMS and Medicaid.gov
+const HCBS_WAITING_LIST = 711000;               // KFF, 2024
 
 /* Written the way the prose writes them, so a page interpolates one
    expression rather than repeating the formatting decision. */
@@ -318,14 +320,32 @@ export interface GradedFigure {
    row's second declared test is "no figure inherits a grade from a sibling";
    the section's first pass met that for the seven headcounts and then broke
    it one level down, by giving the two inputs no grade of their own. */
-export const PLANNING_INPUTS: GradedFigure[] = [
+export interface PlanningInput extends GradedFigure {
+  label: string;
+  /* The two inputs are in different units -- millions of workers, and a bare
+     ratio -- so one shared format cannot serve both, and 5.0 renders as "5"
+     without one. `value` stays raw for the arithmetic. */
+  display: string;
+}
+
+export const PLANNING_INPUTS: PlanningInput[] = [
   {
-    value: LTC_WORKFORCE.coveredFteM, confidence: LTC_WORKFORCE.coveredFteMConfidence as Conf,
-    basis: LTC_WORKFORCE.coveredFteMBasis
+    label: 'Covered full-time-equivalent aides',
+    value: LTC_WORKFORCE.coveredFteM, confidence: 'low' as Conf,
+    display: LTC_WORKFORCE.coveredFteM.toFixed(1) + ' million',
+    basis: 'a plan design assumption, not a published figure: the ' +
+      'direct-care workforce this benefit is costed to cover. The wage-floor ' +
+      'costing spans 4 million to 6 million around it'
   },
   {
-    value: LTC_WORKFORCE.fteFraction, confidence: LTC_WORKFORCE.fteFractionConfidence as Conf,
-    basis: LTC_WORKFORCE.fteFractionBasis
+    label: 'Full-time fraction per worker',
+    value: LTC_WORKFORCE.fteFraction, confidence: 'low' as Conf,
+    /* No unit appended: the label IS the unit, and 'Full-time fraction
+       per worker: 0.67 full-time-equivalents per worker' said it twice. */
+    display: LTC_WORKFORCE.fteFraction.toFixed(2),
+    basis: 'a plan design assumption, not a published figure: direct care is ' +
+      'heavily part-time, so headcount exceeds full-time-equivalents. No ' +
+      'published national figure for this ratio was located'
   }
 ];
 

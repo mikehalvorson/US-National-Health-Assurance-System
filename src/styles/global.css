@@ -3683,6 +3683,21 @@ footer.site a { color: var(--text-muted); }
 .ltc-workforce-grade small {
   display: block; margin-top: 5px; color: var(--text-secondary); font-size: 11px;
 }
+/* R284 [S9d]: the two assumptions the maturity bar divides, each with its own
+   grade rather than folded into the figure they produce. */
+.ltc-planning-inputs { margin-top: 10px; display: grid; gap: 10px; }
+.ltc-planning-inputs li {
+  list-style: none; padding: 9px 0 0; border-top: 1px solid var(--border);
+  font-size: 11.5px; line-height: 1.45;
+}
+.ltc-planning-inputs b { color: var(--text-primary); font-weight: 650; }
+.ltc-planning-inputs .conf {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  border-radius: 4px; font-size: 10.5px;
+}
+.ltc-planning-inputs small {
+  display: block; margin-top: 4px; color: var(--text-secondary); font-size: 11px;
+}
 .ltc-chart-wrap { margin-top: 16px; }
 .ltc-legend { margin-top: 8px; }
 .ltc-country-cards {
