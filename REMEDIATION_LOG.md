@@ -4343,10 +4343,12 @@ accepting thirteen as a policy choice in the text of the framework itself.
 ## P14 — §S9d Long-Term Care · 2026-08-26 · branch `nha-remediation`
 STATUS: complete — all 8 recommendations landed across 2 commits, plus `R180`,
 which belongs to no section and which `R285` could not be finished without,
-and a **fix run** (`0a5d9d1`) after a two-axis code review. ⚠️ **Read
-`### THE CODE REVIEW` at the end of this entry before believing anything
-above it**: three of the four checks this section wrote were measurably weaker
-than their own notes claimed, one of them in three separate ways.
+and **two fix runs** (`0a5d9d1`, `5f99bdf`) after two two-axis code reviews.
+⚠️ **Read `### THE CODE REVIEW` and `### THE SECOND CODE REVIEW` at the end of
+this entry, in order, before believing anything above them.** The first found
+that three of the four checks this section wrote were weaker than their own
+notes claimed. The second was pinned at the first fix run — the code nothing
+had reviewed — and found **nine more, four of them written by that fix run.**
 
 Written from `git diff fdd01a6..HEAD`, not from memory of what was intended.
 Three consecutive sections have needed their log entry corrected by a review
@@ -4606,7 +4608,11 @@ reading *"12 figure-and-page pairs, every one interpolated from
 
 And the `12` was six figures times two pages. Nine pairs exist. Rewritten as
 two halves — every figure must appear as an interpolation expression, and any
-literal *shaped* like a direct-care figure is a fault whatever its value.
+literal *shaped* like a direct-care figure is a fault whatever its value. ⚠️ **The rewrite was itself too weak in two ways, and the
+second review measured both.** It silently dropped `flowed()`, so a
+line-wrapped literal stayed invisible; and its "shape" for the turnover figure
+was the page's own sentence with the digits blanked, which could not fire at
+either site that states it. See `### THE SECOND CODE REVIEW`.
 
 🆕 **One exemption in that rewrite is worth reading.** The shape scan found
 `169.96 million jobs nationally` hand-typed beside a share the model computes
@@ -4621,7 +4627,10 @@ when another check holds it, and not otherwise.**
 correcting a share would have silently retired the guard for that country —
 the check would have gone green about a figure it had stopped watching.
 Derived from `LTC_GDP_2021` now. Its note claimed *"every repeated figure
-resolves to one exported field"* while watching five.
+resolves to one exported field"* while watching five. ⚠️ **And the replacement
+note over-counted**: `ltcRepeatedWatched()` reported **24** for **16** distinct
+pairs, in the same commit that removed `directCareSharedCount`'s `6 × 2 = 12`
+over-count. See `### THE SECOND CODE REVIEW`.
 
 `ltcOecdRangeDrift`'s retired-value clause matched only the paired form
 `2.0-4.4` while its message claimed *"no superseded OECD value anywhere in the
@@ -4691,3 +4700,132 @@ replaced one of **two** occurrences of an interpolation and read as CANNOT
 FAIL — the same mistake the `R288` kind-retirement payload made earlier in the
 section, in a different shape. **That is twice in one section for one error,
 which is the argument for `replace-all` being the default.**
+
+### THE SECOND CODE REVIEW
+
+Pinned at `dde09e4`, so the diff was exactly the first fix run and its log
+amendment — **the code nothing had reviewed**, which is what the P13 handoff
+says to spend a second pass on. Both axes again, and the standards pass ran
+**mutation probes** rather than reading. Fix run: `5f99bdf`.
+
+**Nine defects. Four were written by the first fix run.** That is this
+campaign's signature failure, now observed for the fourth section running: the
+pass removing a defect authors a fresh one.
+
+🛑 **`R282`'s defect reached its THIRD generation, and nothing was enforcing
+`R282`'s own first declared test.**
+
+| generation | constant | authored by |
+|---|---|---|
+| 1 | `WHAT_WORKS`, `MEDICARE_GAP` | already dead when the row was filed |
+| 2 | `WORKFORCE_ASSESS.note` | the commit that fixed generation 1 |
+| 3 | `PLANNING_INPUTS` | the fix run that deleted generation 2 |
+
+Every one found by a human review, never by the build — because *"every
+exported content constant has at least one consumer"* had **no check**.
+`deadLtcExports()` is that check. **A test is deliberately not a consumer:**
+`PLANNING_INPUTS` was imported by one and read as covered.
+
+🛑 **The shape scan silently lost `flowed()`.** The line was
+`flowed(sourceText(page, root))`. Correcting `sourceText` → `renderedSource`
+— which was right, and fixed the false-failure on comments — **dropped the
+whitespace flatten with it**, while every shape hard-codes a single space.
+`ltc.astro` already wraps in exactly that shape. **Two independent fixes were
+needed and one was made**, and the note went on claiming the stronger
+behaviour.
+
+🛑 **The turnover "shape" was the page's own sentence with the digits
+blanked.** `/\b\d{1,3}% annual home-care turnover\b/` could not fire at either
+site that states the figure: the tile writes `~75%/yr`, the LTC page writes
+*"turnover runs near 75%"*. **A shape copied from one occurrence is not a
+shape, it is that occurrence.**
+
+🛑 **`ltcRepeatedWatched()` returned 24 for 16 distinct pairs**, because each
+country emits two needles. **The same commit removed `directCareSharedCount`'s
+`6 × 2 = 12` over-count and shipped `12 × 2 = 24` in the function it was
+writing at the time.**
+
+⚠️ **The retired-value clause identified a value by its digits** — the exact
+thing `gdpShareNeedles`' comment forbids six hundred lines away.
+`ltcExpansion.source` says *"raises NHE ~4.4%"*, a share of **national health
+expenditure**, not of GDP, and the retired list is **self-extending**, so the
+day it names 4.4 the build reddens over a correct number.
+
+🆕 **And the first attempt at fixing that made things worse in the other
+direction.** Requiring the match to read as a share of GDP turned this row's
+own payload green: a bare *", up from 2.0% (OECD)"* beside the corrected range
+passed. **The `current` guard was already doing the work** — a value cannot be
+both retired and current, so 4.4 is skipped before it can collide — so the
+context regex bought nothing and cost a real payload. Removed. **A narrowing
+that survives only because you did not re-run the payloads is a regression.**
+
+⚠️ **Exemptions matched by value, page-wide**, so a second unrelated
+`1.9 million` anywhere in the file would have been waved through with the
+first. Counted now, and an exemption nothing spends is itself a fault.
+
+⚠️ **`coveredFteMBasis` named an internal parameter id in reader-facing prose
+and misdescribed it.** It said `params.ltcWageFloor`*"whose range spans
+4-6M"*; that parameter's range is **29 / 52 / 94 `$B/yr`**, and the 4-6M lives
+inside its own prose source string. The two planning inputs were also four
+parallel `Basis`/`Confidence` fields on a flat object of bare numbers **in the
+model module**, when `GradedFigure` already types that shape. Moved to
+`ltc.ts`; `workforce.ts` is back to two numbers, which is the right seam — the
+model owns the figures, the chapter owns how they are presented.
+
+✅ **And `R284`'s first declared test is now actually met.** The two planning
+inputs **reach a reader**, rendered under the workforce chart with their own
+grades. Each carries a `display` string, because `5.0` reaches the DOM as
+`"5"` and the two inputs are in different units. **Measured in the browser,
+not assumed** — the first render said *"Covered full-time-equivalent aides:
+5"*.
+
+### 🆕 The trap that bit four times in one section
+
+**Shell heredocs collapse backslash pairs.** `<<'EOF'` protects against shell
+*expansion*, not against the text passing through the shell at all. In this
+section it:
+
+1. broke a Python patch script (`\'` → `'`),
+2. broke a second one (`\n` → a real newline, leaving `prove_p14.py`
+   unparseable),
+3. wrote `'\b'` into TypeScript — **U+0008, backspace, not a word boundary** —
+   which made `deadLtcExports` report **every export in `ltc.ts` as dead**.
+   Seventeen findings that were one broken check.
+4. then wrote a **literal backspace into the comment explaining the trap**,
+   which is the control character that makes git call a source file binary.
+
+**Each one produced a plausible-looking wrong answer rather than an error.**
+Anything containing a backslash now goes through a file written with the
+editor, never a heredoc. This is already in the campaign's notes and was used
+anyway, four times, which is the actual lesson.
+
+### Gates after the second fix run
+
+- Self-tests **220 → 221** (`deadLtcExports`). README bumped; it moved **five
+  times** across this section.
+- Suite **488 passing, 59 files**. Manifest **126**. `astro check`
+  **0 / 0 / 1**.
+- `prove_p14.py` is **37 payloads**, up from 31. Six are mutations this review
+  found green. **One of the six was a wrong payload first** — its anchor did
+  not exist, because the page wraps that sentence — which is the **third**
+  payload this section wrote that did not do what its name said.
+- Control-character sweep of `src/`: clean.
+
+### Recorded, not fixed
+
+- **The `/favicon.ico` 404** the browser logs on every page. No favicon exists
+  anywhere in the project and this section's diff touches nothing under
+  `public/` or `src/layouts/`. Site-wide, pre-existing, nobody's row.
+- **`R285` at the other sites.** Precisely: `role="img"` over `tabindex` with
+  **no** focus handler in `src/lib/tax-charts.ts` (6 `role="img"`, 4 with
+  tabindex), `src/lib/benchmark-chart.ts`, `src/lib/financing-chart.ts` and
+  `src/scripts/gov-client.ts`; **and with** a focus handler, which is milder
+  but still prunes the subtree, in `src/lib/bridge-chart.ts` and
+  `src/lib/flow-diagram.ts`. `src/lib/path-chart.ts` has `role="img"` and no
+  focusable children, which is correct. **The first review's list of these was
+  incomplete and this one is measured.**
+- **`R265`'s first declared test**, still. The second reviewer agrees the
+  deferral is *partly* defensible — the range lives inside a prose `source`
+  string, so it cannot become a parameter without a schema change — and notes
+  correctly that establishing that was one grep, and the section is stamped
+  complete regardless. **Open for `§S11b`.**
