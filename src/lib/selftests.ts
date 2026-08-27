@@ -29,8 +29,8 @@ import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './brid
 import {
   BASELINE_ROWS, baselineIdProblems, bindProblems, definitionNamespaceLeaks,
   extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
-  measuresStatusCounts, resolveDefinition, stalePriorityExemptions,
-  unseededPriorityParameters, valueTypeProblems
+  measuresStatusCounts, resolveDefinition, sourceBacklog, stalePriorityExemptions,
+  unseededPriorityParameters, unsourcedGradedRows, valueTypeProblems
 } from './baseline-registry';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
 import { classGrowth, defaultSettings, distribution, TAX_SELFTESTS } from './taxmodel';
@@ -3222,6 +3222,17 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: !parts.length,
           note: parts.join(' | ') || flaggedPriorityParameters().length + ' flagged, all accounted for'
+        };
+      }),
+      runGuarded('R1: a row graded medium or better says where its number came from', () => {
+        const bad = unsourcedGradedRows();
+        const backlog = sourceBacklog();
+        return {
+          ok: !bad.length,
+          note: bad.length
+            ? bad.slice(0, 3).join(' | ')
+            : backlog.length + ' rows still have no source_url, all below medium: '
+              + (backlog.map((b) => b.id + ' ' + b.confidence).join(', ') || 'none')
         };
       })
     ]

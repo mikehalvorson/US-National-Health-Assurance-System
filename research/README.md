@@ -161,11 +161,18 @@ four rows for a day before a review caught it. The column is still a convention
 a reader has to honour.
 
 **The rest of the seed is no longer unread, though.** Since 2026-08-27
-`src/lib/baseline-registry.ts` parses it at build time and eight self-tests
+`src/lib/baseline-registry.ts` parses it at build time and nine self-tests
 gate it: the id sequence, the `measures` bind rule, the resolver's throw, the
-cross-namespace uniqueness, the `value_type` band rule, and the priority-
-parameter sweep. Each of the eight was broken on purpose and watched fail
-before it was trusted. What is **not** gated is anything needing the network -
+cross-namespace uniqueness, the `value_type` band rule, the priority-parameter
+sweep, and the sourcing rule below. Each of the nine was broken on purpose and
+watched fail before it was trusted.
+
+**A row graded `medium` or better states where its number came from.** The
+three rows that still have no `source_url` are all below `medium`, each says in
+`notes` why nothing citable was found, and the check prints their ids rather
+than reporting a bare pass - a gap nobody can see is a gap nobody closes. A row
+whose `source_name` begins `pending` is exempt, which is the only way to hold a
+grade without a link. What is **not** gated is anything needing the network -
 a dead `source_url` still 404s silently, because a network-dependent build gate
 is a worse problem than the one it solves. `baseline-P16/negative_test.py` and
 the P15 `check_urls.py` are the manual halves.

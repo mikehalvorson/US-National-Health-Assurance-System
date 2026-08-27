@@ -5459,8 +5459,8 @@ a value, 0 with a year, 0 with a source.** So the layers were separated instead.
 resolved to the file that *defines* each id rather than the file it appears in,
 which is why `research/01`'s single cross-file reference landed on
 `research/03`. Zero references resolved to no research file, so nothing was
-guessed. Eight self-tests now hold the separation, taking the registry from
-**221 to 229**, and the suite from 488 to **506 across 60 files**.
+guessed. Nine self-tests now hold the separation, taking the registry from
+**221 to 230**, and the suite from 488 to **506 across 60 files**.
 
 ### 🛑 Five discrepancies. The first is the one that would have caused damage.
 
@@ -5498,11 +5498,16 @@ nothing but a name to read.
 **4. `§AN4`'s 160 research heading IDs undercounts by 27.** The real figure is
 **187**. The 160 counts only plain `CP-<FAM>-NNN` headings; it misses 23 marked
 `(NEW, proposed)` / `(proposed)` / `[NEW PARAMETER]` and 4 of the form
-`CP-<FAM>-NEW-NNN`. **Twelve of those 23 mint an ID into an occupied canonical
+`CP-<FAM>-NEW-NNN`. **Sixteen of those 23 mint an ID into an occupied canonical
 slot** — `CP-POP-009/010`, `CP-FIN-018/019/020`, `CP-OFF-005/006`,
-`CP-RX-014/015`, `CP-DX-009/010/011` — which is the worst class of collision in
-the set, a research file deliberately claiming a taken address. `R31`'s own two
-parameters are in that twelve: canonical `CP-RX-015` is "Drug quality failure
+`CP-UNIT-005`, `CP-RX-014/015`, `CP-DX-009/010/011`, `CP-DVH-009`,
+`CP-EMS-009`, `CP-PH-007` — which is the worst class of collision in the set, a
+research file deliberately claiming a taken address. ⚠️ **Corrected from twelve
+after the first commit.** The probe that produced twelve required the literal
+string `NEW` on the heading line, so it never examined the eleven headings
+marked only `(proposed)`, four of which collide. A count, wrong, again — and
+found by re-deriving it during review rather than by rereading the sentence.
+`R31`'s own two parameters are in the sixteen: canonical `CP-RX-015` is "Drug quality failure
 cost" and `CP-DX-011` is "DME/supply cost", so **the prompt's instruction to
 "add `CP-RX-015`/`CP-DX-011` to the seed" would have created a fresh collision.**
 Separation dissolves it: they are `BL-0081` and `BL-0082`, and their evidence is
@@ -5538,10 +5543,10 @@ either CSV, a research heading defined in two files, an identifier living in
 two namespaces, or a retired `superseded_id` coming back as a live id all fail.
 Both new failure modes were then injected and watched fail.
 
-**Eleven negative tests, `baseline-P16/negative_test.py`.** Each edits one real
+**Twelve negative tests, `baseline-P16/negative_test.py`.** Each edits one real
 file and requires the **named** row to go red, because a check that fails for
-someone else's reason has not been tested. All eleven fire; the registry
-restores to 229 green.
+someone else's reason has not been tested. All twelve fire; the registry
+restores to 230 green.
 
 ### The three additions, and a fourth nobody asked for
 
@@ -5556,9 +5561,12 @@ restores to 229 green.
   `BL-0084` is cost per **visit**, which HRSA does *not* publish: the division
   is the row's arithmetic and the row says so, with both denominators —
   **$379.91** over 144,103,619 clinic-plus-virtual visits, **$437.56** over
-  125,120,071 clinic visits alone. `research/02` guessed $200–300; the
-  published data puts it **27 to 46 percent higher**, which is what the pull
-  was for.
+  125,120,071 clinic visits alone. `research/02` guessed $200–300 without
+  pulling the data. Both derived figures sit above the **top** of that guess,
+  by 27 and 46 percent, and above its bottom by 90 and 119 percent — which is
+  what the pull was for. ⚠️ **The first wording said only "27 to 46 percent
+  higher" and did not name which endpoint**, which reads as a comparison
+  against the whole range and is not one. Corrected in the row's `notes` too.
 - **`R12`** — `CP-GOV-001` becomes a distribution. New `value_low`,
   `value_high` and `value_type` columns; `BL-0073` is the one
   `contested-range`, 1.3% on the narrow CMS accounting basis to 6.4% fully
@@ -5603,13 +5611,20 @@ reason attached**, and `stalePriorityExemptions()` is what caught it.
 
 ### What is enforced now, and what still is not
 
-Eight rows, all negative-tested: the definition namespace is single-authority;
+Nine rows, all negative-tested: the definition namespace is single-authority;
 the extract the registry is generated from must agree with it on all 310, which
 is what stops that exemption being a free pass; `BL-*` ids are sequential and
 unique; `measures` is non-empty **if and only if** `measures_status` is
 `mapped`; the resolver throws on both kinds of miss; no identifier resolves to
 two definitions; `value_type` carries the band it claims; and every
-research-flagged priority parameter is seeded or exempt with a reason.
+research-flagged priority parameter is seeded or exempt with a reason. And
+`R1`'s seed half is finally gated rather than merely true: a row graded
+`medium` or better states where its number came from, and the three honestly
+empty rows are counted out loud in the note rather than hidden, which is the
+noisy backlog counter the row asked for. **That ninth check was added after the
+section was first committed, in the review below** - the section had verified
+`R1`'s condition and shipped without enforcing it, which is the difference
+between a fact and a guarantee.
 
 ⚠️ **Still not enforced: anything needing the network.** A dead `source_url`
 still 404s silently. That remains a deliberate decision, not an oversight — a

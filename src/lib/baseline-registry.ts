@@ -472,6 +472,32 @@ export function stalePriorityExemptions(): string[] {
   return Object.keys(PRIORITY_EXEMPT).filter((id) => !flagged.has(id));
 }
 
+/* R1 [§S10], the seed half. 49 of 80 rows carried a confidence grade with no
+   source URL at all, 41 of them high or medium-high. P15 backfilled 46 and
+   downgraded 12, and left three empty - each graded below `medium` precisely
+   because nothing citable was found. Nothing gated any of it, so the state was
+   one careless edit from returning.
+ *
+ * The rule: a row graded `medium` or better states where its number came from,
+ * or names itself pending. The backlog of honestly-empty rows is counted and
+ * printed rather than hidden, which is the "noisy backlog counter" the row
+ * asks for - a gap nobody can see is a gap nobody closes. */
+export const SOURCED_GRADES = ['high', 'medium-high', 'medium'];
+
+export function unsourcedGradedRows(): string[] {
+  return BASELINE_ROWS
+    .filter((r) => SOURCED_GRADES.includes(r.confidence)
+      && r.sourceUrl.trim() === ''
+      && !r.sourceName.trim().toLowerCase().startsWith('pending'))
+    .map((r) => r.baselineId + ' (' + r.confidence + ') ' + r.description);
+}
+
+export function sourceBacklog(): { id: string; confidence: string }[] {
+  return BASELINE_ROWS
+    .filter((r) => r.sourceUrl.trim() === '')
+    .map((r) => ({ id: r.baselineId, confidence: r.confidence }));
+}
+
 /* ---- reporting --------------------------------------------------------- */
 
 export function measuresStatusCounts(): Record<string, number> {
