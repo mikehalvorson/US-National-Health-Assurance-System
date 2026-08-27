@@ -119,7 +119,7 @@ constant it describes.
 | Constant | Used in | Source | Confidence |
 | --- | --- | --- | --- |
 | `kappa = 8` immaturity stress multiplier | the ceiling and error forms, so the interior of most of the 130 trajectories | `GATES[G5]`, AI safety readiness: high-stakes human review and audit capture >=97% at P5 against 99% at maturity, infrastructure 75% built. One observation; see the sensitivity band above | low |
-| 8.0% baseline uninsured share | KPP-A1 | Census CPS ASEC all-ages uninsured rate, 2024. **Not** derived as 26.7M / 334M: that division lands on 8.0% but pairs KFF's under-65 count with an all-ages population, and the two measures are not comparable (`CP-POP-004a` and `CP-POP-004b`) | medium-high |
+| 8.0% baseline uninsured share | KPP-A1 | Census CPS ASEC all-ages uninsured rate, 2024. **Not** derived as 26.7M / 334M: that division lands on 8.0% but pairs KFF's under-65 count with an all-ages population, and the two measures are not comparable (`RB-01-POP-004a` and `RB-01-POP-004b`) | medium-high |
 | 17.6% baseline health share of GDP | KPP-C1 | CMS NHE 2023 | high |
 | $14,950 baseline per-person cost (2024$) | KPP-C2 | CMS NHE 2023 ($14,570 in 2023$), deflated at 2.6% | high |
 | 7.4% baseline administration share | KPP-C3 | CMS NHE 2023: net insurance cost + government administration over total | high |

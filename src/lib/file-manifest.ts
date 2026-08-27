@@ -37,6 +37,7 @@ export const FILE_MANIFEST: string[] = [
   'src/env.d.ts',
   'src/layouts/BaseLayout.astro',
   'src/lib/acronyms.ts',
+  'src/lib/baseline-registry.ts',
   'src/lib/benchmark-chart.ts',
   'src/lib/benchmarks.ts',
   'src/lib/bridge-chart.ts',

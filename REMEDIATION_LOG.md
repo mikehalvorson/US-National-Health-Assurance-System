@@ -5424,3 +5424,215 @@ commit, a third site of the defect being fixed, a rule that contradicts the
 data it governs, a count that was wrong, and a test that cannot fail. **A
 review that only checks the thing the section was careful about will only find
 the defects the section was careless about, and those are different sets.**
+
+## P16 — §S10 Namespace separation · 2026-08-27 · branch `nha-remediation`
+STATUS: complete — all 7 recommendations resolved
+DISCREPANCY: five, all recorded below; in three of them the code won
+LANDED: R129, R236, R28, R31, R2, R12, R1 (seed half)
+MIGRATED: 80 seed rows -> BL-0001..BL-0080; values changed: 0
+MEASURES_STATUS: mapped 27 / unmapped 25 / no-canonical-equivalent 33
+LETTER-SUFFIXED: 15 IDs became 15 BL rows under 3 CP parents (4 mapped, 11 no-canonical-equivalent)
+CP-GOV-002: resolved to research/05 `RB-05-GOV-007`, NOT to canonical `CP-GOV-007`; percentage/dollar collision recorded in the row itself
+RESOLVER: resolveDefinition throws on miss — copied from build_data_phase_targets.py: yes
+ADDED: RAND commercial-to-Medicare ratio (2 rows) / HRSA FQHC analogue (2 rows) / CP-GOV-001 as a distribution / institutional-to-home LTC multiplier
+
+**Any ID that resolves to two definitions after the split: zero.** Checked
+across all three namespaces by reading the files rather than the loaded
+structures, for the reason in `### THE CHECK I WROTE THAT COULD NOT FAIL`
+below.
+
+### What the section did
+
+The backlog's original model was *the seed renumbered parameters, so a join by
+ID binds the wrong value; remap the seed onto canonical IDs.* That model needed
+an authoritative value layer to remap **onto**, and `§AN2` established there
+isn't one. Re-measured here and confirmed exactly: **310 canonical rows, 0 with
+a value, 0 with a year, 0 with a source.** So the layers were separated instead.
+
+| Prefix | Holds | Lives in | Count |
+|---|---|---|---|
+| `CP-*` | definitions only | `research/cp_registry_canonical.csv`, sole authority | 310 |
+| `BL-*` | measurements: value, year, citation, grade | `research/parameter_baseline_seed.csv` | 85 |
+| `RB-0N-*` | evidence: one index per research file | `research/01`–`05` | 187 |
+
+`research/01`–`05` renumbered **313 references over 187 heading definitions**,
+resolved to the file that *defines* each id rather than the file it appears in,
+which is why `research/01`'s single cross-file reference landed on
+`research/03`. Zero references resolved to no research file, so nothing was
+guessed. Eight self-tests now hold the separation, taking the registry from
+**221 to 229**, and the suite from 488 to **506 across 60 files**.
+
+### 🛑 Five discrepancies. The first is the one that would have caused damage.
+
+**1. `§8.0.3`'s own worked example matches by ID, in the same document that
+forbids it.** Point 4 says the six `CP-TOT-004a`–`f` rows "become six `BL-*`
+rows each carrying `measures = CP-TOT-004`". Canonical `CP-TOT-004` is **"Public
+share of system cost"**. The "NHE by category" reading comes from `research/01`,
+which is the *measurement* layer — so the instruction is to bind six spending
+categories to a share-of-total parameter, by ID, three points before point 7
+says *"map by description, never by ID."* Followed literally it would have
+written the section's own defect into six permanent rows. **The code won.** One
+of the six maps (hospital care spending to `CP-HOSP-002`, the hospital global
+budget total); the other five are `no-canonical-equivalent`, because the
+dictionary names no all-payer service-category totals. A test pins this.
+
+**2. `R28`'s "canonical ID" is not a canonical ID.** The prompt says
+`CP-GOV-002`'s canonical id is `CP-GOV-007`. In `cp_registry_canonical.csv` —
+the file `§8.0.3` names as the sole authority — **`CP-GOV-007` is "Appeal
+volume"**. The claim is true of `research/05`'s numbering, now `RB-05-GOV-007`.
+Setting `measures = CP-GOV-007` would have bound the CBO single-payer
+administrative-cost estimate to a count of appeals: the same
+percentage-versus-dollar-amount class of error `R28` exists to stop, committed
+while fixing `R28`. **The code won.** `BL-0074` carries `measures` empty,
+`measures_status = unmapped`, and the whole correction in its `notes` — because
+a correction that lives only in a migration script's comment is not a
+correction; the row still ships wrong.
+
+**3. `§AN2` and `§8.0.3` say all 310 canonical entries are "a name, a
+definition, and sometimes a unit."** Measured: **a definition on 50 of 310, a
+unit on 32.** 260 are a bare name. Only `CP-TOT`, `CP-POP`, `CP-HOSP` and
+`CP-CLIN` carry definitions at all. This is why so much of the mapping resolves
+to `no-canonical-equivalent` rather than to a judgement: on 260 rows there was
+nothing but a name to read.
+
+**4. `§AN4`'s 160 research heading IDs undercounts by 27.** The real figure is
+**187**. The 160 counts only plain `CP-<FAM>-NNN` headings; it misses 23 marked
+`(NEW, proposed)` / `(proposed)` / `[NEW PARAMETER]` and 4 of the form
+`CP-<FAM>-NEW-NNN`. **Twelve of those 23 mint an ID into an occupied canonical
+slot** — `CP-POP-009/010`, `CP-FIN-018/019/020`, `CP-OFF-005/006`,
+`CP-RX-014/015`, `CP-DX-009/010/011` — which is the worst class of collision in
+the set, a research file deliberately claiming a taken address. `R31`'s own two
+parameters are in that twelve: canonical `CP-RX-015` is "Drug quality failure
+cost" and `CP-DX-011` is "DME/supply cost", so **the prompt's instruction to
+"add `CP-RX-015`/`CP-DX-011` to the seed" would have created a fresh collision.**
+Separation dissolves it: they are `BL-0081` and `BL-0082`, and their evidence is
+`RB-03-RX-015` / `RB-03-DX-011`.
+
+**5. I filed a sixth discrepancy and then withdrew it.** A first count put the
+research heading namespace at 183 against `§AN4`'s 160. That was my regex, not
+the document: it matched every `#` line *containing* a CP id, including summary
+tables and cross-referencing headings. The strict count is exactly 160, and
+`§AN4` is right about the population it measured. Recorded because a withdrawn
+finding is evidence about the method, and this campaign has withdrawn four.
+
+### 🛑 THE CHECK I WROTE THAT COULD NOT FAIL
+
+`R236`'s acceptance criterion is *"no `CP-*` ID resolves to two different
+definitions across files."* The obvious implementation iterates
+`CP_DEFINITIONS` looking for a duplicate id — **in a Map keyed by that id** —
+and iterates the seed rows looking for a `BL-*` bound twice, **after the id
+check has already required `BL-*` ids to be unique.** Both failing sets are
+empty by construction. I wrote it, it went green, and it was green for the same
+reason `R13`'s test was green in P15 and check 20 was green in the audit
+harness: **nothing could be in its failing set.**
+
+It was caught by asking the question the P15 handoff says to ask — *after
+writing a definition and a check that reference each other, ask whether the two
+sides can differ at all* — and specifically by noticing that two of the eight
+new checks had no negative test. **The two without a negative test were the two
+worth doubting.** That is a usable heuristic and it is now written down.
+
+The rewrite reads the **files** instead of the loaded structures and asks what
+`B1` actually asks: does any one string denote two things? A duplicate row in
+either CSV, a research heading defined in two files, an identifier living in
+two namespaces, or a retired `superseded_id` coming back as a live id all fail.
+Both new failure modes were then injected and watched fail.
+
+**Eleven negative tests, `baseline-P16/negative_test.py`.** Each edits one real
+file and requires the **named** row to go red, because a check that fails for
+someone else's reason has not been tested. All eleven fire; the registry
+restores to 229 green.
+
+### The three additions, and a fourth nobody asked for
+
+- **`R31`** — RAND Round 5.1, commercial prices at **254%** of Medicare
+  inpatient (`BL-0081`) and **279%** outpatient (`BL-0082`). Two rows, not one
+  range: 254 and 279 are two measurements, not two endpoints.
+- **`R2`** — the FQHC pull `research/02` called *"the single highest-value
+  follow-up data pull"* and nobody had done. **HRSA UDS serves.** `BL-0083`
+  carries HRSA's own published figure, **$1,671.85 total accrued cost per
+  patient (2025)**, which reproduces exactly from the two other published
+  totals on the same page ($54,747,047,587 over 32,746,392 patients).
+  `BL-0084` is cost per **visit**, which HRSA does *not* publish: the division
+  is the row's arithmetic and the row says so, with both denominators —
+  **$379.91** over 144,103,619 clinic-plus-virtual visits, **$437.56** over
+  125,120,071 clinic visits alone. `research/02` guessed $200–300; the
+  published data puts it **27 to 46 percent higher**, which is what the pull
+  was for.
+- **`R12`** — `CP-GOV-001` becomes a distribution. New `value_low`,
+  `value_high` and `value_type` columns; `BL-0073` is the one
+  `contested-range`, 1.3% on the narrow CMS accounting basis to 6.4% fully
+  loaded, which is what `RB-05-GOV-001` recommends and what a point estimate
+  with a caveat in a notes column could not express.
+- **`BL-0085`, which no row asked for.** `R31`'s standing check — *any
+  parameter a research file calls most load-bearing or highest-value must
+  appear in the seed* — was written, run, and immediately found a **third**
+  dropped parameter: `RB-04-LTC-011`, the institutional-to-home cost multiplier
+  that `research/04` calls *"the single most important parameter for avoided
+  institutionalization savings."* The check earned its place before it was
+  committed. Recomputing the multiplier on the seed's own 2024 rows gives
+  **2.1–2.5** against `research/04`'s **2.5–3**; the gap is a 2021 home-care
+  rate, and the row says so.
+
+### A citation that resolves and does not support its row, again
+
+`RB-05-GOV-006` is *"arguably the single most important calibration number for
+NHA governance costs"* by `research/05`'s own words: insurance-administration
+overhead at 7.0% of NHE in 2024, 7.5% in 2023. Both URLs it cites **fetch 200
+and neither carries the number.** The NHE Fact Sheet has no "net cost of health
+insurance" line at all; `files/document/highlights.pdf` is *National Health
+Expenditures 2024 Highlights* and covers type of service, sponsor and source of
+funds. Verified by extracting the PDF's text, including its UTF-16 literals,
+after a first extractor read only the 8-bit ones and produced a clean-looking
+miss.
+
+The figure is in the NHE Tables archive — **the same `nhe-tables.zip` that has
+been open work since `R35`**. So it is not seeded: seeding it would mean
+inventing a citation. It is on `PRIORITY_EXEMPT` with that reason, `research/05`
+now carries the measurement inline, and `stalePriorityExemptions()` will fail
+the build if the flag ever disappears.
+
+**A related self-correction.** `RB-01-OFF-006` was on `PRIORITY_EXEMPT` for one
+run and came off it. My first scanner attributed *"the single most important
+open item"* to that parameter when the phrase sits in the **"Summary of
+Highest-Priority Gaps" section below it** — the scanner stopped a section body
+only at the next `RB-` heading, so it bled across an intervening `##`. Fixed by
+stopping at any heading of the same level or shallower, which also removes a
+second false positive. **An exemption written on an over-report is a lie with a
+reason attached**, and `stalePriorityExemptions()` is what caught it.
+
+### What is enforced now, and what still is not
+
+Eight rows, all negative-tested: the definition namespace is single-authority;
+the extract the registry is generated from must agree with it on all 310, which
+is what stops that exemption being a free pass; `BL-*` ids are sequential and
+unique; `measures` is non-empty **if and only if** `measures_status` is
+`mapped`; the resolver throws on both kinds of miss; no identifier resolves to
+two definitions; `value_type` carries the band it claims; and every
+research-flagged priority parameter is seeded or exempt with a reason.
+
+⚠️ **Still not enforced: anything needing the network.** A dead `source_url`
+still 404s silently. That remains a deliberate decision, not an oversight — a
+network-dependent build gate is a worse problem than the one it solves — and
+P15's `check_urls.py` plus this section's `negative_test.py` are the manual
+halves. ⚠️ **`use_as` is still unenforced** as a summation rule.
+
+### Notes on method
+
+- **`measures` is non-empty if and only if `measures_status` is `mapped`.** An
+  analogue relationship is prose in `notes`, where no code can join on it. This
+  is the single rule that prevents the recurrence: 57 rows collided because a
+  resemblance was recorded somewhere a join could reach it.
+- **27 of 85 mapped is the result, and a high number would have been the
+  warning.** P15's lesson was that 49/49 was the signal, not the reassurance.
+  A migration that mapped everything would have meant mapping by id similarity.
+- **`diff_seed.py` rebuilds every prose edit from the pre-P16 text** by
+  re-applying only the rewrites `migrate_seed.py` declares, then compares byte
+  for byte. It caught two `source_name` changes I had not declared, and the fix
+  was to declare them rather than to loosen the column.
+- 🛑 **The backslash trap fired twice more, occurrences eight and nine**, both
+  in `python -c` inside double quotes — the exact construction the rule
+  forbids, written by the session that had just read the rule. Once in a patch
+  script whose `assert` then failed loudly, once in a PDF extractor whose regex
+  died. **Both were loud. That is luck, not safety**: the seventh occurrence
+  silently deleted a section name from the log's own pointer.

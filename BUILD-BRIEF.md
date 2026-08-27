@@ -40,9 +40,9 @@ benchmarks (below) - and report the gap if there is one.
 4. **`C_offsets(t)` needs one non-overlapping definition.** The research
    surfaced multiple non-comparable "administrative savings" estimates for
    the same underlying phenomenon - e.g. CMS's narrow accounting figure
-   ($360.3B, CP-TOT-005) vs. the broader Himmelstein/Woolhandler academic
-   estimate ($1.1T, CP-OFF-001) vs. the CBO-scored IRA drug-negotiation
-   savings ($98.5B/10yr, CP-OFF-003, the most authoritative single figure
+   ($360.3B, seed row `BL-0010`) vs. the broader Himmelstein/Woolhandler academic
+   estimate ($1.1T, `BL-0029`) vs. the CBO-scored IRA drug-negotiation
+   savings ($98.5B/10yr, `BL-0031`, the most authoritative single figure
    *as originally scored*, because it's the only one based on actual
    enacted-policy results rather than a modeled estimate; R34: CBO re-scoring
    in 2025 revised the projected deficit reduction downward, so this is a
@@ -78,9 +78,9 @@ Build a **national-aggregate annual time series model** first:
   presets on top of the base model
 - Validates its output against three independent real-world benchmarks
   already sourced in `research/01_macro_financing_population_offsets.md`:
-  CBO's own single-payer costing methodology (CP-FIN-015, the most
+  CBO's own single-payer costing methodology (research/01 `RB-01-FIN-015`, the most
   authoritative direct comparator), and the Urban Institute / Mercatus
-  10-year federal cost estimates (CP-FIN-016), which converge around
+  10-year federal cost estimates (`RB-01-FIN-016`), which converge around
   $32-34T/10yr federal despite opposite institutional leanings
 
 Region, population-group, and specialty-level granularity (the full

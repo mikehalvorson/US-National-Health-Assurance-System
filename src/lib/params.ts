@@ -72,7 +72,7 @@ export const BASE2023 = {
 };
 /* Investment residual (structures & equipment + noncommercial research):
  * derived so categories sum exactly to nheTotal. Flagged medium confidence - 
- * see research/01 CP-TOT-004 note about the bundled CMS line. */
+ * see research/01 RB-01-TOT-004 note about the bundled CMS line. */
 (function () {
   const b = BASE2023;
   const listed = b.hospital + b.physician + b.otherProf + b.dental +
@@ -670,11 +670,11 @@ export interface ResearchRecommendation {
 export const RESEARCH_RECOMMENDATIONS: ResearchRecommendation[] = [
   {
     id: 'publicAdminRate', low: 2, high: 6,
-    file: 'research/05_it_governance_rd_transition.md', parameterId: 'CP-GOV-008'
+    file: 'research/05_it_governance_rd_transition.md', parameterId: 'RB-05-GOV-008'
   },
   {
     id: 'providerPaymentFactor', low: 0.39, high: 0.39,
-    file: 'research/03_drugs_pharmacy_diagnostics_devices.md', parameterId: 'CP-RX-015 / CP-DX-011'
+    file: 'research/03_drugs_pharmacy_diagnostics_devices.md', parameterId: 'RB-03-RX-015 / RB-03-DX-011'
   }
 ];
 
@@ -911,7 +911,7 @@ export const OFFSET_RAMPS: OffsetPairing[] = [
   }
 ];
 
-/* Benchmarks for the comparison panel (research/01, CP-FIN-015/016).
+/* Benchmarks for the comparison panel (research/01, RB-01-FIN-015/016).
  * All are single-year or annualized federal-cost concepts - the UI explains
  * that these are different accounting concepts, not one axis. */
 export const BENCHMARKS = {
@@ -1194,7 +1194,7 @@ export const PROBLEM_STATS = [
      the model uses as its uninsured share is the Census CPS ASEC ALL-AGES
      rate. 26.7 / 334.0 does come to 8.0%, which is why nobody caught it, but
      the numerator is an under-65 count and the denominator an all-ages
-     population -- and the seed's own CP-POP-004a has read "two incompatible
+     population -- and the seed's own BL-0015 has read "two incompatible
      measures exist" since it was written. Only the label is corrected here:
      moving the 8.0% input would move scenario economics, and this is a
      labelling defect. See research/README.md, "The 26.7M uninsured headline". */

@@ -45,7 +45,7 @@ test('Medications: the derived phase counts equal the published increments', () 
 
 /* R52's own suggestion: the base has to land inside the sourced range, not
  * merely be the number it has always been. Fails if the CMS retail line, the
- * embedded-drug estimate or the deflator moves the base out of CP-RX-002's
+ * embedded-drug estimate or the deflator moves the base out of RB-03-RX-002's
  * $680-730B, which is the reason the range is quoted on the page at all. */
 test('Medications: the drug base falls inside the sourced all-drug range', () => {
   expect(DRUG_BASE.total).toBeGreaterThan(680);

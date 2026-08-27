@@ -26,6 +26,12 @@ import {
   unknownStructuralKeys, unstressedKindCounts, unstressedParameters
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
+import {
+  BASELINE_ROWS, baselineIdProblems, bindProblems, definitionNamespaceLeaks,
+  extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
+  measuresStatusCounts, resolveDefinition, stalePriorityExemptions,
+  unseededPriorityParameters, valueTypeProblems
+} from './baseline-registry';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
 import { classGrowth, defaultSettings, distribution, TAX_SELFTESTS } from './taxmodel';
 import {
@@ -3157,6 +3163,66 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         if (d.unregistered.length) parts.push('no TABS entry: ' + d.unregistered.join(', '));
         if (d.unrouted.length) parts.push('no page: ' + d.unrouted.join(', '));
         return { ok: !parts.length, note: parts.join(' | ') || 'all routes registered' };
+      })
+    ]
+  },
+  {
+    /* R129 [§S10]: the namespace separation. Before it, 57 of 80 seed ids and
+       143 of 160 research ids bound a different quantity than the canonical id
+       of the same name, and nothing errored - the numbers were simply wrong.
+       These eight rows are what stops the two namespaces merging again. */
+    surface: 'baseline-registry.ts',
+    rows: () => [
+      runGuarded('R129: CP-* is defined in one file and nowhere else', () => {
+        const leaks = definitionNamespaceLeaks();
+        return {
+          ok: !leaks.length,
+          note: leaks.length ? leaks.slice(0, 4).join(' | ') + (leaks.length > 4 ? ' (+' + (leaks.length - 4) + ')' : '')
+            : 'only cp_registry_canonical.csv defines a CP-* id'
+        };
+      }),
+      runGuarded('R129: the definition extract and the registry agree on all 310', () => {
+        const bad = extractDisagreements();
+        return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || '310 agree' };
+      }),
+      runGuarded('R129: measurement ids are sequential, unique and non-semantic', () => {
+        const bad = baselineIdProblems();
+        return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || BASELINE_ROWS.length + ' BL rows in order' };
+      }),
+      runGuarded('R129: every measurement row declares what it measures', () => {
+        const bad = bindProblems();
+        const c = measuresStatusCounts();
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ') || 'mapped ' + c.mapped + ' / unmapped ' + c.unmapped
+            + ' / no-canonical-equivalent ' + c['no-canonical-equivalent']
+        };
+      }),
+      runGuarded('R129: the definition join throws on a miss instead of binding', () => {
+        let threw = 0;
+        try { resolveDefinition('BL-9999'); } catch { threw += 1; }
+        const unbound = BASELINE_ROWS.find((r) => r.measuresStatus !== 'mapped');
+        if (unbound) { try { resolveDefinition(unbound.baselineId); } catch { threw += 1; } }
+        return { ok: threw === 2, note: threw + ' of 2 misses threw' };
+      }),
+      runGuarded('R236: no identifier resolves to two definitions after the split', () => {
+        const bad = idsResolvingToTwoDefinitions();
+        return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || 'zero, which is the number to report' };
+      }),
+      runGuarded('R12: a value carries the band its value_type claims', () => {
+        const bad = valueTypeProblems();
+        return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || 'point, range, contested-range and compound all consistent' };
+      }),
+      runGuarded('R31: a research-flagged priority parameter is seeded or says why not', () => {
+        const missing = unseededPriorityParameters();
+        const stale = stalePriorityExemptions();
+        const parts: string[] = [];
+        if (missing.length) parts.push('not seeded: ' + missing.join(', '));
+        if (stale.length) parts.push('exempt but no longer flagged: ' + stale.join(', '));
+        return {
+          ok: !parts.length,
+          note: parts.join(' | ') || flaggedPriorityParameters().length + ' flagged, all accounted for'
+        };
       })
     ]
   }

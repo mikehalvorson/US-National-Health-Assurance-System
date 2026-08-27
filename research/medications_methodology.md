@@ -65,9 +65,9 @@ line and the growth rate together. Until then the model carries neither.
 - **Scope:** A published retail line plus an estimated $212–264 billion of
   infused, injected, and other medicines recorded inside hospital and
   physician-service categories.
-- **Note (code review, R214):** this range is quoted from CP-RX-002 as
+- **Note (code review, R214):** this range is quoted from RB-03-RX-002 as
   published. It is **not** re-derived from the retail line the model owns, and
-  it should not be read as though it were: CP-RX-002 built it on a 2024 retail
+  it should not be read as though it were: RB-03-RX-002 built it on a 2024 retail
   figure of $467.0B, which the reconciliation note above sets aside. The
   model’s own decomposition is separate and exact: $461.4B retail plus
   $256.5B non-retail is the $717.9B base, which sits inside this range without

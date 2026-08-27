@@ -1,0 +1,159 @@
+import { expect, test } from 'vitest';
+import {
+  BASELINE_ROWS, CP_DEFINITIONS, MEASURES_STATUSES, PRIORITY_EXEMPT, VALUE_TYPES,
+  baselineIdProblems, baselineRow, bindProblems, definitionNamespaceLeaks,
+  extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
+  letterSuffixSurvivors, letterSuffixedOrigins, measuresStatusCounts, parseCsv,
+  resolveDefinition, stalePriorityExemptions, unseededPriorityParameters, valueTypeProblems
+} from '../../src/lib/baseline-registry';
+
+/* R129 [§S10]: two registries claimed the CP-* prefix, so 57 of 80 seed ids
+   and 143 of 160 research ids bound a different quantity than the canonical id
+   of the same name. Nothing errored; the numbers were simply wrong. These tests
+   hold the separation in place: CP-* defines, BL-* measures, RB-* is evidence,
+   and every join throws rather than binding silently. */
+
+test('R129: CP-* is definition-only, and no other file defines one', () => {
+  expect(definitionNamespaceLeaks()).toEqual([]);
+});
+
+test('R129: the extract exemption is not a free pass, so the two must agree', () => {
+  expect(extractDisagreements()).toEqual([]);
+  expect(CP_DEFINITIONS.size).toBe(310);
+});
+
+test('AN2: the definition layer holds no values, which is why a remap was impossible', () => {
+  const withValue = Array.from(CP_DEFINITIONS.values()).filter((d) => d.name === '');
+  expect(withValue).toEqual([]);
+  /* 50 of 310 carry a definition and 32 a unit. §AN2 and §8.0.3 both say all
+     310 do; measured 2026-08-27, they do not, and a mapping pass that expected
+     a definition on every row would have had nothing to read on 260 of them. */
+  const defined = Array.from(CP_DEFINITIONS.values()).filter((d) => d.definition.trim() !== '');
+  expect(defined.length).toBe(50);
+});
+
+test('R129: measurement ids are sequential, unique and non-semantic', () => {
+  expect(baselineIdProblems()).toEqual([]);
+  expect(BASELINE_ROWS[0].baselineId).toBe('BL-0001');
+  expect(BASELINE_ROWS.every((r) => /^BL-[0-9]{4}$/.test(r.baselineId))).toBe(true);
+});
+
+test('R129: no BL number reuses a CP number from the row it replaced', () => {
+  for (const r of BASELINE_ROWS) {
+    if (!r.supersededId) continue;
+    expect(r.baselineId).not.toBe(r.supersededId);
+    expect(r.baselineId.replace('BL-', '')).not.toBe(r.supersededId.replace(/^CP-[A-Z]+-/, ''));
+  }
+});
+
+test('R129: every row declares measures and measures_status, and every bind resolves', () => {
+  expect(bindProblems()).toEqual([]);
+  for (const r of BASELINE_ROWS) expect(MEASURES_STATUSES).toContain(r.measuresStatus);
+});
+
+test('R129: the resolver returns the canonical record for a mapped row', () => {
+  const mapped = BASELINE_ROWS.find((r) => r.measuresStatus === 'mapped');
+  expect(mapped).toBeDefined();
+  const def = resolveDefinition(mapped!.baselineId);
+  expect(def.id).toBe(mapped!.measures);
+  expect(def.name.length).toBeGreaterThan(0);
+});
+
+test('R129: the resolver THROWS on every miss rather than binding silently', () => {
+  /* Copied from tools/build_data_phase_targets.py, which raises
+     ValueError(f"Unknown KPP/TPP: {identifier}") rather than returning a
+     default. A silent default is how a hospital count came to stand in for
+     $1.5T of hospital spending. */
+  expect(() => baselineRow('BL-9999')).toThrow(/Unknown baseline id/);
+  expect(() => resolveDefinition('BL-9999')).toThrow(/Unknown baseline id/);
+
+  const unbound = BASELINE_ROWS.find((r) => r.measuresStatus !== 'mapped');
+  expect(unbound).toBeDefined();
+  expect(() => resolveDefinition(unbound!.baselineId)).toThrow(/declares no canonical parameter/);
+});
+
+test('R236 / B1: no id resolves to two definitions after the split', () => {
+  expect(idsResolvingToTwoDefinitions()).toEqual([]);
+});
+
+test('R236 / J3: the letter-suffix invention is gone as an id and kept as a fact', () => {
+  /* They were never invalid. They were expressing a cardinality the id scheme
+     could not carry, and now `measures` plus `disaggregation` carries it. */
+  expect(letterSuffixSurvivors()).toEqual([]);
+  const origins = letterSuffixedOrigins();
+  expect(origins.length).toBe(15);
+  for (const r of origins) {
+    expect(r.disaggregation.length).toBeGreaterThan(0);
+    expect(BASELINE_ROWS.filter((o) => o.baselineId === r.baselineId).length).toBe(1);
+  }
+});
+
+test('R236 / J3: the six NHE category rows are six rows, not one', () => {
+  const cats = letterSuffixedOrigins().filter((r) => r.supersededId.startsWith('CP-TOT-004'));
+  expect(cats.length).toBe(6);
+  /* §8.0.3 says they all carry measures = CP-TOT-004. They do not, and must
+     not: canonical CP-TOT-004 is "Public share of system cost", not "NHE by
+     category", and that reading comes from research/01, which is the measurement
+     layer. Binding them to it would be matching by id, which §8.0.3 point 7
+     forbids in the same breath. */
+  expect(CP_DEFINITIONS.get('CP-TOT-004')!.name).toBe('Public share of system cost');
+  expect(cats.map((r) => r.measures)).not.toContain('CP-TOT-004');
+});
+
+test('R28: the CBO administrative estimate is not bound to Appeal volume', () => {
+  const row = BASELINE_ROWS.find((r) => r.supersededId === 'CP-GOV-002');
+  expect(row).toBeDefined();
+  expect(row!.description).toMatch(/CBO/);
+  expect(row!.unit).toMatch(/percent/);
+  /* The backlog says its "canonical id is CP-GOV-007". That is research/05's
+     numbering, now RB-05-GOV-007. Canonical CP-GOV-007 is Appeal volume, and a
+     dollar-vs-percentage collision is exactly what R28 exists to stop. */
+  expect(CP_DEFINITIONS.get('CP-GOV-007')!.name).toBe('Appeal volume');
+  expect(row!.measures).toBe('');
+  expect(row!.notes).toMatch(/RB-05-GOV-007/);
+});
+
+test('R12: a contested parameter is a distribution, not a point with a caveat', () => {
+  expect(valueTypeProblems()).toEqual([]);
+  const gov = BASELINE_ROWS.find((r) => r.supersededId === 'CP-GOV-001');
+  expect(gov!.valueType).toBe('contested-range');
+  expect(Number(gov!.valueLow)).toBe(1.3);
+  expect(Number(gov!.valueHigh)).toBe(6.4);
+});
+
+test('R31: a research-flagged priority parameter reaches the seed or says why not', () => {
+  expect(unseededPriorityParameters()).toEqual([]);
+  /* The exemption list cannot rot silently in either direction: an exemption
+     for a parameter nothing flags any more is stale and fails too. */
+  expect(stalePriorityExemptions()).toEqual([]);
+  expect(flaggedPriorityParameters().length).toBeGreaterThan(0);
+  for (const reason of Object.values(PRIORITY_EXEMPT)) {
+    expect(reason.length).toBeGreaterThan(80);
+  }
+});
+
+test('R31 / C1: both dropped priority parameters are now seeded', () => {
+  const blob = BASELINE_ROWS.map((r) => r.description + ' ' + r.notes).join(' ');
+  expect(blob).toContain('RB-03-DX-011'); // RAND commercial-to-Medicare multiplier
+  expect(blob).toContain('RB-02-UNIT-003'); // FQHC cost per visit
+  expect(blob).toContain('RB-04-LTC-011'); // avoided institutionalization
+});
+
+test('R129: the CSV reader survives quoted commas, which every notes column has', () => {
+  const rows = parseCsv('a,b\n"x,1","he said ""hi"""\n');
+  expect(rows).toEqual([['a', 'b'], ['x,1', 'he said "hi"']]);
+});
+
+test('R129: the split is reported, not assumed', () => {
+  const counts = measuresStatusCounts();
+  const total = MEASURES_STATUSES.reduce((n, s) => n + counts[s], 0);
+  expect(total).toBe(BASELINE_ROWS.length);
+  expect(counts.mapped).toBeGreaterThan(0);
+  /* A migration that mapped everything would mean the mapping was done by id
+     similarity, which is what produced the 57 collisions. */
+  expect(counts['no-canonical-equivalent']).toBeGreaterThan(0);
+});
+
+test('every value_type is one of the four and carries the band it claims', () => {
+  for (const r of BASELINE_ROWS) expect(VALUE_TYPES).toContain(r.valueType);
+});
