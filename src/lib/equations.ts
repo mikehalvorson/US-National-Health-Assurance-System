@@ -333,7 +333,14 @@ def({
   id: 'KPP-A1', kind: 'KPP', name: 'National continuous coverage rate', group: 'coverage',
   cmp: '>=', unit: '%', decimals: 1,
   expr: sub(n(100, 'whole population'),
-    mul(n(8.0, 'baseline uninsured share of the population (26.7M of 334M, KFF/Census 2024)'),
+    /* R6 [S11a]: this label read "26.7M of 334M, KFF/Census 2024", which
+       asserts that 26.7M is 8.0% of the population. It is not. 8.0% is the
+       Census CPS ASEC all-ages uninsured rate; 26.7M is KFF's count of the
+       uninsured under 65, whose rate is 9.8%. The division works only
+       because 26.7/334.0 happens to land on 8.0. The value is unchanged --
+       8.0% all-ages is the right input for a national coverage rate -- and
+       only the claim about where it comes from is corrected. */
+    mul(n(8.0, 'baseline uninsured share of the population, all ages (Census CPS ASEC, 2024)'),
       sub(n(1, 'full closure'),
         mul(covN(), mul(dv(q('TPP-1.4'), n(100, 'percent scale')), dv(q('TPP-1.1'), n(100, 'percent scale'))))))),
   why: 'The baseline uninsured share closes as public coverage rolls out, discounted by identity-match accuracy and provisional-activation success.'

@@ -4932,3 +4932,325 @@ checks.
 - `astro build`: 14 pages.
 - Verified in the running dev server at a 375px viewport, not from the built
   output.
+
+
+## P15 — §S11a Seed CSV & research sourcing · 2026-08-26 · branch `nha-remediation`
+STATUS: complete — all 14 recommendations resolved, four of them by measuring
+that the row's premise was false rather than by changing code.
+
+DISCREPANCY: **ten, and four of them change what the row is.**
+
+1. 🛑 **`R40`'s seed side does not exist, and both `R40` and its twin cite a
+   verification tag that is about something else.** The prompt says `rents`
+   "appears here as a seed row and in `params.ts` as `R145`". There is **no
+   `rents` row in the seed** and no `CP-FIN-007` either; the seed's only
+   "rent" hit is `CP-OFF-003b`, the IRA drug-pricing package. And `rents` is
+   not in `params.ts` — it is `src/lib/taxparams.ts:323`, `rev1x: 20`,
+   `default: true`, `confidence: "low"`, exactly as described but at a
+   different address. Both `R40` and `R145` cite **`[V4]`**, and `V4` in the
+   audit is *"`metricCount: 26` and `targetCount: 64` both reconcile by
+   hand"* in `data-phases.ts`. It has nothing to do with `rents`. **The seed
+   side is a null set; the row is `taxparams.ts`'s and belongs to `P17`.** Not
+   invented a seed row to have something to fix: adding one would be the
+   fabrication this section exists to prevent.
+
+2. 🛑 **`R3`'s `HANDOFF.md` is not in this repository, and `R3` was already
+   satisfied.** `specs/HANDOFF.md` is the Astro migration handoff, 71 lines,
+   and contains no mention of elasticity, coefficient or RAND. The document
+   `R3` means is from the original framework build. The row's substance was
+   checked against the code instead: `utilIncrease` carries
+   `confidence: "low"`, carries `url: "https://www.rand.org/health-care/projects/hie.html"`,
+   and **that `low` grade reaches the rendered page in two places** —
+   `gapsList` at `health.astro:15` filters `PARAM_DEFS` to `confidence ===
+   'low'` and prints their labels, and the parameter table prints a `conf
+   low` cell. Both are in `dist/health/index.html`, with the utilization
+   parameter named first in the gaps list. **The row asks for either a cited
+   value or a visible grade; the code has both.** Recorded in
+   `specs/HANDOFF.md`, nothing changed. This is `P14`'s `R284` shape for the
+   second section running: **measure whether the grade reaches a reader
+   before deciding which branch you are on.**
+
+3. 🛑 **`R6`'s premise is true and its diagnosis is wrong, and the real defect
+   is worse.** `R6` says the 26.7M headline "applies a 2024 rate to a 2023
+   population". Both figures are 2024 and the denominator is 2023, so the
+   vintage half is right. But the load-bearing error is a **measure**
+   mismatch. `research/01`'s own `CP-POP-004` records two figures explicitly
+   labelled *"not directly comparable"*: Census CPS ASEC **8.0% all ages**,
+   and KFF/Census-ACS **26.7 million uninsured under age 65** at a **9.8%**
+   rate. `equations.ts` pairs them as *"26.7M of 334M"*, and `PROBLEM_STATS`
+   labelled the result "(KFF/Census, 2024)" — naming both sources, which is
+   what let the mismatch pass. **26.7 / 334.0 = 8.0% is arithmetically true
+   and semantically empty:** the numerator counts a population the
+   denominator does not. The seed's `CP-POP-004a` has carried the note *"two
+   incompatible measures exist"* since it was written and nothing read it.
+
+4. ⚠️ **`R4`'s replacement numbers are real, are not where it says, and its
+   second figure is nowhere at all.** `R4` says replace `CP-BH-003` with
+   `CP-BH-011`'s "36,780–86,430 by 2038". `CP-BH-011` in `research/04` holds
+   the **child and adolescent** figures (7,470 by 2036, 19,770 by 2038); the
+   adult 36,780–86,430 is in **`research/02`**, unnumbered, inside the
+   `CP-EDU-004` psychiatry paragraph. Worse, the two files disagree on the
+   release: `research/02` attributes it to a **January 2026** HRSA release,
+   `research/04` to the **2025** brief, and both link the same 2025 PDF.
+   **`R4`'s other half — "the verified June 30 2026 figure: 157,149,246
+   people, 26.53% of need met, 7,825 practitioners needed" — appears nowhere
+   in this repository**, and `bhw.hrsa.gov` returns HTTP 403 to automated
+   fetch, so it could not be checked. **It was not written.** The row keeps
+   the 122 million with its actual repo provenance (`CP-BH-010`, HRSA HPSA
+   dashboard, October 2024 designation list) and says so.
+
+5. ⚠️ **The "~45 rows" premise is three different numbers and all three are
+   correct.** Measured at `1460194`: **49** rows had an empty `source_url` at
+   any grade; **41** of those were graded `high` or `medium-high`, which is
+   the audit's "~45"; and **49** were graded `≥ medium`, because **no row in
+   the file was graded below `medium` at all**. The P15 handoff reported 49
+   as a correction to the audit's 45; they are answers to different
+   questions. The handoff's own conclusion — that the Done-when clause
+   therefore applies to the whole file — is right.
+
+6. ⚠️ **`R15` names five open items; ten are referenced outside the extract
+   files.** `OI-008`, `OI-033`, `OI-034`, `OI-035` and `OI-043` in
+   `workforce_transition_methodology.md`, plus **`OI-061` and `OI-070`** in
+   `legislation_crosswalk.md`, **`OI-001` and `OI-023`** in the generated
+   `quality-data.ts`, and **`OI-052`** in `rollout.ts` and `selftests.ts`.
+   The register covers all ten, because one covering only the five somebody
+   noticed reproduces the problem it was written to fix.
+
+7. ⚠️ **`research/03` had already downgraded `CP-RX-001` to Low and the seed
+   still said `high`.** The research entry reads
+   `**Confidence:** ~~High~~ **Downgraded to Low, and not used by the
+   model.**` The seed was never told. This is the strongest single argument
+   for the crosswalk this section built: the evidence base and its own
+   distillation had drifted apart in the direction that matters.
+
+8. ⚠️ **`R30`'s recommendation was not adopted for a reason that turns out to
+   be good.** `CP-GOV-NEW-001` wants core agency overhead split from
+   contractor claims processing. `params.ts` splits `publicAdminRate`
+   (claims, enrolment, operations) from `governanceRate` (oversight, appeals,
+   legitimacy). The note's seam exists because MAC payments are booked
+   against the trust funds while Program Management is a discretionary
+   appropriation — **an artifact of current U.S. accounting with no referent
+   in the modelled system**, where there are no MACs. Recorded in
+   `research/05` with the reasoning and with the half of the note that is
+   still right.
+
+9. ⚠️ **`R35`'s 403 is gone and the gap it was recorded against is not.**
+   `cms.gov` now returns **200** on all three URLs that refused, including
+   `files/document/highlights.pdf`. But the DME, other-non-durable and
+   other-professional-services splits `BASE2023` carries are not on any HTML
+   page — they are in `nhe-tables.zip`, which also now serves. **The blocker
+   changed from "the host refuses" to "the archive is unopened", and the
+   check is a `params.ts` change.** Still 403 as of 2026-08-26: `cbo.gov`
+   direct PDFs (the publication page serves), `bhw.hrsa.gov` PDFs,
+   `gao.gov/products`, `jamanetwork.com`.
+
+10. ⚠️ **Six seed rows were structurally broken by an unquoted comma** — the
+    same shape as the audit's own *"6 rows structurally broken by an
+    unescaped pipe"*, in a different file format and, by coincidence, the
+    same count. `CP-POP-001`, `CP-FIN-001`, `CP-FIN-010`, `CP-OFF-003a`,
+    `CP-HOSP-006`, `CP-GOV-001`. Because `notes` is the last column the
+    damage was contained to it, so no grade or year was ever shifted — but
+    `CP-HOSP-006`'s peer-nation comparison was split into three fields, and
+    any consumer strict enough to reject an 11-field row would have rejected
+    the file. All 81 lines now carry exactly 11 fields.
+
+LANDED: `R3` `R4` `R5` `R6` `R7` `R8` `R9` `R10` `R13` `R14` `R15` `R30` `R35`
+`R40` — sha below.
+BACKFILLED: **46** rows given a real `source_url`, plus **2 re-sourced** away
+from secondary outlets (`R9`, `R10`) = 48 rows now carrying a working citation.
+DOWNGRADED: **12** rows whose grade dropped because no evidence carries the old
+one.  **UPGRADED: 0.**
+YEARS: **25** `recent` → numeric, and 11 further placeholders (`estimate`,
+`historical`, `ongoing`, `various`, `study year varies`, `FY2025 enacted`, and
+four undeclared ranges) resolved. **Remaining placeholders: 0.** Six rows carry
+a declared span whose endpoints are named in `notes`.
+DENOMINATOR: canonical population per output type = **334.0M (2023)** for every
+per-capita figure derived from the NHE calibration, **340,110,988 (2024)** for
+regional and county allocation only, **347.3M (2025)** for current-state
+description only. Declared in `research/README.md` with the reason each is not
+interchangeable.
+26.7M HEADLINE: **corrected to "people under 65 uninsured", 9.8%, KFF analysis
+of Census ACS 2024.** The model's 8.0% all-ages input is deliberately
+unchanged — see below.
+CMS.GOV 403: **now fetchable** (200 on the fact sheet, the historical index and
+the Highlights PDF). `cbo.gov`, `bhw.hrsa.gov`, `gao.gov` and `jamanetwork.com`
+still block.
+RENTS (seed side): **no seed row exists** — the premise is false, see
+DISCREPANCY 1. `taxparams.ts` twin deferred to `P17`.
+
+### 🛑 The trap that would have shipped 49 wrong citations
+
+The seed and `research/01`–`06` share a `CP-*` id namespace. Matching the 49
+unsourced rows to research entries by id reported **49 exact hits out of 49** —
+a clean, total, and entirely wrong result.
+
+The seed dropped the research files' `CP-HOSP-001` (hospital care spending,
+already in the seed as `CP-TOT-004a`) and shifted the rest of the block up by
+one **without renumbering**. So:
+
+| seed row | is really | id match would have cited |
+|---|---|---|
+| `CP-HOSP-001` — number of hospitals, 6,120 | research `CP-HOSP-002` | hospital *spending*, $1.5T |
+| `CP-HOSP-002` — operating margin 4.9% | research `CP-HOSP-003` | the hospital *count* |
+| `CP-HOSP-004` — 289% outpatient markup | research `CP-HOSP-005` | *rural closures* |
+| `CP-CLIN-001` — 1.03M physicians | research `CP-CLIN-003` | physician *spending* |
+| `CP-RX-004` — generics 90%/12% | research `CP-RX-010` | insulin *price gap* |
+
+Same shift in `CP-CLIN`, and in `CP-RX` from 002 onward. `CP-BH-003` means the
+psychiatrist shortage in the seed and unmet adult mental-health need in
+`research/04`. **A 100% match rate was the signal, not the reassurance** — the
+P14 handoff's *"a check firing on everything is as suspect as one firing on
+nothing"*, arriving as a matcher succeeding on everything.
+
+The rebuild scored description overlap **and** required the candidate entry to
+contain the row's number. Even then the automated proposal picked an AMA
+prior-authorization survey as the source for an $83,000 billing-cost figure,
+and every one of the 46 was read by hand before it was written.
+
+### 🛑 A 200 is not verification
+
+`R10` needed the Census CPS ASEC primary source. Guessing the report number
+gave `census.gov/library/publications/2025/demo/p60-287.html`, which returns
+**200**. Its title is **"Poverty in the United States: 2024"**. The health
+insurance report is **p60-288**, one number away, and was confirmed by reading
+the title and the table list, not the status code.
+
+The same discipline caught `R9`. `research/01`'s `CP-OFF-002` offers
+`nejm.org/doi/full/10.1056/NEJMc1215485` as its NEJM link and the row needs
+Himmelstein and Woolhandler *directly*. Crossref says that DOI is *"Reducing
+Administrative Costs"*, NEJM, 2013-02-14, **author Samuel Metz**. Citing it
+would have written `R10`'s exact defect — a misattributed source — into the row
+`R9` is about. `10.1056/NEJMsa022033` was verified through Crossref as
+Woolhandler, Campbell and Himmelstein, 2003, and is what shipped.
+
+### The twelve downgrades
+
+The count that matters, and the honest measure of the seed's evidentiary base.
+Every one is the seed catching up to what its own research file already said.
+
+| row | was | now | why |
+|---|---|---|---|
+| `CP-RX-001` | `high` | `low` | `research/03` downgraded it to Low and recorded that the model does not use it. |
+| `CP-FIN-010` | `medium` | `low` | A derived sum with no external source. The FMEA borrows occurrence from these grades, so a derived aggregate must not rank alongside a measured CMS line. |
+| `CP-DVH-002` | `medium-high` | `low-medium` | Credited to the Hearing Industries Association; `research/04` credits consumer price guides and gives no URL for any of them. |
+| `CP-TRN-002` | `high` | `low-medium` | `research/05` reaches the Mathematica evaluation only through Wikipedia and an advocacy site. |
+| `CP-EDU-001` | `high` | `medium` | The per-resident range is a 2013 contractor study on 2015 projected data; only the national totals are firm. |
+| `CP-HOSP-005` | `high` | `medium` | Bundles a CDC visit count (High) with a Peterson-KFF average cost (Medium). The weaker half governs. |
+| `CP-DX-001` | `medium-high` | `medium` | Only the CLFS side is an official schedule; the billed charge is a cost-aggregator site. |
+| `CP-GOV-003` | `medium-high` | `medium` | `research/05` grades Taiwan MEDIUM and calls 1.07% a lower bound of the possible, not a transferable rate. |
+| `CP-IT-001` | `medium-high` | `medium` | The GAO reports are named without links and `gao.gov` refuses automated fetch; the URL is trade reporting. |
+| `CP-RD-002` | `medium-high` | `medium` | The range mixes bases as well as years: $83B is CBO 2019 for the industry, $105B the top of the PhRMA-member range for 2021. |
+| `CP-HOSP-002` | `high` | `medium-high` | Kaufman Hall's panel is ~1,300 hospitals, not the ~6,120 universe, and this row is an exact percentage. |
+| `CP-BH-003` | `high` | `medium-high` | The replacement figures are real but the two research files disagree on which HRSA release published them. |
+
+### Rows whose value or meaning changed
+
+- **`CP-BH-003`** (`R4`): `18000 to 21000` by **2030** → `36780 to 86430` by
+  **2038**, adult psychiatrists, status-quo to elevated-need scenarios.
+- **`CP-CLIN-001`**: `1030000` → **`1032365`**, the figure `research/02`
+  actually states. The rounding is why the value matcher found no hit.
+- **`CP-LTC-001`**: `111000 to 128000` → **`111325 to 127750`**. Not an
+  uncertainty band: semi-private and private room, both 2024.
+- **`CP-LTC-003`**: the `33 to 34` band is **two services**, home health aide
+  and homemaker, both 2024 medians — not a range and not two years.
+- **`CP-LTC-002`**: `70800 to 74400` is a **+5% year-over-year move**, 2024 to
+  2025, not a band. Left as a declared span with the endpoints named.
+- **`CP-HOSP-003`**: description gains the word **rural**, which the seed had
+  dropped, and the note stops attributing 150–210 to the Sheps Center — Chartis
+  counts 206 since 2010, Sheps 197 since 2005, on different definitions.
+- **`CP-EMS-001`**: `source_name` read *"Government Accountability and Data
+  Collection Study (GADCS)"*. GADCS is CMS's **Ground Ambulance Data Collection
+  System**. The expansion was invented and is corrected.
+- **`CP-RX-004`**: credited to *"FDA/IQVIA"*; `research/03` traces it to
+  **AAM/IQVIA**, a generics trade association. Corrected, grade kept, because
+  the volume/spend split is corroborated and the association's savings headline
+  is not used.
+- **`CP-IT-002`**: credited to the UK National Audit Office; the linked
+  document is the **Public Accounts Committee** report.
+
+### `R13`, recorded rather than applied
+
+`CP-BH-001` is $139.6B for **2021** against a 2023 calibration year, and
+`research/04`'s `CP-BH-015` supplies 3.27%/yr real per-capita growth for
+exactly this. **The trend is recorded in the row's notes and deliberately not
+applied.** Applying it would replace a measured 2021 level with a projected
+2023 one and lose the fact that no 2023 measurement exists — which is the
+thing a reader needs. The `use_as` column now says `benchmark`, so nothing can
+sum it into a 2023 total by accident.
+
+### `R14`, resolved as "no newer figure exists"
+
+`CP-EMS-002` flagged itself as needing an inflation update. It is **not**
+refreshed, because there is no newer national median air-ambulance charge
+anywhere in this repo. It is marked superseded-in-context: the No Surprises Act
+changed the billing regime from 2022, `research/04`'s `CP-EMS-005` carries the
+post-Act evidence, and the note now says explicitly **not** to inflate the 2017
+figure forward as though the regime were unchanged. *"No newer figure exists"*
+is a different answer from *"refreshed"* and the row says which one it got.
+
+### What landed outside `research/`
+
+Two label corrections in `src/`, done deliberately and against the prompt's
+statement that this section touches only `research/` and `HANDOFF.md` — which
+is provably not the section's shape, since `R3`, `R5`, `R6` and `R35` all name
+`params.ts`.
+
+- `src/lib/params.ts` `PROBLEM_STATS`: **"people uninsured" → "people under 65
+  uninsured"**, note rewritten to name the measure and its 9.8% rate. This is
+  the public front page stating something false.
+- `src/lib/equations.ts` `KPP-A1`: the operand label read *"26.7M of 334M,
+  KFF/Census 2024"* and now reads *"all ages (Census CPS ASEC, 2024)"*.
+
+**The 8.0% value was not changed.** It is the right input for a national
+coverage rate, and moving it would move scenario economics into the
+`KPP-C8`-breach-count-of-11 tripwire on a labelling defect. Verified in the
+built output: `dist/index.html` carries the new front-page text and
+`dist/_astro/quality.*.js` no longer contains the string `26.7M of 334M`.
+
+### Recorded, not fixed
+
+- **`R6`'s other half.** The headline is a string literal, not a value derived
+  from a declared parameter, so `R6`'s first declared test — *"headline
+  `PROBLEM_STATS` values reproduce from declared parameter inputs"* — is not
+  met and cannot be met without adding a seed row, which would collide with
+  `§S10`'s namespace work.
+- **`R3` has no guard.** Nothing fails if `gapsList` is deleted or its filter
+  stops matching, and `utilIncrease` is the model's most consequential
+  assumption. A check that every `low`-graded `PARAM_DEF` label reaches the
+  rendered page would close it and is not written.
+- **`R35`'s `BASE2023` half.** `otherProf: 159.9`, `dme: 72.8` and
+  `nondurables: 124.1` have still never been traced to NHE Table 2. The
+  archive now serves; nobody has opened it.
+- **The `CP-*` namespace collision itself.** The seed, the research files and
+  `cp_registry_canonical.csv` use the same ids for different parameters —
+  `CP-BH-011` is "psychiatrist shortage projection" in `research/04` and
+  "behavioural health unmet-demand release factor" in the canonical registry.
+  **This is `§S10`'s (`P16`) whole subject** and nothing was renumbered.
+- **`CP-OFF-001` cites `pnhp.org`**, an advocacy summary, for an Annals paper.
+  Same shape as `R9` and `R10`; not named by any row, and `V22` checked it.
+
+### Verification
+
+- Full suite: **488 passing, 59 files**. Unchanged.
+- `astro check`: **0 errors, 0 warnings, 1 hint** (`equations.ts`). Unchanged.
+- `astro build`: 14 pages, exit 0.
+- File manifest **126 → 127** for `research/open_items_register.md`, rebuilt
+  with `node tools/build_file_manifest.mjs` before committing. Nothing pins 126.
+- Self-test count **221**, untouched — nothing in `src/` gained a self-test.
+- Seed CSV: **80 rows, 11 columns, all 81 lines exactly 11 fields**, zero
+  control bytes, LF only.
+- Control-character sweep of `src/`: clean.
+- Premises measured **before** implementing:
+  `NHA-Mental-Health/baseline-P15/preP15-measure.txt`.
+
+### Two tooling traps, one of them for the fifth time
+
+- 🛑 **The backslash-through-the-shell trap bit again**, on the first
+  `python -c` patch of a helper script: `\\\\` collapsed and the assertion
+  caught it. It is in the campaign notes, it bit four times in P14, and it bit
+  here on a one-line edit. **The rule holds: anything with a backslash goes
+  through a file written with the Write tool, or through Edit.**
+- ⚠️ **`pnpm build 2>&1 | tail -30` discarded the `astro check` counts.** Exit
+  code 0 says both commands succeeded; it does not say the hint count is 1.
+  The gate is *read the count*, and piping to `tail` is how the count stops
+  being readable. Re-run without the pipe.

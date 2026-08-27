@@ -1188,8 +1188,18 @@ export const ENGINE_DECLARATION_LITERALS: StructuralLiteral[] = [
 export const PROBLEM_STATS = [
   { value: "17.6% of GDP", label: "U.S. health spending, 2023",
     note: "$4.87T, or $14,570 per person, the highest of any nation (CMS NHE)" },
-  { value: "26.7M", label: "people uninsured",
-    note: "rising again after Medicaid unwinding and ACA subsidy expiration (KFF/Census, 2024)" },
+  /* R6 [S11a]. This said "(KFF/Census, 2024)", which named both sources and
+     so hid that the two do not measure the same population. 26.7M is KFF's
+     count of the uninsured UNDER AGE 65 in 2024, at a 9.8% rate. The 8.0%
+     the model uses as its uninsured share is the Census CPS ASEC ALL-AGES
+     rate. 26.7 / 334.0 does come to 8.0%, which is why nobody caught it, but
+     the numerator is an under-65 count and the denominator an all-ages
+     population -- and the seed's own CP-POP-004a has read "two incompatible
+     measures exist" since it was written. Only the label is corrected here:
+     moving the 8.0% input would move scenario economics, and this is a
+     labelling defect. See research/README.md, "The 26.7M uninsured headline". */
+  { value: "26.7M", label: "people under 65 uninsured",
+    note: "up 1.3M on 2023, a 9.8% rate, after Medicaid unwinding and ACA subsidy expiration (KFF analysis of Census ACS, 2024)" },
   { value: "20.7%", label: "of income goes to healthcare in the poorest fifth of households",
     note: "vs 3.7% in the richest fifth; the same bills hit 16 times harder at the bottom (BLS CES 2024)" },
   { value: "2.78×", label: "U.S. prescription drug prices vs 33 peer countries",

@@ -22,10 +22,89 @@ those as open research items, not silent gaps.
 | [hospital_regionalization_methodology.md](hospital_regionalization_methodology.md) | Hospital ownership and private-equity evidence, public-service charter and global-budget design, the 10-16 region candidate model, 13-region result, and university/specialty-hospital treatment | Physical Care tab (docs/js/hospitalregions.js) |
 | [medications_methodology.md](medications_methodology.md) | Current medicine spending, statutory negotiation constraints, FDA manufacturing pathway, the 200-family PMC qualification plan, exclusions, and a non-additive savings attribution | Medications tab (docs/js/medications.js) |
 
-[parameter_baseline_seed.csv](parameter_baseline_seed.csv) pulls the ~45
-highest-confidence, most load-bearing numbers from the core parameter files
-into one machine-readable table - use it as the starting calibration set,
-then go to the relevant detail file for anything it doesn't cover.
+[parameter_baseline_seed.csv](parameter_baseline_seed.csv) pulls **80** of the
+most load-bearing numbers from the core parameter files into one
+machine-readable table - use it as the starting calibration set, then go to
+the relevant detail file for anything it doesn't cover. It is 80 rows, not the
+"~45" this line claimed until 2026-08-26; the 45 was the count of rows carrying
+a high or medium-high grade with no source at all, which is a different thing
+and is now zero.
+
+### Reading the seed's columns
+
+**`source_url` is the row's own citation, not its research file's.** Until
+2026-08-26, 49 of 80 rows had none - not because no evidence existed, but
+because the distillation from `research/01` through `research/06` dropped the
+link. Forty-six were reconnected from those files and two re-sourced away from
+secondary outlets; the three that remain empty are graded below `medium`
+precisely because nothing citable was found.
+
+**Do not match a seed row to a research entry by its `CP-*` id.** They share an
+id namespace and are nonetheless misaligned: the seed dropped the research
+files' `CP-HOSP-001` (hospital care spending, already in the seed as
+`CP-TOT-004a`) and shifted the rest of that block up by one without
+renumbering, so the seed's `CP-HOSP-00N` is the research files'
+`CP-HOSP-00(N+1)`. The same shift runs through `CP-CLIN` and through `CP-RX`
+from 002 onward, and `CP-BH-003` means two different parameters in the two
+places. Match on the description and confirm the entry states the row's
+number. Repairing the namespace itself belongs to `§S10`.
+
+**`year` is a data vintage, never a placeholder.** No row reads `recent`,
+`estimate`, `historical`, `ongoing` or `various` any more. A row whose value
+genuinely spans years carries a declared span (`2024-2025`, `2022-2031`) and
+its `notes` say what the endpoints are. A span is not an uncertainty band.
+
+**`use_as` gates summation.** Three values:
+
+| `use_as` | Means | Rule |
+|---|---|---|
+| `calibration` | A level that participates in the **2023** base-year identity | May be summed with other `calibration` rows |
+| `trend` | A growth rate, a projection, or a figure whose content is a change over time | Used to move a figure between years, never summed |
+| `benchmark` | Everything else: comparators, unit prices, ratios, analogues, and levels at a year that is not 2023 | Never summed into a national total |
+
+**`confidence` is load-bearing beyond this file.** The published FMEA borrows
+cost-parameter occurrence from these grades, so a row graded high on no
+evidence would rank as *less* likely to miss than one graded medium on a solid
+source. Twelve rows were downgraded in the 2026-08-26 pass and none was
+raised. If a row cannot be sourced, drop its grade; never raise a grade to
+clear a check.
+
+## Canonical population denominator, by output type
+
+Three resident-population figures are live in this repo at once, and all three
+are correct for their own year. They are not interchangeable.
+
+| Denominator | Vintage | Lives in | Use it for |
+|---|---|---|---|
+| **334.0M** | 2023, implied by CMS's $14,570 per-capita NHE | `BASE2023.populationM` in `src/lib/params.ts` | **Every per-capita figure derived from the 2023 NHE calibration**, which is the model's base year. This is the canonical modelling denominator. |
+| **340,110,988** | Census, July 1 2024 | the thirteen region populations in `research/hospital_regionalization_methodology.md`, cross-checked against `public/data/counties.json` by `regionCountyAgreement` | **Regional and county allocation only.** It is the sum of a geographic partition, so a national per-capita figure built from it will not reconcile with the NHE calibration. |
+| **347.3M** | Census Vintage 2025, July 1 2025 | seed row `CP-POP-001` | **Current-state description only** - "how many people live here now". Never as the denominator under a 2023 dollar figure. |
+
+The rule: **a per-capita figure names the denominator it used, and dividing a
+2023 dollar total by a 2025 population is an error even though both inputs are
+correct.** The gap is about 4%, which is larger than several of the savings
+levers the model reports.
+
+The seed's `CP-TOT-010` carries 2024 GDP ($29,298B) for the same reason and
+under the same caution: the model's `BASE2023` uses 2023 GDP ($27,720B), and
+`NHE / GDP = 17.6%` only reproduces on the 2023 pair.
+
+### The 26.7M uninsured headline
+
+The front page states **26.7M people uninsured**. That number is real and is
+the KFF/Census-ACS count of the uninsured **under age 65** in 2024, at a 9.8%
+rate (seed row `CP-POP-004b`). The dashboard pairs it with **8.0%**, which is
+the Census CPS ASEC **all-ages** rate (seed row `CP-POP-004a`), and
+`src/lib/equations.ts` describes the pair as "26.7M of 334M".
+
+`26.7 / 334.0` does come to 8.0%, so the arithmetic is self-consistent - but
+the two inputs measure different populations, and `CP-POP-004a`'s own note has
+said "two incompatible measures exist" since the seed was written. The label
+was corrected on 2026-08-26 to say which measure each figure is. **The model's
+8.0% demand input was deliberately not changed**, because moving it moves
+scenario economics, and this is a labelling defect rather than an arithmetic
+one. Making the headline *derive* from a declared parameter rather than being a
+string literal is still open.
 
 ## Calibration base year - do not sum across vintages
 
@@ -84,6 +163,30 @@ Each file ends with its own "gaps for follow-up" section. Recurring themes:
   Brookings commentary) that are reliable but not a substitute for the
   primary table. A follow-up pass with direct PDF/API access should verify
   exact figures before hard-coding them as simulation constants.
+
+  **Retested 2026-08-26, and the answer is now split by host.** Plain `curl`
+  with an ordinary user agent:
+
+  | Host | Then | Now |
+  |---|---|---|
+  | `cms.gov` NHE fact sheet, historical index, and `files/document/highlights.pdf` | 403 | **200** |
+  | `cbo.gov/system/files/...` direct PDFs | 403 | **403 still**; the `cbo.gov/publication/<id>` page is 200, so cite the publication page |
+  | `bhw.hrsa.gov/sites/default/files/...` PDFs | not tested | **403** |
+  | `gao.gov/products/<id>` | not tested | **403** |
+  | `jamanetwork.com` article pages | not tested | **403** |
+
+  **A 403 here is a bot block, not a dead link.** It is a reason a figure
+  cannot be machine-verified, never evidence that the source is wrong.
+
+  The `cms.gov` unblock does **not** close the specific gap it was recorded
+  against. `research/03`'s `CP-DX-001` needed NHE **Table 2** for the
+  durable-medical-equipment, other-non-durable-products and
+  other-professional-services splits that `BASE2023` carries as `dme: 72.8`,
+  `nondurables: 124.1` and `otherProf: 159.9`. Those splits are not on the
+  fact-sheet page; they are inside the NHE Tables archive at
+  `https://www.cms.gov/files/zip/nhe-tables.zip`, which now serves. **The
+  blocker changed from "the host refuses" to "the data is in a zip nobody has
+  opened", and that check belongs to whoever owns `src/lib/params.ts`.**
 - BLS occupational and industry headcounts now anchor the Workforce tab, but
   no official table isolates PBM employment and the framework still lacks an
   audited occupation-to-function crosswalk. The resulting displacement and

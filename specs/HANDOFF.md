@@ -69,3 +69,37 @@ pnpm check       # astro check + tsc --noEmit (0 errors; 1 pre-existing dead-gro
 pnpm build       # static build -> dist/ (14 pages)
 pnpm preview --port 8518   # serve dist under the base path
 ```
+
+## The utilization elasticity, and a document that is not this one (R3, §S11a)
+
+Recorded 2026-08-26. `R3` says *"`HANDOFF.md` requires a specific coefficient
+before coding"* and asks for the utilization elasticity to be sourced.
+
+**No such requirement is in this file, and this file is the only `HANDOFF.md`
+in the repository.** It is the Astro and TypeScript migration handoff; it
+contains no mention of elasticity, of a coefficient, or of RAND. The document
+`R3` means is from the original framework build and is not in this repository.
+Do not go looking for it here.
+
+`R3`'s substance was checked against the code instead, and **it is already
+satisfied, on the branch the recommendation itself offers.** `R3` asks for
+either a specific RAND HIE arc-elasticity value **or** a `low` grade surfaced
+in the UI rather than only in the parameter's source string. As it stands,
+`utilIncrease` in `src/lib/params.ts`:
+
+- carries `confidence: "low"`;
+- carries `url: "https://www.rand.org/health-care/projects/hie.html"`, so the
+  RAND HIE citation is present, and the source string names the arc elasticity
+  of about -0.2 as the anchor;
+- has that `low` grade **rendered in two places on the Health page**, not one:
+  `gapsList` at `src/pages/health.astro:15` filters `PARAM_DEFS` to
+  `confidence === 'low'` and prints their labels into `#gaps-list`, and the
+  parameter table prints a `conf low` cell per row. Both appear in
+  `dist/health/index.html`; the gaps list names "Utilization increase at
+  mature NHA (universal coverage + zero point-of-care cost)" first.
+
+So the row's requirement is met and nothing was changed for it. **What is not
+guarded is that it stays met:** nothing fails if `gapsList` is deleted, or if
+the filter stops matching, and `utilIncrease` is the model's most consequential
+assumption. A check that every `low`-graded `PARAM_DEF` label reaches the
+rendered page would close that, and it is not written.

@@ -24,6 +24,7 @@ export const FILE_MANIFEST: string[] = [
   'research/long_term_care_methodology.md',
   'research/medications_methodology.md',
   'research/offset_architecture.md',
+  'research/open_items_register.md',
   'research/parameter_baseline_seed.csv',
   'research/quality-equation-methodology.md',
   'research/source_package_extract.md',

@@ -214,6 +214,46 @@ Compiled 2026-07-15. All figures are nominal USD unless noted. Where sources con
 - **Finding:** As detailed under CP-GOV-002, CMS's own discretionary Program Management budget ($4.3B) is a much narrower slice than the commonly-cited "1.3% of Medicare spending" administrative cost figure (CP-GOV-001, ~$10.8B), because the latter includes Medicare Administrative Contractor (MAC) claims-processing payments that are booked against the trust funds rather than CMS's discretionary appropriation.
 - **Recommendation:** Build the simulation with **two distinct governance-cost line items** - (1) core federal agency overhead/policy staff (CMS Program Management-style, ~0.3% of benefits) and (2) claims-processing/contractor operations (MAC-style, bringing all-in administrative cost to the 1.3-2% CBO-anchored range) - rather than a single collapsed "governance cost %" parameter, since real-world CMS itself separates these functionally and financially.
 
+- **Not adopted, and why (R30, §S11a, recorded 2026-08-26).** The model does
+  split governance cost in two, but along a different seam, and the difference
+  was never written down. What ships in `src/lib/params.ts`:
+
+  | | This note recommends | `params.ts` implements |
+  |---|---|---|
+  | line 1 | core federal agency overhead / policy staff, CMS-Program-Management-style, ~0.3% of benefits | `publicAdminRate` - "claims, enrollment, operations", 1.5 / 2.2 / 6.0% of public spend |
+  | line 2 | claims-processing / contractor operations, MAC-style, bringing all-in to 1.3-2% | `governanceRate` - "independent oversight, appeals, safety and legitimacy bodies", 0.5 / 0.9 / 1.4% of public spend |
+
+  Three reasons, in the order they matter:
+
+  1. **This note's seam is an artifact of current U.S. accounting, not a
+     feature of the modelled system.** Core-agency overhead and MAC
+     contractor payments are separate *here* because MAC payments are booked
+     against the trust funds while Program Management is a discretionary
+     appropriation. Under NHA there are no MACs and no trust-fund/discretionary
+     split, so the boundary has nothing to attach to. A parameter split along
+     a seam the modelled world does not contain is two numbers that always
+     move together.
+  2. **The model's seam is one a reader can argue with.** The legitimacy layer
+     - oversight, appeals, safety bodies - is a design choice the plan funds
+     deliberately at 0.25-0.5%, and someone who thinks that layer is too thin
+     or too fat can move `governanceRate` and see what it does. Nobody can
+     hold an opinion about the ratio of agency staff to contractor claims
+     processing.
+  3. **The range this note wanted is already reached.** `publicAdminRate`
+     spans 1.5-6.0% and its own source string names CBO's 1.5-2.0%, Taiwan's
+     1.07% and Urban/RAND's 5-6% fully loaded. The two-line split was a way to
+     get from a narrow 0.3% to a credible all-in figure; the single parameter
+     gets there by sampling the whole contested band instead, which is the
+     more honest representation of a number the note itself calls the most
+     politically disputed in single-payer modelling.
+
+  **What this note still gets right and the model does not do:** it is correct
+  that CMS's $4.3B Program Management figure and the ~$10.8B "1.3% of
+  Medicare" figure are not the same accounting concept, and anyone comparing
+  the model's administrative rate against a published CMS number needs to know
+  which of the two they are holding. That reconciliation lives in `CP-GOV-001`
+  and `CP-GOV-002` and is not restated in the parameter.
+
 ### CP-RD-NEW-001: NIH budget political volatility as a modeling input
 - **Finding:** As shown in CP-RD-001, the NIH budget swung from a proposed 40% cut (FY2026 President's Budget) to a Congressional increase within the same fiscal cycle (Jan 2026 appropriations deal). This is a documented, current (2025-2026) example of extreme year-to-year federal biomedical R&D funding volatility tied to administration changes.
 - **Recommendation:** Model NIH/BARDA-style public R&D funding (and by extension any NHA public-R&D-delinkage funding pool) with an explicit political-volatility variance term (e.g., ±20-40% swings possible year-to-year based on recent precedent), not a smooth trend line - this is empirically what the most recent 18 months of actual data show.

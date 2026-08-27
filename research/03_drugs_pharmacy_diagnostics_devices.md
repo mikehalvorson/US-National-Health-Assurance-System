@@ -185,6 +185,28 @@ Compiled 2026-07-15. All figures cited to primary or near-primary sources found 
 
 ## Explicit Data Gaps / Follow-Up Recommended
 1. **CP-DX-001**: Exact CMS NHE Table 2 dollar splits for "durable medical equipment," "other non-durable medical products," and "other professional services" could not be pulled directly (cms.gov blocked automated PDF fetch with HTTP 403 in this session). A human or browser-based agent should retrieve these directly from https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data (NHE Tables, historical zip/Excel files) for precision.
+
+   **Retested 2026-08-26 (R35): cms.gov no longer blocks this.** A plain
+   `curl` with an ordinary user agent now gets **200** from
+   `https://www.cms.gov/files/document/highlights.pdf`, from the NHE fact
+   sheet, and from the NHE historical index - all three of which returned 403
+   when this file was written. The `https://www.cms.gov/files/zip/nhe-tables.zip`
+   archive also serves.
+
+   **The gap is still open, for a different reason.** The three category
+   splits are not on any of the HTML pages; they are inside that zip. So this
+   stopped being a blocked-host problem and became an unopened-archive
+   problem. What depends on it: `BASE2023` in `src/lib/params.ts` carries
+   `otherProf: 159.9`, `dme: 72.8` and `nondurables: 124.1`, and **no one has
+   yet traced those three to NHE Table 2 rather than to a secondary summary.**
+   That verification is a `src/lib/params.ts` change and is not this file's to
+   make.
+
+   Do not read a 403 elsewhere in this repo as a dead link. `cbo.gov` direct
+   PDFs, `bhw.hrsa.gov` PDFs, `gao.gov/products` and `jamanetwork.com` all
+   still refuse automated fetch as of 2026-08-26. For CBO, the
+   `cbo.gov/publication/<id>` landing page serves where the
+   `cbo.gov/system/files/...` PDF does not.
 2. **CP-RX-012**: No authoritative national total for PBM rebate dollars retained (vs. passed through) was found; FTC reports describe mechanism, not a national dollar total. Model as a sensitivity band (0-20% retention) rather than a point estimate.
 3. **CP-RX-013**: Big-3 PBM combined market share (~80% commonly cited) was not independently re-verified this pass; confirm before use.
 4. **CP-DX-006**: Precise current Medicare-allowed (not beneficiary-cost-share) national average payment amounts for standard CPT codes (brain MRI 70551/70553, abdomen/pelvis CT 74177, chest X-ray 71046) should be pulled directly from the CMS Physician Fee Schedule Look-Up Tool for simulation-grade precision rather than the secondary-source figures cited here.
