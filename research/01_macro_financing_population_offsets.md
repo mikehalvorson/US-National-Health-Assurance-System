@@ -4,7 +4,7 @@ Compiled 2026-07-15. All figures are the most recent authoritative values found 
 
 ---
 
-## CP-TOT - Total System Baseline (National Health Expenditure)
+## TOT - Total System Baseline (National Health Expenditure)
 
 ### RB-01-TOT-001 - Total National Health Expenditure (NHE), latest year
 - **Value:** $4,866.5 billion (~$4.9 trillion) in 2023
@@ -91,7 +91,7 @@ Compiled 2026-07-15. All figures are the most recent authoritative values found 
 
 ---
 
-## CP-POP - Population / Demographics
+## POP - Population / Demographics
 
 ### RB-01-POP-001 - Current U.S. population
 - **Value:** ~347.3 million (July 1, 2025 Census Vintage 2025 estimate); ~349.0 million projected for July 1, 2026
@@ -164,7 +164,7 @@ Compiled 2026-07-15. All figures are the most recent authoritative values found 
 
 ---
 
-## CP-FIN - Financing / Tax Capacity
+## FIN - Financing / Tax Capacity
 
 ### RB-01-FIN-001 - Federal Medicare spending (net, to be "redirected")
 - **Value:** ~$988 billion (2025, per CRFB/CBO baseline commentary)
@@ -288,7 +288,7 @@ Compiled 2026-07-15. All figures are the most recent authoritative values found 
 
 ---
 
-## CP-OFF - System-Wide Savings Offsets
+## OFF - System-Wide Savings Offsets
 
 ### RB-01-OFF-001 - Administrative cost comparison: private insurance vs. Medicare/single-payer (classic Himmelstein & Woolhandler line of research)
 - **Value:** Multiple studies, several vintages:

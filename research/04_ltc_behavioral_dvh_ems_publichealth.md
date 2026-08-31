@@ -5,7 +5,7 @@ Compiled July 2026. All figures are the most current publicly available as of th
 
 ---
 
-## CP-LTC: Long-Term Care
+## LTC: Long-Term Care
 
 ### RB-04-LTC-001 - Total U.S. long-term care spending (institutional, nursing care facilities)
 - **Value:** $211.3 billion (2023); nursing care facilities = 4.3% of personal health care spending
@@ -81,7 +81,7 @@ Compiled July 2026. All figures are the most current publicly available as of th
 
 ---
 
-## CP-BH: Behavioral Health / Substance Use Disorder
+## BH: Behavioral Health / Substance Use Disorder
 
 ### RB-04-BH-001 - Total U.S. mental health + SUD treatment spending
 - **Value:** $139.6 billion (2021), up from $40.9 billion in 2000; of the 2021 total, 90.6% ($126.5B) was mental health, 9.4% ($13.1B) was SUD. Grew at real per-capita CAGR of 3.27% (2000-2021), outpacing overall medical services growth (2.21%). MH/SUD share of total medical service spending rose from 4.5% (2000) to 5.5% (2021).
@@ -175,7 +175,7 @@ Compiled July 2026. All figures are the most current publicly available as of th
 
 ---
 
-## CP-DVH: Dental / Vision / Hearing
+## DVH: Dental / Vision / Hearing
 
 ### RB-04-DVH-001 - Total U.S. dental spending
 - **Value:** $189.2 billion (2024, +6.6% YoY); $177.4 billion (2023 estimate, +6.4% YoY); represents 3.6% of total NHE (2024). Out-of-pocket and private insurance together = 80% of dental spending.
@@ -227,7 +227,7 @@ Compiled July 2026. All figures are the most current publicly available as of th
 
 ---
 
-## CP-EMS: EMS / Medical Transport
+## EMS: EMS / Medical Transport
 
 ### RB-04-EMS-001 - Total U.S. EMS industry spending/revenue
 - **Value:** Range of estimates: $15.3 billion (Statista, ambulance services revenue projection for 2024); ~$19 billion (Ken Research, US Ambulance Services Market); ~$22 billion (2026 estimate, industry-revenue forecast); IBISWorld and other market-research firms show similar $15-22B range
@@ -279,7 +279,7 @@ Compiled July 2026. All figures are the most current publicly available as of th
 
 ---
 
-## CP-PH: Public Health / Prevention
+## PH: Public Health / Prevention
 
 ### RB-04-PH-001 - Total government public health activity spending (all levels)
 - **Value:** $160.2 billion (2023), 3.3% of total NHE - this is the CMS NHE "Government Public Health Activities" line (federal + state + local combined). Note: CMS's broader "Other Third Party Payers and Programs and Public Health Activity" combined category was $590.5 billion in 2024 (-7.0% YoY, 11% of total NHE) - this is a broader bucket that includes other items beyond public health per se, so RB-04-PH-001's $160.2B (2023) figure is the more precise "public health activities" isolate.

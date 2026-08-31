@@ -4,7 +4,7 @@ Compiled for calibration of the "National Health Assurance" fiscal simulation. A
 
 ---
 
-## CP-HOSP: Hospital / Facility Parameters
+## HOSP: Hospital / Facility Parameters
 
 ### RB-02-HOSP-001 - Total U.S. hospital care spending
 - **Value:** $1.5 trillion in 2023 (31% of total U.S. national health expenditures); grew 10.4% in 2023, the fastest rate since 1990 (+10.8%).
@@ -58,7 +58,7 @@ Compiled for calibration of the "National Health Assurance" fiscal simulation. A
 
 ---
 
-## CP-CLIN: Physician / Clinical Services Parameters
+## CLIN: Physician / Clinical Services Parameters
 
 ### RB-02-CLIN-001 - Total U.S. physician/clinical services spending
 - **Value:** $978 billion in 2023, +7.4% YoY (accelerating from +4.6% in 2022). Private insurance spending on physician/clinical services grew 9.4% in 2023; out-of-pocket spending on physician/clinical services grew 7%.
@@ -90,7 +90,7 @@ Compiled for calibration of the "National Health Assurance" fiscal simulation. A
 
 ---
 
-## CP-UNIT: Four-Unit Diagnostic-Treatment Network Cost Benchmarks
+## UNIT: Four-Unit Diagnostic-Treatment Network Cost Benchmarks
 
 *(No exact real-world analogue exists for the proposed "Type A/B" community diagnostic-treatment units; the following real-world comparables - retail clinics, urgent care, FQHCs, and e-consult/telehealth programs - form a defensible interpolation basis, roughly ordered from lowest-acuity/lowest-cost to higher-acuity/higher-cost.)*
 
@@ -126,7 +126,7 @@ Compiled for calibration of the "National Health Assurance" fiscal simulation. A
 
 ---
 
-## CP-EDU: Workforce Education / Training Pipeline Parameters
+## EDU: Workforce Education / Training Pipeline Parameters
 
 ### RB-02-EDU-001 - Cost per residency slot (Medicare GME payments)
 - **Value:** Total Medicare GME spending ~$16.2 billion (FY2020) to ~$21.2 billion (FY2023), paid primarily to teaching hospitals, covering Direct GME (DGME: resident stipends, supervisory-physician salaries, program administrative costs) and Indirect Medical Education (IME: an add-on payment reflecting the higher patient-care costs of teaching hospitals, calculated via a resident-to-bed ratio formula). Federal support translates to roughly $100,000+ per resident per year in aggregate (DGME+IME combined, order-of-magnitude estimate); more granular hospital-level data (2015) showed per-resident payment rates (the "PRA," a DGME-specific measure) ranging $105,761-$182,233, with 47% of teaching hospitals above the $150,000 mark used as the comparator rate for the federal Teaching Health Center GME program. Note these figures reflect only the Medicare-funded share of true residency-training cost; total program cost per resident (including Medicaid, VA, and hospital self-funded contributions) is materially higher and was not separately quantified in this pass.

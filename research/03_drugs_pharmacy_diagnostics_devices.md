@@ -4,7 +4,7 @@ Compiled 2026-07-15. All figures cited to primary or near-primary sources found 
 
 ---
 
-## CP-RX: Prescription Drugs / Pharmacy / PBM / Public Manufacturing
+## RX: Prescription Drugs / Pharmacy / PBM / Public Manufacturing
 
 ### RB-03-RX-001 - Total U.S. retail prescription drug spending (CMS NHE)
 - **Value:** $467.0 billion (2024), up 7.9% from 2023
@@ -98,7 +98,7 @@ Compiled 2026-07-15. All figures cited to primary or near-primary sources found 
 
 ---
 
-## CP-DX: Diagnostics / Devices / Labs / Imaging
+## DX: Diagnostics / Devices / Labs / Imaging
 
 ### RB-03-DX-001 - Total 2024 NHE by major category (CMS)
 - **Value:** Total NHE 2024 = **$5.28 trillion** (personal health care = $4.51T, >85% of total). Largest categories: Hospital care **$1.63 trillion**; Physician & clinical services **$1.11 trillion** (grew 8.1%); Prescription drugs (retail) **$467.0 billion**. Dental services: **$189 billion** (2024, +4% real growth from 2023, per ADA Health Policy Institute analysis of NHE data). "Other professional services" and dental services combined were the **fastest-growing category, +44.0% cumulative from 2020-2024**.

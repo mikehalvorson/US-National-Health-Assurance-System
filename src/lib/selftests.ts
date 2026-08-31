@@ -32,7 +32,9 @@ import {
   extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
   definedResearchIds, letterSuffixedIdentifiers, measuresStatusCounts,
   multiBindProblems, researchReferenceProblems,
-  resolveDefinition, SOURCED_GRADES, sourceBacklog, stalePriorityExemptions,
+  CP_MIRROR_DIVERGENCES, definitionMirrorDisagreements, resolveDefinition,
+  SOURCED_GRADES,
+  sourceBacklog, staleMirrorDivergences, stalePriorityExemptions,
   unseededPriorityParameters, unsourcedGradedRows, VALUE_TYPES, valueTypeProblems
 } from './baseline-registry';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -88,7 +90,9 @@ import {
   matureYearDerivations, MATURE_YEAR_HOME, mechanismsMissingFromDoc,
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
-  readmeAdvertisedTestCount, readmeDeployDrift, renderedSelfTestNameLeaks,
+  readmeAdvertisedTestCount, readmeDeployDrift, registryGateCountDrift,
+  registrySurfaceRowCount,
+  renderedSelfTestNameLeaks,
   retiredTreeCodeReferences,
   anchoredOccupationCodes, directCareHeadcountDrift, directCareSharedCount,
   requirementFamilyCounts, solvedResearchBlockers,
@@ -3381,6 +3385,46 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: bad.slice(0, 3).join(' | ')
             || defined + ' research sections defined, and every reference to one '
               + 'across the file inventory resolves'
+        };
+      }),
+      /* Finding 15 [P16 fix run 4]: the claim measured rather than read.
+         research/README.md said nothing outside cp_registry_canonical.csv may
+         define a CP-* id and that the build enforces it. Measured:
+         src/lib/quality-data.ts carries all 310 with name, unit, family and a
+         prose definition, and the sweep above could never see it - it reads
+         markdown headings under research/ and its live search space across
+         every non-exempt file is empty. Neither file is hand-editable; both
+         are generated, from two different upstream documents. So the model is
+         one authority and one checked mirror, and the two known wording
+         divergences are declared with their reason rather than smoothed. */
+      runGuarded('The quality catalog and the definition registry name the same parameters', () => {
+        const bad = definitionMirrorDisagreements();
+        const stale = staleMirrorDivergences();
+        const parts: string[] = [];
+        if (bad.length) parts.push(bad.slice(0, 3).join(' | '));
+        if (stale.length) parts.push('declared divergence no longer diverges: ' + stale.join(', '));
+        return {
+          ok: !parts.length,
+          note: parts.join(' | ') || CP_DEFINITIONS.size + ' parameters agree, '
+            + Object.keys(CP_MIRROR_DIVERGENCES).length + ' wording divergences declared'
+        };
+      }),
+      /* Finding 14 [P16 fix run 4]: research/README.md said "nine self-tests
+         gate it" and listed seven. Corrected twice since, because this block
+         keeps growing. Finding 13 was the same defect in the comment above and
+         was resolved by removing the count; a README cannot do that, because
+         there the count IS the claim. So it is gated. */
+      runGuarded('The seed documentation states the number of gates it has', () => {
+        /* The count comes from the source text, not from running this
+           surface: asking SELF_TEST_SOURCES for `rows()` from inside the
+           block that `rows()` builds recurses forever. It did, for five
+           minutes, before this comment existed. */
+        const rows = registrySurfaceRowCount();
+        const bad = registryGateCountDrift(rows);
+        return {
+          ok: !bad.length,
+          note: bad.join(' | ')
+            || 'research/README.md and this block agree: ' + rows + ' gates'
         };
       })
     ]

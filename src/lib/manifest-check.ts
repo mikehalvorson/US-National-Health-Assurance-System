@@ -148,6 +148,64 @@ export function renderedSelfTestNameLeaks(root = REPO_ROOT): string[] {
   return out;
 }
 
+/* Finding 14 [P16 fix run 4]: research/README.md said "nine self-tests gate
+ * it" and then listed seven. It was corrected to eleven, then to twelve one
+ * run later, because the block keeps growing - which is the point. Finding 13
+ * was the same defect in a code comment eight feet away, and the resolution
+ * there was to state no count at all.
+ *
+ * A README cannot do that: the count is the claim. So it is gated instead,
+ * the way the root README's "N built-in integrity tests" already is. The
+ * repo's prose spells numbers, so the comparison spells them too.
+ *
+ * `null` means the sentence is gone, which is itself drift worth failing on. */
+const NUMBER_WORDS = [
+  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+  'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+  'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'
+];
+
+export function researchReadmeGateCount(root = REPO_ROOT): string | null {
+  const text = sourceText('research/README.md', root);
+  const m = text.match(/and \*\*([a-z]+)\*\* self-tests\s*\ngate it/);
+  return m ? m[1] : null;
+}
+
+/* Counted from the SOURCE, and this is not a stylistic choice.
+ *
+ * ⚠️ The first version of the row that consumes this asked
+ * `SELF_TEST_SOURCES.find(s => s.surface === 'baseline-registry.ts').rows()`
+ * for the count - from inside that very surface. `rows()` builds every row in
+ * the block including the one asking, so it recursed until the process hung:
+ * a five-minute timeout with no error, in a check written to enforce honesty
+ * about a count. A self-test that measures its own surface cannot execute it.
+ *
+ * Reading the text is also what `renderedSelfTestNameLeaks` does, one screen
+ * up, and for the same reason. */
+export function registrySurfaceRowCount(root = REPO_ROOT): number {
+  const code = maskComments(sourceText('src/lib/selftests.ts', root));
+  const start = code.indexOf("surface: 'baseline-registry.ts'");
+  if (start < 0) return -1;
+  const end = code.indexOf('\n];', start);
+  return (code.slice(start, end < 0 ? undefined : end).match(/runGuarded\(/g) || []).length;
+}
+
+export function registryGateCountDrift(actual: number, root = REPO_ROOT): string[] {
+  const said = researchReadmeGateCount(root);
+  if (said === null) {
+    return ['research/README.md no longer states how many self-tests gate the seed'];
+  }
+  const want = NUMBER_WORDS[actual];
+  if (want === undefined) {
+    return ['the registry surface has ' + actual + ' rows, past the spelled range'];
+  }
+  if (said !== want) {
+    return ['research/README.md says ' + said + ' self-tests gate the seed; there are '
+      + want + ' (' + actual + ')'];
+  }
+  return [];
+}
+
 function walk(dir: string, root: string, out: string[]): void {
   let entries: string[];
   try {

@@ -6,8 +6,10 @@ import {
   boundCuts, definedResearchIds,
   letterSuffixedIdentifiers, letterSuffixedOrigins, measuresStatusCounts,
   multiBindProblems, parseCsv, researchReferenceProblems,
+  CP_MIRROR_DIVERGENCES, definitionMirrorDisagreements, staleMirrorDivergences,
   resolveDefinition, stalePriorityExemptions, unseededPriorityParameters, valueTypeProblems
 } from '../../src/lib/baseline-registry';
+import { NHA_QUALITY_DATA } from '../../src/lib/quality-data';
 
 /* R129 [§S10]: two registries claimed the CP-* prefix, so 57 of 80 seed ids
    and 143 of 160 research ids bound a different quantity than the canonical id
@@ -290,4 +292,37 @@ test('finding 12: a flagged id is matched as a token, not as a substring', () =>
   expect('RB-04-LTC-011'.includes('RB-04-LTC-01')).toBe(true);
   expect(boundary('RB-04-LTC-01', 'seeded as RB-04-LTC-011 in the notes')).toBe(false);
   expect(boundary('RB-04-LTC-011', 'seeded as RB-04-LTC-011 in the notes')).toBe(true);
+});
+
+/* ---- P16 fix run 4: findings 14, 15 and 16 ------------------------------ */
+
+test('finding 15: the quality catalog is a second definition source, and it is checked', () => {
+  expect(definitionMirrorDisagreements()).toEqual([]);
+  expect(staleMirrorDivergences()).toEqual([]);
+  /* The claim in research/README.md was not too strong, it was pointed at the
+     wrong surface: quality-data.ts carries the WHOLE dictionary. If that ever
+     stops being true the mirror check is guarding nothing, so the premise is
+     asserted rather than assumed. */
+  const mirrored = NHA_QUALITY_DATA.parameters.filter((p: { type: string }) => p.type === 'CP');
+  expect(mirrored.length).toBe(CP_DEFINITIONS.size);
+  expect(CP_DEFINITIONS.size).toBe(310);
+  /* Two real divergences, declared by id with a reason. A declaration with no
+     divergence behind it is reported by staleMirrorDivergences, above. */
+  expect(Object.keys(CP_MIRROR_DIVERGENCES).sort()).toEqual(['CP-TOT-009', 'CP-TOT-010']);
+  for (const reason of Object.values(CP_MIRROR_DIVERGENCES)) {
+    expect(reason.length).toBeGreaterThan(60);
+  }
+});
+
+test('finding 16: no research file heads a section with a CP-* id or family', () => {
+  expect(definitionNamespaceLeaks()).toEqual([]);
+  /* Nineteen family headings were renamed - `## CP-LTC:` to `## LTC:`. The
+     review said twenty and listed nineteen; nineteen is the number, counted
+     here rather than propagated. The family word survives because it is the
+     same segment the RB ids under it carry. */
+  const families = new Set(
+    [...definedResearchIds()].map((id) => id.split('-')[2])
+  );
+  expect(families.size).toBeGreaterThan(10);
+  for (const f of ['LTC', 'GOV', 'POP', 'TOT']) expect(families.has(f)).toBe(true);
 });

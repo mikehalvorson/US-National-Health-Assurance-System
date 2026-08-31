@@ -5,7 +5,7 @@ Compiled 2026-07-15. All figures are nominal USD unless noted. Where sources con
 
 ---
 
-## CP-IT: Health IT / Records / Cybersecurity / AI Infrastructure
+## IT: Health IT / Records / Cybersecurity / AI Infrastructure
 
 ### RB-05-IT-001: VA Electronic Health Record Modernization (EHRM) - total lifecycle cost
 - **Value/range:** Spent to date (FY2018–Q2 FY2025): **$13.84 billion**. Total lifecycle cost estimates range widely: **$16.1B (early estimate) to ~$37B (updated internal 2025 estimate, not yet validated by GAO) to $49.8B** (2022 Institute for Defense Analyses lifecycle estimate: $32.7B for 13 years implementation + $17.1B for 15 years sustainment). Original 2018 Cerner contract was $10B, later revised upward to over $16B.
@@ -62,7 +62,7 @@ Compiled 2026-07-15. All figures are nominal USD unless noted. Where sources con
 
 ---
 
-## CP-GOV: Governance / Oversight / Administration
+## GOV: Governance / Oversight / Administration
 
 ### RB-05-GOV-001: CMS administrative cost as % of Medicare program spending
 - **Value/range:** **~1.3%** - In 2021, administrative expenses for traditional Medicare plus CMS administration/oversight of Medicare Advantage and Part D totaled $10.8 billion, or 1.3% of total program spending ($1.1T+ total Medicare spend). Alternative accounting (adding costs incurred by *other* federal agencies in supporting Medicare, e.g., IRS premium collection, HHS OIG program integrity work) raises the "true" administrative cost range to **2.8%-6.4%** depending on methodology. Private insurer overhead is commonly cited at **12-20%** (Part D private plan administrative expenses+profit alone were 8% of net plan benefit payments in 2021).
@@ -127,7 +127,7 @@ Compiled 2026-07-15. All figures are nominal USD unless noted. Where sources con
 
 ---
 
-## CP-RD: Biomedical R&D
+## RD: Biomedical R&D
 
 ### RB-05-RD-001: NIH total annual budget
 - **Value/range:** FY2025 enacted: **$47.035 billion** program level (or **$48.535 billion** including the separate $1.5B ARPA-H appropriation). FY2026 President's Budget *requested* a cut to $27.9 billion (a ~40% proposed reduction, including NIH restructuring into 8 institutes), but as of January 2026 House and Senate appropriators **rejected** the proposed cuts and instead **increased** NIH funding (+$415 million reported). Use FY2025 enacted (~$47B) as the current-law baseline, not the FY2026 proposed-cut figure.
@@ -167,7 +167,7 @@ Compiled 2026-07-15. All figures are nominal USD unless noted. Where sources con
 
 ---
 
-## CP-TRN: Transition / Migration Costs
+## TRN: Transition / Migration Costs
 
 ### RB-05-TRN-001: ACA implementation and ongoing subsidy cost (partial analogue - federal program stand-up + steady-state operating cost)
 - **Value/range:** Current annual ACA marketplace subsidy cost: **~$125-140 billion/year** (CBO's July 2024 baseline: $125-129B gross federal spending on ACA marketplace subsidies for 2024; other reporting cites $140B for 2025). 10-year (2025-2034) CBO projection: **$1.32 trillion total** ($966B direct marketplace subsidies + $177B Basic Health Program/1332 waivers + $176B revenue reductions), averaging $118-147B/year. Healthcare.gov + state exchanges covered **24 million+ people** in 2025.

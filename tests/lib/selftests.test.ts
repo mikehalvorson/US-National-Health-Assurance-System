@@ -11,7 +11,8 @@ import {
   selfTestSummary
 } from '../../src/lib/selftests';
 import {
-  readmeAdvertisedTestCount, renderedSelfTestNameLeaks
+  readmeAdvertisedTestCount, registryGateCountDrift, registrySurfaceRowCount,
+  renderedSelfTestNameLeaks, researchReadmeGateCount
 } from '../../src/lib/manifest-check';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
@@ -275,4 +276,28 @@ test('finding 1 / 17: the leak check fires on the shape it was written for', () 
   ]) {
     expect(name).not.toMatch(/§|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/);
   }
+});
+
+/* Finding 14 [P16 fix run 4]: research/README.md said "nine self-tests gate
+   it" and listed seven. Finding 13 was the same defect in a code comment and
+   was fixed by deleting the count; a README cannot do that, because there the
+   count IS the claim. So it is gated. */
+test('finding 14: the seed documentation states the number of gates it has', () => {
+  const rows = registrySurfaceRowCount();
+  expect(rows).toBeGreaterThan(0);
+  expect(registryGateCountDrift(rows)).toEqual([]);
+  expect(researchReadmeGateCount()).toBe('fourteen');
+  /* The check can fail in both directions, and a check that only fires one way
+     lets the README run ahead of the code. */
+  expect(registryGateCountDrift(rows + 1)).not.toEqual([]);
+  expect(registryGateCountDrift(rows - 1)).not.toEqual([]);
+});
+
+test('finding 14: the row counts the source and never executes its own surface', () => {
+  /* The first version asked SELF_TEST_SOURCES for `rows()` from inside the
+     surface `rows()` builds. It recursed until the process hung - five minutes,
+     no error, in a check written to enforce honesty about a count. */
+  const surface = SELF_TEST_SOURCES.find((s) => s.surface === 'baseline-registry.ts');
+  expect(surface).toBeDefined();
+  expect(registrySurfaceRowCount()).toBe(surface!.rows().length);
 });

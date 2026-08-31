@@ -53,21 +53,41 @@ the research files' 160. Nothing errored. `§S10` separated them:
 
 | Prefix | Holds | Lives in | Count |
 |---|---|---|---|
-| **`CP-*`** | **Definitions only** - a name, sometimes a definition, sometimes a unit. Never a value, a year or a citation. | `cp_registry_canonical.csv`, the sole authority | 310 |
+| **`CP-*`** | **Definitions only** - a name, sometimes a definition, sometimes a unit. Never a value, a year or a citation. | `cp_registry_canonical.csv` rules it; the Source Package extract and `src/lib/quality-data.ts` mirror it, and the build checks both | 310 |
 | **`BL-*`** | **Measurements** - value, year, citation, grade | `parameter_baseline_seed.csv` | 85 |
 | **`RB-0N-*`** | **Evidence** - one index per research file, `RB-04-BH-015` being research/04's fifteenth behavioural-health topic | `01_*.md` through `05_*.md` | 187 |
 
 Three rules follow, and the build enforces all three:
 
-1. **Nothing outside `cp_registry_canonical.csv` may define a `CP-*` id.** The
-   two Source Package extracts are exempt because the registry is generated
-   from them - and that exemption is checked, not asserted: the extract and the
-   registry must agree on all 310 names.
+1. **`cp_registry_canonical.csv` is the only authority for a `CP-*` id, and
+   every copy of that namespace is checked against it.** Three files carry the
+   whole dictionary and none of them is hand-editable, because all three are
+   generated: the registry itself, the Source Package extract it is generated
+   from, and `src/lib/quality-data.ts`, which the quality catalog generator
+   produces from the v2.0.0 document. So the rule is not "one file holds it"
+   but **"one file rules it"** - the extract must agree with the registry on
+   all 310 names, the catalog must agree on all 310, and the two known wording
+   divergences are declared by id with their reason rather than smoothed away.
+   Separately, **no research file may head a section with a `CP-*` id or
+   family**: those files index `RB-*`, and a `## CP-LTC:` header above an
+   `### RB-04-LTC-011` row is the namespace conflation `§S10` was done to end.
 2. **`BL-*` numbers are sequential and mean nothing.** `BL-0041` is the
    forty-first row. A measurement id that carried meaning could collide again.
-3. **A join is explicit and throws on a miss.** `resolveDefinition(blId)` in
-   `src/lib/baseline-registry.ts` returns the canonical record or raises. There
-   is no default and no silent bind.
+3. **A join is explicit, and resolves to the parameter the row names or
+   throws.** `resolveDefinition(blId)` in `src/lib/baseline-registry.ts`
+   returns the canonical record or raises. There is no default and no silent
+   bind - and the build checks the returned record is the one `measures` names,
+   for every row, because "it resolved" and "it resolved correctly" are
+   different claims and only the first was ever tested.
+
+⚠️ **Rule 1 said "Nothing outside `cp_registry_canonical.csv` may define a
+`CP-*` id" until 2026-08-31, and that was false.** `quality-data.ts` defined
+all 310, with names, units and prose definitions, and the check behind the
+sentence read markdown headings under `research/` and nothing else - a search
+space that was empty across every non-exempt file. **The claim was not too
+strong; it was pointed at the wrong surface.** Two of the 310 names diverge,
+and neither had ever been seen. Nineteen `CP-*` family headings were removed
+from `research/01`-`05` in the same pass.
 
 **Matching by id is still wrong, and now it is impossible rather than
 discouraged.** Every row records where it came from in `superseded_id`, so a
@@ -171,7 +191,7 @@ four rows for a day before a review caught it. The column is still a convention
 a reader has to honour.
 
 **The rest of the seed is no longer unread, though.** Since 2026-08-27
-`src/lib/baseline-registry.ts` parses it at build time and **twelve** self-tests
+`src/lib/baseline-registry.ts` parses it at build time and **fourteen** self-tests
 gate it: the definition-only sweep, the extract-agreement check, the id
 sequence, the `measures` bind rule, the resolver's naming contract, the
 cross-namespace uniqueness, the `value_type` band rule, the priority-parameter

@@ -5868,3 +5868,101 @@ to `tail`.
 build` 14 pages. File manifest 128. `negative_test.py` 23/23. Audit-repo
 `check_audit_docs.py` 35 pass, 0 fail. `dist/health/index.html` renders **234**
 rows, zero carrying an audit code.
+
+### FIX RUN 4: findings 13-16, and a second definition source nobody was checking
+
+**2026-08-31.** Findings 13 and 14 were closed as side effects of fix run 2:
+the block comment stopped stating a count, and the README paragraph was
+enumerated. This run does 15 and 16, and converts 14 from corrected prose into
+a gated claim - because a count in prose that no check maintains has a
+half-life, and this one had already gone wrong twice.
+
+| # | Status |
+|---|---|
+| 13 | Closed in fix run 2. The comment said "These eight rows" while nine was already wrong; it now states no count, and the block holds fourteen. |
+| 14 | Corrected in fix run 2, **gated here**. It said "nine self-tests gate it" and listed seven. A README cannot resolve this the way a comment can, because there the count IS the claim. |
+| 15 | The claim was pointed at the wrong surface. Below. |
+| 16 | Nineteen `CP-*` family headings removed from `research/01`-`05`, and the check widened so they cannot come back. |
+
+#### 🛑 Finding 15 was much larger than the review knew
+
+The review said `definitionNamespaceLeaks()` sweeps only markdown headings
+under `research/`, and that the README's *"Nothing outside
+`cp_registry_canonical.csv` may define a `CP-*` id"* should be scoped down to
+match. Scoping it down would have been the wrong repair, because measuring the
+claim instead of reading it found this:
+
+**`src/lib/quality-data.ts` carries all 310 CP ids** with `name`, `unit`,
+`family` and a `calculation` that is a prose definition. It is a second
+registry of the same namespace by any reading, and **two of the 310 names
+disagree with the canonical registry**, neither ever seen:
+
+| id | registry and extract | quality catalog |
+|---|---|---|
+| `CP-TOT-009` | Gross added **framework** spending | Gross added **system** spending |
+| `CP-TOT-010` | Gross **framework** savings | Gross **system** savings |
+
+And the sweep that backed the sentence could not have found it in principle:
+measured, **its live search space is empty**. Zero markdown headings anywhere
+in the repo, exempt files included, match a numbered `CP-*` id. It was a pure
+regression gate for a shape already removed - correct, negative-tested, and
+nothing to do with the claim printed above it.
+
+**Neither file is hand-editable.** Both are generated: the registry from the
+Source Package extract, which `extractDisagreements()` pins it to, and
+quality-data from the v2.0.0 document by `tools/extract_quality_catalog.py`.
+So the only honest model is not "one file holds the namespace" but **"one file
+rules it, and every copy is checked against it"** - the shape the extract's
+exemption already had, one file further out. The two divergences are declared
+by id with their reason, and `staleMirrorDivergences()` reports a declaration
+that has stopped diverging, so the exemption cannot outlive its cause.
+
+#### Finding 16, counted rather than propagated
+
+**Nineteen** family headings, 4+4+2+5+4 across `01`-`05`. The reviewing agent
+said twenty and listed nineteen; the handoff caught that and this run counted
+it a third time. Nineteen.
+
+They are gone: `## CP-LTC: Long-Term Care` is `## LTC: Long-Term Care`. The
+family word survives because it is the same segment the `RB-*` ids underneath
+carry - `RB-04-LTC-011` sits under `## LTC:`, and the heading now names its
+rows instead of contradicting them. `definitionNamespaceLeaks()` gained a
+family pattern, since the numbered one requires a trailing number and was
+structurally blind to all nineteen. The research-file-to-CP-family crosswalk
+survives in `research/README.md`'s file table, which is one place rather than
+nineteen.
+
+#### 🛑 The fix run authored a defect again, and this one hung the build
+
+The new gate-count row first asked
+`SELF_TEST_SOURCES.find(s => s.surface === 'baseline-registry.ts').rows()` for
+its count - **from inside that very surface**. `rows()` builds every row in the
+block including the one asking. It recursed until the process died on a
+five-minute timeout, with no error and no failing row: a check written to
+enforce honesty about a count, unable to finish counting.
+
+It reads the source text now, which is what `renderedSelfTestNameLeaks` does
+one screen up and for the same reason. **A self-test that measures its own
+surface cannot execute it.** That is a new entry in the trap list, and it is
+the fourth consecutive run in which the pass removing a defect authored one.
+
+#### What is gated now that was not
+
+- The quality catalog agrees with the registry on all 310 names.
+- A declared wording divergence that stops diverging is reported.
+- No research file heads a section with a `CP-*` id **or family**.
+- `research/README.md`'s stated gate count matches the block, in both
+  directions - a check that only fires one way lets the README run ahead.
+
+`negative_test.py` is **24 failure cases and 3 note cases**, all green.
+
+#### Gates
+
+`pnpm test` 521 across 60 files (was 517). `astro check` 0 / 0 / 1. `astro
+build` 14 pages. File manifest 128. `negative_test.py` 27/27. Audit-repo
+`check_audit_docs.py` 35 pass, 0 fail. `dist/health/index.html` renders **236**
+rows, zero carrying an audit code.
+
+**All sixteen review findings are now closed.** The remaining item is the
+`### THE TWO-AXIS REVIEW` block, and then a third review pinned at these four
+fix runs - which four consecutive self-inflicted defects say is not optional.
