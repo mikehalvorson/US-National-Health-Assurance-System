@@ -96,6 +96,58 @@ export function sourceText(rel: string, root = REPO_ROOT): string {
   return text;
 }
 
+/* Findings 1 and 17 [P16 fix run 2]: golden rule 2, applied to the one piece
+ * of rendered text nothing had ever read.
+ *
+ * `src/pages/health.astro` renders every self-test row's `name` verbatim in
+ * the site footer. A self-test name is therefore rendered output, and rule 2
+ * binds it: the UI never surfaces the source document's internal codes. Ten
+ * names breached it - nine R-numbers added in §S10 and one section reference
+ * added in §S9a - and neither an inline review nor a two-axis review caught
+ * the tenth, because no check had ever looked at a self-test name.
+ *
+ * Comments are masked before the sweep. The audit codes belong in the
+ * comments and stay there: that is where a name's traceability lives, and
+ * comments do not render.
+ *
+ * NOT flagged, and this is the whole judgement call: `KPP-W1` and `P8` are
+ * framework vocabulary the site itself publishes - `P8` appears as "Phase 8"
+ * on five pages - so they are the plan's language, not the document's codes. */
+const AUDIT_CODE_IN_RENDERED_TEXT: [RegExp, string][] = [
+  [/§/, 'a section sign'],
+  [/\bR[0-9]{1,3}\b/, 'a recommendation number'],
+  [/\bS[0-9]{1,2}[a-z]?\b/, 'a section number'],
+  [/\bOI-[0-9]/, 'an open-items code'],
+  [/\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/, 'an internal registry id'],
+  [/[Aa]ppendix/, 'an appendix reference'],
+  [/\b[Tt]able [0-9]/, 'a table number'],
+  [/\b[Ss]ection [0-9]/, 'a section number']
+];
+
+/* Reads the source rather than selfTestSummary(), for two reasons: a check
+   that inspected the summary it belongs to would recurse, and the source
+   catches a name that a conditionally-skipped row never emits. */
+export function renderedSelfTestNameLeaks(root = REPO_ROOT): string[] {
+  const rel = 'src/lib/selftests.ts';
+  const code = maskComments(sourceText(rel, root));
+  const out: string[] = [];
+  const call = /runGuarded\(\s*'((?:[^'\\]|\\.)*)'/g;
+  let m: RegExpExecArray | null;
+  while ((m = call.exec(code)) !== null) {
+    const name = m[1];
+    const line = code.slice(0, m.index).split('\n').length;
+    for (const [pattern, what] of AUDIT_CODE_IN_RENDERED_TEXT) {
+      const hit = pattern.exec(name);
+      if (hit) {
+        out.push(rel + ':' + line + ' renders ' + what + ' ("' + hit[0]
+          + '") in a self-test name: ' + name);
+        break;
+      }
+    }
+  }
+  return out;
+}
+
 function walk(dir: string, root: string, out: string[]): void {
   let entries: string[];
   try {

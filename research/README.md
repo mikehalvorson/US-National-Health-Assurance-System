@@ -82,13 +82,23 @@ if** `measures_status` is `mapped`:
 
 | `measures_status` | Means |
 |---|---|
-| `mapped` | The canonical parameter named in `measures` denotes the **same quantity** this row measures. A unit change is allowed; measuring today's US system rather than the modelled one is allowed, because that is what calibration means. A scope change is not. |
+| `mapped` | The canonical parameter named in `measures` denotes the **same quantity** this row measures. Measuring today's US system rather than the modelled one is allowed, because that is what calibration means. A scope change is not. A unit change is allowed **only where the row states the conversion and whose arithmetic it is**. |
 | `unmapped` | A canonical parameter for this quantity exists, but the row is a **comparator, analogue, precedent or input** to it rather than a measurement of it. No bind is asserted. `notes` names what it informs, in prose, where no code can join on it. |
 | `no-canonical-equivalent` | The dictionary names nothing for this quantity. An honest gap. |
 
-The split is **27 mapped, 25 unmapped, 33 no-canonical-equivalent**, and a
+The split is **25 mapped, 27 unmapped, 33 no-canonical-equivalent**, and a
 migration that had mapped everything would have meant the mapping was done by
 id similarity, which is what produced the 57 collisions.
+
+⚠️ **The unit-change condition above was added after it failed.** The rule as
+first written read "a unit change is allowed (annual vs per-day)", and its own
+worked example was the defect: `BL-0055` held an annual private-pay nursing
+home price against a canonical parameter defined per resident-day, ~365x
+apart, and stayed `mapped` through a section and an inline review. A rule
+whose illustration is the thing it should forbid is not a rule. `BL-0055` is
+now `unmapped` and states the conversion; `BL-0014`, a single age-band
+headcount that was `mapped` to an age-risk *distribution*, is `unmapped` for
+the same reason. That is where two of the `mapped` rows went.
 
 `disaggregation` carries the **many-to-one cardinality the old ids could not**.
 The fifteen letter-suffixed slots - `CP-TOT-004a` through `004f` and friends -
@@ -161,11 +171,22 @@ four rows for a day before a review caught it. The column is still a convention
 a reader has to honour.
 
 **The rest of the seed is no longer unread, though.** Since 2026-08-27
-`src/lib/baseline-registry.ts` parses it at build time and nine self-tests
-gate it: the id sequence, the `measures` bind rule, the resolver's throw, the
-cross-namespace uniqueness, the `value_type` band rule, the priority-parameter
-sweep, and the sourcing rule below. Each of the nine was broken on purpose and
-watched fail before it was trusted.
+`src/lib/baseline-registry.ts` parses it at build time and **eleven** self-tests
+gate it: the definition-only sweep, the extract-agreement check, the id
+sequence, the `measures` bind rule, the resolver's throw, the cross-namespace
+uniqueness, the `value_type` band rule, the priority-parameter sweep, the
+sourcing rule below, the many-to-one bind rule, and the citation read-back.
+
+⚠️ **This paragraph used to say "nine" and then list seven, and to claim that
+"each of the nine was broken on purpose and watched fail before it was
+trusted." That claim was false the day it was written.** The same session
+recorded, in the same sitting, that two of the nine had no negative test; a
+later review then showed that three of them cannot fail at all. Ten of the
+eleven above now have a case in `baseline-P16/negative_test.py`, which holds
+sixteen. The exception is the resolver's throw, whose build-time row is
+redundant with its neighbours and is being rewritten rather than papered over.
+**A written claim of verification is not verification** - it is exactly what
+let three unfailable checks read as green for a whole section.
 
 **A row graded `medium` or better states where its number came from.** The
 three rows that still have no `source_url` are all below `medium`, each says in

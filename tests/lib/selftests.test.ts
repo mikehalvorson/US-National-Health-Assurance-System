@@ -10,7 +10,9 @@ import {
   SELF_TEST_SOURCES,
   selfTestSummary
 } from '../../src/lib/selftests';
-import { readmeAdvertisedTestCount } from '../../src/lib/manifest-check';
+import {
+  readmeAdvertisedTestCount, renderedSelfTestNameLeaks
+} from '../../src/lib/manifest-check';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
   const s = selfTestSummary();
@@ -235,5 +237,42 @@ test('R155: the wrapped-sentence regression is caught', () => {
     expect(() => assertReadmeCountCurrent({ total: 38 }, root)).toThrow(/states no integrity-test count/);
   } finally {
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/* Findings 1 and 17 [P16 fix run 2]: a self-test name is rendered output.
+   health.astro prints every row's `name` in the site footer, so golden rule 2
+   binds it, and ten names carried audit codes - nine R-numbers and one section
+   reference - through an inline review and a two-axis review. Nothing had ever
+   read a self-test name. */
+test('finding 1 / 17: no self-test name puts an internal code on the page', () => {
+  expect(renderedSelfTestNameLeaks()).toEqual([]);
+  /* And the rendered set, not just the source: a row built anywhere else is
+     still a row the footer prints. */
+  for (const r of selfTestSummary().rows) {
+    expect(r.name).not.toMatch(/§|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/);
+  }
+});
+
+test('finding 1 / 17: the leak check fires on the shape it was written for', () => {
+  /* Written against a live defect and watched fail on all ten. Re-proved here
+     against the exact strings, because the source they came from is now clean
+     and a check with nothing left to catch is a check nobody can see work. */
+  const codes = [
+    'R129: CP-* is defined in one file and nowhere else',
+    'The scenarios that stress unit cost still do, and are named for \u00a7S9b',
+    'R1: a row graded medium or better says where its number came from'
+  ];
+  for (const name of codes) {
+    expect(name).toMatch(/§|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/);
+  }
+  /* KPP-W1 and P8 are framework vocabulary the site itself publishes - "Phase
+     8" appears on five pages - so they are the plan's language and must NOT
+     trip it. This is the whole judgement call, pinned. */
+  for (const name of [
+    'The worker-support rate agrees with KPP-W1, the derivation and the page',
+    'Training progress is exactly complete at the P8 anchor'
+  ]) {
+    expect(name).not.toMatch(/§|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/);
   }
 });

@@ -282,6 +282,68 @@ export function bindProblems(): string[] {
   return out;
 }
 
+/* A cut's role is read off the end of `disaggregation`. The column is prose by
+   design - it says which cut of what a row is - but the parent/part
+   distinction inside it has to be machine-readable, so the one word that
+   changes arithmetic is pinned to a pattern. */
+const TOTAL_MARKER = /,\s*total$/i;
+
+/* Finding 4 [P16 fix run 2]: `measures` reproduced the many-to-one trap
+   `research/README.md` already documents for `use_as`.
+ *
+ * Five rows carry `measures = CP-FIN-002`: four components and their $2,050B
+ * total. Only free-text `disaggregation` separates the parent from the parts,
+ * so anything that sums the rows resolving to one canonical id double-counts.
+ * Nothing consumes `measures` yet, which is why the defect is silent and why
+ * it is worth gating before the first consumer exists rather than after.
+ *
+ * ⚠️ Read this as a REGRESSION GATE, not as a repair. The two multi-bound ids
+ * today (CP-FIN-002 with 5 rows, CP-OFF-008 with 2) already carry
+ * disaggregation on every row and at most one total, so this check passes on
+ * the tree that shipped the defect. What it stops is the next bind arriving
+ * naked - and it can fail: 18 mapped rows have an empty disaggregation, and
+ * any one of them binding an already-bound id fires it. */
+export function multiBindProblems(): string[] {
+  const out: string[] = [];
+  const byCanonical = new Map<string, BaselineRow[]>();
+  for (const r of BASELINE_ROWS) {
+    if (r.measuresStatus !== 'mapped' || !r.measures) continue;
+    const list = byCanonical.get(r.measures);
+    if (list) list.push(r); else byCanonical.set(r.measures, [r]);
+  }
+  for (const [canonical, rows] of byCanonical) {
+    if (rows.length < 2) continue;
+    for (const r of rows) {
+      if (r.disaggregation.trim() === '') {
+        out.push(r.baselineId + ' shares ' + canonical + ' with '
+          + (rows.length - 1) + ' other row(s) and declares no disaggregation, '
+          + 'so nothing says whether it is a part or the whole');
+      }
+    }
+    const totals = rows.filter((r) => TOTAL_MARKER.test(r.disaggregation.trim()));
+    if (totals.length > 1) {
+      out.push(canonical + ' has ' + totals.length + ' rows marked total ('
+        + totals.map((r) => r.baselineId).join(', ') + '); at most one cut of a '
+        + 'canonical parameter can be the whole of it');
+    }
+  }
+  return out;
+}
+
+/* Every id a multi-bound canonical parameter groups, with the total separated
+   from the parts, so a consumer never has to parse the prose itself. Unused by
+   the site today; it exists so the first consumer of `measures` has a correct
+   path available rather than a plausible wrong one. */
+export function boundCuts(canonicalId: string): { total?: BaselineRow; parts: BaselineRow[] } {
+  const rows = BASELINE_ROWS.filter(
+    (r) => r.measuresStatus === 'mapped' && r.measures === canonicalId
+  );
+  return {
+    total: rows.find((r) => TOTAL_MARKER.test(r.disaggregation.trim())),
+    parts: rows.filter((r) => !TOTAL_MARKER.test(r.disaggregation.trim()))
+  };
+}
+
 /* R236 / B1: after the split, no identifier resolves to two definitions.
  *
  * ⚠️ The obvious way to write this cannot fail. Iterating CP_DEFINITIONS looks
@@ -431,6 +493,70 @@ export const PRIORITY_EXEMPT: Record<string, string> = {
 };
 
 const RB_HEADING = /^#{2,6}\s+(RB-[0-9]{2}-[A-Z]+(?:-NEW)?-[0-9]+[a-f]?)\b/;
+
+/* Deliberately WIDER than RB_HEADING: it ends `[a-z]?` where the heading ends
+   `[a-f]?`, so a reference to a suffix no heading can carry is caught rather
+   than skipped as not-an-id. A reference pattern narrower than its definition
+   pattern silently exonerates the exact malformation it should catch. */
+const RB_REFERENCE = /RB-[0-9]{2}-[A-Z]+(?:-NEW)?-[0-9]+[a-z]?/g;
+
+/* The RB namespace's sole authority, matching how idsResolvingToTwoDefinitions
+   defines it: a heading in research/01-06, one index per file. */
+export function definedResearchIds(): Set<string> {
+  const out = new Set<string>();
+  for (const rel of FILE_MANIFEST) {
+    if (!/^research\/0[1-6]_/.test(rel)) continue;
+    for (const raw of read(rel).split('\n')) {
+      const m = RB_HEADING.exec(raw.trim());
+      if (m) out.add(m[1]);
+    }
+  }
+  return out;
+}
+
+/* Finding 2 [P16 fix run 2]: two identifiers that never existed.
+ *
+ * `research/quality-equation-methodology.md` cited two letter-suffixed ids in
+ * the POP family. Neither is defined anywhere and neither ever was:
+ * rename_research_ids.py substring-replaced CP-POP-004 -> RB-01-POP-004, which
+ * matched INSIDE the suffixed CP-POP-004a and CP-POP-004b, declared "expect 2
+ * occurrences", found exactly 2, and passed.
+ *
+ * ⚠️ This comment used to spell the two dead ids, and the check below flagged
+ * its own documentation on the first run - the pass removing a defect authoring
+ * a fresh one, inside ten minutes. The literals live in REMEDIATION_LOG.md,
+ * which the sweep does not reach, and that is the point of the scope note.
+ *
+ * A total match rate is the signal and not the reassurance -
+ * the same shape P15 recorded one level up. The migration had no read-back, so
+ * a citation pointing at nothing survived the rename and two reviews.
+ *
+ * This is the read-back. Every RB-* token in every manifest file must name an
+ * id a research heading defines.
+ *
+ * SCOPE, stated because a check that sweeps less than its claim is finding
+ * 15's defect: the manifest's .md, .ts, .astro and .csv files - 128 files
+ * across research/, src/ and tools/. Repo-root documents (REMEDIATION_LOG.md,
+ * AGENTS.md, the handoffs) are NOT swept, which is what lets the log record a
+ * dead id while writing about it. */
+export function researchReferenceProblems(): string[] {
+  const defined = definedResearchIds();
+  const out: string[] = [];
+  for (const rel of FILE_MANIFEST) {
+    if (!/\.(md|ts|astro|csv)$/.test(rel)) continue;
+    read(rel).split('\n').forEach(function (line, i) {
+      if (RB_HEADING.test(line.trim())) return;
+      const found = line.match(RB_REFERENCE);
+      if (!found) return;
+      for (const id of found) {
+        if (defined.has(id)) continue;
+        out.push(rel + ':' + (i + 1) + ' names ' + id
+          + ', which no research heading defines');
+      }
+    });
+  }
+  return out;
+}
 
 export function flaggedPriorityParameters(): { id: string; file: string; phrase: string }[] {
   const found: { id: string; file: string; phrase: string }[] = [];

@@ -29,7 +29,9 @@ import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './brid
 import {
   BASELINE_ROWS, baselineIdProblems, bindProblems, definitionNamespaceLeaks,
   extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
-  measuresStatusCounts, resolveDefinition, sourceBacklog, stalePriorityExemptions,
+  definedResearchIds, measuresStatusCounts, multiBindProblems,
+  researchReferenceProblems,
+  resolveDefinition, sourceBacklog, stalePriorityExemptions,
   unseededPriorityParameters, unsourcedGradedRows, valueTypeProblems
 } from './baseline-registry';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
@@ -85,7 +87,8 @@ import {
   matureYearDerivations, MATURE_YEAR_HOME, mechanismsMissingFromDoc,
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
-  readmeAdvertisedTestCount, readmeDeployDrift, retiredTreeCodeReferences,
+  readmeAdvertisedTestCount, readmeDeployDrift, renderedSelfTestNameLeaks,
+  retiredTreeCodeReferences,
   anchoredOccupationCodes, directCareHeadcountDrift, directCareSharedCount,
   requirementFamilyCounts, solvedResearchBlockers,
   underSpecifiedExpansions, underSpecifiedRendered,
@@ -2615,7 +2618,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          which satisfies R60 while the three stress scenarios go on
          multiplying a number that no longer drives per-type cost. This is the
          half R60 cannot see. */
-      runGuarded('The scenarios that stress unit cost still do, and are named for §S9b', () => {
+      runGuarded('The scenarios that stress unit cost still do, and still name it', () => {
         const bad = unitsCostStressorDrift();
         return {
           ok: !bad.length,
@@ -3016,6 +3019,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          linear, and after three visits one click ran the selection handler
          four times. The shape is checked rather than the instance, because
          there are seven client scripts and it recurs. */
+      /* Findings 1 and 17 [P16 fix run 2]: the health page renders every
+         self-test name verbatim, so a name is rendered output and golden rule
+         2 binds it. Ten names carried audit codes - nine R-numbers and one
+         section reference - and nothing had ever read a self-test name, so an
+         inline review and a two-axis review both walked past them.
+         Registered under this surface because the scan lives in
+         manifest-check.ts, following the convention the row above states. */
+      runGuarded('No self-test name puts an internal code on the page', () => {
+        const bad = renderedSelfTestNameLeaks();
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ')
+            || 'every rendered check name is a reader-facing sentence'
+        };
+      }),
       runGuarded('No element-guarded init registers a document or window listener', () => {
         const bad = guardedGlobalListeners();
         return {
@@ -3170,10 +3188,15 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
     /* R129 [§S10]: the namespace separation. Before it, 57 of 80 seed ids and
        143 of 160 research ids bound a different quantity than the canonical id
        of the same name, and nothing errored - the numbers were simply wrong.
-       These eight rows are what stops the two namespaces merging again. */
+       The rows below are what stops the two namespaces merging again.
+
+       ⚠️ This comment used to say "These eight rows" while eight was already
+       wrong, and it went on being wrong through a fix run and a two-axis
+       review. It now states no count at all: a count in prose that no check
+       maintains is a claim with a half-life, and the block has grown twice. */
     surface: 'baseline-registry.ts',
     rows: () => [
-      runGuarded('R129: CP-* is defined in one file and nowhere else', () => {
+      runGuarded('Every cost definition is declared in one file and nowhere else', () => {
         const leaks = definitionNamespaceLeaks();
         return {
           ok: !leaks.length,
@@ -3181,15 +3204,15 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             : 'only cp_registry_canonical.csv defines a CP-* id'
         };
       }),
-      runGuarded('R129: the definition extract and the registry agree on all 310', () => {
+      runGuarded('The definition extract and the registry agree on every entry', () => {
         const bad = extractDisagreements();
         return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || '310 agree' };
       }),
-      runGuarded('R129: measurement ids are sequential, unique and non-semantic', () => {
+      runGuarded('Measurement identifiers are sequential, unique and carry no meaning', () => {
         const bad = baselineIdProblems();
         return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || BASELINE_ROWS.length + ' BL rows in order' };
       }),
-      runGuarded('R129: every measurement row declares what it measures', () => {
+      runGuarded('Every measurement row declares what it measures', () => {
         const bad = bindProblems();
         const c = measuresStatusCounts();
         return {
@@ -3198,22 +3221,22 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             + ' / no-canonical-equivalent ' + c['no-canonical-equivalent']
         };
       }),
-      runGuarded('R129: the definition join throws on a miss instead of binding', () => {
+      runGuarded('A lookup that finds no definition fails the build instead of binding', () => {
         let threw = 0;
         try { resolveDefinition('BL-9999'); } catch { threw += 1; }
         const unbound = BASELINE_ROWS.find((r) => r.measuresStatus !== 'mapped');
         if (unbound) { try { resolveDefinition(unbound.baselineId); } catch { threw += 1; } }
         return { ok: threw === 2, note: threw + ' of 2 misses threw' };
       }),
-      runGuarded('R236: no identifier resolves to two definitions after the split', () => {
+      runGuarded('No identifier resolves to two different definitions', () => {
         const bad = idsResolvingToTwoDefinitions();
         return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || 'zero, which is the number to report' };
       }),
-      runGuarded('R12: a value carries the band its value_type claims', () => {
+      runGuarded('A value carries the band its type claims', () => {
         const bad = valueTypeProblems();
         return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || 'point, range, contested-range and compound all consistent' };
       }),
-      runGuarded('R31: a research-flagged priority parameter is seeded or says why not', () => {
+      runGuarded('Every priority parameter the research flags is seeded or says why not', () => {
         const missing = unseededPriorityParameters();
         const stale = stalePriorityExemptions();
         const parts: string[] = [];
@@ -3224,7 +3247,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: parts.join(' | ') || flaggedPriorityParameters().length + ' flagged, all accounted for'
         };
       }),
-      runGuarded('R1: a row graded medium or better says where its number came from', () => {
+      runGuarded('A row graded medium or better says where its number came from', () => {
         const bad = unsourcedGradedRows();
         const backlog = sourceBacklog();
         return {
@@ -3233,6 +3256,41 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ? bad.slice(0, 3).join(' | ')
             : backlog.length + ' rows still have no source_url, all below medium: '
               + (backlog.map((b) => b.id + ' ' + b.confidence).join(', ') || 'none')
+        };
+      }),
+      /* Finding 4 [P16 fix run 2]: five rows bind CP-FIN-002 - four components
+         and their total - and only free-text disaggregation tells them apart,
+         so anything summing the rows that resolve to one canonical id
+         double-counts. research/README.md documents this trap for `use_as`;
+         `measures` reproduced it with no guard. A regression gate, not a
+         repair: the current data already passes it. */
+      runGuarded('A canonical parameter measured by several rows says which is the whole', () => {
+        const bad = multiBindProblems();
+        const shared = new Map<string, number>();
+        for (const r of BASELINE_ROWS) {
+          if (r.measuresStatus !== 'mapped' || !r.measures) continue;
+          shared.set(r.measures, (shared.get(r.measures) || 0) + 1);
+        }
+        const multi = [...shared.values()].filter((n) => n > 1);
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ')
+            || multi.length + ' definitions carry more than one row ('
+              + multi.reduce((a, b) => a + b, 0) + ' rows), each cut named'
+        };
+      }),
+      /* Finding 2 [P16 fix run 2]: the methodology note cited two ids that
+         never existed, because a substring rename matched inside a longer id,
+         counted its own hits, and reported a total match rate as success.
+         Nothing read the result back. This is the read-back. */
+      runGuarded('Every research citation names a section that exists', () => {
+        const bad = researchReferenceProblems();
+        const defined = definedResearchIds().size;
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ')
+            || defined + ' research sections defined, and every reference to one '
+              + 'across the file inventory resolves'
         };
       })
     ]

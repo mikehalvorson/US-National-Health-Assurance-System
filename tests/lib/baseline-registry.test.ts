@@ -3,7 +3,9 @@ import {
   BASELINE_ROWS, CP_DEFINITIONS, MEASURES_STATUSES, PRIORITY_EXEMPT, VALUE_TYPES,
   baselineIdProblems, baselineRow, bindProblems, definitionNamespaceLeaks,
   extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
-  letterSuffixSurvivors, letterSuffixedOrigins, measuresStatusCounts, parseCsv,
+  boundCuts, definedResearchIds,
+  letterSuffixSurvivors, letterSuffixedOrigins, measuresStatusCounts,
+  multiBindProblems, parseCsv, researchReferenceProblems,
   resolveDefinition, stalePriorityExemptions, unseededPriorityParameters, valueTypeProblems
 } from '../../src/lib/baseline-registry';
 
@@ -156,4 +158,62 @@ test('R129: the split is reported, not assumed', () => {
 
 test('every value_type is one of the four and carries the band it claims', () => {
   for (const r of BASELINE_ROWS) expect(VALUE_TYPES).toContain(r.valueType);
+});
+
+/* ---- P16 fix run 2 ------------------------------------------------------ */
+
+test('finding 2: every RB-* reference in the file inventory resolves', () => {
+  expect(researchReferenceProblems()).toEqual([]);
+  /* The check is worth having only if the namespace it validates is large
+     enough to typo. It is. */
+  expect(definedResearchIds().size).toBeGreaterThan(150);
+});
+
+test('finding 2: the reference pattern is wider than the definition pattern', () => {
+  /* The defect was RB-01-POP-004a: a letter suffix no heading can carry. A
+     reference pattern that ended [a-f]? like the heading pattern would have
+     read it as "not an id" and exonerated it. Proven by construction: no
+     defined id ends in a letter, so any suffixed reference must be dangling. */
+  for (const id of definedResearchIds()) expect(id).not.toMatch(/[a-z]$/);
+});
+
+test('finding 3 / 5: two binds withdrawn, and the rows say why', () => {
+  for (const id of ['BL-0014', 'BL-0055']) {
+    const row = BASELINE_ROWS.find((r) => r.baselineId === id)!;
+    expect(row.measuresStatus).toBe('unmapped');
+    expect(row.measures).toBe('');
+    /* `unmapped` obliges the row to name what it informs, in prose, because
+       no code can join on it. An empty notes column would make the status a
+       shrug rather than a statement. */
+    expect(row.notes).toMatch(/No bind:/);
+  }
+  const ltc = BASELINE_ROWS.find((r) => r.baselineId === 'BL-0055')!;
+  /* The conversion the old `mapped` bind silently assumed is now stated, and
+     attributed: the division is this row's, not the source's. */
+  expect(ltc.notes).toContain('365');
+});
+
+test('finding 4: a canonical parameter measured by several rows says which is the whole', () => {
+  expect(multiBindProblems()).toEqual([]);
+  const fin = boundCuts('CP-FIN-002');
+  expect(fin.total!.baselineId).toBe('BL-0022');
+  expect(fin.parts.map((r) => r.baselineId))
+    .toEqual(['BL-0017', 'BL-0018', 'BL-0020', 'BL-0021']);
+  /* The point of the guard: summing every row that resolves to CP-FIN-002
+     counts the $2,050B total AND its parts. boundCuts is the path that does
+     not. */
+  expect(fin.parts.length + 1).toBe(
+    BASELINE_ROWS.filter((r) => r.measures === 'CP-FIN-002').length
+  );
+});
+
+test('finding 4: the guard can fail, which is the only reason to keep it', () => {
+  /* 18 mapped rows carry an empty disaggregation. Each is one edit - binding
+     an already-bound canonical id - away from firing this check. A guard whose
+     failing set is empty by construction is the trap this campaign keeps
+     re-finding, so the room to fail is asserted rather than assumed. */
+  const naked = BASELINE_ROWS.filter(
+    (r) => r.measuresStatus === 'mapped' && r.disaggregation.trim() === ''
+  );
+  expect(naked.length).toBeGreaterThan(0);
 });

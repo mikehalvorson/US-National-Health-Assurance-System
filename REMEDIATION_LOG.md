@@ -5651,3 +5651,105 @@ halves. ⚠️ **`use_as` is still unenforced** as a summation rule.
   script whose `assert` then failed loudly, once in a PDF extractor whose regex
   died. **Both were loud. That is luck, not safety**: the seventh occurrence
   silently deleted a section name from the log's own pointer.
+
+### FIX RUN 2: findings 1-5 of the two-axis review, and two the review missed
+
+**2026-08-31.** The two-axis review pinned at `5566f36...HEAD` found sixteen
+defects and fixed none — it was interrupted at "Fixing now". This run closes
+the first five. Findings 6-16 are open and are the next two runs.
+
+Counts in the `## P16` header above are left as written. They record what P16
+shipped, and this entry records what changed since. **`MEASURES_STATUS` is now
+`mapped 25 / unmapped 27 / no-canonical-equivalent 33`**, and `### Notes on
+method`'s "27 of 85 mapped" is superseded by that, for the reason below.
+
+| # | Defect | Resolution |
+|---|---|---|
+| 1 | Nine self-test names rendered audit codes in the site footer, breaching golden rule 2 | renamed to reader-facing sentences; the R-numbers stay in the comments, which do not render |
+| 2 | `research/quality-equation-methodology.md` cited `RB-01-POP-004a`/`004b`, neither of which has ever existed | corrected to `BL-0015` / `BL-0016`, which is what `params.ts` uses for the same note; gated |
+| 3 | `BL-0055` bound an annual private-pay price to a per-resident-day system cost, ~365x apart | `unmapped`, and the row now states the conversion and whose arithmetic it is |
+| 4 | Four components and their $2,050B total all bind `CP-FIN-002`; only free-text separated parent from parts | gated, plus `boundCuts()` so the first consumer has a correct path available |
+| 5 | `BL-0014`, a 71M single-age-band headcount, bound `CP-POP-003` "Age-risk distribution" | `unmapped`; a band is an input to a distribution, not a measurement of it |
+
+**Three checks added, all four branches negative-tested.** `negative_test.py`
+goes from twelve cases to sixteen and every one was watched fail for its own
+named row and pass again. The self-test total is **233**, up from 230.
+
+- `renderedSelfTestNameLeaks()` — no self-test name carries an audit code.
+- `researchReferenceProblems()` — every `RB-*` reference in the 128-file
+  inventory names a heading that exists. 187 defined, 85 referenced elsewhere.
+- `multiBindProblems()` — a canonical id bound by more than one row declares a
+  disaggregation on every such row and marks at most one as the whole.
+
+#### 🛑 Two findings the two-axis review did not have
+
+**17. A tenth name breached golden rule 2, and the review counted nine.** The
+review measured "10 of 230 self-test names carry a doc code, and 9 are mine",
+adjudicating the tenth as `KPP-W1`, framework vocabulary. It missed
+`selftests.ts:2618`, *"…and are named for §S9b"* — a source-document section
+number, the exact class rule 2 names. Sweeping the source rather than reading
+the review's list found eleven candidates: those ten, plus three names carrying
+`P8`. **`P8` is not a breach**: "Phase 8" is published on five pages, so it is
+the plan's language. That judgement is now pinned in a test, because it is the
+only judgement in the check and an unpinned judgement is the next defect.
+
+**18. `research/README.md` claimed a verification that had not happened.** It
+read *"Each of the nine was broken on purpose and watched fail before it was
+trusted."* **That was false the day it was written.** The same session recorded
+in the same sitting that two of the nine had no negative test, and the review
+then proved three of them cannot fail at all. The paragraph also said "nine"
+and listed seven, which is the review's finding 14 — but 14 undersells it: a
+wrong count is a typo, and a written claim of verification is the mechanism
+that let three unfailable checks read as green for a whole section. Corrected
+to eleven, enumerated, with the negative-test coverage stated honestly: ten of
+the eleven have a case, the resolver's throw does not, and that is finding 7's
+territory.
+
+#### The prediction held, at ten minutes
+
+The handoff said to budget for the pass removing a defect authoring a fresh
+one. It did not take a review to find this one: **`researchReferenceProblems()`
+flagged its own documentation on its first run.** The doc comment explaining
+finding 2 spelled the two dead ids, and the check correctly called that a
+citation to a heading that does not exist. It is the same defect wearing the
+fix's clothes.
+
+The comment was reworded rather than the check loosened, and the scope note in
+`baseline-registry.ts` now says why: the sweep covers the 128 manifest files
+under `research/`, `src/` and `tools/`, and deliberately not repo-root
+documents, which is what lets *this log* name `RB-01-POP-004a` in the sentence
+that explains it. **Stating a check's scope in the check is the answer to
+finding 15**, which is the same complaint one level up.
+
+#### Two consequences of the rename that nothing would have caught
+
+- **`baseline-P16/negative_test.py` asserts on self-test names as strings.**
+  All twelve cases named rows by their old names, so the rename silently
+  invalidated the entire negative-test suite — the one artefact whose whole
+  job is to prove the checks can fail. Renaming a rendered string is never
+  only a rendering change when something asserts on it. All twelve repointed.
+- **The block comment said "These eight rows" when there were nine, and this
+  run made it eleven.** It now states no count at all. A count in prose that
+  no check maintains is a claim with a half-life, and this block has grown
+  twice in five days. That is the review's finding 13, taken early because the
+  alternative was shipping it wrong by three instead of by one.
+
+#### The permission that was unsafe against its own data
+
+`migrate_seed.py`'s mapping rule read *"A unit change is allowed (annual vs
+per-day)"*. **Its worked example was the defect.** Finding 3 is precisely an
+annual figure bound to a per-day parameter, so the rule as written permitted
+the thing it was there to prevent, was authored by the same pass that needed
+the permission, and was never tested against its own rows. Both the docstring
+and `research/README.md` now read: a unit change is allowed only where the row
+states the conversion and whose arithmetic it is.
+
+#### Gates
+
+`pnpm test` 513 across 60 files (was 506). `astro check` 0 errors / 0 warnings
+/ 1 hint. `astro build` 14 pages. File manifest 128, unchanged. Audit-repo
+`check_audit_docs.py` all green. `negative_test.py` 16/16.
+
+**Verified against the built HTML, not the source**: `dist/health/index.html`
+renders 233 self-test rows and **zero** carry an audit code. A rendered-output
+rule is only closed when the rendered output is what was read.
