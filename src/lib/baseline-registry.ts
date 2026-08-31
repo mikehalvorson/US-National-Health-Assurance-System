@@ -35,6 +35,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { FILE_MANIFEST } from './file-manifest';
+/* One comment-stripper, not two. manifest-check.ts owns it and this module
+   is the second caller; a private copy here would be the duplicate-parser
+   smell the repo already checks for elsewhere. Neither module imports the
+   other's state, so there is no cycle. */
+import { maskComments } from './manifest-check';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -243,19 +248,31 @@ export function extractDisagreements(): string[] {
   return out;
 }
 
-/* BL ids are sequential and non-semantic, and none reuses a CP number. */
+/* BL ids are sequential and non-semantic.
+ *
+ * ⚠️ Finding 8 [P16 fix run 3]: this used to carry two more clauses, and
+ * neither could add a failure. `want` is always `BL-` + four digits, so:
+ *
+ *   - an id starting `CP-` is already unequal to `want`, and the position
+ *     clause has fired before the namespace clause is reached;
+ *   - two rows sharing an id sit at different indices, so their `want` values
+ *     differ and at least one has already failed the position check.
+ *
+ * Both were strict subsets, which is worse than absent: a reader of this
+ * function came away believing uniqueness and namespace were tested here.
+ * They are tested, independently and from the FILES rather than the parsed
+ * rows, by `idsResolvingToTwoDefinitions()` - a duplicate `baseline_id` in the
+ * CSV and a BL id living in the CP namespace both fail there. Deleting them
+ * here loses no coverage and stops the function overstating itself.
+ *
+ * One check, one property. The position rule pins format, sequence,
+ * uniqueness and namespace at once, and says so. */
 export function baselineIdProblems(): string[] {
   const out: string[] = [];
   BASELINE_ROWS.forEach(function (r, i) {
     const want = 'BL-' + String(i + 1).padStart(4, '0');
     if (r.baselineId !== want) out.push('position ' + (i + 1) + ' is ' + r.baselineId + ', expected ' + want);
-    if (/^CP-/.test(r.baselineId)) out.push(r.baselineId + ' is still in the CP namespace');
   });
-  const seen = new Set<string>();
-  for (const r of BASELINE_ROWS) {
-    if (seen.has(r.baselineId)) out.push('duplicate baseline id ' + r.baselineId);
-    seen.add(r.baselineId);
-  }
   return out;
 }
 
@@ -418,14 +435,42 @@ export function idsResolvingToTwoDefinitions(): string[] {
 }
 
 /* R236 / J3: the fifteen letter-suffixed ids were never invalid - they were
-   expressing a cardinality the id scheme could not carry. After the split none
-   survives as an id; each is a BL row whose superseded_id records where it
-   came from, and the many-to-one relationship it needed lives in `measures`
-   plus `disaggregation`. */
-export function letterSuffixSurvivors(): string[] {
-  return BASELINE_ROWS
-    .filter((r) => /[a-f]$/.test(r.baselineId))
-    .map((r) => r.baselineId);
+ * expressing a cardinality the id scheme could not carry. After the split none
+ * survives as an id; each is a BL row whose superseded_id records where it
+ * came from, and the many-to-one relationship it needed lives in `measures`
+ * plus `disaggregation`.
+ *
+ * ⚠️ Finding 6 [P16 fix run 3]: this used to filter BASELINE_ROWS for
+ * /[a-f]$/ and could not fail. `baselineIdProblems()` pins every id to exactly
+ * `BL-` + its 1-based position, so an id ending in a letter is not merely
+ * absent - it is unreachable, and the check was a `[]` asserted against a set
+ * that is empty by construction.
+ *
+ * The question J3 actually asks is not "did a suffix survive in the seed" but
+ * "did a suffix survive ANYWHERE", and one namespace has real room to fail:
+ * RB_HEADING matches `[0-9]+[a-f]?`, so `### RB-01-POP-004a` is a legal
+ * heading that nothing forbids. That is the namespace finding 2's dead
+ * citation was pointing into. So this reads the files, across all three. */
+export function letterSuffixedIdentifiers(): string[] {
+  const out: string[] = [];
+  const suffixed = /[a-f]$/;
+
+  for (const r of BASELINE_ROWS) {
+    if (suffixed.test(r.baselineId)) out.push('measurement id ' + r.baselineId);
+  }
+  for (const id of CP_DEFINITIONS.keys()) {
+    if (suffixed.test(id)) out.push('definition id ' + id);
+  }
+  for (const rel of FILE_MANIFEST) {
+    if (!/^research\/0[1-6]_/.test(rel)) continue;
+    read(rel).split('\n').forEach(function (raw, i) {
+      const m = RB_HEADING.exec(raw.trim());
+      if (m && suffixed.test(m[1])) {
+        out.push('research heading ' + m[1] + ' (' + rel + ':' + (i + 1) + ')');
+      }
+    });
+  }
+  return out;
 }
 
 export function letterSuffixedOrigins(): BaselineRow[] {
@@ -536,15 +581,30 @@ export function definedResearchIds(): Set<string> {
  *
  * SCOPE, stated because a check that sweeps less than its claim is finding
  * 15's defect: the manifest's .md, .ts, .astro and .csv files - 128 files
- * across research/, src/ and tools/. Repo-root documents (REMEDIATION_LOG.md,
- * AGENTS.md, the handoffs) are NOT swept, which is what lets the log record a
- * dead id while writing about it. */
+ * across research/, src/ and tools/.
+ *
+ * Two things are deliberately outside it, and each is a decision rather than
+ * an oversight:
+ *
+ *   - Repo-root documents (REMEDIATION_LOG.md, AGENTS.md, the handoffs). This
+ *     is what lets the log name a dead id in the sentence explaining it.
+ *   - Comments in .ts and .astro. A comment is prose ABOUT the code; a
+ *     citation is a pointer a reader follows. The check flagged its own
+ *     documentation twice - once in fix run 2 and again in fix run 3, in the
+ *     comment that has to show `RB-04-LTC-01` inside `RB-04-LTC-011` to
+ *     explain finding 12 at all. Rewording won a round and lost the next one.
+ *     Code STRINGS stay swept, and that is where the real .ts references live:
+ *     `params.ts` holds `parameterId: 'RB-05-GOV-008'` and its kin in data,
+ *     which go stale silently if a heading is renamed. The cost is a stale
+ *     "see RB-XX-YYY-NNN" in a comment, which nothing now catches. */
 export function researchReferenceProblems(): string[] {
   const defined = definedResearchIds();
   const out: string[] = [];
   for (const rel of FILE_MANIFEST) {
     if (!/\.(md|ts|astro|csv)$/.test(rel)) continue;
-    read(rel).split('\n').forEach(function (line, i) {
+    const raw = read(rel);
+    const text = /\.(ts|astro)$/.test(rel) ? maskComments(raw) : raw;
+    text.split('\n').forEach(function (line, i) {
       if (RB_HEADING.test(line.trim())) return;
       const found = line.match(RB_REFERENCE);
       if (!found) return;
@@ -584,12 +644,29 @@ export function flaggedPriorityParameters(): { id: string; file: string; phrase:
   return found;
 }
 
+/* ⚠️ Finding 12 [P16 fix run 3]: this used `blob.includes(f.id)`, a substring
+ * match over concatenated prose. `RB-04-LTC-01` matches inside
+ * `RB-04-LTC-011`, so a shorter id reads as seeded on the strength of a longer
+ * one it merely prefixes. Identical root cause to finding 2, one file apart:
+ * a substring operation standing in for an identifier comparison.
+ *
+ * Measured before fixing, because the review relayed this one without running
+ * it: today no RB id is a strict prefix of another, so the bug is LATENT and
+ * nothing is currently mis-reported. It is one heading away from live -
+ * RB_HEADING accepts `[0-9]+`, with no width rule, so `RB-04-LTC-01` is a
+ * legal heading. A latent defect in a check is still a defect in a check.
+ *
+ * A right-hand boundary is enough on its own, since every id begins `RB-`, but
+ * both sides are asserted so the rule reads as "this token, not this text". */
 export function unseededPriorityParameters(): string[] {
   const blob = BASELINE_ROWS
     .map((r) => r.description + ' ' + r.sourceName + ' ' + r.notes)
     .join(' ');
+  const namesId = (id: string) => new RegExp(
+    '(?<![0-9A-Za-z])' + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![0-9A-Za-z])'
+  ).test(blob);
   return flaggedPriorityParameters()
-    .filter((f) => !blob.includes(f.id) && !(f.id in PRIORITY_EXEMPT))
+    .filter((f) => !namesId(f.id) && !(f.id in PRIORITY_EXEMPT))
     .map((f) => f.id + ' (' + f.file + ', "' + f.phrase + '")');
 }
 

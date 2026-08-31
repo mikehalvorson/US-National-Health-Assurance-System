@@ -171,20 +171,27 @@ four rows for a day before a review caught it. The column is still a convention
 a reader has to honour.
 
 **The rest of the seed is no longer unread, though.** Since 2026-08-27
-`src/lib/baseline-registry.ts` parses it at build time and **eleven** self-tests
+`src/lib/baseline-registry.ts` parses it at build time and **twelve** self-tests
 gate it: the definition-only sweep, the extract-agreement check, the id
-sequence, the `measures` bind rule, the resolver's throw, the cross-namespace
-uniqueness, the `value_type` band rule, the priority-parameter sweep, the
-sourcing rule below, the many-to-one bind rule, and the citation read-back.
+sequence, the `measures` bind rule, the resolver's naming contract, the
+cross-namespace uniqueness, the `value_type` band rule, the priority-parameter
+sweep, the sourcing rule below, the many-to-one bind rule, the letter-suffix
+sweep, and the citation read-back.
 
 ⚠️ **This paragraph used to say "nine" and then list seven, and to claim that
 "each of the nine was broken on purpose and watched fail before it was
 trusted." That claim was false the day it was written.** The same session
 recorded, in the same sitting, that two of the nine had no negative test; a
-later review then showed that three of them cannot fail at all. Ten of the
-eleven above now have a case in `baseline-P16/negative_test.py`, which holds
-sixteen. The exception is the resolver's throw, whose build-time row is
-redundant with its neighbours and is being rewritten rather than papered over.
+later review then showed that three of them cannot fail at all.
+
+**All twelve now have a case in `baseline-P16/negative_test.py`**, which holds
+twenty failure cases and three note cases. The note cases are the new part and
+they exist because three of the defects were in NOTES: a note never flips a
+row's `ok`, so a harness that watches only the failing set is structurally
+blind to a green row whose note states something nothing computed. A note case
+requires the note to CHANGE and then to say the true thing, because a constant
+passes the second test on its own.
+
 **A written claim of verification is not verification** - it is exactly what
 let three unfailable checks read as green for a whole section.
 

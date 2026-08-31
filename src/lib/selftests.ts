@@ -27,12 +27,13 @@ import {
 } from './scenarios';
 import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from './bridge';
 import {
-  BASELINE_ROWS, baselineIdProblems, bindProblems, definitionNamespaceLeaks,
+  BASELINE_ROWS, baselineIdProblems, baselineRow, bindProblems,
+  CP_DEFINITIONS, definitionNamespaceLeaks,
   extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
-  definedResearchIds, measuresStatusCounts, multiBindProblems,
-  researchReferenceProblems,
-  resolveDefinition, sourceBacklog, stalePriorityExemptions,
-  unseededPriorityParameters, unsourcedGradedRows, valueTypeProblems
+  definedResearchIds, letterSuffixedIdentifiers, measuresStatusCounts,
+  multiBindProblems, researchReferenceProblems,
+  resolveDefinition, SOURCED_GRADES, sourceBacklog, stalePriorityExemptions,
+  unseededPriorityParameters, unsourcedGradedRows, VALUE_TYPES, valueTypeProblems
 } from './baseline-registry';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
 import { classGrowth, defaultSettings, distribution, TAX_SELFTESTS } from './taxmodel';
@@ -3206,7 +3207,14 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       }),
       runGuarded('The definition extract and the registry agree on every entry', () => {
         const bad = extractDisagreements();
-        return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || '310 agree' };
+        /* Finding 10 [P16 fix run 3]: this said '310 agree', a literal. The
+           registry's size is right there, and a note that hardcodes the
+           number it is reporting stops reporting anything the day the number
+           moves - it just keeps agreeing with itself. */
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ') || CP_DEFINITIONS.size + ' agree'
+        };
       }),
       runGuarded('Measurement identifiers are sequential, unique and carry no meaning', () => {
         const bad = baselineIdProblems();
@@ -3221,20 +3229,71 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             + ' / no-canonical-equivalent ' + c['no-canonical-equivalent']
         };
       }),
-      runGuarded('A lookup that finds no definition fails the build instead of binding', () => {
-        let threw = 0;
-        try { resolveDefinition('BL-9999'); } catch { threw += 1; }
-        const unbound = BASELINE_ROWS.find((r) => r.measuresStatus !== 'mapped');
-        if (unbound) { try { resolveDefinition(unbound.baselineId); } catch { threw += 1; } }
-        return { ok: threw === 2, note: threw + ' of 2 misses threw' };
+      /* ⚠️ Finding 7 [P16 fix run 3]: this row used to try exactly two misses
+         and count the throws, and neither could fail on the data. `BL-9999`
+         cannot exist while the position rule holds, and `bindProblems` already
+         guarantees non-mapped implies an empty `measures`, which implies the
+         throw. Both branches were true unless a neighbouring row was already
+         red - a check whose failing set is owned by another check.
+
+         What nothing tested is the half that matters: a resolver returns the
+         RIGHT definition. `bindProblems` only asks whether `measures` exists
+         in the registry; a resolver that ignored its argument, bound by
+         position, or fell back to a default would satisfy it completely and
+         bind all 25 rows to the wrong parameter, silently, which is the exact
+         failure the namespace split was done to end.
+
+         So the subject is now the resolver's contract over every row. The two
+         refusal branches are kept because they still guard against a REWRITE
+         of the resolver, and that is stated rather than implied: on the data
+         axis they remain subsumed, and pretending otherwise is finding 7. */
+      runGuarded('A lookup resolves to the definition the row names, or fails the build', () => {
+        const bad: string[] = [];
+        let refused = 0;
+        for (const r of BASELINE_ROWS) {
+          if (r.measuresStatus === 'mapped') {
+            try {
+              const def = resolveDefinition(r.baselineId);
+              if (def.id !== r.measures) {
+                bad.push(r.baselineId + ' names ' + r.measures + ' and resolved to ' + def.id);
+              }
+            } catch {
+              bad.push(r.baselineId + ' is mapped and would not resolve');
+            }
+          } else {
+            try {
+              resolveDefinition(r.baselineId);
+              bad.push(r.baselineId + ' is ' + r.measuresStatus + ' and resolved anyway');
+            } catch { refused += 1; }
+          }
+        }
+        try {
+          baselineRow('BL-9999');
+          bad.push('an id no row carries resolved instead of throwing');
+        } catch { /* the miss is the point */ }
+        const mapped = BASELINE_ROWS.length - refused;
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ')
+            || mapped + ' binds resolved to the definition they name, '
+              + refused + ' unbound rows refused to resolve'
+        };
       }),
       runGuarded('No identifier resolves to two different definitions', () => {
         const bad = idsResolvingToTwoDefinitions();
         return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || 'zero, which is the number to report' };
       }),
+      /* Finding 11 [P16 fix run 3]: the note read 'point, range,
+         contested-range and compound all consistent', which names four types
+         whatever the data holds. A type with no rows is consistent the way an
+         empty set is: vacuously. Measured, `contested-range` has exactly one
+         row, so the strongest claim in that sentence rested on a single row
+         and the note gave no way to see it. The census is printed instead. */
       runGuarded('A value carries the band its type claims', () => {
         const bad = valueTypeProblems();
-        return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || 'point, range, contested-range and compound all consistent' };
+        const census = VALUE_TYPES
+          .map((t) => t + ' ' + BASELINE_ROWS.filter((r) => r.valueType === t).length);
+        return { ok: !bad.length, note: bad.slice(0, 3).join(' | ') || census.join(' / ') };
       }),
       runGuarded('Every priority parameter the research flags is seeded or says why not', () => {
         const missing = unseededPriorityParameters();
@@ -3248,14 +3307,30 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         };
       }),
       runGuarded('A row graded medium or better says where its number came from', () => {
+        /* Finding 9 [P16 fix run 3]: 'all below medium' was a hardcoded
+           string in a note that then printed the grades beside it, so a
+           counter-example would have been rendered next to the claim it
+           refutes. `sourceBacklog()` returns every url-less row regardless of
+           grade; a row whose `source_name` starts `pending` is exempt from the
+           FAILURE and still lands in the backlog. Measured: no such row exists
+           today, so the review's 'by construction' was a prediction and the
+           sentence was true - which is exactly how a hardcoded claim survives
+           a reading. It is computed now. */
         const bad = unsourcedGradedRows();
         const backlog = sourceBacklog();
+        const gradedBacklog = backlog.filter((b) => SOURCED_GRADES.includes(b.confidence));
         return {
           ok: !bad.length,
           note: bad.length
             ? bad.slice(0, 3).join(' | ')
-            : backlog.length + ' rows still have no source_url, all below medium: '
-              + (backlog.map((b) => b.id + ' ' + b.confidence).join(', ') || 'none')
+            : backlog.length + ' rows still have no source_url'
+              + (backlog.length
+                  ? ' (' + backlog.map((b) => b.id + ' ' + b.confidence).join(', ') + ')'
+                  : '')
+              + (gradedBacklog.length
+                  ? '; ' + gradedBacklog.length + ' of them graded medium or better, '
+                    + 'held only by a pending source_name'
+                  : '; all below medium')
         };
       }),
       /* Finding 4 [P16 fix run 2]: five rows bind CP-FIN-002 - four components
@@ -3277,6 +3352,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: bad.slice(0, 3).join(' | ')
             || multi.length + ' definitions carry more than one row ('
               + multi.reduce((a, b) => a + b, 0) + ' rows), each cut named'
+        };
+      }),
+      /* Finding 6 [P16 fix run 3]: the letter-suffix question, asked where it
+         can still be answered wrongly. The old form filtered the parsed seed
+         rows and could not fail, and it was never a build gate at all - it
+         lived only in a vitest asserting `[]` against a set the position rule
+         empties by construction. Two changes: it reads all three namespaces
+         from the files, and it runs here, where a failure stops a build. */
+      runGuarded('No identifier carries a letter suffix in any namespace', () => {
+        const bad = letterSuffixedIdentifiers();
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ')
+            || 'the fifteen suffixed slots are ordinary rows now, and no '
+              + 'namespace has grown a new one'
         };
       }),
       /* Finding 2 [P16 fix run 2]: the methodology note cited two ids that

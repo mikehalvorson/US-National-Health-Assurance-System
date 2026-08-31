@@ -5753,3 +5753,118 @@ states the conversion and whose arithmetic it is.
 **Verified against the built HTML, not the source**: `dist/health/index.html`
 renders 233 self-test rows and **zero** carry an audit code. A rendered-output
 rule is only closed when the rendered output is what was read.
+
+### FIX RUN 3: findings 6-12, and a harness that could not see three of them
+
+**2026-08-31.** Findings 6, 7, 8 and 12 are checks that cannot fail. Findings
+9, 10 and 11 are notes that assert what nothing computed. Four of the seven
+were **relayed** by the reviewing agent rather than run, so each was measured
+here before it was touched. Two of those measurements changed the finding.
+
+| # | What it was | What it is now |
+|---|---|---|
+| 6 | `letterSuffixSurvivors()` filtered the parsed seed rows for `/[a-f]$/`, which the position rule empties by construction. It was **not even a build gate** - it lived only in a vitest asserting `[]`. | Reads all three namespaces from the files, and runs as a gate. The room to fail is real: `RB_HEADING` accepts `[0-9]+[a-f]?`, so a suffixed research heading is legal and nothing else forbids it. |
+| 7 | Two hardcoded misses, counted. Neither could fail on the data. | The resolver's naming contract over all 85 rows. |
+| 8 | A `/^CP-/` clause and a duplicate loop, both strict subsets of the position check. | Deleted. The properties are gated independently, from the FILES, by `idsResolvingToTwoDefinitions()`. |
+| 9 | *"all below medium"*, a hardcoded string printed beside the grades that would refute it. | Computed, and it names the exceptions when there are any. |
+| 10 | *"310 agree"*, a literal. | `CP_DEFINITIONS.size`. |
+| 11 | Four value types named in a fixed sentence whatever the census. | The census. |
+| 12 | `blob.includes(f.id)`, a substring match standing in for an identifier comparison. | A token match, both boundaries asserted. |
+
+#### The review was wrong twice, in the direction that matters
+
+**Finding 9's mechanism was a prediction, not a measurement.** The review said
+`sourceBacklog()` returns url-less rows *"including, by construction, a
+`pending`-exempt `high` one"*. Measured: **no row anywhere carries a `pending`
+source_name**, and all three backlog rows are below `medium`. The sentence was
+**true**. That does not save it - a hardcoded claim that happens to be true is
+the harder case, because reading it confirms it. But the finding's stated cause
+was not the actual state, and propagating it would have put a false measurement
+in the log.
+
+**Finding 12 is latent, not live.** The review's example was `RB-01-FIN-01`
+matching inside `RB-01-FIN-015`. Measured: **no RB id is a strict prefix of any
+other**, all four flagged parameters resolve identically under substring and
+token matching, and the spurious set is empty. The bug is one heading away from
+biting - `RB_HEADING` has no width rule, so `RB-04-LTC-01` is legal - and a
+latent defect in a check is still a defect in a check. Fixed, and the negative
+test creates the prefix condition rather than pretending it exists.
+
+#### Finding 7 was understated, and the rewrite proves it
+
+The review's complaint was redundancy: both branches true unless a neighbour is
+already red. True, and confirmed. But the important half is what **nothing**
+tested. `bindProblems` only asks whether `measures` exists in the registry. A
+resolver that ignored its argument, bound by position, or fell back to a
+default would satisfy it completely and bind all 25 mapped rows to one wrong
+parameter - **silently, which is the exact failure the namespace split was done
+to end**. The check now asserts `resolveDefinition(row).id === row.measures`
+for every row.
+
+Evidence it was not merely tidier: three cases that already existed in
+`negative_test.py` now light this row up, and never did before - *an analogue
+recorded as a bind*, *a bind pointing at a canonical id that does not exist*,
+and *a canonical id defined twice*. A redundant check does not start catching
+things.
+
+The two refusal branches are kept, and the comment says exactly what they are
+worth: on the data axis they remain subsumed by `bindProblems`; they survive as
+protection against a rewrite of the resolver. Stating that is the difference
+between the old row and this one.
+
+#### 🛑 The harness was blind to three of the seven findings
+
+Findings 9, 10 and 11 are defects in **notes**, and a note never flips a row's
+`ok`. `negative_test.py` watched only the failing set, so no case it could hold
+would ever have seen them: all three rows were green the entire time, saying
+things nothing had computed. **A proving harness that watches one channel
+cannot prove a claim made on the other.**
+
+`NOTE_CASES` is the second channel. A note case requires the named row's note
+to **change** and then to **contain the true thing** - both halves, because a
+constant passes the content test on its own. Three cases:
+
+- a `pending` row given a `high` grade stays green, and the note must stop
+  saying "all below medium";
+- a definition removed from the registry but not the extract, and the note must
+  report `registry holds 309`;
+- the single `contested-range` row retyped, and the note must show
+  `contested-range 0` - the vacuity finding 11 named, made visible.
+
+`negative_test.py` is now **20 failure cases and 3 note cases**, and all twelve
+registry rows have one. The claim in `research/README.md` moves from "ten of
+eleven" to all twelve, which is the first time that sentence has been true.
+
+#### 🛑 The check flagged its own documentation. Again.
+
+Fix run 2 recorded `researchReferenceProblems()` catching the comment that
+explained it, and reworded the comment. **It happened again in this run**, in
+the finding-12 comment, which cannot explain the defect without showing
+`RB-04-LTC-01` inside `RB-04-LTC-011`. Rewording won a round and lost the next
+one, which means rewording was not the fix.
+
+Comments in `.ts` and `.astro` are now masked before the sweep, using
+`manifest-check.ts`'s existing `maskComments` rather than a second copy of it.
+The scope was chosen by measurement, not preference: **code strings stay
+swept**, and that is where the real source references live - `params.ts` holds
+`parameterId: 'RB-05-GOV-008'` and its kin as data, which go stale silently
+when a heading is renamed. Dropping `.ts` entirely would have lost those. The
+cost, stated: a stale "see RB-XX-YYY-NNN" in a comment is no longer caught.
+
+#### A tooling trap, and it cost a wrong reading
+
+`grep "^HIT"` over `npx vitest` output **silently drops the first line**: the
+first `console.log` shares a line with vitest's `stdout | file > test` banner,
+so it does not start at column 0. This produced a count of 2 where the failing
+test correctly said 3, and the missing one was in a file the sweep had just
+been changed to read. Counts are this campaign's most-failed claim class and
+this is a new way to get one wrong. **Grep vitest output with `-o` on the
+pattern, or read the assertion instead of the console.** Same family as piping
+to `tail`.
+
+#### Gates
+
+`pnpm test` 517 across 60 files (was 513). `astro check` 0 / 0 / 1. `astro
+build` 14 pages. File manifest 128. `negative_test.py` 23/23. Audit-repo
+`check_audit_docs.py` 35 pass, 0 fail. `dist/health/index.html` renders **234**
+rows, zero carrying an audit code.

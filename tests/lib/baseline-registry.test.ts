@@ -4,7 +4,7 @@ import {
   baselineIdProblems, baselineRow, bindProblems, definitionNamespaceLeaks,
   extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
   boundCuts, definedResearchIds,
-  letterSuffixSurvivors, letterSuffixedOrigins, measuresStatusCounts,
+  letterSuffixedIdentifiers, letterSuffixedOrigins, measuresStatusCounts,
   multiBindProblems, parseCsv, researchReferenceProblems,
   resolveDefinition, stalePriorityExemptions, unseededPriorityParameters, valueTypeProblems
 } from '../../src/lib/baseline-registry';
@@ -81,7 +81,7 @@ test('R236 / B1: no id resolves to two definitions after the split', () => {
 test('R236 / J3: the letter-suffix invention is gone as an id and kept as a fact', () => {
   /* They were never invalid. They were expressing a cardinality the id scheme
      could not carry, and now `measures` plus `disaggregation` carries it. */
-  expect(letterSuffixSurvivors()).toEqual([]);
+  expect(letterSuffixedIdentifiers()).toEqual([]);
   const origins = letterSuffixedOrigins();
   expect(origins.length).toBe(15);
   for (const r of origins) {
@@ -216,4 +216,78 @@ test('finding 4: the guard can fail, which is the only reason to keep it', () =>
     (r) => r.measuresStatus === 'mapped' && r.disaggregation.trim() === ''
   );
   expect(naked.length).toBeGreaterThan(0);
+});
+
+/* ---- P16 fix run 3: findings 6, 7, 8 and 12 ----------------------------- */
+
+test('finding 6: the letter-suffix check asks a question that can be answered wrongly', () => {
+  expect(letterSuffixedIdentifiers()).toEqual([]);
+  /* The old form filtered BASELINE_ROWS for /[a-f]$/, which baselineIdProblems
+     empties by construction. The room to fail is in the RB namespace, whose
+     heading pattern accepts a suffix outright - so the check is only worth
+     keeping if that namespace is real and unsuffixed by choice, not by rule. */
+  const ids = [...definedResearchIds()];
+  expect(ids.length).toBeGreaterThan(150);
+  expect(/[a-f]?$/.test('RB-01-POP-004a')).toBe(true);
+  for (const id of ids) expect(id).not.toMatch(/[a-f]$/);
+});
+
+test('finding 7: the resolver returns the definition the row names, for every row', () => {
+  /* bindProblems only asks whether `measures` EXISTS in the registry. A
+     resolver that ignored its argument would satisfy it and bind every mapped
+     row to one wrong parameter. That is the half nothing tested. */
+  let mapped = 0;
+  let refused = 0;
+  for (const r of BASELINE_ROWS) {
+    if (r.measuresStatus === 'mapped') {
+      expect(resolveDefinition(r.baselineId).id).toBe(r.measures);
+      mapped += 1;
+    } else {
+      expect(() => resolveDefinition(r.baselineId)).toThrow(/declares no canonical parameter/);
+      refused += 1;
+    }
+  }
+  expect(mapped).toBeGreaterThan(0);
+  expect(refused).toBeGreaterThan(0);
+  expect(mapped + refused).toBe(BASELINE_ROWS.length);
+  /* Distinct targets, not one definition returned 25 times - the failure the
+     naming check exists to catch would still show 25 successful resolves. */
+  const targets = new Set(
+    BASELINE_ROWS.filter((r) => r.measuresStatus === 'mapped')
+      .map((r) => resolveDefinition(r.baselineId).id)
+  );
+  expect(targets.size).toBeGreaterThan(1);
+});
+
+test('finding 8: the position rule is what pins uniqueness and namespace', () => {
+  expect(baselineIdProblems()).toEqual([]);
+  /* The two deleted clauses were strict subsets. Proven rather than asserted:
+     any id that would have tripped them is already unequal to its position's
+     expected value, so the position clause has fired first. */
+  BASELINE_ROWS.forEach((r, i) => {
+    const want = 'BL-' + String(i + 1).padStart(4, '0');
+    expect(r.baselineId).toBe(want);
+    expect(want).not.toMatch(/^CP-/);
+  });
+  /* And the properties are still gated, independently, from the files. */
+  expect(idsResolvingToTwoDefinitions()).toEqual([]);
+});
+
+test('finding 12: a flagged id is matched as a token, not as a substring', () => {
+  expect(unseededPriorityParameters()).toEqual([]);
+  const flagged = flaggedPriorityParameters();
+  expect(flagged.length).toBeGreaterThan(0);
+  /* Latent, not live, and the difference is worth recording: no RB id is
+     currently a strict prefix of another, so the substring form reported the
+     same answer. RB_HEADING has no width rule, so that is a convention and not
+     a guarantee. */
+  const ids = [...definedResearchIds()];
+  const prefixPairs = ids.filter((a) => ids.some((b) => b !== a && b.startsWith(a)));
+  expect(prefixPairs).toEqual([]);
+  /* The fix itself, exercised on the shape the ids happen not to have yet. */
+  const boundary = (id: string, hay: string) =>
+    new RegExp('(?<![0-9A-Za-z])' + id + '(?![0-9A-Za-z])').test(hay);
+  expect('RB-04-LTC-011'.includes('RB-04-LTC-01')).toBe(true);
+  expect(boundary('RB-04-LTC-01', 'seeded as RB-04-LTC-011 in the notes')).toBe(false);
+  expect(boundary('RB-04-LTC-011', 'seeded as RB-04-LTC-011 in the notes')).toBe(true);
 });
