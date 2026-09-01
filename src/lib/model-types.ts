@@ -6,12 +6,48 @@ export interface Triangular {
   high: number;
 }
 
+/* R138 [§S11b]: one confidence vocabulary, and it is the FIVE-grade one.
+ *
+ * The recommendation reads the other way - it says `OUTCOME_STATS` "invents"
+ * `medium-high` against `PARAM_DEFS`'s high/medium/low, and to pick one.
+ * Measured before implementing: `research/parameter_baseline_seed.csv` grades
+ * 85 rows on five levels, **19 of them on the two hyphenated grades**, and
+ * `SOURCED_GRADES` in `baseline-registry.ts` already gates "medium or better"
+ * against `['high', 'medium-high', 'medium']` at build time. So the hyphenated
+ * grades are not an invention: they are the repo's established scale with a
+ * build gate behind them, and `PARAM_DEFS`'s three are the narrow surface.
+ *
+ * Enforcing high/medium/low repo-wide would have re-graded nineteen sourced
+ * seed rows - a substantive change to what the project claims about its own
+ * evidence, dressed as a vocabulary cleanup. The scale is declared here
+ * instead, ordered best to worst, and every surface is held to it.
+ *
+ * ORDER IS MEANINGFUL. `SOURCED_GRADES` is this list's first three, and a
+ * self-test holds it to that rather than letting the two lists drift. */
+export const CONFIDENCE_GRADES = [
+  'high', 'medium-high', 'medium', 'low-medium', 'low'
+] as const;
+
+export type Confidence = typeof CONFIDENCE_GRADES[number];
+
+/* Every surface that grades something reads its grade out of data - a CSV
+   column, a generated catalog - so it arrives as `string`. These are the
+   one place a string becomes a grade, which is what makes the scale
+   enforceable rather than merely declared. */
+export function isConfidence(g: string): g is Confidence {
+  return (CONFIDENCE_GRADES as readonly string[]).includes(g);
+}
+
+export function isSourcedGrade(g: string): boolean {
+  return isConfidence(g) && CONFIDENCE_GRADES.indexOf(g) < 3;
+}
+
 export interface ParamDef extends Triangular {
   id: string;
   group?: string;
   unit?: string;
   label?: string;
-  confidence?: 'high' | 'medium' | 'low';
+  confidence?: Confidence;
   source?: string;
   url?: string;
   adjustable?: boolean;

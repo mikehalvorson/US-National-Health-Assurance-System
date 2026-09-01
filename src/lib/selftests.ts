@@ -33,9 +33,9 @@ import {
   definedResearchIds, letterSuffixedIdentifiers, measuresStatusCounts,
   multiBindProblems, researchReferenceProblems,
   CP_MIRROR_DIVERGENCES, definitionMirrorDisagreements, resolveDefinition,
-  SOURCED_GRADES,
   sourceBacklog, staleMirrorDivergences, stalePriorityExemptions,
-  unseededPriorityParameters, unsourcedGradedRows, VALUE_TYPES, valueTypeProblems
+  unseededPriorityParameters, unsourcedGradedRows, VALUE_TYPES, valueTypeProblems,
+  SOURCED_GRADES
 } from './baseline-registry';
 import { benchmarkChartRows, benchmarkText } from './benchmarks';
 import { classGrowth, defaultSettings, distribution, TAX_SELFTESTS } from './taxmodel';
@@ -140,7 +140,9 @@ import {
 } from './workforce';
 import { leaderBasisCounts, leaderBasisProblems } from './gov';
 import { TABS } from './tabs';
-import type { PercentileBand } from './model-types';
+import {
+  CONFIDENCE_GRADES, isConfidence, isSourcedGrade, type PercentileBand
+} from './model-types';
 import {
   AGE_STRUCTURE, BASE2023, DEFLATOR_2023_TO_2024, ENGINE_CONSTANTS,
   ENGINE_STRUCTURAL_LITERALS, engineConstant, MONEYFLOW, OFFSET_RAMPS,
@@ -148,7 +150,7 @@ import {
   denominatorSumDrift, HOUSEHOLD_DENOMINATORS,
   MONTE_CARLO_DRAWS, OFFSET_ARCHITECTURE_DOC, PARAM_DEFS, paramProseCatalogCodes,
   PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS, SEED_STABILITY,
-  SPONSOR_SHARE, START_YEAR, transitionEnvelope
+  SPONSOR_SHARE, START_YEAR, transitionEnvelope, OUTCOME_STATS
 } from './params';
 import {
   EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
@@ -3057,6 +3059,50 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          notes carry internal ids on purpose. That is safe only because the
          build refuses a failing row - a mechanism five comments assert and
          nothing read until now. */
+      /* R138 [§S11b]: one confidence vocabulary, enforced rather than
+         asserted, and it is the FIVE-grade one.
+
+         Measured before implementing. The recommendation says OUTCOME_STATS
+         "invents" medium-high against params.ts's high/medium/low and to pick
+         one - but the seed CSV grades 19 of its 85 rows on the two hyphenated
+         levels, and SOURCED_GRADES has gated "medium or better" against
+         medium-high since P15. The three-grade surface was the narrow one.
+         Standardising on it would have re-graded nineteen sourced rows under
+         cover of a vocabulary cleanup.
+
+         ltc.ts is not swept here: §BV10 makes its per-figure grades the model
+         for the rest, and they are typed at their declarations rather than
+         collected into any list this could read. */
+      runGuarded('Every graded surface uses the one declared confidence scale', () => {
+        const bad: string[] = [];
+        const check = (where: string, rows: readonly { confidence?: string }[]) => {
+          for (const r of rows) {
+            if (r.confidence === undefined) continue;
+            if (!isConfidence(r.confidence)) {
+              bad.push(where + ' grades on "' + r.confidence + '"');
+            }
+          }
+        };
+        check('params.ts PARAM_DEFS', PARAM_DEFS);
+        check('params.ts ENGINE_CONSTANTS', ENGINE_CONSTANTS);
+        check('params.ts OUTCOME_STATS', OUTCOME_STATS);
+        check('medications.ts FAMILIES', FAMILIES);
+        for (const r of BASELINE_ROWS) {
+          if (!isConfidence(r.confidence)) {
+            bad.push('the seed grades ' + r.baselineId + ' on "' + r.confidence + '"');
+          }
+        }
+        /* SOURCED_GRADES is the scale's first three. Held to that rather than
+           trusted: two lists that agree today are still two lists. */
+        if (SOURCED_GRADES.join('|') !== CONFIDENCE_GRADES.slice(0, 3).join('|')) {
+          bad.push('SOURCED_GRADES has drifted from the head of the scale');
+        }
+        return {
+          ok: !bad.length,
+          note: [...new Set(bad)].slice(0, 3).join(' | ')
+            || 'every grade is one of ' + CONFIDENCE_GRADES.join(', ')
+        };
+      }),
       runGuarded('A failing self-test stops the build before any page is emitted', () => {
         const bad = buildGateWiring();
         return {
@@ -3364,7 +3410,7 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
            a reading. It is computed now. */
         const bad = unsourcedGradedRows();
         const backlog = sourceBacklog();
-        const gradedBacklog = backlog.filter((b) => SOURCED_GRADES.includes(b.confidence));
+        const gradedBacklog = backlog.filter((b) => isSourcedGrade(b.confidence));
         return {
           ok: !bad.length,
           note: bad.length

@@ -35,6 +35,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { FILE_MANIFEST } from './file-manifest';
+import {
+  CONFIDENCE_GRADES, isSourcedGrade, type Confidence
+} from './model-types';
 /* One comment-stripper, not two. manifest-check.ts owns it and this module
    is the second caller; a private copy here would be the duplicate-parser
    smell the repo already checks for elsewhere. Neither module imports the
@@ -787,11 +790,14 @@ export function stalePriorityExemptions(): string[] {
  * or names itself pending. The backlog of honestly-empty rows is counted and
  * printed rather than hidden, which is the "noisy backlog counter" the row
  * asks for - a gap nobody can see is a gap nobody closes. */
-export const SOURCED_GRADES = ['high', 'medium-high', 'medium'];
+/* R138 [§S11b]: the first three of the declared scale, sliced rather than
+   retyped, so "medium or better" cannot come to mean something different
+   here than it does where the scale lives. */
+export const SOURCED_GRADES: readonly Confidence[] = CONFIDENCE_GRADES.slice(0, 3);
 
 export function unsourcedGradedRows(): string[] {
   return BASELINE_ROWS
-    .filter((r) => SOURCED_GRADES.includes(r.confidence)
+    .filter((r) => isSourcedGrade(r.confidence)
       && r.sourceUrl.trim() === ''
       && !r.sourceName.trim().toLowerCase().startsWith('pending'))
     .map((r) => r.baselineId + ' (' + r.confidence + ') ' + r.description);

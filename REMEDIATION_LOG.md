@@ -6115,3 +6115,146 @@ the three-alternative copy that used to stand in for it.
 The three added rows are the path-citation sweep, its staleness check, and the
 build-gate wiring read. `README.md`'s advertised count moved 236 to 239 in the
 same commits, which its own gate required.
+
+---
+
+## P17 — §S11b Live-code sourcing & confidence · 2026-08-31 · branch `nha-remediation`
+STATUS: partial — the premise pass is complete and `R138` has landed. The
+sourcing half (`R135`'s nine URLs, `R218`, `R252`, `R130`) is untouched and
+needs the network.
+
+DISCREPANCY: **five of seventeen recommendations rest on premises the code
+contradicts.** Each is below with what was measured. In every case the code
+wins, per Standing Order 0.
+
+LANDED: `R138`
+URLS: 9 backfilled? **no**; remaining `url:""` in `params.ts`: **16** (9 `medium`,
+7 `low`) — the target of 0 is untouched.
+
+### Entry gate
+
+1. `## P1` `STATUS: complete` ✓
+2. `grep -c 'url: ""' src/lib/params.ts` → **16**, not the nine the gate names.
+   **Reconciled, and both numbers are right for different questions:** 16 is
+   every parameter with an empty `url`; `R135`'s nine is the `medium`-graded
+   subset, which is what the prompt's own body says two paragraphs on. Measured
+   through the module rather than by grep: 32 parameters, 16 with no URL, split
+   **9 `medium` / 7 `low`**, and the nine are exactly the nine the prompt names.
+   The P17 handoff had already reached this; it is re-derived here rather than
+   carried, because the campaign's most-failed claim class is counts.
+3. `astro build` passes ✓ · `git status` clean ✓
+
+### 🛑 The five premises that did not survive measurement
+
+**`R124` — already done.** *"Register `0.28`. `taxFeedback = wageGain * 0.28`
+sourced only to a code comment citing CBO convention. `R21` lists ten literals;
+this is the eleventh."* Measured: `model.ts:399` reads
+`wageGain * WAGE_TAX_FEEDBACK_RATE`, and `wageTaxFeedbackRate` is in
+`ENGINE_CONSTANTS` graded `medium` **with a URL**. There is no `0.28` literal
+in `model.ts` or `taxmodel.ts`. Registered in `§S6a`; nothing to do.
+
+**`R241` — one real site of three.** *"Register `0.27`, now in three modules."*
+Measured, per module:
+- `overview.ts:88` — `0.27 * 5300` and `0.27 * baseMature`. **Real, and
+  unregistered.** This is the one.
+- `params.ts:975, :979` — inside a comment that derives the household sponsor
+  share as `1314/4866.5 = 0.2700`. Not a literal; it is the explanation of why
+  there is no literal.
+- `taxparams.ts:257` — `t9999: 0.27`, a distributional bracket rate. **A
+  different quantity that happens to equal 0.27.** The audit matched on the
+  digits.
+
+**`R254` — the claim it quotes does not exist.** *"`rollout.astro` states the
+plan explicitly does not invent phase shares or straight-line the total ...
+One of the two sides is wrong."* Measured: `grep -rn "invent" src/` returns no
+such sentence anywhere, and `grep -rni "phase share" src/` returns nothing at
+all. What `rollout.astro:116` actually says is that transition cost *"is not
+straight-lined: the model carries an annual outlay profile"* — which asserts
+that `transitionShape` exists and is doing exactly what it does. **The page and
+the code agree.** The residual real point is different and smaller: those twelve
+fractions have no source, and `model.ts:655` gates only that they sum to 1.
+
+**`R51` — stale.** *"`medications.ts` has no sources at all: none for `717.9`,
+none for anything."* Measured through the module: **200 of 200 families carry a
+`source` and a `confidence`** (185 `high`, 15 `medium`). `R174` in `§S7` did
+this. `ALL_DRUG_SPEND_2024 = 717.9` carries a fifty-line provenance comment.
+What remains open is the 52 scenario overrides, which the "Done when" also names.
+
+**`R138` — backwards, and this one mattered.** See below.
+
+### `R138`: the vocabulary the recommendation would have thrown away
+
+*"`PARAM_DEFS` uses `high`/`medium`/`low`; `OUTCOME_STATS` invents `medium-high`.
+Pick one and enforce it."* Read as written, that says standardise on three.
+
+Measured first:
+
+| Surface | Grades in use |
+|---|---|
+| `params.ts` `PARAM_DEFS` | high 3 · medium 19 · low 10 |
+| `params.ts` `ENGINE_CONSTANTS` | medium 1 · low 6 |
+| `params.ts` `OUTCOME_STATS` | medium 2 · **medium-high 1** · **low-medium 1** |
+| `medications.ts` `FAMILIES` | high 185 · medium 15 |
+| `research/parameter_baseline_seed.csv` | high 47 · **medium-high 17** · medium 17 · **low-medium 2** · low 2 |
+
+🛑 **The seed grades nineteen of its eighty-five rows on the two hyphenated
+levels, and `SOURCED_GRADES = ['high', 'medium-high', 'medium']` in
+`baseline-registry.ts` has gated "a row graded medium or better states where its
+number came from" against `medium-high` since P15.** So `medium-high` is not an
+invention of `OUTCOME_STATS`; it is the project's own scale with a build gate
+behind it, and `PARAM_DEFS`'s three grades are the narrow surface.
+
+**Enforcing high/medium/low repo-wide would have re-graded nineteen sourced seed
+rows — a substantive change to what the project claims about its own evidence,
+carried out under the description of a vocabulary cleanup.** The recommendation
+also under-counts: `OUTCOME_STATS` uses two hyphenated grades, not one.
+
+Landed the other way round. `CONFIDENCE_GRADES` in `model-types.ts` declares the
+five levels **in order**, `Confidence` is its type, `ParamDef.confidence` is
+typed from it instead of restating three, `SOURCED_GRADES` is now
+`CONFIDENCE_GRADES.slice(0, 3)` rather than a second list, and `isConfidence` /
+`isSourcedGrade` are the one place a string from a CSV column or a generated
+catalog becomes a grade. A self-test sweeps `PARAM_DEFS`, `ENGINE_CONSTANTS`,
+`OUTCOME_STATS`, `FAMILIES` and every seed row against the scale, and fails if
+`SOURCED_GRADES` drifts from the scale's head.
+
+`ltc.ts` is not swept: `§BV10` makes its per-figure grades the model for the
+rest, and they are typed at their declarations rather than gathered into a list
+a check could read. Stated rather than left as an unexplained absence.
+
+### Recorded, not fixed
+
+- **`R135`, the nine URLs.** All nine name real studies in prose — Himmelstein,
+  CDC NHAMCS, SAMHSA NSDUH, PhRMA/CBO, MedPAC/CMS GME, Saez–Zucman, GADCS, TFAH.
+  It is transcription, and it needs the network. The seven `low`-graded ones are
+  a separate question: the P17 handoff's instruction to **re-measure rather than
+  carry them forward** still stands.
+- **`R115`, the ten uncontrolled records.** Confirmed by arithmetic: the live
+  catalog is **440** (45 KPP + 85 TPP + 310 CP) against the extractor's 430
+  (41 + 79 + 310), so ten records were added by hand. P0's correction is right
+  on both halves — **no record carries a `basis` field**, and no record carries
+  a `2026-08` string — so nothing identifies *which* ten. Three records already
+  say `provisional`. Identifying the ten needs a diff against extractor output,
+  and `R220` in P18 and `§S16` must land on the same words.
+- **`R160`** is three pages, not one: `health.astro:366`, `quality.astro:222`
+  and `hardening.astro:262` all point *"Sources and methodology"* at the
+  repository root.
+- **`R252`** is live: `equations.ts:466` carries `n(15000, 'controlled
+  certified-unit count at maturity')` with no source.
+- **`R145`** is live: `rents` is `enabled: true` in all three goal scenarios.
+- `R125`, `R264`, `R68`, `R218`, `R130`, `R257`, `R16` not started.
+
+### Gates
+
+`pnpm test` **526 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
+**14 pages**, self-tests **240 of 240**. File manifest **128**.
+`negative_test.py` **32 of 32** (29 failure + 3 note). `README.md` advertises
+**240**, moved by its own gate.
+
+### Method note
+
+Five wrong premises in seventeen rows is the highest rate this campaign has
+measured in one section, and every one of them was cheap to check and expensive
+to have implemented. `R138` is the sharp case: implemented as written, it would
+have looked like tidying and been a re-grading of nineteen sourced rows.
+**Measure the premise. The recommendation is a hypothesis about the code.**

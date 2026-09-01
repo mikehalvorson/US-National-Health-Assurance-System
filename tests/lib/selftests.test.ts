@@ -17,6 +17,10 @@ import {
   RESEARCH_PATH_EXEMPT, sourceText, staleResearchPathExemptions,
   unsweptSelfTestNameSites
 } from '../../src/lib/manifest-check';
+import {
+  CONFIDENCE_GRADES, isConfidence, isSourcedGrade
+} from '../../src/lib/model-types';
+import { SOURCED_GRADES } from '../../src/lib/baseline-registry';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
   const s = selfTestSummary();
@@ -395,6 +399,25 @@ test('finding 4: the build gate that makes a rendered note safe is wired', () =>
     }
   }
   expect(buildGateWiring(mkdtempSync(join(tmpdir(), 'nha-gate-absent-')))).toHaveLength(1);
+});
+
+/* R138 [Pi17 SS11b]: one confidence vocabulary, and the measurement that chose
+   it. The recommendation said OUTCOME_STATS invents medium-high against
+   params.ts high/medium/low; the seed grades 19 of 85 rows on the hyphenated
+   levels and SOURCED_GRADES gates against them, so the three-grade surface was
+   the narrow one and standardising on it would have re-graded sourced rows. */
+test('R138: the confidence scale is one list, and SOURCED_GRADES is its head', () => {
+  expect(CONFIDENCE_GRADES).toEqual(['high', 'medium-high', 'medium', 'low-medium', 'low']);
+  expect(SOURCED_GRADES).toEqual(CONFIDENCE_GRADES.slice(0, 3));
+  for (const g of CONFIDENCE_GRADES) expect(isConfidence(g)).toBe(true);
+  /* The shapes a surface actually drifts into: a near-miss spelling and a
+     grade from a scale nobody declared. */
+  for (const g of ['med-high', 'moderate', 'High', 'medium high', '']) {
+    expect(isConfidence(g)).toBe(false);
+  }
+  expect(isSourcedGrade('medium-high')).toBe(true);
+  expect(isSourcedGrade('low-medium')).toBe(false);
+  expect(isSourcedGrade('med-high')).toBe(false);
 });
 
 /* Finding 10 [P16 review 3]: research/README.md cited a path a reader of this
