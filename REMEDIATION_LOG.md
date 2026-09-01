@@ -5966,3 +5966,152 @@ rows, zero carrying an audit code.
 **All sixteen review findings are now closed.** The remaining item is the
 `### THE TWO-AXIS REVIEW` block, and then a third review pinned at these four
 fix runs - which four consecutive self-inflicted defects say is not optional.
+
+### THE TWO-AXIS REVIEW
+
+Two reviews, not one. Both ran `code-review` with Standards and Spec as
+parallel sub-agents, and this block is the record of both, written late: the
+previous handoff asked for it after the first review and four fix runs went by
+without it, which is itself the reason the second review had two reviews' worth
+of material to find.
+
+**Review 1 — pinned at the P16 section, 2026-08-27. Sixteen findings, all
+closed.** What each one was and what closed it is in `### FIX RUN 2`, `### FIX
+RUN 3` and `### FIX RUN 4` above, and in `git log 384ef3f..a1c9776`. The shape
+worth carrying forward is that the section's own inline review, recorded in
+`### 🛑 Five discrepancies` above, found five things and missed all sixteen of
+these — it checked whether the work was done and never checked whether the
+claims about the work were true.
+
+**Review 2 — pinned at `384ef3f..HEAD`, 2026-08-31, so its diff was fix runs 2,
+3 and 4: the work no review had seen. Eleven findings.** Every one is closed
+below, in fix run 5.
+
+#### The finding that is the campaign in one line
+
+**A count in a published document was wrong, inside the fix for the previous
+review's finding that a count in a published document was wrong, and the gate
+written to prevent it was green the whole time.**
+
+`research/README.md` said **fourteen** self-tests gate the seed and then listed
+**twelve**. `registryGateCountDrift()` had been written one commit earlier for
+exactly this. It compares the spelled word against the row count: 14 == 14,
+green. **It never counted the list, which is the half that failed.** The two
+halves fail for different reasons — the number drifts when someone edits prose,
+the list drifts when someone adds a gate and stops after the number — and a
+single check over the easy half reads as coverage of both.
+
+Fixed three ways, because one would not have been enough:
+
+- the enumeration is a **bullet list** now, one gate per line. A
+  comma-separated English sentence cannot be counted without guessing what a
+  comma means, and a parser that guesses is the next check that cannot fail.
+- `registryGateCountDrift()` reports **both** halves, separately.
+- the negative harness has **two** cases, one per half. The number half was
+  already proved; the list half had never been.
+
+#### Review 2, the eleven
+
+| # | Axis | Finding | Verdict and fix |
+|---|---|---|---|
+| 1 | both | `research/README.md` says fourteen, lists twelve; the gate cannot see the list. `:207` also carried two stale figures. | **Real, and the worst.** See above. Both `:207` figures corrected — and the case counts were then **removed** rather than corrected, because nothing in this repo can count cases in the audit working set, and finding 13's precedent is to state no count where none can be gated. |
+| 2 | Standards | `renderedSelfTestNameLeaks()` sweeps single-quoted names only. | **Real, latent.** Measured: **183 call sites, 179 single-quoted, 3 double-quoted, 1 variable.** The three double-quoted names were clean, which is exactly why nothing showed. All three quote styles are swept; the unreadable remainder is now **counted and printed in the row's own note** by `unsweptSelfTestNameSites()`, and the rendered set is swept in vitest with the shipped list. |
+| 3 | Standards | `tests/lib/selftests.test.ts` inlines a three-alternative copy of an eight-pattern production list. | **Real.** `AUDIT_CODE_IN_RENDERED_TEXT` is exported and imported. The five codes the copy passed — `Appendix C`, `OI-014`, `Table 3`, `Section 8`, `S9b` — are named individually in the test, each asserted to hit the shipped list **and** to have passed the deleted copy, so the reason the copy had to go is pinned rather than remembered. |
+| 4 | Standards | `health.astro:455` renders a failing row's `note`, and the new notes carry `CP-*`/`RB-*` ids and paths by design. | **Not a live breach** — `astro:build:start` runs `assertSelfTestsPass` before any route is emitted, so a red row stops the build. **But the reason it is not a breach was asserted in five code comments and read by nothing.** Unregister the integration and all five keep reading true. `buildGateWiring()` reads `astro.config.mjs` now: hook present, both asserts called, and the integration actually in `integrations: []`. Three negative cases, plus one in the harness. |
+| 5 | Standards | `tests/lib/baseline-registry.test.ts` rebuilds `namesId` without its regex escape and calls it *"the fix itself, exercised"*; the CP projection is rebuilt in three places. | **Real.** `namesIdAsToken()` and `catalogCpParameters()` are exported and used by both sides. The test now also asserts the escape's own behaviour, which the copy could not have caught. |
+| 6 | Standards | `manifest-check.ts` gained three functions about the registry surface and README prose, citing a "the scan lives here" convention `.agent-kb/CONVENTIONS.md` does not document. | **Real, and the self-issued half is the real part.** The module header now states the convention in full where a reader of this repo meets it: every check that reads the repo's own text lives in one module because `node:fs` is confined to one module. The local agent knowledge base carries it too. ⚠️ **The first version of this fix cited `.agent-kb/CONVENTIONS.md` from a tracked source comment - and `.agent-kb/` is gitignored, so it was finding 10 committed inside the fix for finding 6.** Caught before commit. The functions stay. |
+| 7 | Spec | `### THE TWO-AXIS REVIEW` never written. | **Real.** This block. |
+| 8 | Spec | `rename_research_ids.py`'s docstring still states the CP family-header decision that fix run 4 reversed. | **Real.** Retracted in place, with the old text quoted, because that script is the record of what the migration believed. Verified before writing: nineteen headers gone, `CP_FAMILY_HEADING` in place. |
+| 9 | Spec | `boundCuts()` is scope creep — exported, unused by the site. | **Real, and kept on judgement.** It is tested, its comment already says it is unused, and it exists so the first consumer of `measures` has a correct path rather than a plausible wrong one. Recording that it was added unasked is the disclosure the finding wanted. |
+| 10 | Spec | `research/README.md` cites `baseline-P16/negative_test.py`, which a reader of this repo cannot open, load-bearing for its claim of proof. | **Real, and bigger than the instance.** See below. |
+| 11 | Spec | Finding 3 from the Spec side: the negative test should drive the production list. | **Real, same fix.** The rendered-set sweep runs the shipped list; production cannot, because a self-test calling `selfTestSummary()` from inside `selfTestSummary()` recurses. |
+
+#### What sweeping finding 10's class found that the review did not
+
+The review named one unresolvable path citation. Sweeping every backticked
+path-shaped token in `research/*.md` found **three of forty**:
+
+- `baseline-P16/negative_test.py` in `research/README.md` — the reported one.
+- `baseline-P16/migrate_seed.py` in `research/05_it_governance_rd_transition.md`
+  — **the same defect, unreported**, and it is the citation supporting why a
+  `high`-graded parameter is exempt from the priority sweep.
+- `tools/extract_docx.py` in `research/task_zero_findings.md`, twice — **the
+  opposite**. R131 deleted that file on purpose after proving the `.mjs` port
+  against it, and the document is a dated record of the pre-port state.
+
+That third one is why the new gate carries an **exemption table with a reason
+per entry** rather than a flat rule. A blanket "every cited path resolves"
+would have fired on an accurate account of the past and pressed a writer to
+falsify it. `staleResearchPathExemptions()` fails when an exempt path comes
+back, which is the moment its reason stops being true.
+
+The two real ones are fixed in prose — each citation now says at the point of
+citation that the file lives in the audit working set and not in this repo.
+**This is the no-remote problem producing a defect in a published document, for
+the first time.** It is the nineteenth session in which the audit repo has no
+remote.
+
+#### 🆕 A trap this fix run created and caught before it shipped
+
+`sourceText()` memoises by root + path. A negative test that writes two
+different broken versions of the same file into one temp directory therefore
+**tests the first one twice** — the second read is served from cache. The
+build-gate test did exactly this and passed the second assertion for the wrong
+reason; it only surfaced because the two cases expected different messages. One
+temp root per mutation now, and a scan of every `mkdtempSync` span in `tests/`
+confirms no other test reuses a path within one root.
+
+This is a new member of a family the campaign keeps meeting: **a negative test
+that proves one case and reports two.**
+
+#### 🆕 Two corrections to the review, and one to the handoff
+
+- The Spec agent said *"181 of the 236 rendered names are covered."* The
+  handoff corrected it to 179 of 184. **Both are wrong about the denominator:
+  there are 183 call sites.** The 184th `runGuarded(` is the function's own
+  declaration. Third consecutive review with a wrong count in it, and the
+  correction to the count was also wrong.
+- The Standards agent's finding 4 omitted the build gate, so its severity was
+  wrong while its direction was right. Recorded because it is the same failure
+  mode as the counts: **an agent stated a mechanism without checking whether the
+  mechanism exists.**
+- The previous handoff's own run instruction, `python
+  baseline-P16/negative_test.py` from the dashboard root, **does not work.**
+  There is no `baseline-P16/` in the dashboard repo. The harness must be invoked
+  by absolute path from the dashboard root, because it mutates files here and
+  reads the build here while living there. Same root cause as finding 10.
+
+#### What is gated now that was not
+
+- The README's gate enumeration is counted, not only its spelled number.
+- Double- and backtick-quoted self-test names are swept, and the names no
+  source sweep can read are counted rather than assumed empty.
+- One pattern list, one home; the test cannot drift from production.
+- Every backticked path a research file cites resolves, or is exempt with a
+  written reason that fails when it stops being true.
+- The build gate that makes a rendered note safe is read, including the
+  defined-but-never-registered case that no comment could have caught.
+- `namesIdAsToken` and `catalogCpParameters` have one implementation each.
+
+#### Deliberately not done
+
+- `boundCuts()` kept. See finding 9.
+- The `manifest-check.ts` functions stay where they are. See finding 6.
+- The audit working set still has no remote. Two decisions are the user's:
+  which account, and private. This is now the direct cause of a defect in a
+  published file, not only a reproducibility gap.
+
+#### Gates
+
+`pnpm test` **525 across 60 files** (was 521). `astro check` **0 errors / 0
+warnings / 1 hint**. `astro build` **14 pages**, self-tests **239 of 239** (was
+236; three rows added). File manifest **128**, unchanged. `negative_test.py`
+**31 of 31** (28 failure + 3 note; four cases added, every one watched failing
+for its own reason and passing again). Audit working set `check_audit_docs.py`
+**35 pass, 0 fail**. `dist/health/index.html` renders **239** rows and **zero**
+carry an audit code, swept with the eight-pattern production list rather than
+the three-alternative copy that used to stand in for it.
+
+The three added rows are the path-citation sweep, its staleness check, and the
+build-gate wiring read. `README.md`'s advertised count moved 236 to 239 in the
+same commits, which its own gate required.

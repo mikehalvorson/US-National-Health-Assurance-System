@@ -91,8 +91,9 @@ import {
   primitiveAssertions, undeclaredEngineDeclarations,
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, registryGateCountDrift,
-  registrySurfaceRowCount,
-  renderedSelfTestNameLeaks,
+  registrySurfaceRowCount, buildGateWiring,
+  renderedSelfTestNameLeaks, researchPathCitationLeaks,
+  staleResearchPathExemptions, unsweptSelfTestNameSites,
   retiredTreeCodeReferences,
   anchoredOccupationCodes, directCareHeadcountDrift, directCareSharedCount,
   requirementFamilyCounts, solvedResearchBlockers,
@@ -3033,10 +3034,51 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          manifest-check.ts, following the convention the row above states. */
       runGuarded('No self-test name puts an internal code on the page', () => {
         const bad = renderedSelfTestNameLeaks();
+        /* Findings 2 and 11 [P16 review 3]: the sweep reads the source, so
+           it cannot read a name the source does not spell. The pass note
+           says how many those are rather than implying there are none -
+           the sweep was single-quote-only for a run, and the three
+           double-quoted names it walked past were clean by luck. */
+        const unswept = unsweptSelfTestNameSites();
         return {
           ok: !bad.length,
           note: bad.slice(0, 3).join(' | ')
-            || 'every rendered check name is a reader-facing sentence'
+            || 'every rendered check name is a reader-facing sentence; '
+              + unswept.length + ' site(s) name rows the source sweep cannot'
+              + ' read, and vitest sweeps the rendered set for those'
+        };
+      }),
+      /* Finding 10 [P16 review 3]: research/README.md cited a path that
+         is load-bearing for its claim of proof and that a reader of this repo
+         cannot open. Sweeping the class found two more; one of those turned
+         out to be a true record of a deleted file, which is why the check
+         carries an exemption table instead of a flat rule. */
+      /* Finding 4 [P16 review 3]: a failing row's note is rendered, and the
+         notes carry internal ids on purpose. That is safe only because the
+         build refuses a failing row - a mechanism five comments assert and
+         nothing read until now. */
+      runGuarded('A failing self-test stops the build before any page is emitted', () => {
+        const bad = buildGateWiring();
+        return {
+          ok: !bad.length,
+          note: bad.join(' | ')
+            || 'astro:build:start runs the suite and the config registers it'
+        };
+      }),
+      runGuarded('Every path a research file cites can be opened from this repo', () => {
+        const bad = researchPathCitationLeaks();
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ')
+            || 'every cited path resolves, or says at the citation why it cannot'
+        };
+      }),
+      runGuarded('No exemption claims a file is absent that the tree now holds', () => {
+        const stale = staleResearchPathExemptions();
+        return {
+          ok: !stale.length,
+          note: stale.join(' | ')
+            || 'each exempt path is still absent, so each reason still holds'
         };
       }),
       runGuarded('No element-guarded init registers a document or window listener', () => {
@@ -3424,7 +3466,8 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         return {
           ok: !bad.length,
           note: bad.join(' | ')
-            || 'research/README.md and this block agree: ' + rows + ' gates'
+            || 'research/README.md spells and lists ' + rows
+              + ' gates, and this block has ' + rows
         };
       })
     ]

@@ -192,11 +192,27 @@ a reader has to honour.
 
 **The rest of the seed is no longer unread, though.** Since 2026-08-27
 `src/lib/baseline-registry.ts` parses it at build time and **fourteen** self-tests
-gate it: the definition-only sweep, the extract-agreement check, the id
-sequence, the `measures` bind rule, the resolver's naming contract, the
-cross-namespace uniqueness, the `value_type` band rule, the priority-parameter
-sweep, the sourcing rule below, the many-to-one bind rule, the letter-suffix
-sweep, and the citation read-back.
+gate it:
+
+- the definition-only sweep
+- the extract-agreement check
+- the id sequence
+- the `measures` bind rule
+- the resolver's naming contract
+- the cross-namespace uniqueness rule
+- the `value_type` band rule
+- the priority-parameter sweep
+- the sourcing rule below
+- the many-to-one bind rule
+- the letter-suffix sweep
+- the citation read-back
+- the quality-catalog mirror
+- this paragraph's own gate count
+
+The list is bullets rather than a sentence so that a check can count it. It
+was a comma-separated sentence for one run, during which it said fourteen
+and named twelve, and the check written to catch exactly that compared only
+the two spelled numbers.
 
 ⚠️ **This paragraph used to say "nine" and then list seven, and to claim that
 "each of the nine was broken on purpose and watched fail before it was
@@ -204,8 +220,11 @@ trusted." That claim was false the day it was written.** The same session
 recorded, in the same sitting, that two of the nine had no negative test; a
 later review then showed that three of them cannot fail at all.
 
-**All twelve now have a case in `baseline-P16/negative_test.py`**, which holds
-twenty failure cases and three note cases. The note cases are the new part and
+**All fourteen now have a case** in the negative-test harness described
+below, which holds failure cases and note cases. No count is given here: the
+harness lives in the audit working set, nothing in this repo can count it, and
+this campaign has now shipped three wrong counts in prose that no check
+maintained. The harness prints its own totals on every run. The note cases are the new part and
 they exist because three of the defects were in NOTES: a note never flips a
 row's `ok`, so a harness that watches only the failing set is structurally
 blind to a green row whose note states something nothing computed. A note case
@@ -222,8 +241,11 @@ than reporting a bare pass - a gap nobody can see is a gap nobody closes. A row
 whose `source_name` begins `pending` is exempt, which is the only way to hold a
 grade without a link. What is **not** gated is anything needing the network -
 a dead `source_url` still 404s silently, because a network-dependent build gate
-is a worse problem than the one it solves. `baseline-P16/negative_test.py` and
-the P15 `check_urls.py` are the manual halves.
+is a worse problem than the one it solves. The negative-test harness
+(`baseline-P16/negative_test.py`, **which lives in the audit working set and
+not in this repo**) and the P15 `check_urls.py` are the manual halves. It is
+run from this repo's root against the audit set's copy, because it mutates
+the seed here and reads the build here.
 
 ### `value_low`, `value_high` and `value_type`
 

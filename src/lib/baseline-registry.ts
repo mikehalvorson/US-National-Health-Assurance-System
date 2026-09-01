@@ -280,9 +280,16 @@ export const CP_MIRROR_DIVERGENCES: Record<string, string> = {
     + 'and from the same pair of documents.'
 };
 
+/* Finding 5 [P16 review 3]: three places projected the catalog down to its
+ * CP rows, one of them a test asserting the premise the other two rest on.
+ * A premise asserted against a rebuilt copy of itself is not asserted. */
+export function catalogCpParameters(): QualityParameter[] {
+  return QUALITY_CATALOG.parameters.filter((p) => p.type === 'CP');
+}
+
 export function definitionMirrorDisagreements(): string[] {
   const out: string[] = [];
-  const mirror = QUALITY_CATALOG.parameters.filter((p) => p.type === 'CP');
+  const mirror = catalogCpParameters();
   const seen = new Set<string>();
   for (const p of mirror) {
     seen.add(p.id);
@@ -303,8 +310,7 @@ export function definitionMirrorDisagreements(): string[] {
    an exemption nobody retires is how a check quietly narrows. */
 export function staleMirrorDivergences(): string[] {
   const byId = new Map(
-    QUALITY_CATALOG.parameters.filter((p) => p.type === 'CP')
-      .map((p): [string, QualityParameter] => [p.id, p])
+    catalogCpParameters().map((p): [string, QualityParameter] => [p.id, p])
   );
   return Object.keys(CP_MIRROR_DIVERGENCES).filter(function (id) {
     const p = byId.get(id);
@@ -747,15 +753,22 @@ export function flaggedPriorityParameters(): { id: string; file: string; phrase:
  *
  * A right-hand boundary is enough on its own, since every id begins `RB-`, but
  * both sides are asserted so the rule reads as "this token, not this text". */
+/* Finding 5 [P16 review 3]: the test rebuilt this and dropped the escape,
+ * then said in a comment that it was exercising "the fix itself". It was
+ * exercising a copy that could not have caught the bug the escape prevents.
+ * Exported so there is one matcher and both sides run it. */
+export function namesIdAsToken(id: string, text: string): boolean {
+  return new RegExp(
+    '(?<![0-9A-Za-z])' + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![0-9A-Za-z])'
+  ).test(text);
+}
+
 export function unseededPriorityParameters(): string[] {
   const blob = BASELINE_ROWS
     .map((r) => r.description + ' ' + r.sourceName + ' ' + r.notes)
     .join(' ');
-  const namesId = (id: string) => new RegExp(
-    '(?<![0-9A-Za-z])' + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![0-9A-Za-z])'
-  ).test(blob);
   return flaggedPriorityParameters()
-    .filter((f) => !namesId(f.id) && !(f.id in PRIORITY_EXEMPT))
+    .filter((f) => !namesIdAsToken(f.id, blob) && !(f.id in PRIORITY_EXEMPT))
     .map((f) => f.id + ' (' + f.file + ', "' + f.phrase + '")');
 }
 

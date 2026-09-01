@@ -10,8 +10,21 @@
  * Build-time only. Imported by selftests.ts, which runs in Node during
  * `astro build` and under vitest; nothing in src/scripts/ imports it, so
  * node:fs never reaches a client bundle.
+ *
+ * Finding 6 [P16 review 3]: the module is no longer only about the file
+ * manifest, and pretending otherwise is how the divergence stayed
+ * invisible. It is every build-time check that READS THE REPO'S OWN TEXT -
+ * the manifest, rendered self-test names, README counts, research path
+ * citations, the build gate's wiring. The reason they share a home is the
+ * paragraph above: one module owns node:fs.
+ *
+ * For three functions that convention existed only as a comment here citing a
+ * convention nothing recorded. It is stated in full above now, which is where
+ * a reader of this repo can actually meet it - the agent knowledge base under
+ * .agent-kb/ carries it too, but that directory is gitignored on purpose, so
+ * pointing a reader at it would repeat finding 10 rather than close finding 6.
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -113,7 +126,19 @@ export function sourceText(rel: string, root = REPO_ROOT): string {
  * NOT flagged, and this is the whole judgement call: `KPP-W1` and `P8` are
  * framework vocabulary the site itself publishes - `P8` appears as "Phase 8"
  * on five pages - so they are the plan's language, not the document's codes. */
-const AUDIT_CODE_IN_RENDERED_TEXT: [RegExp, string][] = [
+/* Finding 2 [P16 review 3]: this used to match single-quoted names only.
+ * Of 183 call sites 179 are single-quoted, 3 are double-quoted and 1 passes
+ * a variable, so three names were outside the sweep. They were clean, which
+ * is the whole problem with a latent gap: nothing shows until one is not.
+ *
+ * Exported because `tests/lib/selftests.test.ts` inlined its own copy of
+ * both this and the pattern list, and the copy had three alternatives where
+ * the list below has eight - so the negative case proved the copy fired,
+ * not the shipped list. One list, one home. */
+export const SELF_TEST_NAME_CALL =
+  /runGuarded\(\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`)/;
+
+export const AUDIT_CODE_IN_RENDERED_TEXT: [RegExp, string][] = [
   [/§/, 'a section sign'],
   [/\bR[0-9]{1,3}\b/, 'a recommendation number'],
   [/\bS[0-9]{1,2}[a-z]?\b/, 'a section number'],
@@ -131,10 +156,10 @@ export function renderedSelfTestNameLeaks(root = REPO_ROOT): string[] {
   const rel = 'src/lib/selftests.ts';
   const code = maskComments(sourceText(rel, root));
   const out: string[] = [];
-  const call = /runGuarded\(\s*'((?:[^'\\]|\\.)*)'/g;
+  const call = new RegExp(SELF_TEST_NAME_CALL.source, 'g');
   let m: RegExpExecArray | null;
   while ((m = call.exec(code)) !== null) {
-    const name = m[1];
+    const name = m[1] ?? m[2] ?? m[3];
     const line = code.slice(0, m.index).split('\n').length;
     for (const [pattern, what] of AUDIT_CODE_IN_RENDERED_TEXT) {
       const hit = pattern.exec(name);
@@ -143,6 +168,34 @@ export function renderedSelfTestNameLeaks(root = REPO_ROOT): string[] {
           + '") in a self-test name: ' + name);
         break;
       }
+    }
+  }
+  return out;
+}
+
+/* Findings 2 and 11 [P16 review 3]: the sweep above reads the SOURCE, so a
+ * name the source does not spell is a name it cannot read. Rather than
+ * assert that gap is empty, measure it: this returns every site whose
+ * rendered name the sweep is structurally blind to, and the row that
+ * consumes it prints them. A gap nobody can see is a gap nobody closes.
+ *
+ * The other half is closed in vitest, which sweeps the RENDERED set with
+ * this same pattern list. Production cannot do that: a self-test calling
+ * selfTestSummary() from inside selfTestSummary() recurses to a timeout. */
+export function unsweptSelfTestNameSites(root = REPO_ROOT): string[] {
+  const rel = 'src/lib/selftests.ts';
+  const code = maskComments(sourceText(rel, root));
+  const out: string[] = [];
+  const any = /(function\s+)?runGuarded(List)?\(\s*(.)/g;
+  let m: RegExpExecArray | null;
+  while ((m = any.exec(code)) !== null) {
+    if (m[1]) continue; /* the declaration, not a call */
+    const line = code.slice(0, m.index).split('\n').length;
+    if (m[2]) {
+      out.push(rel + ':' + line + ' runGuardedList names its rows inside the'
+        + ' callee, where the source sweep cannot read them');
+    } else if (!/['"`]/.test(m[3])) {
+      out.push(rel + ':' + line + ' passes a variable as the self-test name');
     }
   }
   return out;
@@ -171,6 +224,30 @@ export function researchReadmeGateCount(root = REPO_ROOT): string | null {
   return m ? m[1] : null;
 }
 
+/* Finding 1 [P16 review 3]: the check above compares the spelled number and
+ * nothing else, so when the paragraph said fourteen and listed twelve it was
+ * green. 14 == 14. It never counted the list, which is the half that failed -
+ * inside the fix for the previous review's finding that the paragraph said
+ * nine and listed seven.
+ *
+ * The list is bullets now, one gate per line, because a comma-separated
+ * English list cannot be counted without guessing what a comma means. */
+export function researchReadmeGateList(root = REPO_ROOT): string[] {
+  const text = sourceText('research/README.md', root);
+  const m = text.match(/and \*\*[a-z]+\*\* self-tests\s*\ngate it:[ \t]*\n/);
+  if (!m) return [];
+  const out: string[] = [];
+  for (const line of text.slice(m.index! + m[0].length).split('\n')) {
+    if (line.trim() === '') {
+      if (out.length) break;
+      continue;
+    }
+    if (!line.startsWith('- ')) break;
+    out.push(line.slice(2).trim());
+  }
+  return out;
+}
+
 /* Counted from the SOURCE, and this is not a stylistic choice.
  *
  * ⚠️ The first version of the row that consumes this asked
@@ -190,20 +267,151 @@ export function registrySurfaceRowCount(root = REPO_ROOT): number {
   return (code.slice(start, end < 0 ? undefined : end).match(/runGuarded\(/g) || []).length;
 }
 
+/* Both halves, and they fail for different reasons: the number drifts when
+ * someone edits prose, the list drifts when someone adds a gate and stops
+ * after the number. Reporting them separately is what lets the negative test
+ * prove each one, which is how the list half got in unproved. */
 export function registryGateCountDrift(actual: number, root = REPO_ROOT): string[] {
+  const out: string[] = [];
   const said = researchReadmeGateCount(root);
-  if (said === null) {
-    return ['research/README.md no longer states how many self-tests gate the seed'];
-  }
   const want = NUMBER_WORDS[actual];
-  if (want === undefined) {
-    return ['the registry surface has ' + actual + ' rows, past the spelled range'];
+  if (said === null) {
+    out.push('research/README.md no longer states how many self-tests gate the seed');
+  } else if (want === undefined) {
+    out.push('the registry surface has ' + actual + ' rows, past the spelled range');
+  } else if (said !== want) {
+    out.push('research/README.md says ' + said + ' self-tests gate the seed; there are '
+      + want + ' (' + actual + ')');
   }
-  if (said !== want) {
-    return ['research/README.md says ' + said + ' self-tests gate the seed; there are '
-      + want + ' (' + actual + ')'];
+  const listed = researchReadmeGateList(root);
+  if (listed.length !== actual) {
+    out.push('research/README.md lists ' + listed.length + ' gates by name; there are '
+      + actual);
   }
-  return [];
+  return out;
+}
+
+/* Finding 10 [P16 review 3]: `research/README.md` cited
+ * `baseline-P16/negative_test.py`, which is load-bearing for its claim that
+ * every gate has a negative case, and which a reader of this repo cannot open -
+ * it lives in the audit working set. Sweeping the class rather than the
+ * instance found two more the review had not: the same shape in
+ * `05_it_governance_rd_transition.md`, and `tools/extract_docx.py` in
+ * `task_zero_findings.md`, which is the opposite - a true historical record of
+ * a file R131 deleted on purpose.
+ *
+ * That third one is why this is an exemption table and not a rule. A blanket
+ * "every cited path resolves" would fire on an accurate account of the past and
+ * push a writer to falsify it. So an unresolvable citation is allowed, once
+ * someone writes down why, next to the code that checks it - the shape
+ * `PRIORITY_EXEMPT` already uses one directory over.
+ *
+ * Scope, stated rather than assumed: backticked tokens containing `/`, no
+ * spaces, not a URL, ending in a source or data extension. A prose mention
+ * without backticks is out of scope and always was. */
+const RESEARCH_PATH_EXTENSIONS = [
+  '.py', '.ts', '.mjs', '.js', '.csv', '.md', '.json', '.astro', '.yml'
+];
+
+/* Two of these reasons END in a claim about the document - that the citation
+ * itself tells the reader the file is elsewhere. A reason that asserts
+ * something about a file and is checked against nothing is the defect this
+ * whole check exists to catch, one level up. So `disclose` is the string the
+ * citation must actually carry, and null means the reason stands on its own. */
+export interface PathExemption { why: string; disclose: string | null }
+
+export const RESEARCH_PATH_EXEMPT: Record<string, PathExemption> = {
+  'baseline-P16/negative_test.py': {
+    why: 'the negative-test harness, in the audit working set',
+    disclose: 'not in this repo'
+  },
+  'baseline-P16/migrate_seed.py': {
+    why: 'the P16 seed migration, in the audit working set',
+    disclose: 'not in this repo'
+  },
+  'tools/extract_docx.py': {
+    why: 'deleted at R131 after the .mjs port was proved against it; cited as history',
+    disclose: null
+  }
+};
+
+export function researchPathCitationLeaks(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  const files: string[] = [];
+  walk(join(root, 'research'), root, files);
+  for (const rel of files.filter((f) => f.endsWith('.md')).sort()) {
+    const text = sourceText(rel, root);
+    const tick = /`([^`\n]+)`/g;
+    let m: RegExpExecArray | null;
+    while ((m = tick.exec(text)) !== null) {
+      const tok = m[1].trim();
+      if (!tok.includes('/') || /\s/.test(tok)) continue;
+      if (tok.startsWith('http://') || tok.startsWith('https://')) continue;
+      if (!RESEARCH_PATH_EXTENSIONS.some((e) => tok.endsWith(e))) continue;
+      const line = text.slice(0, m.index).split('\n').length;
+      const exempt = RESEARCH_PATH_EXEMPT[tok];
+      if (exempt !== undefined) {
+        /* The window is the citing paragraph, not the file: a disclosure four
+           screens away is not a disclosure the reader of this line meets. */
+        const near = text.slice(Math.max(0, m.index - 400), m.index + 400);
+        if (exempt.disclose !== null && !near.includes(exempt.disclose)) {
+          out.push(rel + ':' + line + ' cites `' + tok + '`, exempt because '
+            + exempt.why + ', but the citation does not say "'
+            + exempt.disclose + '"');
+        }
+        continue;
+      }
+      if (existsSync(join(root, tok))) continue;
+      out.push(rel + ':' + line + ' cites `' + tok
+        + '`, which is not in this repo and is not an exempt citation');
+    }
+  }
+  return out;
+}
+
+/* An exemption nobody re-reads is a comment. This fails when a path on the
+   table above comes BACK, which is the moment the reason stops being true. */
+export function staleResearchPathExemptions(root = REPO_ROOT): string[] {
+  return Object.keys(RESEARCH_PATH_EXEMPT)
+    .filter((tok) => existsSync(join(root, tok)))
+    .map((tok) => tok + ' is exempt as absent, but exists in the tree now');
+}
+
+/* Finding 4 [P16 review 3]: a review read `health.astro:455` - which renders a
+ * failing row's `note`, and the notes added in fix run 4 carry CP-* and RB-*
+ * ids and research paths by design - and called it a golden-rule-2 breach. It
+ * is not, because `astro:build:start` runs `assertSelfTestsPass` before any
+ * route is emitted, so a red row stops the build instead of shipping.
+ *
+ * The finding was wrong and the reason it was wrong was asserted in five code
+ * comments and checked in none. Delete the integration from the config and
+ * every one of those comments keeps reading true while the gate is gone - and
+ * the config comment two files over already says out loud that it worries
+ * about exactly this. So the wiring is read, not assumed.
+ *
+ * Reading the text is the only option: importing the config would execute the
+ * gate this check is registered inside. */
+export function buildGateWiring(root = REPO_ROOT): string[] {
+  const rel = 'astro.config.mjs';
+  let text: string;
+  try {
+    text = sourceText(rel, root);
+  } catch {
+    return [rel + ' is missing, so nothing stops a failing self-test from shipping'];
+  }
+  const out: string[] = [];
+  const code = maskComments(text);
+  if (!/'astro:build:start'\s*:/.test(code)) {
+    out.push(rel + ' has no astro:build:start hook');
+  }
+  for (const call of ['assertSelfTestsPass(', 'assertReadmeCountCurrent(']) {
+    if (!code.includes(call)) out.push(rel + ' no longer calls ' + call + ')');
+  }
+  /* Defined and never registered is the failure this is really for. */
+  if (!/integrations:\s*\[[^\]]*selfTestGate\(\)/.test(code)) {
+    out.push(rel + ' defines the gate but does not register it in `integrations`');
+  }
+  return out;
 }
 
 function walk(dir: string, root: string, out: string[]): void {

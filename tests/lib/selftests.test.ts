@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { expect, test } from 'vitest';
@@ -11,8 +11,11 @@ import {
   selfTestSummary
 } from '../../src/lib/selftests';
 import {
-  readmeAdvertisedTestCount, registryGateCountDrift, registrySurfaceRowCount,
-  renderedSelfTestNameLeaks, researchReadmeGateCount
+  AUDIT_CODE_IN_RENDERED_TEXT, buildGateWiring, readmeAdvertisedTestCount,
+  registryGateCountDrift, registrySurfaceRowCount, renderedSelfTestNameLeaks,
+  researchPathCitationLeaks, researchReadmeGateCount, researchReadmeGateList,
+  RESEARCH_PATH_EXEMPT, sourceText, staleResearchPathExemptions,
+  unsweptSelfTestNameSites
 } from '../../src/lib/manifest-check';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
@@ -246,26 +249,68 @@ test('R155: the wrapped-sentence regression is caught', () => {
    binds it, and ten names carried audit codes - nine R-numbers and one section
    reference - through an inline review and a two-axis review. Nothing had ever
    read a self-test name. */
+/* Finding 3 [P16 review 3]: this file used to inline a three-alternative copy
+   of the pattern list. The shipped list has eight. `Appendix C`, `OI-014`,
+   `Table 3`, `Section 8` and `S9b` all passed the copy and fail production -
+   and OI-0xx, appendix and table numbers are codes golden rule 2 names by
+   hand. So the negative case below proved the COPY fired, not the list that
+   ships. One list, one home; it is imported now. */
+const hitsAuditCode = (name: string): boolean =>
+  AUDIT_CODE_IN_RENDERED_TEXT.some(([pattern]) => pattern.test(name));
+
 test('finding 1 / 17: no self-test name puts an internal code on the page', () => {
   expect(renderedSelfTestNameLeaks()).toEqual([]);
-  /* And the rendered set, not just the source: a row built anywhere else is
-     still a row the footer prints. */
-  for (const r of selfTestSummary().rows) {
-    expect(r.name).not.toMatch(/§|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/);
-  }
+  /* Finding 11 [P16 review 3]: the rendered set, not just the source, and with
+     the production list. This is the half production cannot run - a self-test
+     calling selfTestSummary() from inside selfTestSummary() recurses - so the
+     three sites that name their rows inside a callee are covered here or they
+     are covered nowhere. */
+  const rows = selfTestSummary().rows;
+  expect(rows.length).toBeGreaterThan(200);
+  expect(rows.filter((r) => hitsAuditCode(r.name)).map((r) => r.name)).toEqual([]);
+});
+
+test('finding 2: the source sweep says how much of the surface it cannot read', () => {
+  /* The sweep matched single-quoted names only for one run. Of 183 call sites
+     179 are single-quoted, 3 double-quoted and 1 passes a variable; the three
+     double-quoted names happened to be clean, so nothing showed. All three
+     quote styles are swept now, and what stays unreadable is counted rather
+     than assumed away - every site here is a row the test above covers from
+     the rendered side. */
+  const unswept = unsweptSelfTestNameSites();
+  expect(unswept).toHaveLength(3);
+  const code = sourceText('src/lib/selftests.ts');
+  expect((code.match(/runGuarded\(\s*"/g) || []).length).toBe(3);
+  expect((code.match(/runGuarded\(\s*'/g) || []).length).toBeGreaterThan(150);
 });
 
 test('finding 1 / 17: the leak check fires on the shape it was written for', () => {
   /* Written against a live defect and watched fail on all ten. Re-proved here
      against the exact strings, because the source they came from is now clean
      and a check with nothing left to catch is a check nobody can see work. */
+  /* The five the inline copy silently passed. Named one by one, because
+     losing one to a list edit should fail here rather than go quiet. */
+  for (const name of [
+    'The workforce split matches Appendix C',
+    'OI-014 is closed and the ledger says so',
+    'The unit mix agrees with Table 3',
+    'Section 8 targets are carried into the phase model',
+    'The scenarios named for S9b still stress unit cost'
+  ]) {
+    expect(hitsAuditCode(name)).toBe(true);
+    /* And every one of them passed the copy this file used to inline,
+       which is the whole reason the copy had to go. */
+    expect(name).not.toMatch(
+      /\u00a7|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/
+    );
+  }
   const codes = [
     'R129: CP-* is defined in one file and nowhere else',
     'The scenarios that stress unit cost still do, and are named for \u00a7S9b',
     'R1: a row graded medium or better says where its number came from'
   ];
   for (const name of codes) {
-    expect(name).toMatch(/§|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/);
+    expect(hitsAuditCode(name)).toBe(true);
   }
   /* KPP-W1 and P8 are framework vocabulary the site itself publishes - "Phase
      8" appears on five pages - so they are the plan's language and must NOT
@@ -274,7 +319,7 @@ test('finding 1 / 17: the leak check fires on the shape it was written for', () 
     'The worker-support rate agrees with KPP-W1, the derivation and the page',
     'Training progress is exactly complete at the P8 anchor'
   ]) {
-    expect(name).not.toMatch(/§|\bR[0-9]{1,3}\b|\b(?:CP|BL|RB)-(?:\*|[A-Z]{2,4}\b|[0-9])/);
+    expect(hitsAuditCode(name)).toBe(false);
   }
 });
 
@@ -291,6 +336,86 @@ test('finding 14: the seed documentation states the number of gates it has', () 
      lets the README run ahead of the code. */
   expect(registryGateCountDrift(rows + 1)).not.toEqual([]);
   expect(registryGateCountDrift(rows - 1)).not.toEqual([]);
+});
+
+/* Finding 1 [P16 review 3]: finding 14's own fix shipped a paragraph that said
+   fourteen and listed twelve, and the gate written to stop exactly that was
+   green - it compared 14 to 14 and never counted the list. The two halves fail
+   for different reasons, so they get separate cases; one case covering both is
+   how the list half went unproved. */
+test('finding 1: the gate counts the list, not only the spelled number', () => {
+  const rows = registrySurfaceRowCount();
+  const listed = researchReadmeGateList();
+  expect(listed).toHaveLength(rows);
+  expect(new Set(listed).size).toBe(listed.length);
+  /* The number half held while the list half was wrong, so break only the
+     list half and watch it fail on its own. */
+  const root = mkdtempSync(join(tmpdir(), 'nha-gatelist-'));
+  try {
+    mkdirSync(join(root, 'research'), { recursive: true });
+    const text = sourceText('research/README.md');
+    const dropped = text.replace('\n- the citation read-back', '');
+    expect(dropped).not.toBe(text);
+    writeFileSync(join(root, 'research/README.md'), dropped, 'utf8');
+    expect(researchReadmeGateCount(root)).toBe('fourteen'); /* number still right */
+    expect(researchReadmeGateList(root)).toHaveLength(rows - 1);
+    expect(registryGateCountDrift(rows, root).join(' ')).toMatch(/lists 13 gates by name/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/* Finding 4 [P16 review 3]: the review called health.astro's rendering of a
+   failing row's note a rule-2 breach. It is not - the build refuses a failing
+   row first - but that answer rested on five comments and no check. */
+test('finding 4: the build gate that makes a rendered note safe is wired', () => {
+  expect(buildGateWiring()).toEqual([]);
+  const text = sourceText('astro.config.mjs');
+  /* One temp root PER mutation, and this is not tidiness. sourceText memoises
+     by root+path, so rewriting one temp file twice serves the first content to
+     the second case - which silently passed the second assertion here until it
+     happened to expect a different message. A negative test that reuses a path
+     through a cached reader proves one case and reports two. */
+  const breaks: [string, string, RegExp][] = [
+    /* Defined and never registered: the failure the config comment names, and
+       the one no comment could have caught. */
+    ['integrations: [selfTestGate()]', 'integrations: []', /does not register it/],
+    ['assertSelfTestsPass(summary);', '', /no longer calls assertSelfTestsPass/],
+    ["'astro:build:start': (ctx)", "'astro:build:done': (ctx)", /no astro:build:start hook/]
+  ];
+  for (const [from, to, want] of breaks) {
+    const root = mkdtempSync(join(tmpdir(), 'nha-gate-'));
+    try {
+      const broken = text.replace(from, to);
+      expect(broken).not.toBe(text);
+      writeFileSync(join(root, 'astro.config.mjs'), broken, 'utf8');
+      expect(buildGateWiring(root).join(' ')).toMatch(want);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }
+  expect(buildGateWiring(mkdtempSync(join(tmpdir(), 'nha-gate-absent-')))).toHaveLength(1);
+});
+
+/* Finding 10 [P16 review 3]: research/README.md cited a path a reader of this
+   repo cannot open, load-bearing for its claim that every gate has a negative
+   case. The class sweep found two more the review had not. */
+test('finding 10: every cited research path resolves, or is exempt with a reason', () => {
+  expect(researchPathCitationLeaks()).toEqual([]);
+  expect(staleResearchPathExemptions()).toEqual([]);
+  /* Two exemptions rest on a claim about the document - that the citation
+     itself tells the reader the file is elsewhere. An unchecked claim about a
+     file is the defect this check exists to catch, so the disclosure is read
+     at the citation. */
+  const disclosed = Object.entries(RESEARCH_PATH_EXEMPT)
+    .filter(([, e]) => e.disclose !== null);
+  expect(disclosed.length).toBeGreaterThan(0);
+  const readme = sourceText("research/README.md");
+  for (const [tok, e] of disclosed) {
+    if (!readme.includes(tok)) continue;
+    const at = readme.indexOf(tok);
+    expect(readme.slice(Math.max(0, at - 400), at + 400)).toContain(e.disclose!);
+  }
 });
 
 test('finding 14: the row counts the source and never executes its own surface', () => {

@@ -3,13 +3,12 @@ import {
   BASELINE_ROWS, CP_DEFINITIONS, MEASURES_STATUSES, PRIORITY_EXEMPT, VALUE_TYPES,
   baselineIdProblems, baselineRow, bindProblems, definitionNamespaceLeaks,
   extractDisagreements, flaggedPriorityParameters, idsResolvingToTwoDefinitions,
-  boundCuts, definedResearchIds,
+  boundCuts, catalogCpParameters, definedResearchIds, namesIdAsToken,
   letterSuffixedIdentifiers, letterSuffixedOrigins, measuresStatusCounts,
   multiBindProblems, parseCsv, researchReferenceProblems,
   CP_MIRROR_DIVERGENCES, definitionMirrorDisagreements, staleMirrorDivergences,
   resolveDefinition, stalePriorityExemptions, unseededPriorityParameters, valueTypeProblems
 } from '../../src/lib/baseline-registry';
-import { NHA_QUALITY_DATA } from '../../src/lib/quality-data';
 
 /* R129 [§S10]: two registries claimed the CP-* prefix, so 57 of 80 seed ids
    and 143 of 160 research ids bound a different quantity than the canonical id
@@ -286,12 +285,17 @@ test('finding 12: a flagged id is matched as a token, not as a substring', () =>
   const ids = [...definedResearchIds()];
   const prefixPairs = ids.filter((a) => ids.some((b) => b !== a && b.startsWith(a)));
   expect(prefixPairs).toEqual([]);
-  /* The fix itself, exercised on the shape the ids happen not to have yet. */
-  const boundary = (id: string, hay: string) =>
-    new RegExp('(?<![0-9A-Za-z])' + id + '(?![0-9A-Za-z])').test(hay);
+  /* Finding 5 [P16 review 3]: this said "the fix itself, exercised" while
+     rebuilding the matcher without its escape, so it exercised a copy that
+     could not fail the way the original can. The production function is
+     imported now. */
   expect('RB-04-LTC-011'.includes('RB-04-LTC-01')).toBe(true);
-  expect(boundary('RB-04-LTC-01', 'seeded as RB-04-LTC-011 in the notes')).toBe(false);
-  expect(boundary('RB-04-LTC-011', 'seeded as RB-04-LTC-011 in the notes')).toBe(true);
+  expect(namesIdAsToken('RB-04-LTC-01', 'seeded as RB-04-LTC-011 in the notes')).toBe(false);
+  expect(namesIdAsToken('RB-04-LTC-011', 'seeded as RB-04-LTC-011 in the notes')).toBe(true);
+  /* The escape the copy dropped: a metacharacter in an id must match
+     itself, not act as a wildcard. */
+  expect(namesIdAsToken('RB-04.LTC', 'seeded as RB-04XLTC in the notes')).toBe(false);
+  expect(namesIdAsToken('RB-04.LTC', 'seeded as RB-04.LTC in the notes')).toBe(true);
 });
 
 /* ---- P16 fix run 4: findings 14, 15 and 16 ------------------------------ */
@@ -303,7 +307,7 @@ test('finding 15: the quality catalog is a second definition source, and it is c
      wrong surface: quality-data.ts carries the WHOLE dictionary. If that ever
      stops being true the mirror check is guarding nothing, so the premise is
      asserted rather than assumed. */
-  const mirrored = NHA_QUALITY_DATA.parameters.filter((p: { type: string }) => p.type === 'CP');
+  const mirrored = catalogCpParameters();
   expect(mirrored.length).toBe(CP_DEFINITIONS.size);
   expect(CP_DEFINITIONS.size).toBe(310);
   /* Two real divergences, declared by id with a reason. A declaration with no
