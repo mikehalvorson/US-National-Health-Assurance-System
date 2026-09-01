@@ -150,7 +150,8 @@ import {
   denominatorSumDrift, HOUSEHOLD_DENOMINATORS,
   MONTE_CARLO_DRAWS, OFFSET_ARCHITECTURE_DOC, PARAM_DEFS, paramProseCatalogCodes,
   PARAMS_BY_ID, RAMPS, RAMP_MILESTONES, RESEARCH_RECOMMENDATIONS, SEED_STABILITY,
-  SPONSOR_SHARE, START_YEAR, transitionEnvelope, OUTCOME_STATS
+  SPONSOR_SHARE, START_YEAR, transitionEnvelope, OUTCOME_STATS,
+  parameterSourceBacklog, unsourcedGradedParameters
 } from './params';
 import {
   EXPANSION_SPAN, LTC_BENEFIT_PHASE, PHASE_YEAR, ROLLOUT_HEADLINES, WORKSTREAMS,
@@ -3073,6 +3074,22 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          ltc.ts is not swept here: §BV10 makes its per-figure grades the model
          for the rest, and they are typed at their declarations rather than
          collected into any list this could read. */
+      /* R135 [§S11b]: the seed's sourcing rule, applied to the module the
+         live engine actually reads. Nine medium-graded parameters carried an
+         empty url through five sections because nothing here looked. The
+         backlog is printed rather than counted into a bare pass, the way the
+         seed's version does it. */
+      runGuarded('Every parameter graded medium or better says where its number came from', () => {
+        const bad = unsourcedGradedParameters();
+        const backlog = parameterSourceBacklog();
+        return {
+          ok: !bad.length,
+          note: bad.length
+            ? bad.slice(0, 3).join(' | ')
+            : backlog.length + ' parameter(s) have no source_url, all graded below'
+              + ' medium and each saying why: ' + backlog.slice(0, 4).join(', ')
+        };
+      }),
       runGuarded('Every graded surface uses the one declared confidence scale', () => {
         const bad: string[] = [];
         const check = (where: string, rows: readonly { confidence?: string }[]) => {

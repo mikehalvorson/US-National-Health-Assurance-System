@@ -6119,17 +6119,17 @@ same commits, which its own gate required.
 ---
 
 ## P17 — §S11b Live-code sourcing & confidence · 2026-08-31 · branch `nha-remediation`
-STATUS: partial — the premise pass is complete and `R138` has landed. The
-sourcing half (`R135`'s nine URLs, `R218`, `R252`, `R130`) is untouched and
-needs the network.
+STATUS: partial. The premise pass is complete; `R138` and `R135` have landed.
+`R218`, `R252` and `R130` are the sourcing work still open.
 
 DISCREPANCY: **five of seventeen recommendations rest on premises the code
 contradicts.** Each is below with what was measured. In every case the code
 wins, per Standing Order 0.
 
-LANDED: `R138`
-URLS: 9 backfilled? **no**; remaining `url:""` in `params.ts`: **16** (9 `medium`,
-7 `low`) — the target of 0 is untouched.
+LANDED: `R138`, `R135`
+URLS: 9 backfilled? **yes** - eight cited against verified page content, one
+downgraded because no source for it exists. Remaining `url:""` in
+`params.ts`: **8**, every one graded `low` and saying why.
 
 ### Entry gate
 
@@ -6258,3 +6258,118 @@ measured in one section, and every one of them was cheap to check and expensive
 to have implemented. `R138` is the sharp case: implemented as written, it would
 have looked like tidying and been a re-grading of nineteen sourced rows.
 **Measure the premise. The recommendation is a hypothesis about the code.**
+
+### R135: the nine URLs, and the two citations that did not carry their numbers
+
+Nine parameters graded `medium` carried `url: ""`. The prompt calls this
+transcription rather than research, and it mostly was - the seed CSV and
+`research/01`-`05` already held the citations. What it was not is a copy job,
+because **two of the nine were pointing at the wrong source and one of them had
+no source to point at.**
+
+Every URL below was verified against the page's own content, not its status
+code. That distinction is not ceremony here: it is the third time in this
+campaign that a citation has resolved, been topically right, and not carried
+its number.
+
+| Parameter | Citation | How it was verified |
+|---|---|---|
+| `governanceRate` | SSA administrative expenses by trust fund | Read the page. It carries the ratio the parameter is: *"one percent or less of combined cost"* since 1989, and the 0.3% / 1.9% split brackets the 0.5-1.4% band. Chosen over the HHS OIG and GAO analogues because those are dollar budgets for differently-scoped bodies, and this parameter is a rate. |
+| `careModelSavings` | CDC/NCHS ED visit estimates (NHAMCS) | Read the page. Right source for the 155M visit count. |
+| `lowValueCapture` | **none, and downgraded to `low`** | See below. |
+| `bhExpansion` | SAMHSA 2023 NSDUH annual national report | 200, title matches, needles hit. |
+| `dvhExpansion` | CMS NHE fact sheet | 200, carries the dental category. |
+| `emsPhExpansion` | CMS Ground Ambulance Data Collection System | 200, title matches. |
+| `rdPublic` | CBO, *Research and Development in the Pharmaceutical Industry* | **Verbatim**: *"In 2019, the pharmaceutical industry spent $83 billion dollars on R&D."* |
+| `workforceEdu` | the study summary carrying the PRA range | **Verbatim**: `105,761`, `182,233` and the `$150,000` mark all present. |
+| `wealthCollectionEff` | Saez-Zucman memo to Sen. Warren | **Verbatim**: *"households subject to the wealth tax are able to reduce their tax liability by 15% through a combination of tax evasion and tax avoidance"* - which is the 85% the parameter cites. |
+
+`cbo.gov`, `ssa.gov` and `cdc.gov` all refuse automated fetch with 403, so those
+three were read in a browser rather than by `curl`. **A 403 is a bot block and
+not a dead link**, which `baseline-P15/check_urls.py` already says; what it does
+not do is tell you whether the page carries the figure, and for `rdPublic` that
+turned out to be the whole question.
+
+### 🛑 `workforceEdu`: the source did not contain the number
+
+`research/02`'s `RB-02-EDU-001` attributed the **$105,761-$182,233** per-resident
+amount range to a named MedPAC contractor report, and `params.ts` carried the
+attribution forward as *"$100-180k/resident/yr (CMS/MedPAC)"*.
+
+**It is not in that report.** Fetched and extracted whole - 94 pages, 231,000
+characters, so extraction plainly worked - and neither figure appears in any
+formatting, with or without the comma, and neither does the `$150,000` mark.
+The report is topically correct: it discusses per-resident amounts at length and
+has a table of them. Its own PRAs run about **$57k to $150k**, which does not
+support the `$100-180k` range either.
+
+All three numbers are in the Fierce Healthcare summary `research/02` lists
+separately for a different figure. Both files are corrected: `params.ts` cites
+what carries the range, and `research/02` carries the correction at the row,
+with the measurement rather than an assertion.
+
+⚠️ **This is the same shape as `RB-05-GOV-006`, where two URLs fetch 200 and
+neither carries the "net cost of health insurance" figure.** Twice now the
+defect has been a citation that a reader would accept and a fetcher would pass.
+A URL check that reads status codes cannot find either one.
+
+### `lowValueCapture`: downgraded rather than given a URL that fits
+
+The parameter is the **share** of low-value care that a records mesh and
+protocol stewardship actually remove. The waste literature sizes the pool -
+`lowValuePool` is $75.7-101.2B/yr with a real citation - and does not estimate
+what fraction of it any intervention removes.
+
+So there was a URL available that would have looked right and been wrong: the
+pool's own source. Attaching it would have produced exactly the defect above,
+authored deliberately. **Graded `low` instead, with the search recorded in the
+prose so the next pass does not repeat it**, following the seed's precedent
+where a hearing-aid row was *"DOWNGRADED FOR ABSENCE OF A CITATION, NOT ON THE
+EVIDENCE."*
+
+⚠️ This has a consequence worth naming: `§BT4` says the FMEA borrows cost-
+parameter likelihood from the confidence grade, so a downgrade moves a published
+risk ranking. That is the honest direction - the grade now reflects the evidence
+- and it is `R264`'s territory, which is still open.
+
+### Three attributions corrected in passing
+
+The nine parameters' `source` strings are rendered on the Healthcare chapter, so
+they are reader prose under golden rule 2 and a wrong attribution there is
+published. Three were compressing two or three sources into one parenthetical:
+
+- `careModelSavings` read *"155M ED visits x $2,453 avg (CDC NHAMCS)"*. The
+  **$2,453 is Peterson-KFF, not CDC** - the seed row for this same pair was
+  corrected for precisely this in P15, and `params.ts` had not been.
+- `dvhExpansion` cited three figures as one. Dental is CMS; vision is a Vision
+  Council industry estimate including non-medical eyewear; **the $4,672
+  hearing-aid figure has no primary source located at all**, which its seed row
+  already records.
+- `rdPublic` read *"(PhRMA/CBO)"* across a `$83-105B` band whose two ends come
+  from differently-scoped counts.
+
+Each now says which figure the citation covers and which it does not.
+
+### The check `params.ts` did not have
+
+The prompt said `params.ts` needs the seed's ninth check and does not have it,
+and to copy the shape rather than design a new one. `unsourcedGradedParameters()`
+fails the build on a parameter graded `medium` or better with no `url`;
+`parameterSourceBacklog()` prints the honestly-uncited ones by id, because a bare
+pass hides a gap.
+
+**Eight parameters remain with no URL and all eight are graded `low`.** That is
+the state the rule permits and the note names them, so the number can go down
+rather than disappear.
+
+`URLS: 9 backfilled? yes (8 cited + 1 downgraded); remaining url:"" in
+params.ts: 8, all below medium` - the exit protocol's target of 0 covers those
+eight too, and they are the `low`-graded set P17's handoff says to re-measure
+rather than carry forward.
+
+### Gates
+
+`pnpm test` **527 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
+**14 pages**, self-tests **241 of 241**. `negative_test.py` **33 of 33**, the new
+case watched failing: re-grading `lowValueCapture` back to `medium` turns the row
+red, which is the exact defect the rule forbids.

@@ -38,7 +38,7 @@
  *  - `transitionShape` and `itCapitalShape` are outlay profiles whose
  *    provenance no pass has confirmed either way (BS4/R254).
  * ========================================================================= */
-import type { ParamDef } from './model-types';
+import { isSourcedGrade, type ParamDef } from './model-types';
 
 /* R41 [§S5]: the research files this parameter base reconciles against, as
    data. Checked to exist on disk, so the header cannot outlive them. */
@@ -452,8 +452,8 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Independent oversight, appeals, safety & legitimacy bodies",
     low: 0.5, mode: 0.9, high: 1.4,
     confidence: "medium",
-    source: "The plan sets aside 0.25–0.5% for the legitimacy layer alone; HHS OIG/GAO/SSA analogues (research/05) add the oversight/ombudsman/adaptation bodies. Distinct from claims administration above.",
-    url: "",
+    source: "The plan sets aside 0.25–0.5% for the legitimacy layer alone; HHS OIG/GAO/SSA analogues add the oversight/ombudsman/adaptation bodies. Distinct from claims administration above. The citation is the SSA analogue, which is the one that carries a RATIO rather than a budget line: administrative expenses have been one percent or less of combined trust-fund cost every year since 1989, and the 0.3% retirement / 1.9% disability split brackets this band. The HHS OIG and GAO budgets are dollar figures for differently-scoped bodies and are comparators, not the anchor.",
+    url: "https://www.ssa.gov/oact/STATS/admin.html",
     adjustable: false
   },
 
@@ -463,16 +463,16 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "ED diversion + avoidable admission + readmission savings",
     low: 10, mode: 25, high: 45,
     confidence: "medium",
-    source: "155M ED visits × $2,453 avg (CDC NHAMCS); disputed avoidable share 25–67% (research/02); the plan targets at least a 30% reduction in low-acuity ED use. Net of unit-network substitution cost, which is priced separately in the units category.",
-    url: "",
+    source: "155M ED visits (CDC NHAMCS) × $2,453 average cost. The two figures come from two places and the citation covers the first: $2,453 is the Peterson-KFF Health System Tracker, NOT CDC, and pairing them under one attribution is what the seed row for this pair was corrected for. Avoidable share is disputed 25–67%; the plan targets at least a 30% reduction in low-acuity ED use. Net of unit-network substitution cost, which is priced separately in the units category.",
+    url: "https://www.cdc.gov/nchs/dhcs/ed-visits/index.htm",
     adjustable: false
   },
   {
     id: "lowValueCapture", group: "Care model", unit: "%",
     label: "Share of low-value/duplicate-testing spend eliminated",
     low: 15, mode: 30, high: 45,
-    confidence: "medium",
-    source: "Capture via records mesh + protocol stewardship, applied to the lowValuePool parameter rather than to a fixed pool: the pool is how much low-value care there is to find, this is the share a records mesh and protocol stewardship actually remove, and they are separate uncertainties.",
+    confidence: "low",
+    source: "ASSUMPTION, and downgraded from medium for the absence of a citation rather than on the evidence. Applied to the lowValuePool parameter rather than to a fixed pool: the pool is how much low-value care there is to find, this is the share a records mesh and protocol stewardship actually remove, and they are separate uncertainties. The pool is measured and cited; the capture share is not. R135 searched for it: the waste literature sizes low-value care and does not estimate what fraction of it a records mesh and protocol stewardship remove, so citing the pool's source here would attach a URL that does not carry this number.",
     url: "",
     adjustable: false
   },
@@ -519,8 +519,8 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Behavioral health / SUD expansion",
     low: 40, mode: 70, high: 110,
     confidence: "medium",
-    source: "27.1M untreated AMI + 41.1M untreated SUD (SAMHSA NSDUH); MH+SUD spend $139.6B (2021). Serving a large share of unmet need at current unit costs.",
-    url: "",
+    source: "27.1M untreated AMI + 41.1M untreated SUD (SAMHSA NSDUH, cited here) alongside MH+SUD spend of $139.6B in 2021, which is a separate Health Affairs figure and a different vintage. Serving a large share of unmet need at current unit costs.",
+    url: "https://www.samhsa.gov/data/report/2023-nsduh-annual-national-report",
     adjustable: false
   },
   {
@@ -528,8 +528,8 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Dental, vision & hearing expansion",
     low: 35, mode: 60, high: 95,
     confidence: "medium",
-    source: "Dental NHE $173.8B (2023) mostly private; vision market $68.3B; hearing aids avg $4,672/pair (research/04). Universal coverage raises utilization among the currently-uncovered.",
-    url: "",
+    source: "Dental NHE $173.8B (2023), mostly private - the citation, and the only one of the three with a primary source. Vision is a $68.3B industry market estimate from The Vision Council, not CMS, and includes non-medical eyewear. The $4,672 average hearing-aid pair has NO primary source located: the seed row carrying that same figure was downgraded for exactly that. Universal coverage raises utilization among the currently-uncovered.",
+    url: "https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/nhe-fact-sheet",
     adjustable: false
   },
   {
@@ -537,8 +537,8 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "EMS readiness + public health & prevention boost",
     low: 25, mode: 45, high: 75,
     confidence: "medium",
-    source: "Ground ambulance $2,673 mean cost (GADCS); ambulance deserts 8.9% of rural residents; TFAH $4.5B state/local public-health shortfall; framework's readiness-payment model.",
-    url: "",
+    source: "Ground ambulance $2,673 mean cost per transport, from CMS's mandatory Ground Ambulance Data Collection System - the citation. Ambulance deserts at 8.9% of rural residents and the TFAH $4.5B state/local public-health shortfall are separate sources carried in the research files. Plus the framework's readiness-payment model.",
+    url: "https://www.cms.gov/medicare/payment/fee-schedules/ambulance/medicare-ground-ambulance-data-collection-system",
     adjustable: false
   },
   {
@@ -555,8 +555,8 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Public biomedical R&D (innovation delinkage replacing monopoly-price financing)",
     low: 50, mode: 85, high: 120,
     confidence: "medium",
-    source: "Pharma industry R&D $83–105B/yr (PhRMA/CBO); NIH base $47B. The framework replaces price-based R&D recovery with public funding (ASM-001/002); this is the replacement cost.",
-    url: "",
+    source: "Pharma industry R&D $83–105B/yr. The citation is CBO, which states $83B for 2019 and is the conservative US-focused end; the top of the band is PhRMA-member reporting, which is scoped differently year to year. NIH base $47B is a third figure with its own source. The framework replaces price-based R&D recovery with public funding (ASM-001/002); this is the replacement cost.",
+    url: "https://www.cbo.gov/publication/57126",
     adjustable: false
   },
   {
@@ -564,8 +564,8 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Workforce pipeline: 55k training slots, scholarships, Rural Service Corps",
     low: 15, mode: 25, high: 40,
     confidence: "medium",
-    source: "Medicare GME $100–180k/resident/yr (CMS/MedPAC) × the plan's 55,000 new residency slots + AAMC debt-relief scale + rural incentives.",
-    url: "",
+    source: "Medicare GME $100–180k/resident/yr × the plan's 55,000 new residency slots, plus AAMC debt-relief scale and rural incentives. The attribution used to read CMS/MedPAC and that was wrong: R135 extracted the MedPAC contractor report it pointed at and the $105,761–$182,233 per-resident-amount range is not in it, in any formatting - that report's own per-resident amounts run about $57k to $150k. The range is in the study summary cited here.",
+    url: "https://www.fiercehealthcare.com/practices/study-suggests-medicare-overpaying-1-28b-annually-to-support-residency-programs",
     adjustable: false
   },
   {
@@ -642,8 +642,8 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Wealth-tax collection efficiency",
     low: 70, mode: 84, high: 92,
     confidence: "medium",
-    source: "The plan targets at least 92%; Saez–Zucman assume 85%; critics argue much lower. Applied to gross potential above.",
-    url: "",
+    source: "The plan targets at least 92%. Saez–Zucman assume 85%, stated in the cited memo as households reducing liability by 15% through evasion and avoidance combined; critics argue much lower. Applied to gross potential above.",
+    url: "https://www.warren.senate.gov/imo/media/doc/Wealth%20Tax%20Revenue%20Estimates%20by%20Saez%20and%20Zucman%20-%20Feb%2024%2020211.pdf",
     adjustable: true, sliderMin: 40, sliderMax: 95
   }
 ];
@@ -679,6 +679,41 @@ export const RESEARCH_RECOMMENDATIONS: ResearchRecommendation[] = [
 ];
 
 /* Quick lookup map */
+/* R135 [§S11b]: a parameter graded medium or better states where its number
+ * came from.
+ *
+ * This is baseline-registry.ts's ninth check, one layer up, and P17 said in so
+ * many words to copy the shape rather than design a new one. The seed has had
+ * this gate since P15; params.ts is what the live engine reads and it had
+ * nothing, so nine medium-graded parameters carried an empty url through five
+ * sections.
+ *
+ * Two things are deliberate, both taken from the seed's version:
+ *
+ * 1. The honestly-ungraded are PRINTED, not counted into a bare pass. A
+ *    parameter with no external source is fine as long as it is graded low and
+ *    says so; a gap nobody can see is a gap nobody closes.
+ * 2. Failure is on grade-without-citation, never on the absence of a citation
+ *    by itself. lowValueCapture went the other way for exactly this reason:
+ *    no study estimates what share of low-value care a records mesh removes,
+ *    so it is graded low with the search recorded, rather than pointed at the
+ *    pool's URL, which does not carry that number. */
+export function unsourcedGradedParameters(): string[] {
+  return PARAM_DEFS
+    .filter((d) => d.confidence !== undefined
+      && isSourcedGrade(d.confidence)
+      && (d.url === undefined || d.url.trim() === ''))
+    .map((d) => d.id + ' (' + d.confidence + ') ' + (d.label || ''));
+}
+
+/* The other half of the pair: which parameters are honestly without a source.
+   Reported so the number is visible and can go down, not asserted away. */
+export function parameterSourceBacklog(): string[] {
+  return PARAM_DEFS
+    .filter((d) => d.url === undefined || d.url.trim() === '')
+    .map((d) => d.id + ' (' + (d.confidence ?? 'ungraded') + ')');
+}
+
 export const PARAMS_BY_ID: Record<string, ParamDef> = {};
 PARAM_DEFS.forEach(function (p) { PARAMS_BY_ID[p.id] = p; });
 

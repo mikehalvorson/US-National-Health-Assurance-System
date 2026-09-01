@@ -21,6 +21,9 @@ import {
   CONFIDENCE_GRADES, isConfidence, isSourcedGrade
 } from '../../src/lib/model-types';
 import { SOURCED_GRADES } from '../../src/lib/baseline-registry';
+import {
+  PARAM_DEFS, parameterSourceBacklog, unsourcedGradedParameters
+} from '../../src/lib/params';
 
 test('selfTestSummary: every model + bridge + tax self-test passes', () => {
   const s = selfTestSummary();
@@ -367,6 +370,38 @@ test('finding 1: the gate counts the list, not only the spelled number', () => {
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+/* R135 [P17 SS11b]: nine medium-graded parameters in params.ts carried an empty
+   url through five sections, because the seed had a sourcing gate and the module
+   the live engine reads had none. This is the seed's rule, one layer up. */
+test('R135: no parameter is graded medium or better with no citation', () => {
+  expect(unsourcedGradedParameters()).toEqual([]);
+
+  /* The nine, closed. Named so that losing one to an edit fails here. */
+  const nine = [
+    'governanceRate', 'careModelSavings', 'lowValueCapture', 'bhExpansion',
+    'dvhExpansion', 'emsPhExpansion', 'rdPublic', 'workforceEdu',
+    'wealthCollectionEff'
+  ];
+  for (const id of nine) {
+    const d = PARAM_DEFS.find((x) => x.id === id);
+    expect(d, id).toBeDefined();
+    /* Either it now cites something, or it is graded below medium and says so.
+       lowValueCapture is the second kind: no study estimates what share of
+       low-value care a records mesh removes, so it was downgraded rather than
+       pointed at the pool's URL, which does not carry that number. */
+    const cited = (d!.url ?? '').trim() !== '';
+    const graded = d!.confidence !== undefined && SOURCED_GRADES.includes(d!.confidence);
+    expect(cited || !graded, id).toBe(true);
+  }
+  expect(PARAM_DEFS.find((x) => x.id === 'lowValueCapture')!.confidence).toBe('low');
+
+  /* The backlog is reported, not asserted away. It must shrink or hold, never
+     silently become a bare pass. */
+  const backlog = parameterSourceBacklog();
+  expect(backlog.length).toBe(8);
+  for (const entry of backlog) expect(entry).toContain('(low)');
 });
 
 /* Finding 4 [P16 review 3]: the review called health.astro's rendering of a
