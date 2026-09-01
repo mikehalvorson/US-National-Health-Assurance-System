@@ -33,12 +33,15 @@
  * Known limits, in the same spirit as taxparams.ts's:
  *  - Ten engine constants are still unregistered literals (K2/R21); §S6a owns
  *    sourcing or grading them.
- *  - Sixteen parameters carry an empty `url` (R135); nine are graded medium
- *    and seven low, and §S11b owns them.
+ *  - Some parameters carry an empty `url`, and no count is stated here.
+ *    This bullet said sixteen, nine medium and seven low; R135 made all
+ *    three false in one commit, two screens above the change it made.
+ *    The live figures are in `parameterSourceBacklog()`, which computes
+ *    them, and in the self-test note that prints it.
  *  - `transitionShape` and `itCapitalShape` are outlay profiles whose
  *    provenance no pass has confirmed either way (BS4/R254).
  * ========================================================================= */
-import { isSourcedGrade, type ParamDef } from './model-types';
+import { isSourcedGrade, type Confidence, type ParamDef } from './model-types';
 
 /* R41 [§S5]: the research files this parameter base reconciles against, as
    data. Checked to exist on disk, so the header cannot outlive them. */
@@ -472,7 +475,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Share of low-value/duplicate-testing spend eliminated",
     low: 15, mode: 30, high: 45,
     confidence: "low",
-    source: "ASSUMPTION, and downgraded from medium for the absence of a citation rather than on the evidence. Applied to the lowValuePool parameter rather than to a fixed pool: the pool is how much low-value care there is to find, this is the share a records mesh and protocol stewardship actually remove, and they are separate uncertainties. The pool is measured and cited; the capture share is not. R135 searched for it: the waste literature sizes low-value care and does not estimate what fraction of it a records mesh and protocol stewardship remove, so citing the pool's source here would attach a URL that does not carry this number.",
+    source: "ASSUMPTION, and downgraded from medium for the absence of a citation rather than on the evidence. Applied to the lowValuePool parameter rather than to a fixed pool: the pool is how much low-value care there is to find, this is the share a records mesh and protocol stewardship actually remove, and they are separate uncertainties. The pool is measured and cited; the capture share is not. This was searched for: the waste literature sizes low-value care and does not estimate what fraction of it a records mesh and protocol stewardship remove, so citing the pool's source here would attach a URL that does not carry this number.",
     url: "",
     adjustable: false
   },
@@ -564,7 +567,7 @@ export const PARAM_DEFS: ParamDef[] = [
     label: "Workforce pipeline: 55k training slots, scholarships, Rural Service Corps",
     low: 15, mode: 25, high: 40,
     confidence: "medium",
-    source: "Medicare GME $100–180k/resident/yr × the plan's 55,000 new residency slots, plus AAMC debt-relief scale and rural incentives. The attribution used to read CMS/MedPAC and that was wrong: R135 extracted the MedPAC contractor report it pointed at and the $105,761–$182,233 per-resident-amount range is not in it, in any formatting - that report's own per-resident amounts run about $57k to $150k. The range is in the study summary cited here.",
+    source: "Medicare GME $100–180k/resident/yr × the plan's 55,000 new residency slots, plus AAMC debt-relief scale and rural incentives. The attribution used to read CMS/MedPAC and that was wrong. This pass extracted the MedPAC contractor report it pointed at and found that the $105,761–$182,233 per-resident-amount range is not in it, in any formatting - that report's own per-resident amounts run about $57k to $150k. The range is in the study summary cited here.",
     url: "https://www.fiercehealthcare.com/practices/study-suggests-medicare-overpaying-1-28b-annually-to-support-residency-programs",
     adjustable: false
   },
@@ -699,19 +702,31 @@ export const RESEARCH_RECOMMENDATIONS: ResearchRecommendation[] = [
  *    so it is graded low with the search recorded, rather than pointed at the
  *    pool's URL, which does not carry that number. */
 export function unsourcedGradedParameters(): string[] {
-  return PARAM_DEFS
-    .filter((d) => d.confidence !== undefined
-      && isSourcedGrade(d.confidence)
-      && (d.url === undefined || d.url.trim() === ''))
-    .map((d) => d.id + ' (' + d.confidence + ') ' + (d.label || ''));
+  /* [P17 fix run 6]: ENGINE_CONSTANTS lives in this file, carries the same
+     `confidence` and `url` pair, and was outside this sweep. Latent rather than
+     live - its one medium-graded constant has a URL - but the rule is about the
+     pair, not about which array holds it. */
+  const graded = (c: string | undefined, url: string | undefined) =>
+    c !== undefined && isSourcedGrade(c) && (url === undefined || url.trim() === '');
+  return [
+    ...PARAM_DEFS
+      .filter((d) => graded(d.confidence, d.url))
+      .map((d) => d.id + ' (' + d.confidence + ') ' + (d.label || '')),
+    ...ENGINE_CONSTANTS
+      .filter((c) => graded(c.confidence, c.url))
+      .map((c) => c.id + ' (' + c.confidence + ') engine constant')
+  ];
 }
 
 /* The other half of the pair: which parameters are honestly without a source.
    Reported so the number is visible and can go down, not asserted away. */
 export function parameterSourceBacklog(): string[] {
-  return PARAM_DEFS
-    .filter((d) => d.url === undefined || d.url.trim() === '')
-    .map((d) => d.id + ' (' + (d.confidence ?? 'ungraded') + ')');
+  return [
+    ...PARAM_DEFS.filter((d) => d.url === undefined || d.url.trim() === '')
+      .map((d) => d.id + ' (' + (d.confidence ?? 'ungraded') + ')'),
+    ...ENGINE_CONSTANTS.filter((c) => c.url === undefined || c.url.trim() === '')
+      .map((c) => c.id + ' (' + c.confidence + ')')
+  ];
 }
 
 export const PARAMS_BY_ID: Record<string, ParamDef> = {};
@@ -1059,7 +1074,10 @@ export interface EngineConstant {
   usedBy: string;
   basis: string;
   url: string;
-  confidence: 'high' | 'medium' | 'low';
+  /* R138 [P17 fix run 6]: was `'high' | 'medium' | 'low'`. R138 typed
+     ParamDef from the declared scale and left this one restating the
+     narrow three - the exact narrowing R138 existed to remove. */
+  confidence: Confidence;
   sampled: boolean;
 }
 

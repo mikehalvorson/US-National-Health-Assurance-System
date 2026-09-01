@@ -220,7 +220,7 @@ trusted." That claim was false the day it was written.** The same session
 recorded, in the same sitting, that two of the nine had no negative test; a
 later review then showed that three of them cannot fail at all.
 
-**All fourteen now have a case** in the negative-test harness described
+**All fourteen of them now have a case** in the negative-test harness described
 below, which holds failure cases and note cases. No count is given here: the
 harness lives in the audit working set, nothing in this repo can count it, and
 this campaign has now shipped three wrong counts in prose that no check

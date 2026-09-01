@@ -6120,7 +6120,9 @@ same commits, which its own gate required.
 
 ## P17 — §S11b Live-code sourcing & confidence · 2026-08-31 · branch `nha-remediation`
 STATUS: partial. The premise pass is complete; `R138` and `R135` have landed.
-`R218`, `R252` and `R130` are the sourcing work still open.
+`R218`, `R241`, `R252` and `R130` are the work still open. Corrected in fix run
+6: this line named three, and omitted `R241`, whose one real site the section
+itself measured and then inventoried nowhere.
 
 DISCREPANCY: **five of seventeen recommendations rest on premises the code
 contradicts.** Each is below with what was measured. In every case the code
@@ -6129,7 +6131,26 @@ wins, per Standing Order 0.
 LANDED: `R138`, `R135`
 URLS: 9 backfilled? **yes** - eight cited against verified page content, one
 downgraded because no source for it exists. Remaining `url:""` in
-`params.ts`: **8**, every one graded `low` and saying why.
+`params.ts`: **8** parameters, every one graded `low`, plus **4** engine
+constants in the same file that fix run 6 brought into the same sweep.
+MAGIC NUMBERS: `0.28` was already registered before this section (`R124`);
+`0.27` has one real unregistered site, `overview.ts:88` (`R241`). Neither is
+done here.
+RENTS: not started (`R145`). `rents` is `enabled: true` in all three goal
+scenarios and graded `low` with no external source.
+440 vs 430: arithmetic confirmed, the ten records are real, and **nothing
+identifies which ten**. No record carries a `basis` field or a `2026-08` string.
+Not marked `provisional`, per the prompt's own instruction not to grade on a
+premise that could not be reproduced.
+TRANSITIONSHAPE: provenance NOT settled. The contradiction `R254` reports does
+not exist; the real gap is that twelve hand-set fractions have no source and
+only their sum is gated.
+VOCABULARY: one scale, five grades, enforced. See `R138` below.
+FMEA: **not addressed.** `R264` asks that the FMEA stop borrowing probability
+from unsourced grades, and it is untouched. ⚠️ This section moved one grade -
+`lowValueCapture`, medium to low - so it has *changed* an FMEA likelihood
+without touching the mechanism that makes the grade load-bearing. That is the
+honest direction and it widens `R264` rather than closing it.
 
 ### Entry gate
 
@@ -6174,11 +6195,32 @@ that `transitionShape` exists and is doing exactly what it does. **The page and
 the code agree.** The residual real point is different and smaller: those twelve
 fractions have no source, and `model.ts:655` gates only that they sum to 1.
 
-**`R51` — stale.** *"`medications.ts` has no sources at all: none for `717.9`,
+**⚠️ `R51` — RETRACTED in fix run 6. The premise verdict below was wrong.**
+
+What was written: *"`medications.ts` has no sources at all: none for `717.9`,
 none for anything."* Measured through the module: **200 of 200 families carry a
 `source` and a `confidence`** (185 `high`, 15 `medium`). `R174` in `§S7` did
 this. `ALL_DRUG_SPEND_2024 = 717.9` carries a fifty-line provenance comment.
 What remains open is the 52 scenario overrides, which the "Done when" also names.
+
+🛑 **The correction.** A review re-read the field rather than its name.
+`source` on a drug family is `FamilySource = 'manufacturing-character' |
+'form-class'` - a key into `FAMILY_SOURCES`, which holds **methodology prose
+about how the qualification phase is derived**, not a citation. There are
+**zero** `http` strings in `medications.ts`. And `familyConfidence(r)` is
+`r.why ? 'medium' : 'high'`, so 185 families are graded `high` because a field
+is ABSENT.
+
+So `R51`'s *"no sources at all"* is closer to true than the verdict above.
+What P17 actually established is narrower: the 200 families carry a derivation
+tag and a derived grade, which is not the same as provenance, and the sourcing
+question `R51` asks is still open. ⚠️ Under `§BT4` those 185 `high` grades feed
+FMEA likelihood, which makes this the same defect class as `R264` rather than a
+documentation gap.
+
+**Why the first verdict was wrong is the part worth keeping: the premise was
+checked by asking whether a field named `source` was populated, not by reading
+what it contained.** A field name is not evidence of what is in it.
 
 **`R138` — backwards, and this one mattered.** See below.
 
@@ -6224,7 +6266,12 @@ a check could read. Stated rather than left as an unexplained absence.
 
 ### Recorded, not fixed
 
-- **`R135`, the nine URLs.** All nine name real studies in prose — Himmelstein,
+- **`R135`, the nine URLs. LANDED after this block was written** - see
+  `### R135: the nine URLs` below. The paragraph is left as it stood when
+  the premise pass ended, because it records what was true then; fix run 6
+  adds this line rather than silently editing it, since `59a3826` appended
+  its own section without reconciling this one and a reader met both.
+  All nine name real studies in prose — Himmelstein,
   CDC NHAMCS, SAMHSA NSDUH, PhRMA/CBO, MedPAC/CMS GME, Saez–Zucman, GADCS, TFAH.
   It is transcription, and it needs the network. The seven `low`-graded ones are
   a separate question: the P17 handoff's instruction to **re-measure rather than
@@ -6373,3 +6420,132 @@ rather than carry forward.
 **14 pages**, self-tests **241 of 241**. `negative_test.py` **33 of 33**, the new
 case watched failing: re-grading `lowValueCapture` back to `medium` turns the row
 red, which is the exact defect the rule forbids.
+
+### FIX RUN 6: the fourth two-axis review, and three defects authored inside their own fix
+
+Pinned at `a1c9776...HEAD`, so the diff was fix run 5, the P17 premise pass and
+`R135`. Both axes ran as parallel sub-agents. **Fourteen findings, all real, and
+every severe one was authored by the commit that was fixing that same class.**
+
+The ratio the previous handoff warned about has now held six times. This is the
+sharpest instance in the campaign so far, because it happened three separate
+ways in one session.
+
+#### 🛑 The three
+
+**1. An audit code reached rendered prose, in the commit whose log entry says
+that prose is rendered.** `params.ts` `lowValueCapture.source` and
+`workforceEdu.source` both contained the literal string `R135`.
+`health.astro:433` renders `{p.source}`. The `R135` log section states, in so
+many words, *"The nine parameters' `source` strings are rendered on the
+Healthcare chapter, so they are reader prose under golden rule 2."*
+
+The sweep over that exact surface walked past it. `paramProseCatalogCodes()`
+reads all six rendered fields and matches `catalogCode()`, which is
+`KPP|TPP|CP|SR|PR|OI|SN|GAP` and carries **no R-numbers** - while
+`AUDIT_CODE_IN_RENDERED_TEXT`, twelve files away, has had
+`[/\bR[0-9]{1,3}\b/, 'a recommendation number']` since fix run 2. **The surface
+was covered and the code class was not**, which is a third variant of the same
+shape as review 3's findings 2 and 3.
+
+Both strings are rewritten. `renderedParamProseAuditCodes()` now runs the
+audit-code list over the same six fields, and the two lists are complementary
+rather than nested - this one has the R-numbers and section signs, the catalog
+one has the KPP/TPP/SR/PR ids. Measured before wiring: over every parameter it
+hit exactly the two defects and nothing else.
+
+**2. A check that compared an expression to itself.**
+`baseline-registry.ts:796` defines `SOURCED_GRADES = CONFIDENCE_GRADES.slice(0, 3)`.
+The `R138` row then asserted
+`SOURCED_GRADES.join('|') !== CONFIDENCE_GRADES.slice(0, 3).join('|')`, with the
+comment *"two lists that agree today are still two lists."* There is one list -
+`R138` had just collapsed them - so the branch could not fail, **in the commit
+whose subject line is "checks that cannot fail."**
+
+Replaced with the property the slice is actually chosen for, which has two real
+sides: the sourced grades must be a **prefix** of the scale, and there must be
+at least one grade below them, or "medium or better" would mean "any grade" and
+the sourcing rule would be vacuous.
+
+**3. A count in a comment that no check maintains.**
+`manifest-check.ts` said *"Of 183 call sites 179 are single-quoted"*. Five new
+`runGuarded` rows in the same session made it 184, and the test that pins the
+neighbouring facts asserts `> 150`, so nothing could see it. The figures are
+gone; `unsweptSelfTestNameSites()` counts the live gap and the note prints it.
+
+#### The rest of the Standards axis
+
+- **`EngineConstant.confidence` was still `'high' | 'medium' | 'low'`.** `R138`
+  typed `ParamDef` from the declared scale and left this one restating the
+  narrow three - the exact narrowing `R138` existed to remove. Typed from
+  `Confidence` now.
+- **The `R138` row's failing set is smaller than it looks.** Of its five
+  surfaces, three are typed unions that `astro check` already guarantees; only
+  `OUTCOME_STATS` and the CSV-parsed seed can fail. They stay, because the
+  guarantee is a type and a type is one edit from `string`, but the row now
+  states which two are live rather than implying five.
+- **Two notes asserted what nothing computed.** The `R135` note said the backlog
+  was *"all graded below medium and each saying why"* - `parameterSourceBacklog()`
+  renders a missing grade as `(ungraded)`, and nothing reads the prose. The
+  gate-count note printed `rows` on **both** sides of *"spells and lists N
+  gates, and this block has N"*, so it could not have shown a disagreement even
+  in principle. Both print measured values now.
+- **`research/README.md` carried a second, ungated count** - *"All fourteen now
+  have a case"* - two clauses after the same paragraph explains that the
+  campaign shipped three wrong counts no check maintained. It is gated against
+  the same fourteen now.
+
+#### The Spec axis, and a retraction
+
+Both agents verified all eleven of review 3's findings closed, and all five
+premise verdicts correct. The Spec axis then found the premise pass had one
+verdict of its own wrong:
+
+🛑 **`R51` is retracted.** The verdict "stale, all 200 drug families carry a
+source and a grade" was reached by checking that a field named `source` was
+populated. `FamilySource` is `'manufacturing-character' | 'form-class'` - a key
+into methodology prose, not a citation - there are **zero** `http` strings in
+`medications.ts`, and `familyConfidence(r)` is `r.why ? 'medium' : 'high'`, so
+185 families are graded `high` **because a field is absent**. Under `§BT4` those
+grades feed FMEA likelihood. Retracted in place, above.
+
+**A field name is not evidence of what is in it.** That is the lesson worth
+carrying: the premise pass got four of five right by measuring and got this one
+wrong by reading a key.
+
+Also from that axis, and fixed:
+
+- `research/02`'s **Confidence** line still asserted the attribution the
+  CORRECTION line one row above retracts. Fix run 5 hit this exact shape in
+  `rename_research_ids.py` and fix run 6 reproduced it one file over.
+- The log listed `R135` under **Recorded, not fixed** while its own header said
+  `LANDED: R138, R135`. `59a3826` appended a section without reconciling the
+  block above it.
+- `R241`'s one real open site was measured, written up, and inventoried nowhere.
+- Six exit-protocol fields the prompt names were absent. All six are now in the
+  header, including **`FMEA:`, which appeared nowhere** - and which has to
+  record that this section *moved* a grade the FMEA borrows from without
+  touching `R264`'s mechanism.
+- `unsourcedGradedParameters()` swept `PARAM_DEFS` and not `ENGINE_CONSTANTS`,
+  which sits in the same file with the same `confidence` + `url` pair. Latent,
+  and now swept: the backlog is 8 parameters plus 4 engine constants.
+
+#### 🆕 A trap this fix run created and caught in ten seconds
+
+The first attempt at the stale-comment edit used `rindex`/`index` to locate a
+bullet and build a replacement window. `'low.'` matched far later in the file,
+so the window swallowed **869 lines of `params.ts`**. Caught by
+`git diff --stat` reading `-869` immediately after the write, and reverted.
+
+**Check `git diff --stat` after every scripted edit.** A patch script that
+computes its own boundaries is a patch script that can delete a file quietly;
+the assert fired on a string that was present, and the string being present says
+nothing about where the slice ends.
+
+#### Gates
+
+`pnpm test` **527 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
+**14 pages**, self-tests **241 of 241** (no rows added; the param-prose sweep
+folded into the row that already made that claim). `negative_test.py` **35 of
+35**, two cases added and both watched failing: an R-number in a rendered
+`source` string, and the second README count.

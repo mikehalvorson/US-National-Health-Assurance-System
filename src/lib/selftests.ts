@@ -92,7 +92,9 @@ import {
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, registryGateCountDrift,
   registrySurfaceRowCount, buildGateWiring,
-  renderedSelfTestNameLeaks, researchPathCitationLeaks,
+  renderedParamProseAuditCodes, renderedSelfTestNameLeaks,
+  researchPathCitationLeaks, researchReadmeGateCount,
+  researchReadmeGateList,
   staleResearchPathExemptions, unsweptSelfTestNameSites,
   retiredTreeCodeReferences,
   anchoredOccupationCodes, directCareHeadcountDrift, directCareSharedCount,
@@ -1131,17 +1133,23 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             RESIDUAL_CAVEAT_SITES.length + ' sites, one declared sentence'
         };
       }),
-      runGuarded('No catalog code reaches reader prose on these two chapters', () => {
+      runGuarded('No internal code reaches reader prose on these two chapters', () => {
         const hits = narrativeCatalogCodes();
         const inCards = careProseCatalogCodes();
         const inParams = paramProseCatalogCodes();
+        /* [P17 fix run 6]: the catalog sweep matches KPP/TPP/CP/SR/PR/OI/SN/GAP
+           and no R-numbers, so it covered these six fields and not this code
+           class. Two `source` strings shipped an R-number through it. The
+           audit-code list runs over the same fields now. */
+        const audit = renderedParamProseAuditCodes();
         return {
-          ok: !hits.length && !inCards.length && !inParams.length,
+          ok: !hits.length && !inCards.length && !inParams.length && !audit.length,
           note: [hits.map((h) => h.file + ':' + h.line).join('; '), inCards.join('; '),
-            inParams.join('; ')]
+            inParams.join('; '), audit.slice(0, 2).join('; ')]
             .filter(Boolean).join(' | ') ||
             NARRATIVE_SURFACES.length + ' narrative surfaces, ' + CARE_SCENARIOS.length +
-            ' cards and ' + PARAM_DEFS.length + ' parameter rows carry none'
+            ' cards and ' + PARAM_DEFS.length + ' parameter rows carry none, under'
+            + ' both the catalog list and the audit-code list'
         };
       }),
       runGuarded('No care card states a benefit year in its own prose', () => {
@@ -3073,7 +3081,15 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
 
          ltc.ts is not swept here: §BV10 makes its per-figure grades the model
          for the rest, and they are typed at their declarations rather than
-         collected into any list this could read. */
+         collected into any list this could read.
+
+         ⚠️ Scope, measured [P17 fix run 6]: of the surfaces below, only
+         OUTCOME_STATS and BASELINE_ROWS can actually fail. PARAM_DEFS,
+         ENGINE_CONSTANTS and FAMILIES are typed unions, so `astro check`
+         already guarantees them and this row re-asserts what the compiler
+         proved. They stay because the guarantee is the TYPE, and a type is one
+         edit from being widened to `string`; what is stated here is that the
+         live failing set is two surfaces, not five. */
       /* R135 [§S11b]: the seed's sourcing rule, applied to the module the
          live engine actually reads. Nine medium-graded parameters carried an
          empty url through five sections because nothing here looked. The
@@ -3086,8 +3102,13 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !bad.length,
           note: bad.length
             ? bad.slice(0, 3).join(' | ')
-            : backlog.length + ' parameter(s) have no source_url, all graded below'
-              + ' medium and each saying why: ' + backlog.slice(0, 4).join(', ')
+            /* [P17 fix run 6] This said "all graded below medium and each
+               saying why". Neither half was computed: parameterSourceBacklog()
+               renders a missing grade as '(ungraded)', which is not "below
+               medium", and nothing reads the prose to check it says why. It
+               prints what it actually knows now. */
+            : backlog.length + ' parameter(s) have no source_url: '
+              + backlog.join(', ')
         };
       }),
       runGuarded('Every graded surface uses the one declared confidence scale', () => {
@@ -3109,10 +3130,27 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             bad.push('the seed grades ' + r.baselineId + ' on "' + r.confidence + '"');
           }
         }
-        /* SOURCED_GRADES is the scale's first three. Held to that rather than
-           trusted: two lists that agree today are still two lists. */
-        if (SOURCED_GRADES.join('|') !== CONFIDENCE_GRADES.slice(0, 3).join('|')) {
-          bad.push('SOURCED_GRADES has drifted from the head of the scale');
+        /* [P17 fix run 6] This branch used to read
+             `SOURCED_GRADES.join('|') !== CONFIDENCE_GRADES.slice(0, 3).join('|')`
+           and its comment said "two lists that agree today are still two lists".
+           There is ONE list: baseline-registry.ts defines SOURCED_GRADES AS
+           `CONFIDENCE_GRADES.slice(0, 3)`, so the branch compared that
+           expression to itself and could not fail. R138 collapsed the two lists
+           into one and then wrote a drift check for the collapse it had just
+           made - in the commit whose subject was checks that cannot fail.
+
+           What IS worth holding is the property the slice is chosen for: the
+           sourced grades must be a prefix of the scale, and there must be a
+           grade below them, or "medium or better" would mean "any grade" and
+           the sourcing rule would be vacuous. Both sides of that are real. */
+        if (SOURCED_GRADES.length >= CONFIDENCE_GRADES.length) {
+          bad.push('every grade counts as sourced, so the sourcing rule is vacuous');
+        }
+        for (let i = 0; i < SOURCED_GRADES.length; i += 1) {
+          if (SOURCED_GRADES[i] !== CONFIDENCE_GRADES[i]) {
+            bad.push('SOURCED_GRADES is not a prefix of the declared scale');
+            break;
+          }
         }
         return {
           ok: !bad.length,
@@ -3528,9 +3566,14 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
         const bad = registryGateCountDrift(rows);
         return {
           ok: !bad.length,
+          /* [P17 fix run 6] This printed `rows` on both sides of "spells and
+             lists N gates, and this block has N", so the note could not have
+             shown a disagreement even in principle. Each side is measured
+             separately now, which is the whole point of the two halves. */
           note: bad.join(' | ')
-            || 'research/README.md spells and lists ' + rows
-              + ' gates, and this block has ' + rows
+            || 'research/README.md spells ' + (researchReadmeGateCount() ?? '?')
+              + ' and lists ' + researchReadmeGateList().length
+              + '; this block has ' + rows
         };
       })
     ]

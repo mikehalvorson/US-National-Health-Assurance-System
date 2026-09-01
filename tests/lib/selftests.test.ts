@@ -400,7 +400,10 @@ test('R135: no parameter is graded medium or better with no citation', () => {
   /* The backlog is reported, not asserted away. It must shrink or hold, never
      silently become a bare pass. */
   const backlog = parameterSourceBacklog();
-  expect(backlog.length).toBe(8);
+  /* Eight parameters plus the four engine constants in the same file, which
+     fix run 6 brought into the same sweep: the rule is about the
+     confidence+url pair, not about which array holds it. */
+  expect(backlog.length).toBe(12);
   for (const entry of backlog) expect(entry).toContain('(low)');
 });
 

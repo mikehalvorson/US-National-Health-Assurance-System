@@ -44,7 +44,7 @@ import {
   NETWORK_ABSORPTION, networkCost, UNIT_ASSUMPTIONS, unitsCostComparison,
   VISIT_SPLITS, type UnitAssumption
 } from './units';
-import { catalogCode, PARAMS_BY_ID } from './params';
+import { catalogCode, PARAM_DEFS, PARAMS_BY_ID } from './params';
 import {
   SCENARIOS as MODEL_SCENARIOS, SCENARIOS_BY_ID
 } from './scenarios';
@@ -127,9 +127,13 @@ export function sourceText(rel: string, root = REPO_ROOT): string {
  * framework vocabulary the site itself publishes - `P8` appears as "Phase 8"
  * on five pages - so they are the plan's language, not the document's codes. */
 /* Finding 2 [P16 review 3]: this used to match single-quoted names only.
- * Of 183 call sites 179 are single-quoted, 3 are double-quoted and 1 passes
- * a variable, so three names were outside the sweep. They were clean, which
- * is the whole problem with a latent gap: nothing shows until one is not.
+ * Most call sites are single-quoted, a few are double-quoted and one passes
+ * a variable, so several names were outside the sweep. They were clean,
+ * which is the whole problem with a latent gap: nothing shows until one is
+ * not. No figures here on purpose - this comment said "183 call sites, 179
+ * single-quoted" and five new rows in the same session made both stale,
+ * with nothing to catch it. `unsweptSelfTestNameSites()` counts the live
+ * gap and the self-test note prints it.
  *
  * Exported because `tests/lib/selftests.test.ts` inlined its own copy of
  * both this and the pattern list, and the copy had three alternatives where
@@ -167,6 +171,46 @@ export function renderedSelfTestNameLeaks(root = REPO_ROOT): string[] {
         out.push(rel + ':' + line + ' renders ' + what + ' ("' + hit[0]
           + '") in a self-test name: ' + name);
         break;
+      }
+    }
+  }
+  return out;
+}
+
+/* [P17 fix run 6]: the same list, over the OTHER rendered prose it binds.
+ *
+ * `health.astro` renders each parameter's `label`, `unit`, `source` and its
+ * three divergence fields, so all six are reader prose under golden rule 2.
+ * `paramProseCatalogCodes()` already swept them - but with `catalogCode()`,
+ * which matches `KPP|TPP|CP|SR|PR|OI|SN|GAP` and no R-numbers. So the sweep
+ * covered the surface and not the code class, and R135 shipped "R135" into two
+ * `source` strings in the very commit whose log entry says those strings are
+ * rendered reader prose.
+ *
+ * The two lists are complementary, not nested: this one has the R-numbers,
+ * section signs and appendix/table references; the catalog one has the
+ * KPP/TPP/SR/PR ids. Both run, over the same six fields.
+ *
+ * Measured before it was wired: over every parameter it hits exactly the two
+ * defects and nothing else, so the eight patterns are safe against this prose. */
+export function renderedParamProseAuditCodes(): string[] {
+  const out: string[] = [];
+  for (const p of PARAM_DEFS) {
+    const fields: Array<[string, string]> = [
+      ['label', p.label || ''],
+      ['unit', p.unit || ''],
+      ['source', p.source || ''],
+      ['divergence.leans', p.divergence ? p.divergence.leans : ''],
+      ['divergence.recommended', p.divergence ? p.divergence.recommended : ''],
+      ['divergence.note', p.divergence ? p.divergence.note : '']
+    ];
+    for (const [where, text] of fields) {
+      for (const [pattern, what] of AUDIT_CODE_IN_RENDERED_TEXT) {
+        const hit = pattern.exec(text);
+        if (hit) {
+          out.push(p.id + '.' + where + ' renders ' + what + ' ("' + hit[0] + '")');
+          break;
+        }
       }
     }
   }
@@ -271,6 +315,16 @@ export function registrySurfaceRowCount(root = REPO_ROOT): number {
  * someone edits prose, the list drifts when someone adds a gate and stops
  * after the number. Reporting them separately is what lets the negative test
  * prove each one, which is how the list half got in unproved. */
+/* [P17 fix run 6]: the same paragraph carries a SECOND count - "All fourteen
+ * of them now have a case" - and it was ungated, two clauses after the file
+ * says a count no check maintains is a claim with a half-life. It names the
+ * same fourteen gates, so it is held to the same number. */
+export function researchReadmeCasedCount(root = REPO_ROOT): string | null {
+  const text = sourceText('research/README.md', root);
+  const m = text.match(/\*\*All ([a-z]+) of them now have a case\*\*/);
+  return m ? m[1] : null;
+}
+
 export function registryGateCountDrift(actual: number, root = REPO_ROOT): string[] {
   const out: string[] = [];
   const said = researchReadmeGateCount(root);
@@ -287,6 +341,13 @@ export function registryGateCountDrift(actual: number, root = REPO_ROOT): string
   if (listed.length !== actual) {
     out.push('research/README.md lists ' + listed.length + ' gates by name; there are '
       + actual);
+  }
+  const cased = researchReadmeCasedCount(root);
+  if (cased === null) {
+    out.push('research/README.md no longer states how many gates have a case');
+  } else if (want !== undefined && cased !== want) {
+    out.push('research/README.md says ' + cased + ' gates have a negative case; there are '
+      + want + ' gates (' + actual + ')');
   }
   return out;
 }
