@@ -6119,10 +6119,19 @@ same commits, which its own gate required.
 ---
 
 ## P17 — §S11b Live-code sourcing & confidence · 2026-08-31 · branch `nha-remediation`
-STATUS: partial. The premise pass is complete; `R138` and `R135` have landed.
-`R218`, `R241`, `R252` and `R130` are the work still open. Corrected in fix run
-6: this line named three, and omitted `R241`, whose one real site the section
-itself measured and then inventoried nowhere.
+STATUS: **complete**, as of the 2026-09-02 fix run. Every row in the section is
+now landed, measured stale, or measured satisfied by earlier work, and each is
+named with which of the three it is under `### FIX RUN 7` below.
+
+The line that stood here through fix run 6 read: *"partial. The premise pass is
+complete; `R138` and `R135` have landed. `R218`, `R241`, `R252` and `R130` are
+the work still open."* It was wrong twice over and both errors are instructive.
+It omitted `R51`, `R264`, `R145`, `R115`, `R254`, `R257`, `R160`, `R68`, `R16`
+and `R125` — ten rows, including the two sharpest defects the section
+contained — and of the four it did name, two (`R130`, `R252`) turned out to
+have been satisfied already by work in other sections. **A status line that
+lists what is open is a claim, and claims in this campaign are wrong about half
+the time.** It is left above as it stood rather than edited in place.
 
 DISCREPANCY: **five of seventeen recommendations rest on premises the code
 contradicts.** Each is below with what was measured. In every case the code
@@ -6549,3 +6558,236 @@ nothing about where the slice ends.
 folded into the row that already made that claim). `negative_test.py` **35 of
 35**, two cases added and both watched failing: an R-number in a rendered
 `source` string, and the second README count.
+
+### FIX RUN 7: the section closed, and the arithmetic defect nobody had looked for
+
+`ac7ac71..ad68c99`, seven commits on the dashboard and one on the audit set.
+The remaining fourteen rows were measured before any of them was implemented,
+which is the practice fix run 6's retraction argued for and it paid again:
+**six of the fourteen premises did not survive measurement**, and the two most
+serious findings of the whole section were in rows the audit had described as
+documentation work.
+
+#### The header, restated
+
+| field | value |
+|---|---|
+| LANDED | `R125`, `R264`, `R145`, `R51`, `R68`, `R138` (reopened), `R115`, `R241`, `R254`, `R160`, `R257`, `R252`, `R218` |
+| MEASURED STALE | `R16` (delivered by `R67` in `§S9a`), `R124` (registered in `§S6a`) |
+| MEASURED SATISFIED ELSEWHERE | `R130` (by `R117` and `R149`) |
+| URLS | remaining `url: ""` in `params.ts`: **8 parameters + 4 engine constants**, every one graded `low` and printed by name in `parameterSourceBacklog()`. Unchanged this run: the eight are the honestly-uncited set, and `R264` below is what makes their being uncited visible where it matters. |
+| MAGIC NUMBERS | `0.28` already registered (`R124`). `0.27` **derived, not registered**: `SPONSOR_SHARE.household` already existed. Wage pass-through: **audited, and it was a double count** — see below. |
+| RENTS | **defaulted off** and removed from all three goal scenarios, with a gate. Consistent with the P15 log: yes — P15 established the seed side is a null set and the row is wholly `taxparams.ts`'s. |
+| 440 vs 430 | the ten are **`plan-defined`**, marked structurally by the generator. Wording for the page, exported as data so `R220` and `§S16` cannot drift from it: *"430 of these records are carried by the controlled framework document. Ten are not: the merit health-talent immigration parameters, which the plan defines and the framework document does not contain. They are listed here with the rest and marked plan-defined, because leaving them out would understate what the plan commits to and calling all 440 controlled would overstate what the framework carries."* |
+| TRANSITIONSHAPE | neither side wrong; the page and the code agree. The real gap was that **only one of the three claims made about the shapes was tested**. All three are gated now. |
+| VOCABULARY | one scale, five grades — and **`R138`'s own "enforced" was false**, see below. |
+| FMEA | probability is **gated on whether the grade it borrows is cited**. 97 of 295 borrowed scores were not. |
+
+#### 🛑 `R125`: the wage pass-through was paid to households twice
+
+The prompt asked, loudly, whether this never-audited mechanism was unsourced.
+It is not: both halves carry a CBO citation at `medium`. **The defect is
+arithmetic, and it reached two published surfaces.**
+
+`model.ts` computes `wageGain` from employers' net premium savings, takes 28%
+of it as `taxFeedback`, and subtracts that feedback from `newRevenue`. Those
+dollars are government revenue. Households keep `wageGain - taxFeedback`. Two
+surfaces credited them the gross:
+
+- the tax page's distribution rows, where `netPerHH` subtracts `wagePerHH`. At
+  2041 that overstates household benefit by **$79.6B**, from $151 per household
+  in q1 to $13,265 in the top band.
+- **`KPP-C8`, a published KPP**, which subtracts the wage term from a `newRev`
+  already reduced by the feedback. The wage channel was relieving the
+  ordinary-taxpayer burden by **128% of the wages it passes through**.
+
+Both readings of the correction converge on the same number, which is why it is
+certain: netting the wage term, and adding the feedback back as tax ordinary
+taxpayers pay, give identical numerators.
+
+⚠️ **`KPP-C8` moves from 4.6% to 5.6% against a ≤5% cap, and its breaching set
+from 11 to 17 of 20 scenarios with `SCN-BASE` among them.** The metric is now
+met on no scenario rather than on one favourable run. Its documented gap is
+rewritten to say so.
+
+**Three defects that uncovered, each fixed:**
+
+1. **The disclosure's own figures were unchecked.** `documentedGapDrift()`
+   reconciles the SET of declared gaps against the set written up, in both
+   directions, and reads **no number out of either**. So `KPP-C8` published a
+   base value, a breach count and a worst case that the model contradicted —
+   and **three of those four were already stale**, the neighbouring test having
+   pinned 11 against the prose's twelve since `R140`.
+   `documentedGapFigureDrift()` recomputes each stated figure and fails if the
+   prose stops stating it. 🆕 **Check-shape: a drift check that reconciles two
+   SETS while every quantity inside the declared text goes unread.**
+2. **The wage seam self-test was a conservation check.** `R126` wrote it
+   naming this exact risk — *"it flatters the plan in both directions at
+   once"* — then handed `distribution()` the gross and asserted the allocation
+   conserved the figure it had just passed in. **Conserving the wrong input
+   perfectly.** It exercises `wageGainNet` now, and a new row holds that what
+   households are credited plus what the treasury books is the gross exactly
+   once. 🆕 **Check-shape: a seam check that verifies a quantity is conserved
+   across the seam, where the live question is whether that quantity was the
+   right one to send.**
+3. **Fixing `KPP-C8` put `R125` into its `why` string**, which
+   `quality-client.ts` renders as the equation card's lead paragraph — the same
+   defect fix run 6 caught in `params.ts` `source`, one module over, **in the
+   session whose handoff opens by naming it.** Seventh instance. Prose
+   corrected; `renderedEquationProseAuditCodes()` sweeps every equation `name`
+   and `why` now. Measured before wiring: 133 equations, zero other hits.
+
+#### 🛑 `R264`: 97 published risk scores read a grade that rests on nothing
+
+Five of nineteen CP families read their FMEA occurrence off a grade whose every
+parameter at that grade has an empty `url`: `CP-CLM` (15 rows,
+`legacyAdminFloor`), `CP-UNIT` (24, `unitsCost`, its only input), `CP-IT` (18,
+both inputs), `CP-TRN` (20), `CP-OFF` (20, `lowValueCapture` and
+`extractionSavings`). **97 of 295 borrowed scores, ranked beside 720 native
+ones, with nothing on the row saying they were arrived at differently.**
+
+`CP-LTC` is the contrast that makes the distinction right rather than
+convenient: it is also `low`, and `ltcWageFloor` carries a citation, so its
+`low` is a measured statement about a real range.
+
+Gated, not suppressed. An uncited grade here is `low`, `low` maps to occurrence
+4, and 4 is the pessimistic end — blanking these rows would **delete a
+high-risk flag rather than add honesty**. `'borrowed'` splits into
+`'borrowed-uncited'`, which publishes its score and carries the disclosure.
+
+⚠️ **The handoff's claim that `medications.ts`'s 185 `high` family grades feed
+FMEA likelihood under `§BT4` is false.** `fmea.ts` never imports
+`medications.ts`; it borrows only from `PARAMS_BY_ID`. `R51`'s retraction was
+right about the sourcing gap and wrong about the consequence.
+
+#### `R51`, `R68`, `R138`: three fields named for evidence that grade something else
+
+`Family.source` was a key into two sentences of methodology prose;
+`Family.confidence` was `r.why ? 'medium' : 'high'`, so 185 families were
+graded `high` **because a field is absent**. Everywhere else in this repo
+`source` is a citation and `confidence` is how well evidenced a number is.
+**That naming is why two audit passes read the module opposite ways.** Renamed
+to `phaseBasis` and `phaseGrade`; the self-test row that said *"Every drug
+family carries a source and a confidence grade"* is named for what it checks;
+the rendered pill reads *"phase basis high"* rather than a bare `high` in the
+same idiom the parameter table uses for a sourcing grade — three sections above
+a `high confidence` pill on the same page that does rate evidence.
+`MEDICATIONS_SOURCING` declares the module's one cited quantity and is held to
+the data in both directions.
+
+`R51`'s other half is already done: **all 55 scenario overrides** carry a grade
+and a reason (`§S6b`), not the 52 the prompt names.
+
+`R68`: `LEGACY`'s five grades lived inside a prose sentence in `evidence`.
+Lifted into a typed field plus `confidenceReason`, with the client composing
+the sentence — one store, not a field and a restatement of it.
+
+🛑 **`R138` reopened, and its own claim was the defect.** Its entry says *"one
+scale, five grades, enforced"* and its sweep covered five surfaces.
+`workforce.ts` was not one of them, and `CREATED` graded seven items on
+**`"Medium-Low"`** and `"Low"` — capitalised, and `"Medium-Low"` is not even a
+permutation of the scale's `low-medium`. `CreatedItem.confidence` was typed
+`string`, which is how it typechecked, and `workforce-client.ts` renders the
+value verbatim, **so a grade on a vocabulary this repo declares and does not
+contain has been reaching the Workforce tab throughout.** Eighth instance of
+the class: the fix declared enforcement over surfaces it had not looked at.
+
+#### The five rows the audit could not implement, and why it could
+
+- **`R115`** — the ten uncontrolled records. Two handoffs and the prompt record
+  that *nothing identifies which ten*. **Measured: they were identifiable twice
+  over.** `tools/quality_catalog_addendum.json` names all ten by id and carries
+  `addedInPass: 2026-08`; and in the live catalog all ten carry a `status`
+  string **no other record carries**. Nothing read either signal. They are
+  `KPP-W2/W3/W4/W5`, `TPP-W1/W2`, `TPP-IMM1/2/3/4` — 4 KPP + 6 TPP, matching
+  the arithmetic exactly. Marked `provenance: 'plan-defined'`, not
+  `provisional`: these are not draft numbers, they carry targets, calculations,
+  datasets and verifiers like any other record. What is true of them is about
+  the source.
+- **`R241`** — `overview.ts:88` typed `0.27` twice. Registering it would have
+  been the wrong fix: `params.ts` already **derives** the household sponsor
+  share as `SPONSOR_SHARE.household`, and `R21` derived the other four for
+  exactly this reason. It is 0.27009, which is what the 27% beneath it rounds
+  to.
+- **`R254`** — the contradiction does not exist. The real gap: twenty hand-set
+  fractions, **three claims made about them and one tested**. The sum was
+  checked; the span was not, so moving weight into year 14 keeps the sum at 1
+  and makes three statements false; and *"not straight-lined"*, which the page
+  prints, was not tested at all, so a flat profile would have passed
+  everything.
+- **`R160`** — four pages, and **three circulating counts were all wrong**: the
+  prompt said one, this log said three and named `health.astro`, which has
+  pointed at `research/01` for some time, and my own first grep said five by
+  matching the label rather than the href. The check holds the property, not a
+  count.
+- **`R257`** — exactly `G6`, `G7`, `G8`, the only row in the section whose
+  premise held as written. Derived from the floor text so a gate that gains a
+  threshold stops carrying the note.
+
+#### Two rows already satisfied, one row stale
+
+- **`R252`** — the 15,000 is neither unsourced nor removable. The framework
+  carries it as `SR-ACC-010` *and* as `TPP-6.1`'s target, and the equation that
+  typed it as a literal **is `TPP-6.1`'s equation**. `R21`'s class one layer up:
+  read from the record now.
+- **`R130`** — the premise does not hold and the substance is satisfied twice.
+  Gate floors carry **no `basis` field at all**; `basis:"framework"` is **19**
+  rows in `data-phases.ts`, not the five the row names and not the seventeen
+  `V5` counted. `R117` checks all 19 as parsed `(comparator, number, unit)`
+  claims against the catalog's own entries; `R149` re-derives all 8 gate floors
+  from `rollout.ts`. Both stronger than a `PR-SCH-*` id. What was wrong was a
+  count in two comments — *"sixteen of the seventeen restate the catalog"*,
+  where there are nineteen and all nineteen are reworded.
+- **`R16`** — stale. `R67` in `§S9a` delivered it as data:
+  `CREATED_SCOPE_EXCLUSIONS` declares all seven domains with a status and the
+  parameter ids that size them, and the page writes its prose from it. `R16`'s
+  own wording is now wrong: LTC is sized separately rather than excluded.
+
+#### `R218`: a claim its own source contradicts
+
+*"The estate tax raises a fifth of what a static calculation says it should"*,
+under a heading blaming the planning industry. Penn Wharton's decomposition:
+run the 2000 code against 2019 estates and it would have raised **nine times**
+the liability it did — a ninth, not a fifth — and *"changes in tax law played a
+much larger, and more certain, role"* than planning, whose estimate the source
+flags as its least certain. **The number was wrong and the attribution, the
+load-bearing half, was wrong in the other direction.** Rewritten to what is
+measured, which is the sharper point: one instrument standing alone can be
+legislated away.
+
+The audit-rate claim holds and now carries GAO-22-104960's figures: 0.9% to
+0.25% overall from tax year 2010 to 2019, furthest for returns over $200,000.
+
+#### Traps this run added to the list
+
+- 🆕 **A chained `sed` can match its own output.**
+  `s/245/246/;s/246/247/` ran both substitutions on one line and produced 247
+  from 245. Caught by the README gate. One substitution per invocation, or read
+  the count back from the gate rather than incrementing it.
+- 🆕 **Escaping a payload through a shell heredoc into Python corrupted the
+  same string three times running** before it was written as a file instead.
+  The `nha-scripting-traps` rule already says heredocs; this adds that a
+  payload containing both quote styles should be built by concatenation with
+  `chr(34)` rather than escaped.
+- 🆕 **A negative case can assert the opposite of what it proves.** The `R264`
+  note case first named `unitsCost`, which would have DROPPED `CP-UNIT` from
+  the note the case asserts must contain it. And the `R115` case was written as
+  a NOTE_CASE on the assumption the note would drift; it does not — the gate
+  turns the row red, which is the stronger result. **Run the case and read
+  which way it moved before believing the case.**
+
+#### Gates
+
+`pnpm test` **528 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
+**14 pages**, self-tests **253 of 253**. File manifest **128**.
+`negative_test.py` **42 of 42** (35 failure + 7 note), five new failure cases
+and one new note case, all watched failing.
+
+#### Method note
+
+Fourteen rows, six wrong premises, and the two most serious defects in the
+section — a published KPP off by an order of magnitude at 2032, and 97
+published risk scores resting on nothing — were both in rows the audit filed as
+sourcing or documentation work. **`R125` was one line in the prompt asking
+whether a mechanism had ever been audited.** The answer was no, and what was
+wrong with it was not what the row expected to find.
