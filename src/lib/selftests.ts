@@ -70,6 +70,7 @@ import {
 import {
   committedKindCounts, cpConfidenceWiring, cpFamilyConfidence, duplicateRecordIds, FMEA_DATA,
   fmeaSelfTests, gateBumpedRecords, gateWiring, phaseOrderDrift, PROBABILITY_CEILING,
+  borrowedCitationDrift, uncitedBorrowedFamilies,
   PROBABILITY_FLOOR, PROBABILITY_SOURCES, probabilityScaleReach, probabilitySourceConflicts,
   probabilitySourceCounts, proxiedInMatrix, undeclaredCommittedKinds, unslugedKinds
 } from './fmea';
@@ -2098,6 +2099,27 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !conflicts.length,
           note: conflicts.slice(0, 5).join(' | ') ||
             PROBABILITY_SOURCES.map((s) => by[s] + ' ' + s).join(', ')
+        };
+      }),
+      /* R264 [§S11b]: a borrowed occurrence reads a confidence grade, and for
+         five families every parameter at that grade carries an empty source -
+         so 97 published scores were ranked beside 720 native ones with
+         nothing saying they rest on an analyst assumption. The fifth
+         provenance state carries the disclosure; this row holds it to the
+         parameters, in both directions, and names the families rather than
+         counting them. */
+      runGuarded('Every borrowed occurrence says whether the grade it reads is cited', () => {
+        const drift = borrowedCitationDrift();
+        const fams = uncitedBorrowedFamilies();
+        const rows = fams.reduce((n, f) => n + f.rows, 0);
+        return {
+          ok: !drift.length,
+          note: drift.slice(0, 3).join(' | ') ||
+            (fams.length
+              ? rows + ' of ' + (probabilitySourceCounts().borrowed + rows) +
+                ' borrowed scores read an uncited grade: ' +
+                fams.map((f) => f.id + ' (' + f.grade + ', ' + f.uncited.join('/') + ')').join(', ')
+              : 'every borrowed grade is attested')
         };
       }),
       /* R275 [§S4]: CP occurrence is borrowed from params.ts, so what is

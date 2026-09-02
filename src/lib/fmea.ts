@@ -299,6 +299,24 @@ function familyConfidence(family: string): string | null {
   });
   return weakest;
 }
+/* R264: is the grade the occurrence was read off attested by anything?
+ *
+ * The occurrence comes from the WEAKEST grade among a family's inputs, so the
+ * question is about the parameters sitting at that grade, not about all of
+ * them. If every one of them has an empty `url`, the number on the chart
+ * rests on an analyst assumption and nothing else. Returns null where the
+ * family has no parameterised line, matching familyConfidence. */
+function familyGradeCited(family: string): boolean | null {
+  const weakest = familyConfidence(family);
+  if (weakest === null) return null;
+  const ids = CP_FAMILY_MODEL_INPUTS[family] || [];
+  const atWeakest = ids
+    .map(function (id) { return PARAMS_BY_ID[id]; })
+    .filter(function (d) { return d && d.confidence === weakest; });
+  if (!atWeakest.length) return null;
+  return atWeakest.some(function (d) { return !!d.url; });
+}
+
 function familyInputLabel(family: string): string {
   const ids = CP_FAMILY_MODEL_INPUTS[family] || [];
   return ids.map(function (id) {
@@ -387,16 +405,36 @@ export function cellBand(consequence: number, probability: number): ScoredBand {
  * needsNewParam still means "the catalog is missing something here", which is
  * true of borrowed, proxied and unscored alike, and drives the gap machinery
  * unchanged. */
-export type ProbabilitySource = 'native' | 'borrowed' | 'proxied' | 'unscored';
-export const PROBABILITY_SOURCES: ProbabilitySource[] = ['native', 'borrowed', 'proxied', 'unscored'];
-/* Which of the four publish a number. R279 moved 'proxied' out of this set:
+/* R264 [§S11b]: 'borrowed' was one word for two different states.
+ *
+ * A borrowed occurrence is read off the weakest confidence grade among the
+ * parameters calibrating that ledger. For most families that grade is itself
+ * attested - CP-LTC borrows a `low` from `ltcWageFloor`, which carries a
+ * citation, and a cited `low` is a measured statement about a real range.
+ * For five families it is not: CP-CLM, CP-UNIT, CP-IT, CP-TRN and CP-OFF read
+ * their occurrence off a grade whose every parameter at that grade has an
+ * empty `url`. That is 97 of the 295 borrowed scores on the published chart,
+ * ranked beside 720 native ones, with nothing on the row saying the two were
+ * arrived at differently.
+ *
+ * The score still publishes, and deliberately. An uncited grade here is
+ * `low`, a `low` maps to occurrence 4, and 4 is the pessimistic end -
+ * suppressing the row would delete a high-risk flag rather than add honesty.
+ * What was missing is the disclosure, so the fifth state carries it. */
+export type ProbabilitySource =
+  'native' | 'borrowed' | 'borrowed-uncited' | 'proxied' | 'unscored';
+export const PROBABILITY_SOURCES: ProbabilitySource[] =
+  ['native', 'borrowed', 'borrowed-uncited', 'proxied', 'unscored'];
+/* Which of the five publish a number. R279 moved 'proxied' out of this set:
    a placeholder is not a measurement, so it is not charted, banded or
    multiplied through into a risk or an RPN. */
-export const SCORE_PUBLISHING_SOURCES: ProbabilitySource[] = ['native', 'borrowed'];
+export const SCORE_PUBLISHING_SOURCES: ProbabilitySource[] =
+  ['native', 'borrowed', 'borrowed-uncited'];
 /* How each source is disclosed wherever a score of that provenance is shown. */
 export const PROBABILITY_SOURCE_NOTE: Record<ProbabilitySource, string> = {
   native: '',
   borrowed: 'borrowed: not native to the controlled catalog, see parameter gaps',
+  'borrowed-uncited': 'borrowed from an uncited grade: the confidence this score reads is itself an analyst assumption with no external source, see parameter gaps',
   proxied: 'proxied: no controlled number exists to score against, see parameter gaps',
   unscored: 'unscored: no probability could be derived at all, see parameter gaps'
 };
@@ -489,6 +527,67 @@ function probabilityForRow(
   if (e.phase === 'P0' || e.phase === 'P1') { score += 1; parts.push('unproven foundation system +1'); }
   else if (e.phase === 'P2') { score += 0.5; parts.push('first live operation +0.5'); }
   return { score: clampScore(score), basis: parts.join(', '), source: 'native' };
+}
+
+/* R264 [§S11b]: which families publish an occurrence read off an uncited
+   grade, with the parameters responsible and the row count each carries.
+
+   Named rather than counted. A bare pass says the disclosure is wired; it
+   does not say that five of nineteen families are in this state, that
+   CP-UNIT and CP-IT are there on the strength of their ONLY inputs, or which
+   parameter to source to move a published risk ranking. The note prints it,
+   so the number can go down rather than disappear. */
+export function uncitedBorrowedFamilies(): {
+  id: string; grade: string; rows: number; uncited: string[];
+}[] {
+  const rowsBy: Record<string, number> = {};
+  RECORDS.forEach(function (r) {
+    if (r.probabilitySource === 'borrowed-uncited') {
+      rowsBy[r.family] = (rowsBy[r.family] || 0) + 1;
+    }
+  });
+  const out: { id: string; grade: string; rows: number; uncited: string[] }[] = [];
+  Object.keys(CP_FAMILY_MODEL_INPUTS).forEach(function (fam) {
+    if (familyGradeCited(fam) !== false) return;
+    const grade = familyConfidence(fam);
+    /* familyGradeCited returns false only where a grade exists, so this cannot
+       be null. Narrowed rather than asserted: R127 forbids the assertion, and
+       an early return that can never fire is cheaper than a claim the compiler
+       has to be told to stop checking. */
+    if (grade === null) return;
+    out.push({
+      id: fam, grade: grade, rows: rowsBy[fam] || 0,
+      uncited: (CP_FAMILY_MODEL_INPUTS[fam] || []).filter(function (id) {
+        const d = PARAMS_BY_ID[id];
+        return d && d.confidence === grade && !d.url;
+      })
+    });
+  });
+  return out;
+}
+
+/* R264: the disclosure has to reach every row it describes, and only those.
+   Two real sides: a row typed 'borrowed-uncited' whose grade is in fact
+   attested, and a row typed plain 'borrowed' whose grade is not. Either way
+   the chart would rank a score under a provenance it does not have. */
+export function borrowedCitationDrift(): string[] {
+  const out: string[] = [];
+  RECORDS.forEach(function (r) {
+    if (r.probabilitySource !== 'borrowed' && r.probabilitySource !== 'borrowed-uncited') {
+      return;
+    }
+    const cited = familyGradeCited(r.family);
+    if (cited === null) {
+      out.push(r.id + ' borrows from ' + r.family + ', which has no gradeable input');
+      return;
+    }
+    const should = cited ? 'borrowed' : 'borrowed-uncited';
+    if (r.probabilitySource !== should) {
+      out.push(r.id + ' is ' + r.probabilitySource + ' but ' + r.family +
+        "'s weakest grade is " + (cited ? 'cited' : 'uncited'));
+    }
+  });
+  return [...new Set(out)];
 }
 
 /* R274: the reachable ends of the occurrence scale, derived from the two
@@ -716,6 +815,7 @@ QUALITY_DATA.parameters.forEach(function (p) {
   if (p.type === 'CP') {
     /* one calibration-tolerance failure mode per cost parameter */
     const conf = familyConfidence(p.family);
+    const cited = familyGradeCited(p.family);
     const assessed = conf != null;
     const cons = consequenceForRow(p, cls, null);
     const det = detectability(p);
@@ -731,8 +831,8 @@ QUALITY_DATA.parameters.forEach(function (p) {
         failureMode: 'Value never calibrated, or calibrated outside the controlled range.',
         effectClass: cls.key, effectClassLabel: cls.label, effect: effectText(p, cls, null),
         probability: prob,
-        probabilityBasis: 'No native likelihood attribute on the cost parameter; occurrence read from the weakest confidence grade among the simulation parameters that calibrate the ' + p.family + ' ledger: ' + familyInputLabel(p.family) + '. Weakest is ' + conf + ', which maps to ' + prob + '.',
-        probabilitySource: 'borrowed',
+        probabilityBasis: 'No native likelihood attribute on the cost parameter; occurrence read from the weakest confidence grade among the simulation parameters that calibrate the ' + p.family + ' ledger: ' + familyInputLabel(p.family) + '. Weakest is ' + conf + ', which maps to ' + prob + '.' + (cited === false ? ' That grade is uncited: every parameter at it carries an empty source, so this occurrence rests on an analyst assumption rather than on evidence.' : ''),
+        probabilitySource: cited === false ? 'borrowed-uncited' : 'borrowed',
         consequence: cons.score, consequenceBasis: cons.basis,
         detect: det.score, detectBasis: det.basis,
         risk: prob * cons.score, rpn: cons.score * prob * det.score,
@@ -1078,7 +1178,12 @@ export function phaseOrderDrift(): string[] {
    pill beside the word "unscored" is the defect the row names, and this is
    what makes the two disagree loudly rather than silently. */
 export function probabilitySourceCounts(): Record<ProbabilitySource, number> {
-  const out = { native: 0, borrowed: 0, proxied: 0, unscored: 0 };
+  /* R264 [§S11b]: built from PROBABILITY_SOURCES rather than restating its
+     members. The object literal here listed the four by hand, so adding the
+     fifth left every count NaN - the sum test caught it, but a restated
+     enum is the shape this file has removed twice already. */
+  const out = {} as Record<ProbabilitySource, number>;
+  PROBABILITY_SOURCES.forEach(function (k) { out[k] = 0; });
   RECORDS.forEach(function (r) { out[r.probabilitySource] += 1; });
   return out;
 }
