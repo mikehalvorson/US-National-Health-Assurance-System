@@ -354,7 +354,47 @@ export function balancerIds(): Set<string> {
 }
 
 /* ---- Self-tests (exported for the shared self-test harness) ---- */
+/* R145 [§S11b]: the rule the section's "Done when" states, as a check.
+ *
+ * "No instrument graded low with no external source is enabled by default."
+ * `rents` was the one violator and is off now, but the rule is what has to
+ * survive, not the fix: the next instrument added at `low` would otherwise
+ * arrive enabled and nothing would say so.
+ *
+ * Graded `low` is the right test rather than `isSourcedGrade`. Three
+ * instruments sit at `low-medium` - wealth, estate, enforce - and all three
+ * cite a real external score (Saez-Zucman, JCT's score of S.994, CBO and
+ * Treasury enforcement estimates). `low` is the grade this list uses for a
+ * number the plan supplies about itself, and `rents` is the only one.
+ *
+ * Both sides can fail: flipping `rents` back on fails it, and so does
+ * downgrading a currently-enabled instrument to `low` without turning it off.
+ */
+export function defaultOnUnsourcedInstruments(): string[] {
+  const out: string[] = [];
+  INSTRUMENTS.forEach(function (ins) {
+    if (ins.confidence !== 'low') return;
+    const onByDefault = ins.kind === 'toggle'
+      ? ins.default === true
+      : Number(ins.default) > 0;
+    if (onByDefault) out.push(ins.id + ' is graded low and is on by default');
+    SCENARIOS.forEach(function (scn) {
+      if (!scn.balancer) return;   /* the custom package is the reader's own */
+      const st = scn.settings[ins.id];
+      if (!st) return;
+      const on = st.enabled === true || (st.enabled !== false && Number(st.value) > 0);
+      if (on) out.push(ins.id + ' is graded low and is enabled in ' + scn.id);
+    });
+  });
+  return out;
+}
+
 export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
+  {
+    name: "Tax: no instrument graded low is enabled by default or in a goal scenario",
+    run: function () { return defaultOnUnsourcedInstruments().length === 0; }
+  },
+
   {
     name: "Tax: every instrument's incidence shares sum to 1",
     run: function () {

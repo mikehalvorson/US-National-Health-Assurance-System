@@ -320,12 +320,35 @@ export const INSTRUMENTS: TaxInstrument[] = (function () {
       source: "CBO Options 2025–2034, Option 72 (broad base; narrow base scores $2,180B/10yr)", confidence: "high"
     },
     {
+      /* R145 [§S11b]: off by default, on the VAT's precedent and for a
+         different reason.
+
+         Every other instrument in this list carries an external score - CBO
+         option numbers, JCT scores of named bills, Treasury Greenbook lines,
+         the Saez-Zucman letter. Three are graded low-medium and all three
+         still cite one. This is the only instrument graded `low`, and the
+         only one whose source is the framework describing its own design.
+         $20B/yr for a windfall levy on health-sector monopoly rents is an
+         order of magnitude, not an estimate, and nothing outside the plan
+         supports it.
+
+         It was `default: true` and enabled in all three goal scenarios, so
+         every shipped configuration leaned on it. Turning it off moves the
+         balancers by about 2.4% - surtax 1.568 to 1.606, payroll 1.988 to
+         2.032 - and leaves coverage unchanged, because the sourced levers
+         absorb it. The trade the reader can now see is the honest one: this
+         is what the package costs without an uncosted instrument in it.
+
+         It stays available manually, exactly as the VAT does, because the
+         levy is in the plan and a reader is entitled to price it. */
       id: "rents", label: "Health-sector rent taxes",
       desc: "Windfall/extraction levies on monopoly rents in the health sector during transition (the plan's Title XIV).",
-      kind: "toggle", default: true, rev1x: 20, growth: "gdp",
+      kind: "toggle", default: false, rev1x: 20, growth: "gdp",
+      defaultNote: "off by default; no external estimate scores this levy, so the shipped packages do not lean on it",
       incidence: mix(0.10, 0.90),
       phaseStart: 2029, phaseYears: 2,
-      source: "Framework design; order-of-magnitude only", confidence: "low"
+      source: "Framework design; order-of-magnitude only. No external score exists for a windfall levy on health-sector rents, so the $20B/yr is the plan's own figure and is graded accordingly.",
+      confidence: "low"
     }
   ];
 })();
@@ -526,9 +549,12 @@ export const WEALTH_DIST: WealthDist = {
  * covers the funding need (102% of the mature-year need and 100%
  * cumulatively, whichever binds harder). Selecting a scenario applies and
  * solves it; every control stays editable afterward, and the coverage
- * tiles keep telling the truth. The VAT is excluded from all goal
- * scenarios because consumption taxes are regressive; it remains
- * available manually for anyone who wants to see that trade-off.        */
+ * tiles keep telling the truth. Two instruments are excluded from
+ * all goal scenarios, for two different reasons, and both remain available
+ * manually for anyone who wants to see the trade-off: the VAT because
+ * consumption taxes are regressive, and the health-sector rent levy (R145,
+ * §S11b) because it is the one instrument here with no external score behind
+ * its number.                                                           */
 export const SCENARIOS: TaxScenario[] = [
   {
     id: "goal-top", name: "Wealth-first", balancer: "surtax",
@@ -541,7 +567,7 @@ export const SCENARIOS: TaxScenario[] = [
       ftt: { value: 2.3 }, inherit: { enabled: true, value: 1 },
       intl: { enabled: true, value: 1 }, enforce: { enabled: true, value: 1 },
       buyback: { enabled: true, value: 1 }, vat: { value: 0, enabled: false },
-      rents: { enabled: true, value: 1 }
+      rents: { enabled: false, value: 1 }
     }
   },
   {
@@ -555,7 +581,7 @@ export const SCENARIOS: TaxScenario[] = [
       ftt: { value: 1.0 }, inherit: { enabled: true, value: 1 },
       intl: { enabled: true, value: 1 }, enforce: { enabled: true, value: 1 },
       buyback: { enabled: true, value: 1 }, vat: { value: 0, enabled: false },
-      rents: { enabled: true, value: 1 }
+      rents: { enabled: false, value: 1 }
     }
   },
   {
@@ -569,7 +595,7 @@ export const SCENARIOS: TaxScenario[] = [
       ftt: { value: 2.3 }, inherit: { enabled: true, value: 1 },
       intl: { enabled: true, value: 1 }, enforce: { enabled: true, value: 1 },
       buyback: { enabled: true, value: 1 }, vat: { value: 0, enabled: false },
-      rents: { enabled: true, value: 1 }
+      rents: { enabled: false, value: 1 }
     }
   },
   {
