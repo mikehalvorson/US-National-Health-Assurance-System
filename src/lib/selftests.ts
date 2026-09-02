@@ -2265,8 +2265,10 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
          vocabulary and never that the claim is true. A framework basis asserts
          the framework fixed this number at this phase, and the catalog entry it
          claims is in the same function the generator already loads. Compared as
-         (comparator, number, unit), because sixteen of the seventeen restate
-         the catalog in the page's own words rather than repeating it. */
+         (comparator, number, unit), because these rows restate the catalog in
+         the page's own words rather than repeating it. R130 [§S11b]: the
+         count that stood here said "sixteen of the seventeen" and there are
+         nineteen, all of them reworded. The note below computes both. */
       runGuarded('Every framework-basis target matches the catalog entry it claims', () => {
         const drift = frameworkBasisDrift();
         const claims = frameworkBasisClaims();

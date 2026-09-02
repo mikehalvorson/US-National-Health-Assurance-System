@@ -60,12 +60,17 @@ export function frameworkBasisEntries(): Array<{ phase: string; id: string }> {
  * A `framework` basis asserts that the framework fixed this number at this
  * phase, so the catalog's entry at that phase is the thing to check it against.
  *
- * String equality is the wrong instrument and reports sixteen false failures.
- * Sixteen of the seventeen are prose restatements of one quantity: the
- * generator declares '>=98% API conformance' where the catalog says '>=98%',
- * and '>=65% population within the unit-network coverage milestone' where the
- * catalog says '>=65% by phase end'. Comparing the parsed (comparator, number,
- * unit) triple compares the claim; comparing the strings compares the wording.
+ * String equality is the wrong instrument, because these rows restate the
+ * catalog in the page's own words: the generator declares '>=98% API
+ * conformance' where the catalog says '>=98%', and '>=65% population within
+ * the unit-network coverage milestone' where the catalog says '>=65% by phase
+ * end'. Comparing the parsed (comparator, number, unit) triple compares the
+ * claim; comparing the strings compares the wording.
+ *
+ * R130 [§S11b]: this comment used to say "sixteen of the seventeen". There
+ * are nineteen rows and all nineteen are reworded, so both halves were wrong
+ * and nothing maintained either. The self-test note beside this computes both
+ * figures, so the count belongs there and the property belongs here.
  *
  * Only these three kinds come from the catalog. 'derived interim target',
  * 'data-plan interim target' and 'equation-derived target' are added or

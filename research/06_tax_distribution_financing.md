@@ -209,3 +209,61 @@ Source: KFF State Health Facts (ACS-based), 2024 data:
 3. **Corporate 21→28:** current CBO per-point yield implies ~$0.95T/10yr, below the older ~$1.3T figure; both citable, note vintage.
 4. **Vintage mixing:** core distribution table is CY2022 (2022 dollars); revenue baseline is FY2025; CES health data CY2024; DFA 2026:Q1. Deflate/inflate consistently (CBO used the PCE index) before combining.
 5. **Post-OBBBA baseline:** the July 2025 reconciliation act changed individual rates (TCJA rates now permanent), estate exemption, and corporate expensing. CBO's Dec 2024 options predate it; scores assuming 2026 TCJA expiration (e.g., Option 45's bracket reversion) need re-basing. CBO's *Budget and Economic Outlook: 2026–2036* (early 2026) is the place to re-anchor.
+
+---
+
+## Two narrative claims on the Tax chapter, sourced (R218)
+
+Both were prose on `tax.astro` with no source. Measured against primary
+material this session; one of the two turned out to be wrong in the part it
+was arguing.
+
+### Estate tax yield versus a static calculation
+
+**The page said:** *"the estate tax raises a fifth of what a static
+calculation says it should"*, in a bullet titled "A planning industry" whose
+argument is that grantor trusts, dynasty trusts and valuation discounts defeat
+the tax.
+
+**What is measured.** Penn Wharton Budget Model, *Decomposing the Decline in
+Estate Tax Liability Since 2000* (2022-07-28):
+<https://budgetmodel.wharton.upenn.edu/p/2022-07-28-decomposing-the-decline-in-estate-tax-liability-since-2000/>
+
+Verbatim: *"Under a counterfactual scenario where the 2000 tax code was in
+effect for tax year 2019, the estate tax would have generated 9 times as much
+tax liability ($85B counterfactual vs $9B actual) and 100 times as many taxable
+estates."*
+
+So the ratio is about **a ninth**, not a fifth. More importantly the
+decomposition contradicts the bullet's attribution: the analysis states that
+*"Changes in tax law (factor 3B) played a much larger, and more certain, role
+in reducing estate tax liability and the number of taxable estates since tax
+year 2000"* than tax planning does, and flags its own planning estimate as the
+more uncertain one.
+
+**Resolution.** The bullet is rewritten and retitled. The larger cause is
+statutory - the raised exemption and cut rates - which is a sharper point for a
+financing plan than the one the page was making: a single instrument standing
+alone can be legislated away. Avoidance is real and it is the smaller half.
+CONFIDENCE: high for the 9x ratio and the direction of the decomposition;
+the planning share is the source's own least certain figure and the page does
+not quote a number for it.
+
+### Audit-rate collapse at the top
+
+**The page said:** *"Audit rates on the largest returns collapsed for a
+decade"*, with no source and no figures.
+
+**What is measured.** GAO-22-104960, *Tax Compliance: Trends of IRS Audit Rates
+and Results for Individual Taxpayers by Income* (May 2022):
+<https://www.gao.gov/products/gao-22-104960>. From tax year 2010 to 2019 the
+overall individual audit rate fell from **0.9% to 0.25%**; rates fell at every
+income level and fell furthest for returns reporting **$200,000 or more**. GAO
+attributes the decline to staffing, noting that higher-income audits take more
+staff time and expertise.
+
+**Resolution.** The claim holds and now carries its figures and its citation.
+CONFIDENCE: high.
+
+⚠️ `gao.gov` refuses `curl` with a 403, as the P17 handoff records. The search
+result and the report's own landing page carry the figures above.

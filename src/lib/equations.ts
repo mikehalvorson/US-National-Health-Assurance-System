@@ -42,6 +42,7 @@ import { buildRamps, runPath } from './model';
 import type { BuiltRamps } from './model';
 import type { SampledParams, PathResult } from './model-types';
 import type { QualityData, QualityParameter } from './quality-data';
+import { NHA_QUALITY_DATA } from './quality-data';
 import { parseNum, withNum } from './phase-targets';
 import { PHASE_YEAR } from './rollout';
 
@@ -186,6 +187,32 @@ function err3(M: number, label: string, S: ExprNode): ExprNode {
 function qn(id: string): ExprNode {
   return mn(n(1, 'attainment cap'), dv(q(id), b8(q(id))));
 }
+/* R252 [§S11b]: a controlled target read from the record that controls it.
+ *
+ * The row asks that "at least 15,000 certified units" be sourced or removed
+ * from the maturity requirement. Measured: it is neither unsourced nor
+ * removable. The framework document carries it twice - as SR-ACC-010, "the
+ * system shall operate at least 15,000 certified Type A/B/C/D units by Phase
+ * 8", and as TPP-6.1's own target - and the equation that restated it as a
+ * literal IS TPP-6.1's equation. So the defect is the restatement, not the
+ * number: a controlled quantity typed a second time in the module that
+ * computes the record carrying it, which is R21's class one layer up.
+ *
+ * `ctrl` reads it off the catalog. A target reworded to a different number
+ * moves the equation with it, and a target that stops carrying a number at
+ * all fails the build at import rather than silently keeping the old one. */
+function ctrl(id: string, label: string): ExprNode {
+  const record = NHA_QUALITY_DATA.parameters.filter(function (p) {
+    return p.id === id;
+  })[0];
+  if (!record) throw new Error('No controlled record ' + id + ' to read a target from');
+  const meta = parseNum(record.target);
+  if (!meta) {
+    throw new Error(id + ' carries no numeric target to read: "' + record.target + '"');
+  }
+  return n(meta.num, label + ' (read from ' + id + ')');
+}
+
 function avg(...xs: ExprNode[]): ExprNode {
   let s = xs[0];
   for (let i = 1; i < xs.length; i++) s = add(s, xs[i]);
@@ -465,7 +492,7 @@ def({
 def({
   id: 'TPP-6.1', kind: 'TPP', name: 'Certified unit count', group: 'access',
   cmp: '>=', unit: 'units', decimals: 0,
-  expr: mul(n(15000, 'controlled certified-unit count at maturity'), unitN()),
+  expr: mul(ctrl('TPP-6.1', 'controlled certified-unit count at maturity'), unitN()),
   why: 'Certified units scale directly with the unit-network build ramp.'
 });
 def({
