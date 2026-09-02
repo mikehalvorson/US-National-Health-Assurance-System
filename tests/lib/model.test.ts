@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { buildRamps, matureAtScale, offsetRamp, runMonteCarlo, runPath, sampleParams, selfTest } from '../../src/lib/model';
 import { effectiveParams } from '../../src/lib/scenarios';
-import { OFFSET_RAMPS, PRE_YEARS, RAMPS, START_YEAR } from '../../src/lib/params';
+import { MATURE_YEAR, OFFSET_RAMPS, PRE_YEARS, RAMPS, START_YEAR } from '../../src/lib/params';
 
 const effective = effectiveParams('SCN-BASE', null);
 
@@ -118,4 +118,22 @@ test('R203: an offset with no declared pairing cannot reach a ramp', () => {
   const values = { coverage: 0.5, units: 0.4, drugs: 0.3, hospitals: 0.2, expansions: 0.1, infra: 0.9, costShareElim: 0 };
   expect(offsetRamp('offLowValue', values)).toBe(values.infra);
   expect(() => offsetRamp('offSomethingNew', values)).toThrow(/declares no ramp pairing/);
+});
+
+/* R125 [§S11b]: the wage pass-through crosses two engines and was double
+   counted on the household side. `taxFeedback` is 28% of `wageGain` and is
+   subtracted from `newRevenue`, so those cents are government revenue.
+   Households keep `wageGain - taxFeedback`. Two published surfaces credited
+   them the gross: the tax page's distribution rows and KPP-C8. */
+test('the detail row publishes the wage gain net of the feedback already booked as revenue', () => {
+  const path = runPath(sampleParams(effective, null), {});
+  const idx = path.years.indexOf(MATURE_YEAR);
+  const d = path.detail[idx];
+  expect(d.wageGain).toBeGreaterThan(0);
+  expect(d.taxFeedback).toBeGreaterThan(0);
+  expect(d.wageGainNet).toBeCloseTo(d.wageGain - d.taxFeedback, 9);
+  /* the point of the field: households and the treasury together get the
+     gross exactly once, not 1.28 times it */
+  expect(d.wageGainNet + d.taxFeedback).toBeCloseTo(d.wageGain, 9);
+  expect(d.wageGainNet).toBeLessThan(d.wageGain);
 });

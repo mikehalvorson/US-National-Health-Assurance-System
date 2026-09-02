@@ -397,6 +397,12 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
       (1 - p.employerCapture / 100));
     const wageGain = empRelief * ((p.wagePassThrough || 0) / 100);
     const taxFeedback = wageGain * WAGE_TAX_FEEDBACK_RATE;
+    /* R125 [§S11b]: the household side of the same dollars. The feedback is
+       already subtracted from newRevenue below, so a household surface that
+       credits `wageGain` counts the taxed share twice - once as revenue that
+       reduces what must be raised, once as income that reduces apparent
+       burden. Same class as R42 on the revenue side, one channel over. */
+    const wageGainNet = wageGain - taxFeedback;
     /* R23 [§S5]: "Clamp both or neither, and surface when it binds."
        Neither, and the reason is a measurement.
        `newRevenue` carried `Math.max(0, ...)` under a comment implying the
@@ -452,6 +458,7 @@ export function runPath(p: SampledParams, structural: ScenarioStructural): PathR
       wealthRevenue: wealthRevenue, householdRelief: householdRelief,
       householdReliefNegative: householdReliefNegative,
       wageGain: wageGain, taxFeedback: taxFeedback,
+      wageGainNet: wageGainNet,
       pubShare: pubShare
     };
     out.detail.push(row);

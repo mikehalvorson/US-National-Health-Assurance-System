@@ -45,6 +45,7 @@ import {
   VISIT_SPLITS, type UnitAssumption
 } from './units';
 import { catalogCode, PARAM_DEFS, PARAMS_BY_ID } from './params';
+import { EQUATIONS } from './equations';
 import {
   SCENARIOS as MODEL_SCENARIOS, SCENARIOS_BY_ID
 } from './scenarios';
@@ -209,6 +210,42 @@ export function renderedParamProseAuditCodes(): string[] {
         const hit = pattern.exec(text);
         if (hit) {
           out.push(p.id + '.' + where + ' renders ' + what + ' ("' + hit[0] + '")');
+          break;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/* R125 [§S11b]: the third rendered surface the same list binds, found by
+ * authoring the defect into it.
+ *
+ * `quality-client.ts` renders `EQUATIONS[id].why` as the equation card's
+ * lead paragraph and `name` as its heading, so both are reader prose under
+ * golden rule 2. Neither sweep above reaches them: one reads
+ * `selftests.ts`'s source, the other walks `PARAM_DEFS`. Fixing KPP-C8's
+ * wage term put "R125" straight into a `why` string, in the session whose
+ * handoff opens by naming that exact defect - so this is the surface the
+ * previous fix generalised over, one module short.
+ *
+ * Measured before it was wired: 133 equations, zero hits on `why` and zero on
+ * `name`, so the eight patterns are safe against this prose too.
+ */
+export function renderedEquationProseAuditCodes(): string[] {
+  const out: string[] = [];
+  for (const id of Object.keys(EQUATIONS)) {
+    const d = EQUATIONS[id];
+    if (!d) continue;
+    const fields: Array<[string, string]> = [
+      ['name', d.name || ''],
+      ['why', d.why || '']
+    ];
+    for (const [where, text] of fields) {
+      for (const [pattern, what] of AUDIT_CODE_IN_RENDERED_TEXT) {
+        const hit = pattern.exec(text);
+        if (hit) {
+          out.push(id + '.' + where + ' renders ' + what + ' ("' + hit[0] + '")');
           break;
         }
       }

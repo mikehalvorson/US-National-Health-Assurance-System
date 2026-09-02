@@ -438,14 +438,17 @@ DOCUMENTED_GAPS = {
         "target."
     ),
     "KPP-C8": (
-        "Ordinary-taxpayer burden share: the base case computes 4.6% of program cost "
+        "Ordinary-taxpayer burden share: the base case computes 5.6% of program cost "
         "against the 5% cap, after wealth financing, household relief and wage "
-        "pass-through - inside the cap, but only just, and only there. Twelve of the "
-        "twenty scenarios breach it, the worst at 15.6% (SCN-PESS). The gap stays "
-        "declared because the metric is met on one favourable run and missed on most "
-        "of the rest. R143 moved this: before the healthcare model grew the wealth "
-        "base at the sourced top-capital rate rather than at GDP, the base case "
-        "computed about 5.9%."
+        "pass-through, and 17 of the 20 scenarios breach it, the worst at 16.7% "
+        "(SCN-PESS). R125 moved this and moved it the unflattering way: the wage "
+        "pass-through was subtracted from the burden at its gross value while the "
+        "28% tax feedback on those same wages had already been credited against "
+        "the revenue requirement, so households were relieved twice for the taxed "
+        "share and the base case read 4.6%, inside the cap. Corrected to the wage "
+        "gain households keep, the base case is outside the cap too. R143 moved it "
+        "earlier: before the healthcare model grew the wealth base at the sourced "
+        "top-capital rate rather than at GDP, the base case computed about 5.9%."
     ),
     "TPP-W1": (
         "Role-region vacancy ceiling: the error form closes only where its build "

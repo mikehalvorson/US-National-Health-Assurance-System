@@ -48,7 +48,8 @@ import { PHASE_YEAR } from './rollout';
 /* ---- Expression tree ---------------------------------------------------- */
 export type RampId = 'cov' | 'cs' | 'unit' | 'drug' | 'hosp' | 'exp' | 'inf';
 export type ModelId = 'util' | 'trainProg' | 'year' | 'costRatio'
-  | 'adminShare' | 'pubCost' | 'newRev' | 'wealthRev' | 'houseRelief' | 'wageGain';
+  | 'adminShare' | 'pubCost' | 'newRev' | 'wealthRev' | 'houseRelief' | 'wageGain'
+  | 'wageGainNet';
 
 export type ExprNode =
   /* `kappa` marks the one leaf whose value is a sensitivity knob rather than a
@@ -240,7 +241,8 @@ export const MODEL_META: Record<ModelId, { sym: string; label: string }> = {
   newRev: { sym: 'newRev(t)', label: 'New dedicated revenue requirement from the fiscal engine ($B)' },
   wealthRev: { sym: 'wealthRev(t)', label: 'Wealth-financing revenue delivered ($B)' },
   houseRelief: { sym: 'relief(t)', label: 'Household premium and out-of-pocket relief ($B)' },
-  wageGain: { sym: 'wages(t)', label: 'Wage gains from employer premium pass-through ($B)' }
+  wageGain: { sym: 'wages(t)', label: 'Wage gains from employer premium pass-through ($B)' },
+  wageGainNet: { sym: 'wages_net(t)', label: 'Wage gains kept by households, net of the tax feedback ($B)' }
 };
 
 /* ---- The equation catalog ----------------------------------------------- */
@@ -659,9 +661,9 @@ def({
   id: 'KPP-C8', kind: 'KPP', name: 'Ordinary taxpayer protection ratio', group: 'cost',
   cmp: '<=', unit: '%', decimals: 1,
   expr: mul(n(100, 'percent scale'),
-    dv(mx(n(0, 'no net burden'), sub(sub(sub(m('newRev'), m('wealthRev')), m('houseRelief')), m('wageGain'))),
+    dv(mx(n(0, 'no net burden'), sub(sub(sub(m('newRev'), m('wealthRev')), m('houseRelief')), m('wageGainNet'))),
       mx(m('pubCost'), n(1, 'positive-cost guard ($B)')))),
-  why: 'The ordinary-taxpayer share of program cost is the new revenue not covered by wealth financing and not returned as premium relief, out-of-pocket relief, or pass-through wage gains.'
+  why: 'The ordinary-taxpayer share of program cost is the new revenue not covered by wealth financing and not returned as premium relief, out-of-pocket relief, or pass-through wage gains. The wage term is net of the tax feedback on those wages, because the financing requirement is already reduced by that feedback; subtracting the gross would relieve households by more than the wages they keep.'
 });
 
 /* ======== Clinical outcomes and equity (KPP-D, KPP-E, TRUST) ============ */
@@ -1255,6 +1257,7 @@ function modelAt(ctx: ScnCtx, id: ModelId, t: number): number {
     case 'wealthRev': return row.wealthRevenue;
     case 'houseRelief': return row.householdRelief;
     case 'wageGain': return row.wageGain;
+    case 'wageGainNet': return row.wageGainNet;
   }
   return NaN;
 }

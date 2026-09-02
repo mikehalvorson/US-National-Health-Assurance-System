@@ -161,16 +161,26 @@ describe('R231: maturity closure says what it means', () => {
     expect(gaps).toEqual(['KPP-C1', 'KPP-C7', 'KPP-C8', 'TPP-W1']);
   });
 
-  /* R143 [§S5]: the measurement that keeps KPP-C8's gap declared. The base
-     case is inside the 5% cap and almost nothing else is, so a base-case-only
-     reading of "the gap closed" would have deleted a true disclosure. */
-  test('KPP-C8 meets its cap on the base case and misses it in most scenarios', () => {
+  /* R143 [§S5]: the measurement that keeps KPP-C8's gap declared. It used to
+     read "meets its cap on the base case and misses it in most scenarios",
+     because the base case was inside the 5% cap and almost nothing else was.
+
+     R125 [§S11b] moved the base case outside the cap. The wage pass-through
+     was subtracted from the ordinary-taxpayer burden at its GROSS value while
+     `newRevenue` had already been reduced by the 28% tax feedback on those
+     same wages, so the metric relieved households twice for the taxed share.
+     The equation reads `wageGainNet` now and the base case is 5.6%, not 4.6%.
+     The assertions are inverted rather than loosened: what this test pins is
+     that the base case is a breach, because a fix that quietly restored the
+     gross would put it back inside the cap and a `toBeLessThan(6)` would not
+     notice. */
+  test('KPP-C8 misses its cap on the base case and in almost every scenario', () => {
     const p = QUALITY_DATA.parameters.find((x) => x.id === 'KPP-C8')!;
     const meta = parseNum(p.target)!;
     expect(meta.num).toBe(5);
     const base = evaluateAtPhase('KPP-C8', 'SCN-BASE', 'P8');
-    expect(base).toBeLessThan(5);
-    expect(base).toBeGreaterThan(4);
+    expect(base).toBeGreaterThan(5);
+    expect(base).toBeLessThan(6);
     const breaching = breachingScenarios(p, meta);
     /* R143 measured "12 of 20 scenarios breach". Re-drawing the same model
        with one random stream per parameter, and no economics changed at all,
@@ -190,7 +200,11 @@ describe('R231: maturity closure says what it means', () => {
        households inside the 5% cap. SCN-PESS also moved, 15.59 -> 15.88, from
        rdPublic. The scenario that crossed is asserted by name, so a future
        move of the same size somewhere else cannot pass on the count alone. */
-    expect(breaching.length).toBe(11);
+    /* R125 [§S11b]: 11 -> 17, and SCN-BASE joins them. Pinned exactly for
+       the reason above: the count is a statistic of the ensemble, so a real
+       move is visible and a reseed is not mistaken for one. */
+    expect(breaching.length).toBe(17);
+    expect(breaching).toContain('SCN-BASE');
     expect(breaching).toContain('SCN-PESS');
     expect(breaching).toContain('SCN-EMP-FAIL');
     expect(p.documentedGap).toBeTruthy();

@@ -49,12 +49,14 @@ import {
 } from './phase-targets';
 import { QUALITY_DATA } from './quality';
 import {
-  AUTHORITATIVE_KINDS, clampCounts, computeTargets, documentedGapIds, equationSelfTests,
+  AUTHORITATIVE_KINDS, clampCounts, computeTargets, documentedGapIds, EQUATIONS,
+  equationSelfTests,
   KAPPA_CONFIDENCE, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, MATURITY_TOLERANCE,
   NOT_RELEVANT_TEXT
 } from './equations';
 import {
-  calibrationDrift, documentedGapDrift, kappaBand, kappaRegistryGaps, kappaTableDrift,
+  calibrationDrift, documentedGapDrift, documentedGapFigureDrift, GAP_FIGURES,
+  kappaBand, kappaRegistryGaps, kappaTableDrift,
   maturityToleranceDrift
 } from './kappa-check';
 import {
@@ -92,7 +94,7 @@ import {
   guardedGlobalListeners, manifestDrift, PARSER_HOME, parserImplementations,
   readmeAdvertisedTestCount, readmeDeployDrift, registryGateCountDrift,
   registrySurfaceRowCount, buildGateWiring,
-  renderedParamProseAuditCodes, renderedSelfTestNameLeaks,
+  renderedEquationProseAuditCodes, renderedParamProseAuditCodes, renderedSelfTestNameLeaks,
   researchPathCitationLeaks, researchReadmeGateCount,
   researchReadmeGateList,
   staleResearchPathExemptions, unsweptSelfTestNameSites,
@@ -574,13 +576,26 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
        new-revenue requirement on one side and household burden on the other -
        it flatters the plan in both directions at once - and nothing exercised
        the seam it crosses. This is where the two sides meet, so this is where
-       the check lives; neither file owns it. */
+       the check lives; neither file owns it.
+
+       R125 [§S11b]: it flattered the plan in both directions at once, and
+       this check could not see it. It handed `distribution()` the GROSS wage
+       gain and then asserted that the allocation conserved the figure it had
+       just passed in - a conservation check, where the live question was
+       whether the gross or the net belonged on the household side at all.
+       Conserving the wrong input perfectly is what it was measuring.
+
+       The check now exercises what the app exercises (`wageGainNet`, which
+       tax-client.ts passes) and adds the side that was missing: the dollars
+       credited to households plus the dollars booked as revenue must come to
+       the gross exactly once. Handing the gross back to households fails that
+       row by the whole feedback. */
     surface: 'wage-passthrough',
     rows: () => {
       const YEAR = MATURE_YEAR;
       const mc = runOverviewMc('SCN-BASE', null);
       const d = mc.modePath.detail[MATURE_INDEX];
-      const wageB = d.wageGain * DEFLATOR_2023_TO_2024;
+      const wageB = d.wageGainNet * DEFLATOR_2023_TO_2024;
       const reliefB = d.householdRelief * DEFLATOR_2023_TO_2024;
       const settings = defaultSettings();
       const withWage = distribution(settings, YEAR, reliefB, wageB);
@@ -634,7 +649,32 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             ok: !problems.length,
             note: problems.slice(0, 3).join('; ') ||
               'household burden falls by $' + reliefTotalB.toFixed(1) +
-              'B, the whole of the wage gain, spread by wage share'
+              'B, the whole of the wage gain households keep, spread by wage share'
+          };
+        }),
+        /* R125 [§S11b]: the third half, and the one that had no side to fail
+           on. The wage channel pays out once. What the household surfaces
+           credit, plus what the revenue side books as tax feedback, is the
+           gross pass-through - not more. */
+        runGuarded('The wage channel pays out once across the two engines', () => {
+          const grossB = d.wageGain * DEFLATOR_2023_TO_2024;
+          const feedbackB = d.taxFeedback * DEFLATOR_2023_TO_2024;
+          const credited = distribution(defaultSettings(), YEAR, 0, wageB)
+            .reduce((a, r) => a + r.wageB, 0);
+          const problems: string[] = [];
+          if (!(grossB > 0 && feedbackB > 0)) {
+            problems.push('the model produces no wage channel at ' + YEAR);
+          }
+          if (Math.abs((credited + feedbackB) - grossB) > 1e-6) {
+            problems.push('households are credited $' + credited.toFixed(1) +
+              'B and the treasury books $' + feedbackB.toFixed(1) +
+              'B against a gross pass-through of $' + grossB.toFixed(1) + 'B');
+          }
+          return {
+            ok: !problems.length,
+            note: problems.join('; ') ||
+              '$' + grossB.toFixed(1) + 'B gross = $' + credited.toFixed(1) +
+              'B to households + $' + feedbackB.toFixed(1) + 'B to the treasury'
           };
         })
       ];
@@ -791,6 +831,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           ok: !drift.length,
           note: drift.join('; ') ||
             documentedGapIds(QUALITY_DATA).join(', ') + ', each pointing at the methodology'
+        };
+      }),
+      /* R125 [§S11b]: the row above reconciles the SET of gaps and reads no
+         number out of any of them, so KPP-C8's disclosure published a base
+         value, a breach count and a worst case that the model contradicted -
+         three of them stale before this section opened. This row recomputes
+         each figure the prose states, and fails if the prose stops stating
+         it. */
+      runGuarded('Every figure a documented gap states is the figure the model computes', () => {
+        const drift = documentedGapFigureDrift();
+        return {
+          ok: !drift.length,
+          note: drift.join('; ') ||
+            GAP_FIGURES.length + ' published figures recomputed across ' +
+            new Set(GAP_FIGURES.map((f) => f.id)).size + ' disclosures'
         };
       }),
       runGuarded('The published KAPPA sensitivity band matches the model', () => {
@@ -1142,13 +1197,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
            class. Two `source` strings shipped an R-number through it. The
            audit-code list runs over the same fields now. */
         const audit = renderedParamProseAuditCodes();
+        /* R125 [§S11b]: and over the equation cards, whose `name` and `why`
+           quality-client.ts renders. Fixing KPP-C8 put an R-number into a
+           `why` string, which is the surface the fix above generalised over
+           one module short. Folded in here rather than added as a row,
+           because the claim this row makes is the one it belongs to. */
+        const inEq = renderedEquationProseAuditCodes();
         return {
-          ok: !hits.length && !inCards.length && !inParams.length && !audit.length,
+          ok: !hits.length && !inCards.length && !inParams.length && !audit.length &&
+            !inEq.length,
           note: [hits.map((h) => h.file + ':' + h.line).join('; '), inCards.join('; '),
-            inParams.join('; '), audit.slice(0, 2).join('; ')]
+            inParams.join('; '), audit.slice(0, 2).join('; '), inEq.slice(0, 2).join('; ')]
             .filter(Boolean).join(' | ') ||
             NARRATIVE_SURFACES.length + ' narrative surfaces, ' + CARE_SCENARIOS.length +
-            ' cards and ' + PARAM_DEFS.length + ' parameter rows carry none, under'
+            ' cards, ' + PARAM_DEFS.length + ' parameter rows and ' +
+            Object.keys(EQUATIONS).length + ' equation cards carry none, under'
             + ' both the catalog list and the audit-code list'
         };
       }),

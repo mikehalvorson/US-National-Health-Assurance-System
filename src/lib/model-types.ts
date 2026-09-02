@@ -158,6 +158,14 @@ export interface DetailRow {
   householdRelief: number;
   wageGain: number;
   taxFeedback: number;
+  /* R125 [§S11b]: the wage gain households actually keep.
+     `taxFeedback` is `wageGain * wageTaxFeedbackRate` and is subtracted from
+     `newRevenue`, so those dollars are government revenue. Two published
+     surfaces credited households the GROSS anyway - the tax page's
+     distribution rows and KPP-C8 - which relieved them by 128% of the wages
+     the model passes through. Every household-facing surface reads this
+     field; `wageGain` stays gross because the revenue arithmetic is right. */
+  wageGainNet: number;
   pubShare: number;
 }
 

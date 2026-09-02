@@ -22,7 +22,11 @@ import type { TaxSettings, TaxProgram, DistributionRow } from '../lib/tax-types'
 
 function $(id: string): HTMLElement | null { return document.getElementById(id); }
 
-interface HealthPath { years: number[]; newRevenue: number[]; relief: number[]; wageGain: number[] }
+/* R125 [§S11b]: `wageGainNet`, not `wageGain`. The health model's tax
+   feedback is already subtracted from newRevenue, so crediting households
+   the gross pass-through here relieved them twice for the taxed share. The
+   field is named for which of the two it carries. */
+interface HealthPath { years: number[]; newRevenue: number[]; relief: number[]; wageGainNet: number[] }
 
 /* ---- state ---- */
 let settings: TaxSettings = defaultSettings();
@@ -41,7 +45,7 @@ function buildHealthPath(): void {
     years: mc.years.slice(),
     newRevenue: mc.modePath.detail.map(function (d) { return d.newRevenue * DEF; }),
     relief: mc.modePath.detail.map(function (d) { return d.householdRelief * DEF; }),
-    wageGain: mc.modePath.detail.map(function (d) { return (d.wageGain || 0) * DEF; })
+    wageGainNet: mc.modePath.detail.map(function (d) { return (d.wageGainNet || 0) * DEF; })
   };
 }
 function healthNeed(year: number): number {
@@ -58,9 +62,9 @@ function healthRelief(year: number): number {
 }
 function healthWage(year: number): number {
   const hp = healthPath;
-  if (!hp || !hp.wageGain) return 0;
+  if (!hp || !hp.wageGainNet) return 0;
   const i = hp.years.indexOf(year);
-  return i >= 0 ? hp.wageGain[i] : 0;
+  return i >= 0 ? hp.wageGainNet[i] : 0;
 }
 
 function activePrograms(): TaxProgram[] {

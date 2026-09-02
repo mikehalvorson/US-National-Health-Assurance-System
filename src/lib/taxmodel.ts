@@ -197,6 +197,12 @@ export function compute(settings: TaxSettings, programs: TaxProgram[]): ComputeR
  * year ($B, 2024$), from the healthcare model; 0 if not linked.
  * wageGainB: wages passed through from employers' net premium savings
  * ($B, 2024$), allocated to groups by wage share; 0 if not linked.
+ * R125 [§S11b]: this must be NET of any tax feedback the funding side has
+ * already booked as revenue. The health model subtracts
+ * `wageGain * wageTaxFeedbackRate` from `newRevenue`, so passing the gross
+ * here credits households dollars the treasury is simultaneously collecting -
+ * the same double count R42 removed on the revenue side. Pass
+ * `detail.wageGainNet`.
  * Returns rows per group + totals.
  */
 export function distribution(

@@ -26,10 +26,12 @@ import { fileURLToPath } from 'node:url';
 import {
   computeTargets, EQ_PHASES, EQUATIONS, KAPPA_BAND, KAPPA_BUILD_AT_P5, KAPPA_CONFIDENCE,
   KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE,
-  documentedGapIds, MATURITY_TOLERANCE, withKappa
+  documentedGapIds, evaluateAtPhase, MATURITY_TOLERANCE, withKappa
 } from './equations';
 import { QUALITY_DATA } from './quality';
 import { GATES } from './rollout';
+import { SCENARIOS } from './scenarios';
+import { parseNum } from './phase-targets';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const METHODOLOGY = 'research/quality-equation-methodology.md';
@@ -225,6 +227,117 @@ export function documentedGapDrift(): string[] {
     }
   }
   return [...new Set(out)].sort();
+}
+
+/* R125 [§S11b]: the figures a documented gap states, checked against the
+ * model that produces them.
+ *
+ * `documentedGapDrift` above reconciles the SET of stamped ids against the set
+ * written up, in both directions. It reads no number out of either. So
+ * KPP-C8's disclosure - the audit calls this block the most honest thing in
+ * the codebase - published "the base case computes 4.6% ... twelve of the
+ * twenty scenarios breach it, the worst at 15.6%" while the model computed
+ * 5.6%, seventeen and 16.7%. Three of those four figures were already stale
+ * before R125 touched anything: the neighbouring test had been pinning eleven
+ * since R140, and nothing compared the two.
+ *
+ * A set check and a figure check are different checks. This is the second.
+ *
+ * Each row lifts a number out of the published prose and recomputes it. A row
+ * whose pattern finds nothing FAILS, so deleting the figure to quiet the check
+ * is not a way out; the figure has to be there and it has to be right.
+ */
+export interface GapFigure {
+  id: string;
+  what: string;
+  /* one capture group, the number as the prose states it */
+  pattern: RegExp;
+  compute: () => number;
+  /* the prose rounds, so state how far it may round */
+  tolerance: number;
+}
+
+function breachCount(id: string): number {
+  const p = QUALITY_DATA.parameters.filter(function (x) { return x.id === id; })[0];
+  const meta = p && parseNum(p.target);
+  if (!meta || !meta.cmp) return NaN;
+  return SCENARIOS.filter(function (sc) {
+    const v = evaluateAtPhase(id, sc.id, 'P8');
+    if (!isFinite(v)) return true;
+    return meta.cmp === '<='
+      ? !(v <= meta.num * (1 + MATURITY_TOLERANCE))
+      : !(v >= meta.num * (1 - MATURITY_TOLERANCE));
+  }).length;
+}
+
+function worstScenarioValue(id: string): number {
+  const vals = SCENARIOS.map(function (sc) { return evaluateAtPhase(id, sc.id, 'P8'); })
+    .filter(function (v) { return isFinite(v); });
+  return vals.length ? Math.max.apply(null, vals) : NaN;
+}
+
+export const GAP_FIGURES: GapFigure[] = [
+  {
+    id: 'KPP-C1', what: 'base-case maturity value',
+    pattern: /computes about ([0-9.]+)% at maturity/,
+    compute: function () { return evaluateAtPhase('KPP-C1', 'SCN-BASE', 'P8'); },
+    tolerance: 0.5
+  },
+  {
+    id: 'KPP-C7', what: 'base-case maturity value',
+    pattern: /the researched mature collection rate is ([0-9.]+)%/,
+    compute: function () { return evaluateAtPhase('KPP-C7', 'SCN-BASE', 'P8'); },
+    tolerance: 0.5
+  },
+  {
+    id: 'KPP-C8', what: 'base-case maturity value',
+    pattern: /the base case computes ([0-9.]+)% of program cost/,
+    compute: function () { return evaluateAtPhase('KPP-C8', 'SCN-BASE', 'P8'); },
+    tolerance: 0.05
+  },
+  {
+    id: 'KPP-C8', what: 'breaching scenario count',
+    pattern: /and ([0-9]+) of the [0-9]+ scenarios breach it/,
+    compute: function () { return breachCount('KPP-C8'); },
+    tolerance: 0
+  },
+  {
+    id: 'KPP-C8', what: 'scenario count',
+    pattern: /and [0-9]+ of the ([0-9]+) scenarios breach it/,
+    compute: function () { return SCENARIOS.length; },
+    tolerance: 0
+  },
+  {
+    id: 'KPP-C8', what: 'worst scenario value',
+    pattern: /the worst at ([0-9.]+)%/,
+    compute: function () { return worstScenarioValue('KPP-C8'); },
+    tolerance: 0.05
+  }
+];
+
+export function documentedGapFigureDrift(): string[] {
+  const out: string[] = [];
+  const byId: Record<string, string> = {};
+  QUALITY_DATA.parameters.forEach(function (p) {
+    if (p.documentedGap) byId[p.id] = p.documentedGap;
+  });
+  GAP_FIGURES.forEach(function (f) {
+    const prose = byId[f.id];
+    if (!prose) { out.push(f.id + ' has no documented gap to read ' + f.what + ' from'); return; }
+    const m = f.pattern.exec(prose);
+    if (!m) {
+      out.push(f.id + ' no longer states its ' + f.what + ' in the disclosure');
+      return;
+    }
+    const stated = Number(m[1]);
+    const actual = f.compute();
+    if (!isFinite(actual)) { out.push(f.id + ': ' + f.what + ' could not be computed'); return; }
+    if (Math.abs(stated - actual) > f.tolerance) {
+      out.push(f.id + ' states ' + f.what + ' ' + stated + ', the model computes ' +
+        (f.tolerance === 0 ? String(actual) : actual.toFixed(2)));
+    }
+  });
+  return out;
 }
 
 /* The registry entry itself. Read off the ONE table row that names the
