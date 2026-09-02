@@ -64,7 +64,12 @@ function renderPortfolio(): void {
     const why = element('p', 'medications-family-why',
       family.formClass + ' product, so it qualifies at ' + family.phase +
       (family.why ? '. ' + family.why : '.'));
-    const grade = element('span', 'conf ' + family.confidence, family.confidence);
+    /* R51 [§S11b]: the pill used to read a bare "high", in the same idiom
+       the parameter table uses for a sourcing grade, next to a field called
+       `confidence`. It grades how mechanical the phase derivation was and
+       says nothing about evidence, so it says which it is. */
+    const grade = element('span', 'conf ' + family.phaseGrade,
+      'phase basis ' + family.phaseGrade);
     why.appendChild(document.createTextNode(' '));
     why.appendChild(grade);
     card.appendChild(why);

@@ -45,20 +45,35 @@ export const PHASE_FOR_CLASS: Record<FormClass, PhaseId> = {
   'biologic': 'P8'
 };
 
-/* R174 [§S7]: 200 families with no source, no confidence grade, and no field
- * for either, against a params.ts that grades and cites 31 parameters and a
- * care.ts that grades all 10 cards. BJ1 narrowed it: the sourcing exists in
- * the medications methodology, in a file this module never cited, so it is a
- * linking job.
- *
- * Per family, what there is to cite is how the family's phase was assigned.
- * For most of them the essential forms decide it and the rule is mechanical.
- * For fifteen they do not, and the family says why in its own words. The
- * source key records which of the two it is, and the confidence grade follows
+/* R174 [§S7]: 200 families with no record of how their phase was assigned,
+ * against a params.ts that grades and cites 31 parameters and a care.ts that
+ * grades all 10 cards. Per family, what there is to state is how the phase
+ * was arrived at. For most of them the essential forms decide it and the rule
+ * is mechanical. For fifteen they do not, and the family says why in its own
+ * words. The basis key records which of the two it is, and the grade follows
  * from it: a mechanical assignment is `high`, a judgement is `medium`. Both
  * are read off the record rather than typed beside it, so neither can drift
- * away from what the data actually supports. */
-export const FAMILY_SOURCES = {
+ * away from what the data actually supports.
+ *
+ * 🛑 R51 [§S11b]: these two fields used to be called `source` and
+ * `confidence`, and both names were wrong in the same direction.
+ *
+ * Everywhere else in this repo `source` is a citation and `confidence` is how
+ * well evidenced a number is - params.ts pairs them with a `url`, and a build
+ * gate fails a parameter graded medium or better without one. Here `source`
+ * was a key into two sentences of methodology prose and `confidence` graded
+ * how mechanical the phase rule was. Neither says anything about evidence.
+ *
+ * That cost two audit passes. R51 was recorded as "medications.ts has no
+ * sources at all"; a premise pass measured that 200 of 200 families "carry a
+ * source and a confidence", called the row stale, and a later review had to
+ * retract it after reading what was in the field rather than what it was
+ * called. A self-test row named "Every drug family carries a source and a
+ * confidence grade" passed throughout.
+ *
+ * Renamed to `phaseBasis` and `phaseGrade`. The module carries no external
+ * citation at all and MEDICATIONS_SOURCING below says so, checked. */
+export const PHASE_BASES = {
   'form-class': 'The qualification phase follows the dosage-form class named ' +
     'in the family\'s own essential forms, under the manufacturing-complexity ' +
     'rule the medications methodology states for the portfolio.',
@@ -66,8 +81,12 @@ export const FAMILY_SOURCES = {
     'class. The phase follows the product\'s manufacturing character, and the ' +
     'family carries the reason.'
 } as const;
-export type FamilySource = keyof typeof FAMILY_SOURCES;
-export type FamilyConfidence = 'high' | 'medium';
+export type PhaseBasis = keyof typeof PHASE_BASES;
+/* Not a Confidence from model-types: this grades a derivation rule, not
+   evidence, so it deliberately does not sit on the repo's sourcing scale.
+   R138 [§S11b] enforces that scale over the surfaces that DO grade evidence,
+   and this is not one of them. */
+export type PhaseGrade = 'high' | 'medium';
 
 export interface FamilyRecord {
   id: string;
@@ -83,8 +102,8 @@ export interface FamilyRecord {
 
 export interface Family extends FamilyRecord {
   phase: PhaseId;
-  confidence: FamilyConfidence;
-  source: FamilySource;
+  phaseGrade: PhaseGrade;
+  phaseBasis: PhaseBasis;
 }
 
 const RECORDS: FamilyRecord[] = [
@@ -1350,19 +1369,59 @@ const RECORDS: FamilyRecord[] = [
   }
 ];
 
-export function familySource(r: FamilyRecord): FamilySource {
+export function familyPhaseBasis(r: FamilyRecord): PhaseBasis {
   return r.why ? 'manufacturing-character' : 'form-class';
 }
 
-export function familyConfidence(r: FamilyRecord): FamilyConfidence {
+export function familyPhaseGrade(r: FamilyRecord): PhaseGrade {
   return r.why ? 'medium' : 'high';
+}
+
+/* R51 [§S11b]: what this module cites, stated rather than left to be
+ * inferred from field names.
+ *
+ * One quantity here rests on published evidence: ALL_DRUG_SPEND_2024, whose
+ * fifty-line provenance comment names its sources. Nothing else does. The 200
+ * families carry a derivation and how mechanical it was; the portfolio's
+ * composition is the plan's own selection.
+ *
+ * `citedQuantities` is held to zero external references in the family data by
+ * medicationsSourcingDrift() below. The check has two sides on purpose: if a
+ * citation is ever added to a family, the declaration is wrong and the build
+ * says so, and if the declaration is edited to claim citations that are not
+ * there, it says so too. A module that carries no sources should say which
+ * one it is, not go quiet. */
+export const MEDICATIONS_SOURCING = {
+  cited: ['ALL_DRUG_SPEND_2024'],
+  uncited: 'Every one of the 200 families. The phase basis records how the ' +
+    'qualification phase was derived from the dosage-form class, and the ' +
+    'grade records whether that derivation was mechanical. Neither is a ' +
+    'citation, and no family carries an external reference.'
+};
+
+/* Held against the data. A family record carrying a URL, a DOI or a bare
+   domain would be a citation this declaration denies, and would mean the
+   module's sourcing position had changed without the sentence changing. */
+export function medicationsSourcingDrift(records: FamilyRecord[] = RECORDS): string[] {
+  const out: string[] = [];
+  const reference = /https?:\/\/|\bdoi\.org\b|\bwww\./i;
+  records.forEach(function (r) {
+    const text = [r.name, r.form, r.why || ''].join(' ');
+    if (reference.test(text)) {
+      out.push(r.id + ' carries an external reference, which MEDICATIONS_SOURCING denies');
+    }
+  });
+  if (!MEDICATIONS_SOURCING.cited.length) {
+    out.push('the declaration names no cited quantity, but ALL_DRUG_SPEND_2024 is one');
+  }
+  return out;
 }
 
 export const FAMILIES: Family[] = RECORDS.map((r) => ({
   ...r,
   phase: PHASE_FOR_CLASS[r.formClass],
-  confidence: familyConfidence(r),
-  source: familySource(r)
+  phaseGrade: familyPhaseGrade(r),
+  phaseBasis: familyPhaseBasis(r)
 }));
 
 /* The class the essential forms lead to on their own. Deliberately small and
@@ -1438,9 +1497,9 @@ export function familyPhaseCounts(families: Family[] = FAMILIES): Record<PhaseId
   return out;
 }
 
-export function familyGradeCounts(families: Family[] = FAMILIES): Record<FamilyConfidence, number> {
-  const out: Record<FamilyConfidence, number> = { high: 0, medium: 0 };
-  for (const f of families) out[f.confidence] += 1;
+export function familyGradeCounts(families: Family[] = FAMILIES): Record<PhaseGrade, number> {
+  const out: Record<PhaseGrade, number> = { high: 0, medium: 0 };
+  for (const f of families) out[f.phaseGrade] += 1;
   return out;
 }
 

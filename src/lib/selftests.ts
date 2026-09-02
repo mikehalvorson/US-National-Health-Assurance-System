@@ -9,7 +9,7 @@ import {
 } from './model';
 import { FRAGILE_WITHIN, REGION_PALETTE } from './hospital-regions';
 import { KIND_STYLE } from './ltc';
-import { LTC_WORKFORCE as LTC_WORKFORCE_FIGURES } from './workforce';
+import { CREATED, LEGACY, LTC_WORKFORCE as LTC_WORKFORCE_FIGURES } from './workforce';
 import { runOverviewMc } from './overview';
 import { runMonteCarlo } from './model';
 import {
@@ -121,7 +121,8 @@ import {
 import {
   ALL_DRUG_SPEND_2024, DRUG_BASE, DRUG_BASE_LABELS, DRUG_BASE_NOTE_FIGURES,
   drugBaseNote, spendBarArithmetic,
-  FAMILIES, FAMILY_SOURCES, FAMILY_TAGS, FAMILY_WHY_FLOOR, familyGradeCounts,
+  FAMILIES, PHASE_BASES, FAMILY_TAGS, FAMILY_WHY_FLOOR, familyGradeCounts,
+  MEDICATIONS_SOURCING, medicationsSourcingDrift,
   familyPhaseCounts, PHASE_FOR_CLASS, phasePrinciple, shallowFormClassReasons,
   staleFormClassDeclarations, undeclaredFormClasses, unknownFamilyTags,
   unusedFamilyTags
@@ -2537,17 +2538,35 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       /* R174 [§S7]: and every family carries both fields, with the grade the
          basis of its own assignment supports. BY6 found `high` published on
          the portfolio while the data graded nothing at all. */
-      runGuarded('Every drug family carries a source and a confidence grade', () => {
+      /* R51 [§S11b]: this row was called "Every drug family carries a source
+         and a confidence grade", and it passed, and the claim it appeared to
+         make was false. The fields it reads are a derivation key and a grade
+         of how mechanical that derivation was. Renamed to what it checks, and
+         the sourcing question it was mistaken for is the row below. */
+      runGuarded('Every drug family declares how its phase was derived, and how mechanically', () => {
         const grades = familyGradeCounts();
         const ok = FAMILIES.every((f) =>
-          FAMILY_SOURCES[f.source] !== undefined && f.confidence.length > 0) &&
+          PHASE_BASES[f.phaseBasis] !== undefined && f.phaseGrade.length > 0) &&
           grades.high + grades.medium === 200 &&
-          Object.keys(FAMILY_SOURCES).every((k) =>
-            FAMILIES.some((f) => f.source === k));
+          Object.keys(PHASE_BASES).every((k) =>
+            FAMILIES.some((f) => f.phaseBasis === k));
         return {
           ok,
-          note: grades.high + ' high, ' + grades.medium + ' medium, across ' +
-            Object.keys(FAMILY_SOURCES).length + ' declared sources'
+          note: grades.high + ' derived mechanically, ' + grades.medium +
+            ' by judgement, across ' + Object.keys(PHASE_BASES).length +
+            ' declared bases. Neither grade is a statement about evidence.'
+        };
+      }),
+      /* R51 [§S11b]: and the sourcing question itself, which nothing asked.
+         The module cites one quantity and says so; the check holds the
+         sentence to the data in both directions. */
+      runGuarded('The medications module states which of its quantities are cited', () => {
+        const drift = medicationsSourcingDrift();
+        return {
+          ok: !drift.length,
+          note: drift.slice(0, 3).join('; ') ||
+            MEDICATIONS_SOURCING.cited.join(', ') + ' cited; all ' +
+            FAMILIES.length + ' families uncited and declared so'
         };
       }),
       /* R176 [§S7]: the six reasons are a union, and the tab's filter offers
@@ -3196,20 +3215,39 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
               + backlog.join(', ')
         };
       }),
+      /* R138 [§S11b], reopened. The row said "one scale, five grades,
+         enforced" and swept five surfaces. workforce.ts was not one of them,
+         and it grades seven CREATED items on "Medium-Low" and "Low" -
+         capitalised, and "Medium-Low" is not even a permutation of the scale's
+         `low-medium`. workforce-client.ts renders the value verbatim, so a
+         grade on a vocabulary this repo declares and does not contain has been
+         reaching a reader on the Workforce tab throughout.
+
+         Seventh instance of the class this campaign keeps finding: the fix
+         declared enforcement and left a surface it had not looked at. The
+         surfaces are a declared list now rather than four hand-written calls,
+         so adding a graded surface without adding it here is a visible
+         omission instead of an invisible one. */
       runGuarded('Every graded surface uses the one declared confidence scale', () => {
         const bad: string[] = [];
-        const check = (where: string, rows: readonly { confidence?: string }[]) => {
-          for (const r of rows) {
-            if (r.confidence === undefined) continue;
-            if (!isConfidence(r.confidence)) {
-              bad.push(where + ' grades on "' + r.confidence + '"');
-            }
+        const check = (where: string, values: readonly (string | undefined)[]) => {
+          for (const v of values) {
+            if (v === undefined) continue;
+            if (!isConfidence(v)) bad.push(where + ' grades on "' + v + '"');
           }
         };
-        check('params.ts PARAM_DEFS', PARAM_DEFS);
-        check('params.ts ENGINE_CONSTANTS', ENGINE_CONSTANTS);
-        check('params.ts OUTCOME_STATS', OUTCOME_STATS);
-        check('medications.ts FAMILIES', FAMILIES);
+        const graded = (rows: readonly { confidence?: string }[]) =>
+          rows.map((r) => r.confidence);
+        check('params.ts PARAM_DEFS', graded(PARAM_DEFS));
+        check('params.ts ENGINE_CONSTANTS', graded(ENGINE_CONSTANTS));
+        check('params.ts OUTCOME_STATS', graded(OUTCOME_STATS));
+        /* R51 [§S11b]: `phaseGrade`, not `confidence`. It grades a derivation
+           rule rather than evidence, but its words are the scale's words and
+           a reader cannot tell two vocabularies apart, so it is held to the
+           one scale like everything else. */
+        check('medications.ts FAMILIES', FAMILIES.map((f) => f.phaseGrade));
+        check('workforce.ts CREATED', CREATED.map((c) => c.confidence));
+        check('workforce.ts LEGACY', LEGACY.map((l) => l.confidence));
         for (const r of BASELINE_ROWS) {
           if (!isConfidence(r.confidence)) {
             bad.push('the seed grades ' + r.baselineId + ' on "' + r.confidence + '"');

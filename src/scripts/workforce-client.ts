@@ -158,7 +158,10 @@ function renderLegacyDetail(id: string): void {
   host.appendChild(reason);
   host.appendChild(field('Likely destinations', item.destinations));
   host.appendChild(field('Counting boundary', item.boundary));
-  host.appendChild(field('Evidence and confidence', item.evidence));
+  /* R68 [§S11b]: the grade is a field now, so the sentence is composed from
+     it rather than typed into the prose beside it. */
+  host.appendChild(field('Evidence and confidence',
+    item.evidence + ' Confidence: ' + item.confidence + '. ' + item.confidenceReason));
   host.appendChild(field('Work that continues', item.continues));
   addAcronymHovers(host);
 }
