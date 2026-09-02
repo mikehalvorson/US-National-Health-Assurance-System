@@ -23,6 +23,12 @@ const eqRows = derivations
   .filter((d) => d.kinds.includes('equation-derived target'))
   .reduce((n, d) => n + d.rows, 0);
 const assertedRows = publishedRows - eqRows;
+
+/* R115 [§S11b]: the catalog has two sources and the page said so nowhere.
+   The sentence is read from the catalog, not typed here, because R220 in
+   §S12 and §S16 have to land on the same words and copying prose between
+   three places is how three places end up saying three things. */
+const provenance = QUALITY_DATA.provenance;
 ---
 <BaseLayout title="National Health Assurance: Quality">
   <main>
@@ -33,8 +39,10 @@ const assertedRows = publishedRows - eqRows;
       parameters. Key performance parameters define system outcomes,
       technical performance parameters define operating performance, and
       cost parameters define the quantities required to cost, calibrate, and
-      stress-test the system. This view lists all 440 records in the
-      controlled dictionaries and groups them by where they matter.</p>
+      stress-test the system. This view lists all {provenance.framework + provenance.planDefined}
+      records in the plan's dictionaries and groups them by where they
+      matter.</p>
+    <p class="desc">{provenance.note}</p>
     <div class="quality-counts" aria-label="Controlled parameter counts">
       <div class="quality-count">
         <span class="quality-kicker">System outcomes</span>
@@ -157,7 +165,7 @@ const assertedRows = publishedRows - eqRows;
   </section>
 
   <section class="card">
-    <h2>Explore all 440 parameters</h2>
+    <h2>Explore all {provenance.framework + provenance.planDefined} parameters</h2>
     <p class="desc">Search the controlled identifier or text, narrow the
       catalog by parameter type or concept, and choose a rollout phase. Select
       any row for its calculation, owner, datasets, status, its target
@@ -219,7 +227,7 @@ const assertedRows = publishedRows - eqRows;
   <p class="rollout-source">The catalog covers the complete key-performance
     and technical-performance dictionaries, the 310-record cost-parameter
     registry, and the controlled phase and gate tables.
-    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources and methodology</a>.</p>
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/quality-equation-methodology.md" target="_blank" rel="noopener">Sources and methodology</a>.</p>
 
     <ChapterNav />
   </main>

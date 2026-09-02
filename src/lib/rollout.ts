@@ -21,6 +21,37 @@ export interface Gate {
   fallback: string;
 }
 
+/* R257 [§S11b]: five of the eight gates state a number and three do not.
+ *
+ * G1 requires >=75%, G2 >=80% and <=5 per 10,000, G3 >=85%, G4 >=98% and six
+ * months, G5 >=97%. G6, G7 and G8 read as lists of things that must "work",
+ * "transfer safely" or be "usable" - real requirements, and not measurements.
+ *
+ * The section they are published in is framed as measurement: gateFloorChecks
+ * lifts the quantities out of each floor and holds catalog rows to them, and
+ * the page presents all eight the same way. So three gates sat in a
+ * measurement frame carrying nothing to measure, and a reader had no way to
+ * tell which kind they were looking at.
+ *
+ * Derived rather than declared. A hand-kept list of "the three" is a list
+ * that goes stale the moment a floor is rewritten with a number in it, which
+ * is exactly what should happen to G6, G7 and G8. The page reads this. */
+export function gateFloorQuantities(gate: Gate): number[] {
+  /* Phase and gate references are addresses, not quantities - the same
+     exclusion gate-floors.ts makes, for the same reason. */
+  return (gate.floor.replace(/\b[PG][0-9]+\b/g, ' ').match(/[0-9]+(?:\.[0-9]+)?/g) || [])
+    .map(Number);
+}
+
+export function gateIsMeasurable(gate: Gate): boolean {
+  return gateFloorQuantities(gate).length > 0;
+}
+
+export const QUALITATIVE_GATE_NOTE =
+  'This gate states conditions rather than a threshold. Readiness is a ' +
+  'judgement by the named body against the listed capabilities, not a number ' +
+  'the model can score.';
+
 export interface AgencyGroup {
   title: string;
   color: string;

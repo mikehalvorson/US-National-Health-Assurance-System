@@ -806,6 +806,60 @@ export const RAMPS = {
   itCapitalShape:  [0.08, 0.12, 0.15, 0.15, 0.14, 0.13, 0.12, 0.11, 0, 0, 0, 0, 0, 0, 0, 0]
 };
 
+/* ---- The two outlay shapes, and what is actually claimed about them ------
+ * R254 [§S11b]. The row said `rollout.astro` states the plan "explicitly does
+ * not invent phase shares or straight-line the total" and that `params.ts`
+ * shipping `transitionShape` contradicts it. Measured: no such sentence
+ * exists anywhere in `src/`, and `grep -rni "phase share"` returns nothing.
+ * What `rollout.astro` says is that transition cost "is not straight-lined:
+ * the model carries an annual outlay profile", which asserts that these
+ * arrays exist and do what they do. The page and the code agree.
+ *
+ * The real gap is smaller and it is here. Twenty hand-set fractions, and the
+ * only thing checked about them was that each array sums to 1. Three claims
+ * were being made and one was being tested:
+ *
+ *   - the sum. Checked already.
+ *   - the SPAN. The comments say "over yrs 1-12" and "over yrs 1-8", and the
+ *     page says "runs over 10-12 years". Nothing held the arrays to it, so
+ *     moving weight into year 14 would keep the sum at 1 and quietly make
+ *     three statements false.
+ *   - "not straight-lined", which the page states outright. Nothing tested
+ *     it, so a flat profile would have satisfied every check while
+ *     contradicting the sentence describing it.
+ *
+ * Declared here so all three can fail. What is NOT claimed is that the
+ * fractions are sourced: they are an analyst-shaped profile, graded as one,
+ * and `basis` says what would have to exist to do better.
+ * ------------------------------------------------------------------------ */
+export interface OutlayShape {
+  id: 'transitionShape' | 'itCapitalShape';
+  years: number;
+  label: string;
+  basis: string;
+}
+export const OUTLAY_SHAPES: OutlayShape[] = [
+  {
+    id: 'transitionShape', years: 12,
+    label: 'Transition outlay profile',
+    basis: 'ASSUMPTION. The shape of transition spending over the years it ' +
+      'runs: slow in year one while contracts are let, a plateau through the ' +
+      'middle years when wave conversion and worker bridges overlap, then a ' +
+      'taper as legacy operations close. No source estimates the annual ' +
+      'profile of a transition of this kind, because none has been run. What ' +
+      'would move it is a costed work-package schedule, which the plan ' +
+      'requires and does not yet have. The total it distributes is ' +
+      'transitionTotal, which is itself graded low.'
+  },
+  {
+    id: 'itCapitalShape', years: 8,
+    label: 'Information mesh capital profile',
+    basis: 'ASSUMPTION. Capital for the records mesh, front-loaded because ' +
+      'the build has to precede the reliance that gates on it. Same standing ' +
+      'as the transition profile: no external schedule exists for it.'
+  }
+];
+
 /* ---- Declared ramp milestones -------------------------------------------
  * Each policy ramp claims, in its comment above, to deliver something by a
  * named phase. Those claims are restated here as data so a self-test can

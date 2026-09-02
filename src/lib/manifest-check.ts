@@ -1019,6 +1019,85 @@ export function scanSourceLines(
   return out;
 }
 
+/* R160 [§S11b]: a link labelled "Sources and methodology" has to lead to
+ * sources.
+ *
+ * Four pages sent it to the repository ROOT - quality, hardening, risk and
+ * rollout - where a reader arrives at a README about the dashboard and has to
+ * go looking. Nine other pages already pointed at the research file that
+ * carries their numbers, so the four were the exception and nothing said so.
+ *
+ * Three counts were in circulation for this row and all three were wrong: the
+ * prompt said one page, the log said three and named health.astro, which has
+ * pointed at research/01 for some time. Counted here instead of asserted, and
+ * that is the shape of the check: it does not hold a number, it holds the
+ * property. A repo link that names a path must name a path that exists, and a
+ * repo link that names none is the bare root.
+ *
+ * `research/` files are the target; the check reads the tree, so a renamed or
+ * deleted research file fails the page that cites it, which is the defect
+ * P16's review found in research/README.md itself - a path no reader could
+ * open. */
+export const REPO_URL =
+  'https://github.com/mikehalvorson/US-National-Health-Assurance-System';
+const REPO_LINK = new RegExp('href="' + REPO_URL + '([^"]*)"', 'g');
+
+export function repoLinkTargets(root = REPO_ROOT): {
+  file: string; line: number; path: string; exists: boolean;
+}[] {
+  const out: { file: string; line: number; path: string; exists: boolean }[] = [];
+  for (const rel of enumerateSourceFiles(root)) {
+    if (!rel.startsWith('src/pages/') || !rel.endsWith('.astro')) continue;
+    const lines = readFileSync(join(root, rel), 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      REPO_LINK.lastIndex = 0;
+      let m: RegExpExecArray | null;
+      while ((m = REPO_LINK.exec(line)) !== null) {
+        /* strip /blob/main/ or /tree/main/ and any #anchor */
+        const tail = m[1].replace(/^\/(?:blob|tree)\/main\//, '').split('#')[0];
+        out.push({
+          file: rel, line: i + 1, path: tail,
+          exists: tail !== '' && existsSync(join(root, tail))
+        });
+      }
+    });
+  }
+  return out;
+}
+
+/* The one page that may name the repository root, and why. index.astro calls
+   it "this dashboard" in a sentence about the project, which is a link TO the
+   repository rather than a link to sources. Declared rather than pattern-
+   matched on the label, because a label is prose and prose gets edited. */
+export const REPO_ROOT_LINK_HOME = 'src/pages/index.astro';
+
+export function unresolvedRepoLinks(root = REPO_ROOT): string[] {
+  return repoLinkTargets(root)
+    .filter((t) => !t.exists)
+    .filter((t) => !(t.path === '' && t.file === REPO_ROOT_LINK_HOME))
+    .map((t) => t.file + ':' + t.line +
+      (t.path === '' ? ' points at the repository root, where a reader has to' +
+        ' go looking for the sources' : ' points at ' + t.path +
+        ', which is not in the tree'));
+}
+
+/* R257 [§S11b]: the rollout page splits its gates into the ones that set a
+ * threshold and the ones that set conditions, and it must derive that split
+ * rather than type it. Checked here because this is the module that reads
+ * source files; selftests.ts consumes the result. */
+export const GATE_SPLIT_PAGE = 'src/pages/rollout.astro';
+export const GATE_SPLIT_EXPRESSIONS = [
+  'GATES.filter(gateIsMeasurable).length',
+  '{measurableGates} of the {GATES.length}'
+];
+
+export function gateSplitNotDerived(root = REPO_ROOT): string[] {
+  const page = readFileSync(join(root, GATE_SPLIT_PAGE), 'utf8');
+  return GATE_SPLIT_EXPRESSIONS
+    .filter((e) => !page.includes(e))
+    .map((e) => GATE_SPLIT_PAGE + ' no longer derives the gate split: "' + e + '"');
+}
+
 export function maskComments(text: string): string {
   const out = text.split('');
   let i = 0;

@@ -4,6 +4,7 @@
    via the timeline's dataset.wired guard. */
 import {
   PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS, WORKSTREAM_COST_NOTE,
+  gateIsMeasurable, QUALITATIVE_GATE_NOTE,
   WORKSTREAM_GATE, WORKSTREAM_OWNER, UNIT_BUILDOUT_STEPS
 } from '../lib/rollout';
 
@@ -269,12 +270,23 @@ function renderGates(): void {
     when.textContent = gate.when;
     const floor = document.createElement('p');
     floor.textContent = gate.floor;
+    /* R257 [§S11b]: three of the eight gates carry no measurable floor, in a
+       section that presents all eight as measurements. Which three is read
+       off the floor text, so a gate that gains a threshold stops carrying
+       this note without anyone maintaining a list. */
+    const qualitative = !gateIsMeasurable(gate) ? (function () {
+      const p = document.createElement('p');
+      p.className = 'gate-qualitative';
+      p.textContent = QUALITATIVE_GATE_NOTE;
+      return p;
+    })() : null;
     const fallback = document.createElement('p');
     fallback.className = 'gate-fallback';
     fallback.textContent = 'If not ready: ' + gate.fallback;
     body.appendChild(h3);
     body.appendChild(when);
     body.appendChild(floor);
+    if (qualitative) body.appendChild(qualitative);
     body.appendChild(fallback);
     item.appendChild(number);
     item.appendChild(body);

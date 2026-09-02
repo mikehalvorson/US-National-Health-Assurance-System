@@ -12,7 +12,7 @@ import { runMonteCarlo } from './model';
 import type { MonteCarloResult } from './model-types';
 import {
   DEFLATOR_2023_TO_2024, householdDenominator, MATURE_INDEX, MONTE_CARLO_DRAWS,
-  MONTE_CARLO_SEED
+  MONTE_CARLO_SEED, SPONSOR_SHARE
 } from './params';
 import { money, moneyShort, pct, perCap } from './format';
 
@@ -85,7 +85,17 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
      also what makes the pairing visible: the "today" figure divides by today's
      households and the 2041 figure by 2041's, and those are different numbers
      for a reason. */
-  const famNow = 0.27 * 5300, fam2041 = 0.27 * baseMature;
+  /* R241 [§S11b]: was `0.27 * 5300` and `0.27 * baseMature`. The audit filed
+     this as a magic number to register, and §BC5 counted it in three modules;
+     measured, the other two are a comment deriving this same share and an
+     unrelated distributional bracket rate that happens to equal 0.27.
+     Registering it would have been the wrong fix anyway: params.ts already
+     DERIVES the household sponsor share from the money-flow map, as
+     SPONSOR_SHARE.household, and R21 derived the other four sponsor shares
+     for exactly this reason. So it is read, not registered. It is 0.27009,
+     which is what the 27% in the sentence below rounds to. */
+  const familyShare = SPONSOR_SHARE.household;
+  const famNow = familyShare * 5300, fam2041 = familyShare * baseMature;
   const hhNow = householdDenominator('census').households;
   const hh2041 = householdDenominator('census-2041').households;
   const d41 = mc.modePath.detail[MATURE_INDEX];

@@ -59,6 +59,67 @@ NHA_QUALITY_DATA.parameters.forEach(function (parameter) {
   ].join(' ').toLowerCase();
 });
 
+/* R115 [§S11b]: the catalog's two sources, held to each other.
+ *
+ * Ten records are not in the controlled framework document. Both the prompt
+ * and two handoffs recorded that nothing identified which ten, so the row
+ * could not be implemented. Measured: the addendum names all ten and the live
+ * catalog gave all ten a `status` string no other record carried, so they
+ * were identifiable twice over and nothing read either signal.
+ *
+ * `provenance` is the signal now, set by the generator from the file that
+ * supplies the records. This holds four things a reader of the page depends
+ * on, each able to fail on its own: every record declares a provenance, the
+ * declared counts match the records, the plan-defined ids are exactly the
+ * ones marked, and the page's sentence states the split it describes. The
+ * last is the one that matters most - the sentence names two numbers, and a
+ * sentence naming numbers nothing recomputes is how this campaign shipped
+ * three wrong counts. */
+export const CATALOG_PROVENANCES = ['framework', 'plan-defined'];
+
+export function catalogProvenanceDrift(): string[] {
+  const out: string[] = [];
+  const prov = NHA_QUALITY_DATA.provenance;
+  if (!prov) return ['the catalog declares no provenance block'];
+  const counted: Record<string, number> = {};
+  const planIds: string[] = [];
+  NHA_QUALITY_DATA.parameters.forEach(function (p) {
+    const v = p.provenance;
+    if (!v || CATALOG_PROVENANCES.indexOf(v) < 0) {
+      out.push(p.id + ' declares provenance "' + (v || '') + '"');
+      return;
+    }
+    counted[v] = (counted[v] || 0) + 1;
+    if (v === 'plan-defined') planIds.push(p.id);
+  });
+  if ((counted['framework'] || 0) !== prov.framework) {
+    out.push('declares ' + prov.framework + ' framework records, counts ' +
+      (counted['framework'] || 0));
+  }
+  if ((counted['plan-defined'] || 0) !== prov.planDefined) {
+    out.push('declares ' + prov.planDefined + ' plan-defined records, counts ' +
+      (counted['plan-defined'] || 0));
+  }
+  const declared = (prov.planDefinedIds || []).slice().sort().join(',');
+  if (declared !== planIds.slice().sort().join(',')) {
+    out.push('the declared plan-defined ids are not the ones marked');
+  }
+  /* The sentence names both numbers. Read them out of it rather than trusting
+     that whoever last edited it also edited the counts. */
+  const stated: string[] = prov.note.match(/\b(\d+)\b/g) || [];
+  const wants: string[] = [
+    String(prov.framework),
+    String(prov.framework + prov.planDefined)
+  ];
+  wants.forEach(function (n) {
+    if (stated.indexOf(n) < 0) out.push('the catalog note does not state ' + n);
+  });
+  if (!/\bTen\b|\bten\b|\b10\b/.test(prov.note)) {
+    out.push('the catalog note does not say how many records are plan-defined');
+  }
+  return out;
+}
+
 export const QUALITY_DATA = NHA_QUALITY_DATA;
 
 /* The two walks §S3 wrote nine times between them.

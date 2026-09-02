@@ -48,6 +48,7 @@ import {
   PARAM_DEFS,
   TOP_CAPITAL_REAL_GROWTH,
   SPONSOR_SHARE,
+  OUTLAY_SHAPES,
   engineConstant,
 } from './params';
 import {
@@ -662,6 +663,22 @@ export function selfTest(): SelfTestResult[] {
     Math.abs(sum(RAMPS.transitionShape) - 1) < 1e-9);
   check("IT capital shape sums to 100%",
     Math.abs(sum(RAMPS.itCapitalShape) - 1) < 1e-9);
+
+  /* 2b. R254 [§S11b]: and the two claims the sum could not see. A profile
+     that runs a year longer than its declaration, or one that is flat, both
+     keep the sum at 1 while contradicting the sentence the page prints. */
+  OUTLAY_SHAPES.forEach(function (shape) {
+    const a = RAMPS[shape.id];
+    const last = a.reduce(function (n, v, i) { return v > 0 ? i + 1 : n; }, 0);
+    const nonZero = a.filter(function (v) { return v > 0; }).length;
+    check(shape.label + " runs over the " + shape.years + " years it declares",
+      last === shape.years && nonZero === shape.years,
+      "spans " + last + " years, " + nonZero + " non-zero");
+    const spread = Math.max.apply(null, a) - Math.min.apply(null, a.slice(0, shape.years));
+    check(shape.label + " is a profile, not a straight line",
+      spread > 1e-9,
+      "peak minus trough across the span = " + spread.toFixed(4));
+  });
 
   /* 3. Neutral policy ⇒ NHA ≈ baseline (no free lunch / no phantom cost) */
   const effective = effectiveParams("SCN-BASE", null);

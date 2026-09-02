@@ -47,7 +47,8 @@ import {
   REL_FALLBACK_IDS, REL_FALLBACK_PHASE, selfTestEveryRelevantPhase, selfTestNoRegression,
   staleRelevanceFallbacks, undeclaredRelevanceFallbacks
 } from './phase-targets';
-import { QUALITY_DATA } from './quality';
+import { catalogProvenanceDrift, QUALITY_DATA } from './quality';
+import { GATES, gateIsMeasurable } from './rollout';
 import {
   AUTHORITATIVE_KINDS, clampCounts, computeTargets, documentedGapIds, EQUATIONS,
   equationSelfTests,
@@ -96,6 +97,7 @@ import {
   readmeAdvertisedTestCount, readmeDeployDrift, registryGateCountDrift,
   registrySurfaceRowCount, buildGateWiring,
   renderedEquationProseAuditCodes, renderedParamProseAuditCodes, renderedSelfTestNameLeaks,
+  repoLinkTargets, unresolvedRepoLinks, gateSplitNotDerived,
   researchPathCitationLeaks, researchReadmeGateCount,
   researchReadmeGateList,
   staleResearchPathExemptions, unsweptSelfTestNameSites,
@@ -2555,6 +2557,50 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
           note: grades.high + ' derived mechanically, ' + grades.medium +
             ' by judgement, across ' + Object.keys(PHASE_BASES).length +
             ' declared bases. Neither grade is a statement about evidence.'
+        };
+      }),
+      /* R257 [§S11b]: which gates carry a measurable floor, and the page's
+         count of them. Both sides can fail: rewriting G6 with a threshold
+         moves the count, and so does a floor losing its number. The row is
+         here rather than a hand-kept list of "the three" because a list is
+         what goes stale when the thing it lists is meant to change. */
+      runGuarded('The rollout page states how many gates set a threshold', () => {
+        const measurable = GATES.filter(gateIsMeasurable);
+        const qualitative = GATES.filter((g) => !gateIsMeasurable(g));
+        const problems = gateSplitNotDerived();
+        if (!qualitative.length) {
+          problems.push('every gate now sets a threshold; the page still splits them');
+        }
+        return {
+          ok: !problems.length,
+          note: problems.join('; ') ||
+            measurable.map((g) => g.n).join('/') + ' set a threshold; ' +
+            qualitative.map((g) => g.n).join('/') + ' set conditions'
+        };
+      }),
+      /* R160 [§S11b]: "Sources and methodology" has to lead to sources. */
+      runGuarded('Every repository link on a page resolves to a file in the tree', () => {
+        const bad = unresolvedRepoLinks();
+        const all = repoLinkTargets();
+        return {
+          ok: !bad.length,
+          note: bad.slice(0, 3).join(' | ') ||
+            all.length + ' repository links across ' +
+            new Set(all.map((t) => t.file)).size + ' pages, every one resolving'
+        };
+      }),
+      /* R115 [§S11b]: the catalog has two sources and the page called all 440
+         "controlled". The ten records the framework document does not carry
+         are marked structurally now, and this holds the marking, the declared
+         counts, the declared ids and the page's own sentence to each other. */
+      runGuarded('The catalog says which of its records the framework document carries', () => {
+        const drift = catalogProvenanceDrift();
+        const p = QUALITY_DATA.provenance;
+        return {
+          ok: !drift.length,
+          note: drift.slice(0, 3).join('; ') ||
+            p.framework + ' framework, ' + p.planDefined + ' plan-defined (' +
+            p.planDefinedIds.join(', ') + ')'
         };
       }),
       /* R51 [§S11b]: and the sourcing question itself, which nothing asked.

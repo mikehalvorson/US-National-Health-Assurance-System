@@ -4,12 +4,18 @@ import ChapterNav from '../components/ChapterNav.astro';
 /* R255 [§S2]: the headline years are derived from the phase map and gated
    against the ramps that deliver them; this page renders them, and does not
    restate any milestone year of its own. */
-import { ROLLOUT_HEADLINES } from '../lib/rollout';
+import { GATES, gateIsMeasurable, ROLLOUT_HEADLINES } from '../lib/rollout';
 /* R256 [§S2]: the calendar anchor is stated in params.ts and referenced here. */
 /* R253 + R156 [§S5]: the envelope is computed from transitionTotal and
    itCapital rather than typed, and the cost bridge's exclusion is named here,
    where the envelope is displayed. */
 import { CALENDAR_ANCHOR_NOTE, transitionEnvelope } from '../lib/params';
+
+/* R257 [§S11b]: five gates state a threshold and three state conditions. The
+   split is counted from the floor text, not typed, so a gate that gains a
+   number moves the sentence with it. */
+const measurableGates = GATES.filter(gateIsMeasurable).length;
+const qualitativeGates = GATES.length - measurableGates;
 
 const ENV = transitionEnvelope();
 const t = (b: number) => '$' + (b / 1000).toFixed(1) + 'T';
@@ -104,10 +110,17 @@ const ENVELOPE_NOTE =
   </section>
 
   <section class="card">
-    <h2>Eight gates that can stop the clock</h2>
+    <h2>{GATES.length} gates that can stop the clock</h2>
     <p class="desc">A gate is a decision, not a date. If evidence is below the
       floor, the plan preserves care and payment, invokes a manual or
       legacy fallback, repairs the defect, and re-enters review.</p>
+    <p class="desc">{measurableGates} of the {GATES.length} set a threshold a
+      number can be tested against. The other {qualitativeGates} set conditions
+      instead: a list of capabilities that must be working before the wave
+      proceeds, judged by the named body rather than scored. They are real
+      requirements and they are not measurements, and each says so on its own
+      card, because a page that presents all {GATES.length} identically invites
+      a reader to assume all {GATES.length} are the same kind of claim.</p>
     <div id="rollout-gates" class="gate-grid"></div>
   </section>
 
@@ -136,7 +149,7 @@ const ENVELOPE_NOTE =
   </section>
 
   <p class="rollout-source">
-    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources and methodology</a>.</p>
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/README.md" target="_blank" rel="noopener">Sources and methodology</a>.</p>
 
     <ChapterNav />
   </main>

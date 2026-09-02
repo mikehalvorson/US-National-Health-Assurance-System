@@ -82,6 +82,11 @@ export interface QualityParameter {
   calculation: string; datasets: string; ownerVerifier: string; status: string; unit: string;
   modelRole: string; temporal: string; unitStatus: string; family: string; phaseNote: string;
   rollout: RolloutEntry[]; _search?: string; _phaseStart?: string;
+  /* R115 [S11b]: which source carries this record. `framework` for the 430
+     the controlled document defines, `plan-defined` for the ten the plan
+     defines and the document does not. Set by the generator from the file
+     that supplies them, so it cannot be edited apart from the records. */
+  provenance: string;
   /* R235: set on the metrics whose base-case maturity value does not meet the
      source target, with the reason and a pointer to where it is written up.
      The maturity-closure check exempts exactly the records carrying it, and
@@ -93,6 +98,10 @@ export interface QualityGate { id: string; decision: string; name?: string; floo
 export interface CpFamily { id: string; domain: string; records: number; owners?: string; sensitivity?: string; }
 export interface QualityData {
   source: string; counts: { KPP: number; TPP: number; CP: number; total: number };
+  /* R115 [S11b]: how many of `total` each source carries, and the one
+     sentence every surface describing the catalog must use. R220 in S12 and
+     S16 land on the same words by reading this, not by copying it. */
+  provenance: { framework: number; planDefined: number; planDefinedIds: string[]; note: string };
   concepts: string[]; cpFamilies?: CpFamily[]; phases: QualityPhase[]; gates: QualityGate[]; parameters: QualityParameter[];
 }
 
@@ -471,10 +480,47 @@ def stamp_documented_gaps(parameters: list[dict]) -> None:
         by_id[identifier]["documentedGapSection"] = DOCUMENTED_GAP_SECTION
 
 
+# R115 [S11b]: the ten records the DOCX does not carry, marked structurally.
+#
+# The row says "add them to the controlled source or mark them provisional",
+# and both the prompt and two handoffs said nothing identified WHICH ten.
+# Measured: the addendum names all ten by id, and in the live catalog all ten
+# carry a `status` string no other record carries.  So they were identifiable
+# twice over and nothing read either signal.  A status string is prose that a
+# regeneration could reword; `provenance` is the fact, set here from the file
+# that defines it, so the ten cannot drift from the ten.
+#
+# Not "provisional".  These are not draft numbers - they are the plan's own
+# parameters, with targets, calculations, datasets and verifiers like any
+# other.  What is true of them is narrower and it is about the SOURCE: the
+# framework document does not carry them.  `plan-defined` says that; the 430
+# are `framework`.
+#
+# CATALOG_PROVENANCE_NOTE is the wording the page must use.  R220 in S12 fixes
+# the page that calls all 440 "controlled" and S16 owns the vocabulary, and
+# the prompt requires all three to land on the same words.  Exported as data
+# rather than written up for copying, because copying prose between three
+# sections is how three sections end up saying three things.
+PROVENANCE_FRAMEWORK = "framework"
+PROVENANCE_PLAN = "plan-defined"
+
+CATALOG_PROVENANCE_NOTE = (
+    "430 of these records are carried by the controlled framework document. "
+    "Ten are not: the merit health-talent immigration parameters, which the "
+    "plan defines and the framework document does not contain. They are "
+    "listed here with the rest and marked plan-defined, because leaving them "
+    "out would understate what the plan commits to and calling all 440 "
+    "controlled would overstate what the framework carries."
+)
+
+
 def load_addendum() -> list[dict]:
     """The records that are not in the DOCX, in the order the live file has them."""
     payload = json.loads(ADDENDUM.read_text(encoding="utf-8"))
-    return payload["records"]
+    records = payload["records"]
+    for record in records:
+        record["provenance"] = PROVENANCE_PLAN
+    return records
 
 
 def build_catalog() -> dict:
@@ -519,6 +565,9 @@ def build_catalog() -> dict:
             f"{len(kpps)} KPP, {len(tpps)} TPP, {len(cps)} CP"
         )
 
+    for parameter in parameters:
+        parameter["provenance"] = PROVENANCE_FRAMEWORK
+
     parameters.extend(load_addendum())
     kpp_total = sum(1 for item in parameters if item["type"] == "KPP")
     tpp_total = sum(1 for item in parameters if item["type"] == "TPP")
@@ -536,6 +585,20 @@ def build_catalog() -> dict:
             "TPP": tpp_total,
             "CP": len(cps),
             "total": len(parameters),
+        },
+        "provenance": {
+            "framework": sum(
+                1 for item in parameters
+                if item["provenance"] == PROVENANCE_FRAMEWORK
+            ),
+            "planDefined": sum(
+                1 for item in parameters if item["provenance"] == PROVENANCE_PLAN
+            ),
+            "planDefinedIds": [
+                item["id"] for item in parameters
+                if item["provenance"] == PROVENANCE_PLAN
+            ],
+            "note": CATALOG_PROVENANCE_NOTE,
         },
         "concepts": CONCEPTS,
         "cpFamilies": [
