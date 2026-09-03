@@ -44,13 +44,15 @@ import {
    other's state, so there is no cycle. */
 import { maskComments } from './manifest-check';
 /* The CP namespace's generated mirror. A leaf module with no imports of
-   its own, so reading it here cannot form a cycle. The cast follows
-   quality.ts, which imports the value and the type separately because the
-   generated literal infers a union rather than the declared shape. */
+   its own, so reading it here cannot form a cycle.
+   R298 [§S12]: this used to re-cast the import `as unknown as QualityData`,
+   which was needed only because the generated literal itself was cast through
+   `unknown` and therefore reached consumers untyped. The generator now
+   annotates it, so the import already has the declared shape. */
 import { NHA_QUALITY_DATA } from './quality-data';
-import type { QualityData, QualityParameter } from './quality-data';
+import type { QualityParameter } from './quality-data';
 
-const QUALITY_CATALOG = NHA_QUALITY_DATA as unknown as QualityData;
+const QUALITY_CATALOG = NHA_QUALITY_DATA;
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 

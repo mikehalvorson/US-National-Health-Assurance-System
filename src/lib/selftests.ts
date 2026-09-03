@@ -98,6 +98,7 @@ import {
   registrySurfaceRowCount, buildGateWiring,
   renderedEquationProseAuditCodes, renderedParamProseAuditCodes, renderedSelfTestNameLeaks,
   repoLinkTargets, unresolvedRepoLinks, gateSplitNotDerived,
+  provenanceStampDrift, unresolvedMethodologyPath,
   researchPathCitationLeaks, researchReadmeGateCount,
   researchReadmeGateList,
   staleResearchPathExemptions, unsweptSelfTestNameSites,
@@ -2201,6 +2202,18 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('Data-tab metric IDs conform to the KPP/TPP pattern', () => {
         const bad = dataPhaseIdFormat().nonConforming;
         return { ok: !bad.length, note: bad.join(', ') || 'all conform' };
+      }),
+      /* R298 [§S12]: the row name states the property, not the stamp. The
+         stamp is the plan's own document title, and health.astro renders
+         every self-test name, so naming the value here would put it on a
+         public page. */
+      runGuarded('Both generated catalogs claim the same provenance', () => {
+        const bad = provenanceStampDrift();
+        return { ok: !bad.length, note: bad.join('; ') || 'the two stamps agree' };
+      }),
+      runGuarded('The published methodology path resolves in the tree', () => {
+        const bad = unresolvedMethodologyPath();
+        return { ok: !bad.length, note: bad.join('; ') || 'the cited document is present' };
       }),
       runGuarded('Data-tab phase targets never regress from their mature target', () => {
         const r = dataPhaseMonotonicity().regressions;

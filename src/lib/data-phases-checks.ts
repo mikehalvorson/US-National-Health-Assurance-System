@@ -1,9 +1,16 @@
 /* R54 [§S0]: self-tests for data-phases.ts.
  *
- * The module ships metricCount: 26 and targetCount: 64 as fields and asserts
- * nothing at all - no registration on any harness. Both figures verify by hand
- * (V4), but the Quality tab reuses this data verbatim, so an error here reaches
- * two public chapters with no independent check.
+ * The module shipped metricCount and targetCount as fields and asserted
+ * nothing at all - no registration on any harness. Both figures verified by
+ * hand (V4), but the Quality tab reuses this data verbatim, so an error here
+ * reaches two public chapters with no independent check.
+ *
+ * R110 [§S12]: two claims in this comment had gone stale, which is the defect
+ * the file exists to prevent, one level up. It said the module "asserts
+ * nothing at all" after these functions were registered in selftests.ts, and
+ * it stated targetCount as 64 after P7's R105 added two P8 certification rows
+ * and moved it to 66. Neither figure is restated here now: the count is the
+ * payload's own field, and the tests read it rather than a copy.
  *
  * Kept out of data-phases.ts because that file is a verbatim port marked
  * "Fidelity-critical: do not re-derive"; the data stays untouched and the
@@ -238,4 +245,62 @@ export function dataPhaseMonotonicity(): { regressions: Regression[] } {
     }
   }
   return { regressions };
+}
+
+/* R110 [§S12], the one item of §AB7's test list nothing had written: the
+ * uptime justifications state an annualized downtime in hours and minutes,
+ * and that figure is derivable from the phase target at 8760 hours a year.
+ *
+ * The two sides are independent. The generator's PHASES table types the
+ * percentage in `phaseTarget` and types the hours and minutes into
+ * `justification` as prose; neither is computed from the other, so a target
+ * edited without its sentence, or a sentence edited without its target,
+ * publishes an uptime percentage next to a downtime it does not imply.
+ *
+ * Scope, stated rather than assumed: any metric whose justification states
+ * "<n> hours <m> minutes" and whose phase target carries a percentage. Rows
+ * that state no figure are not faults here - but `uptimeDowntimeRows()`
+ * reports how many DO state one, and the test pins that count, because a
+ * check that only inspects the rows carrying a figure makes deleting the
+ * figure the way to pass it. */
+const HOURS_MINUTES = /(\d+)\s+hours?\s+(\d+)\s+minutes?/;
+const TARGET_PCT = /(\d+(?:\.\d+)?)\s*%/;
+const HOURS_PER_YEAR = 8760;
+
+export interface DowntimeClaim {
+  phase: string;
+  id: string;
+  uptimePct: number;
+  statedMinutes: number;
+  impliedMinutes: number;
+}
+
+/* Every row that states a downtime figure, with what its target implies. */
+export function uptimeDowntimeRows(): DowntimeClaim[] {
+  const out: DowntimeClaim[] = [];
+  for (const { phase, metric } of everyMetric()) {
+    const said = HOURS_MINUTES.exec(metric.justification);
+    if (!said) continue;
+    const pct = TARGET_PCT.exec(metric.phaseTarget);
+    if (!pct) continue;
+    const uptime = Number(pct[1]);
+    out.push({
+      phase: phase,
+      id: metric.id,
+      uptimePct: uptime,
+      statedMinutes: Number(said[1]) * 60 + Number(said[2]),
+      impliedMinutes: ((100 - uptime) / 100) * HOURS_PER_YEAR * 60
+    });
+  }
+  return out;
+}
+
+/* The prose rounds to the nearest minute and says "about", so a minute of
+ * rounding is allowed and nothing more. */
+export function uptimeDowntimeDrift(): string[] {
+  return uptimeDowntimeRows()
+    .filter((r) => Math.abs(r.statedMinutes - r.impliedMinutes) > 1)
+    .map((r) => r.phase + ' ' + r.id + ' states ' + r.statedMinutes
+      + ' minutes of annualized downtime; ' + r.uptimePct + '% uptime implies '
+      + r.impliedMinutes.toFixed(1));
 }

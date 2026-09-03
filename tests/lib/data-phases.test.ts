@@ -10,13 +10,20 @@ import {
   frameworkBasisDrift,
   frameworkBasisEntries,
   measuredCoverageGaps,
-  unreasonedCoverageGaps
+  unreasonedCoverageGaps,
+  uptimeDowntimeDrift,
+  uptimeDowntimeRows
 } from '../../src/lib/data-phases-checks';
 
-/* R54 [§S0] — data-phases.ts ships metricCount: 26 and targetCount: 64 as
-   fields and asserts nothing. Both verify by hand (V4), but the Quality tab
-   reuses this data verbatim, so an error propagates to two public tabs with no
-   independent check. */
+/* R54 [§S0] — data-phases.ts shipped both counts as fields and asserted
+   nothing. Both verify by hand (V4), but the Quality tab reuses this data
+   verbatim, so an error propagates to two public tabs with no independent
+   check.
+
+   R110 [§S12]: this comment used to state targetCount as 64, which P7's R105
+   moved to 66 two sections ago. A count restated in a comment beside the test
+   that reads it is a second copy with nothing maintaining it, so the figure is
+   gone from here and the assertions below read the field. */
 
 test('R54: the declared metric count equals the distinct metric IDs', () => {
   expect(dataPhaseMetricIds().length).toBe(DATA_PHASE_COUNTS.metricCount);
@@ -65,10 +72,14 @@ test('R117: the check reaches all nineteen claims and reads the catalog', () => 
   expect(g1).toEqual(['P3', 'P4']);
 });
 
-test('R117: wording differs from the catalog on sixteen of the seventeen', () => {
-  // The reason string equality is the wrong instrument: the claims are prose
-  // restatements of the same quantity, so only the P8 API-conformance style
-  // rows repeat the catalog verbatim.
+test('R117: the claims restate the catalog rather than repeating it', () => {
+  /* R130 [§S11b] corrected this in data-phases-checks.ts and left the name
+     here saying "sixteen of the seventeen". There are nineteen rows and all
+     nineteen are reworded, so both figures were wrong; the assertion below
+     never depended on either, which is why nothing caught it.
+     Why string equality is the wrong instrument: the claims are prose
+     restatements of the same quantity, so comparing strings compares the
+     wording and comparing the parsed triple compares the claim. */
   const verbatim = frameworkBasisClaims().filter((c) => c.declared === c.catalogValue);
   expect(verbatim.length).toBeLessThan(frameworkBasisClaims().length);
   expect(frameworkBasisDrift()).toEqual([]);
@@ -111,4 +122,28 @@ test('R54: every phase carries an id, a year and at least one group', () => {
     expect(p.year).toBeGreaterThan(0);
     expect(p.groups.length).toBeGreaterThan(0);
   }
+});
+
+/* R110 [§S12] — §AB7's test list has seven items and six were written. This is
+   the seventh: the uptime justifications state an annualized downtime, and it
+   must be the one their percentage implies at 8760 hours a year. */
+
+test('R110: every stated annualized downtime matches its uptime target', () => {
+  expect(uptimeDowntimeDrift()).toEqual([]);
+});
+
+test('R110: five rows state a downtime figure, and the check reads all five', () => {
+  /* Pinned so that deleting a figure fails here rather than emptying the
+     drift list above and passing. */
+  const rows = uptimeDowntimeRows();
+  expect(rows.length).toBe(5);
+  expect(rows.map((r) => r.phase)).toEqual(['P1', 'P2', 'P3', 'P6', 'P7']);
+  expect(rows.every((r) => r.id === 'TPP-11.1')).toBe(true);
+
+  /* The arithmetic, once, in the open: 99.90% uptime leaves 0.10% of 8760
+     hours, which is 8 hours 46 minutes. */
+  const p1 = rows.filter((r) => r.phase === 'P1')[0];
+  expect(p1.uptimePct).toBe(99.9);
+  expect(p1.statedMinutes).toBe(8 * 60 + 46);
+  expect(Math.round(p1.impliedMinutes)).toBe(526);
 });

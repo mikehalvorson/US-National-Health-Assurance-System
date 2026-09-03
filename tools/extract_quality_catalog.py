@@ -105,8 +105,14 @@ export interface QualityData {
   concepts: string[]; cpFamilies?: CpFamily[]; phases: QualityPhase[]; gates: QualityGate[]; parameters: QualityParameter[];
 }
 
-export const NHA_QUALITY_DATA = '''
-TS_FOOTER = " as unknown as QualityData;\n"
+export const NHA_QUALITY_DATA: QualityData = '''
+# R298 [S12] swept the class rather than the instance it names.  The row is
+# filed against data-phases.ts, but this file carried the same
+# `as unknown as QualityData` construction over 440 parameter objects, and an
+# assertion through `unknown` switches off the type validation the interface
+# above exists to provide.  A plain annotation type-checks the whole payload:
+# proved by retyping counts.KPP as a string, which fails `astro check`.
+TS_FOOTER = ";\n"
 
 
 CONCEPTS = [

@@ -64,6 +64,10 @@ import {
 } from './ltc';
 import { FILE_MANIFEST } from './file-manifest';
 import { TABS } from './tabs';
+/* R298 [§S12]: both provenance stamps, reachable for the first time now that
+   neither generated payload is cast through `unknown`. */
+import { DATA_PHASE_METHODOLOGY_PATH, DATA_PHASE_SOURCE } from './data-phases';
+import { NHA_QUALITY_DATA } from './quality-data';
 
 /* src/lib/manifest-check.ts -> repo root */
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -4259,4 +4263,39 @@ export function deadLtcExports(root = REPO_ROOT): DeadExport[] {
     if (!used) out.push({ name, where: LTC_DATA });
   }
   return out;
+}
+
+/* R298 [§S12]: the two generated catalogs each carry a provenance stamp, and
+ * until the casts came off neither was reachable from any consumer, so nothing
+ * could compare them.
+ *
+ * They are not one value read twice. `tools/extract_quality_catalog.py` types
+ * the string at its line 668-equivalent and `tools/build_data_phase_targets.py`
+ * types it again in its own payload dict; neither reads it from the other. So
+ * regenerating one and not the other publishes two different provenance claims
+ * from one repository, which is exactly the state a reader cannot detect. The
+ * two sides of this check are two independently authored literals.
+ *
+ * The stamp is not rendered on any page, and this check must not start
+ * rendering it: it reports that the two disagree and shows both, and the
+ * self-test row that consumes it is named for the property, not the value. */
+export function provenanceStampDrift(): string[] {
+  if (DATA_PHASE_SOURCE === NHA_QUALITY_DATA.source) return [];
+  return ['the two generated catalogs claim different provenance: data-phases.ts'
+    + ' says "' + DATA_PHASE_SOURCE + '", quality-data.ts says "'
+    + NHA_QUALITY_DATA.source + '"'];
+}
+
+/* R298 [§S12]: the methodology path the payload publishes, resolved against
+ * the tree. `researchPathCitationLeaks` sweeps backticked paths in
+ * research/*.md and never looked at a path held as DATA in src/lib, so this
+ * one had been unchecked since it was written. A generated file naming a
+ * methodology document that is not there is a dead reference a reader meets
+ * before the code does. */
+export function unresolvedMethodologyPath(root = REPO_ROOT): string[] {
+  const rel = DATA_PHASE_METHODOLOGY_PATH;
+  if (rel === '') return ['data-phases.ts publishes no methodology path'];
+  return existsSync(join(root, rel))
+    ? []
+    : ['data-phases.ts cites ' + rel + ', which is not in the tree'];
 }
