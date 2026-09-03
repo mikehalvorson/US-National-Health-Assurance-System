@@ -100,6 +100,8 @@ import {
   repoLinkTargets, unresolvedRepoLinks, gateSplitNotDerived,
   provenanceStampDrift, unresolvedMethodologyPath,
   typedChapterNumbers, frontDoorChapterCoverage, literalCountsInAriaLabels,
+  readmeCountDrift, readmeStatedCounts, baseLayoutCallsWithoutDescription,
+  basisNotRendered,
   researchPathCitationLeaks, researchReadmeGateCount,
   researchReadmeGateList,
   staleResearchPathExemptions, unsweptSelfTestNameSites,
@@ -2228,6 +2230,34 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       /* R292 [S12]: a count typed into an aria-label is unverifiable by
          construction - nothing on screen and nothing in the accessibility
          tree can contradict it. Derived counts pass; literals do not. */
+      /* R136 [S12]: the README's headline sentence carries four counts and
+         only one was gated. The row filed the parameter count; the draws and
+         the scenario count were beside it, unchecked, and the parameter
+         count had already been corrected once with nothing to keep it
+         corrected. The note reports how many claims the check reads, so
+         deleting a sentence is visible rather than quiet. */
+      runGuarded('Every count the README states matches its collection', () => {
+        const bad = readmeCountDrift();
+        return {
+          ok: !bad.length,
+          note: bad.join('; ') || readmeStatedCounts().length + ' stated counts, all current'
+        };
+      }),
+      /* R269 [S12]: the mechanism was written correctly and one of fourteen
+         callers used it, so thirteen chapters shipped with no meta
+         description. The length floor is part of the check because an empty
+         or three-word description satisfies "passes one" and fixes nothing. */
+      runGuarded('Every page passes a real description to the layout', () => {
+        const bad = baseLayoutCallsWithoutDescription();
+        return { ok: !bad.length, note: bad.join('; ') || 'every page describes itself' };
+      }),
+      /* R111 [S12]: 47 of the 66 phase targets are analyst proposals the
+         methodology says must not be presented as framework requirements.
+         The distinction does reach the DOM; this is what keeps it there. */
+      runGuarded('Every rendered phase target shows whether it is derived', () => {
+        const bad = basisNotRendered();
+        return { ok: !bad.length, note: bad.join('; ') || 'the basis label is rendered on every row' };
+      }),
       runGuarded('No aria-label asserts a count as a literal', () => {
         const bad = literalCountsInAriaLabels();
         return { ok: !bad.length, note: bad.join('; ') || 'no label types a count' };

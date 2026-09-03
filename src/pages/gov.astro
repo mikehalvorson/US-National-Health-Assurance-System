@@ -22,7 +22,10 @@ import { GOV_GROUPS, LEADER_BASIS_NOTE } from '../lib/gov';
 const bodyCount = GOV_GROUPS.length;
 const entityCount = GOV_GROUPS.reduce((n, g) => n + g.members.length, 0);
 ---
-<BaseLayout title="National Health Assurance: Governance">
+<BaseLayout
+  title="National Health Assurance: Governance"
+  description="The institutions that would operate, decide, audit and enforce National Health Assurance, and what each one replaces."
+>
   <main>
 
   <section class="card chapter-intro">

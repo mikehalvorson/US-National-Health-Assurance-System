@@ -4,7 +4,7 @@
  * mature-scale total and federal-financing shift with observed U.S. spending
  * and CBO/Urban/Mercatus estimates. No DOM; returns rows + text strings.
  * ========================================================================= */
-import { BENCHMARKS, FRAMEWORK_CLAIM } from './params';
+import { BENCHMARKS, FRAMEWORK_CLAIM, NHE_2024_OBSERVED } from './params';
 import { money, moneyShort } from './format';
 import type { MonteCarloResult } from './model-types';
 import type { BenchmarkRow } from './benchmark-chart';
@@ -19,10 +19,14 @@ export function benchmarkChartRows(mc: MonteCarloResult, DEF: number): Benchmark
       mid: mc.steady.matureToday.p50 * DEF, color: 'var(--series-1)',
       basis: 'Total national health expenditure at maturity, all payers, real 2024 dollars'
     },
+    /* R183 [§S12]: this row typed the observed 2024 total, its band and its
+       basis, and overview.ts typed the same total again with nothing beside
+       it. Registered in params.ts and read by both. */
     {
-      label: 'Observed U.S. health spending, 2024', note: 'CMS preliminary estimate',
-      lo: 5250, hi: 5350, mid: 5300, color: 'var(--baseline-series)',
-      basis: 'Total national health expenditure actually spent in 2024, all payers'
+      label: NHE_2024_OBSERVED.label, note: NHE_2024_OBSERVED.note,
+      lo: NHE_2024_OBSERVED.low, hi: NHE_2024_OBSERVED.high,
+      mid: NHE_2024_OBSERVED.mid, color: 'var(--baseline-series)',
+      basis: NHE_2024_OBSERVED.basis
     },
     /* R26 [§S6a]: the framework's own figure, drawn from the constant and
        carrying the basis its own catalog states. It was in params.ts,
@@ -51,7 +55,7 @@ export function benchmarkText(mc: MonteCarloResult, DEF: number): BenchmarkText 
   const d30 = mc.nhe2030delta;
   const nhe = mc.steady.matureToday;
   const nheMid = nhe.p50 * DEF;
-  const nheDiffPct = 100 * (nheMid / 5300 - 1);
+  const nheDiffPct = 100 * (nheMid / NHE_2024_OBSERVED.mid - 1);
   const nheRelation = Math.abs(nheDiffPct) < 0.05 ? 'essentially equal to' :
     (nheDiffPct > 0 ? Math.abs(nheDiffPct).toFixed(1) + '% above' :
       Math.abs(nheDiffPct).toFixed(1) + '% below');

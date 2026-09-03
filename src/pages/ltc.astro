@@ -35,7 +35,10 @@ const wf = LTC_WORKFORCE;
 const usPerCapita = LTC_GDP_2021.find((r) => r.kind === 'us')!.perCapita
   .toLocaleString('en-US');
 ---
-<BaseLayout title="National Health Assurance: Long-Term Care">
+<BaseLayout
+  title="National Health Assurance: Long-Term Care"
+  description="How long-term services and supports would be funded and delivered, what families carry unpaid today, and what the benefit would cost."
+>
   <main>
 
   <section class="card chapter-intro">

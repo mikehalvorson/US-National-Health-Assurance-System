@@ -44,10 +44,10 @@ import {
   NETWORK_ABSORPTION, networkCost, UNIT_ASSUMPTIONS, unitsCostComparison,
   VISIT_SPLITS, type UnitAssumption
 } from './units';
-import { catalogCode, PARAM_DEFS, PARAMS_BY_ID } from './params';
+import { catalogCode, MONTE_CARLO_DRAWS, PARAM_DEFS, PARAMS_BY_ID } from './params';
 import { EQUATIONS } from './equations';
 import {
-  SCENARIOS as MODEL_SCENARIOS, SCENARIOS_BY_ID
+  SCENARIOS as MODEL_SCENARIOS, SCENARIOS_BY_ID, STRESS_SCENARIO_COUNT
 } from './scenarios';
 import {
   ADMINISTRATIVE_MATCH_IDS, CLINICAL_ENTRANT_IDS, createdGroupTotals,
@@ -4405,4 +4405,147 @@ export function literalCountsInAriaLabels(root = REPO_ROOT): string[] {
     }
   }
   return out;
+}
+
+/* R136 [§S12]: the README's other three counts, gated the way R155 gated the
+ * fourth.
+ *
+ * The row filed one instance - PARAM_DEFS has 31 and the README said "27
+ * sourced parameter distributions." Measured, the README now says 32 and
+ * PARAM_DEFS holds 32, so that instance closed in some earlier pass without
+ * anything being written to keep it closed. The sentence carries four
+ * numbers: the Monte Carlo draws, the parameter distributions, the stress
+ * scenarios and the integrity tests. Only the last was checked.
+ *
+ * A README cannot interpolate, so the count IS the claim and gating is the
+ * only available fix - the same reasoning R155 and the research README's gate
+ * already record. Each is read with its own pattern and compared against its
+ * own collection, so the three fail separately and for different reasons.
+ *
+ * MONTE_CARLO_DRAWS is formatted with a thousands separator in the prose and
+ * without one in the code, which is why the pattern admits the comma rather
+ * than the README being changed to read "1500 Monte Carlo draws". */
+export interface ReadmeCountClaim {
+  what: string;
+  stated: number | null;
+  actual: number;
+}
+
+export function readmeStatedCounts(root = REPO_ROOT): ReadmeCountClaim[] {
+  const text = readFileSync(join(root, 'README.md'), 'utf8');
+  const read = (re: RegExp): number | null => {
+    const m = text.match(re);
+    return m ? Number(m[1].replace(/,/g, '')) : null;
+  };
+  return [
+    {
+      what: 'Monte Carlo draws',
+      stated: read(/([\d,]+) Monte Carlo draws/),
+      actual: MONTE_CARLO_DRAWS
+    },
+    {
+      what: 'sourced parameter distributions',
+      stated: read(/(\d+) sourced parameter distributions/),
+      actual: PARAM_DEFS.length
+    },
+    {
+      what: 'stress scenarios',
+      stated: read(/(\d+) stress scenarios/),
+      actual: STRESS_SCENARIO_COUNT
+    }
+  ];
+}
+
+export function readmeCountDrift(root = REPO_ROOT): string[] {
+  return readmeStatedCounts(root)
+    .filter((c) => c.stated !== c.actual)
+    .map((c) => c.stated === null
+      ? 'README.md no longer states how many ' + c.what + ' there are; the code has ' + c.actual
+      : 'README.md says ' + c.stated + ' ' + c.what + '; the code has ' + c.actual);
+}
+
+/* R269 [§S12]: every page ships a meta description.
+ *
+ * BaseLayout has always accepted one and rendered it conditionally. One of
+ * fourteen callers passed it, so the conditional never fired on thirteen
+ * chapters and they went out with no description at all - which is what a
+ * search result and a link preview show for a document meant to be shared
+ * and cited.
+ *
+ * Read from the rendered artefact rather than the source, because the point
+ * is what reaches the DOM: a page could pass an empty string and satisfy any
+ * source scan. A description shorter than the floor is reported too, since a
+ * three-word one is the same defect wearing the fix. */
+const DESCRIPTION_MIN_CHARS = 60;
+
+export function pagesWithoutDescription(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  const files: string[] = [];
+  walk(join(root, 'src/pages'), root, files);
+  for (const rel of files.filter((f) => f.endsWith('.astro')).sort()) {
+    const route = rel.replace(/^src\/pages\//, '').replace(/\.astro$/, '');
+    const built = join(root, 'dist', route === 'index' ? '' : route, 'index.html');
+    if (!existsSync(built)) continue; /* not built yet: the build gate runs before pages render */
+    const html = readFileSync(built, 'utf8');
+    const m = html.match(/<meta name="description" content="([^"]*)"/);
+    if (!m) out.push(rel + ' renders no meta description');
+    else if (m[1].trim().length < DESCRIPTION_MIN_CHARS) {
+      out.push(rel + ' renders a ' + m[1].trim().length + '-character description');
+    }
+  }
+  return out;
+}
+
+/* The source half, which is the one that can run during the build gate: every
+   caller of BaseLayout passes a non-empty description literal. */
+export function baseLayoutCallsWithoutDescription(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  const files: string[] = [];
+  walk(join(root, 'src/pages'), root, files);
+  for (const rel of files.filter((f) => f.endsWith('.astro')).sort()) {
+    const body = readFileSync(join(root, rel), 'utf8');
+    const open = body.indexOf('<BaseLayout');
+    if (open === -1) {
+      out.push(rel + ' does not render through BaseLayout');
+      continue;
+    }
+    const tag = body.slice(open, body.indexOf('>', open) + 1);
+    const m = tag.match(/description="([^"]*)"/);
+    if (!m) out.push(rel + ' passes no description to BaseLayout');
+    else if (m[1].trim().length < DESCRIPTION_MIN_CHARS) {
+      out.push(rel + ' passes a ' + m[1].trim().length + '-character description');
+    }
+  }
+  return out;
+}
+
+/* R111 [§S12]: the Data tab must show which targets are framework requirements
+ * and which are analyst proposals.
+ *
+ * 47 of the 66 phase targets carry basis "derived", and the methodology says
+ * in terms that a derived target "is not a new framework requirement and must
+ * not be presented as one". The row filed this as unverified because the
+ * fetch truncated before reaching the render. Measured, it does reach the
+ * DOM - data-client.ts builds a span whose text is "Specified" or "Derived"
+ * and appends it to the identity row - so this is a check that the row stays
+ * closed, not a fix.
+ *
+ * Scope, stated rather than assumed: this reads the client SOURCE, because the
+ * span is written at runtime and never appears in dist. Comments are masked,
+ * so a note about the labels does not satisfy it, and the three expressions
+ * are the read, the label and the append - deleting any one of them stops the
+ * basis reaching the reader, and deleting all three is the failure the row
+ * describes. */
+export const BASIS_RENDER_FILE = 'src/scripts/data-client.ts';
+export const BASIS_RENDER_EXPRESSIONS = [
+  "basis.className = 'data-basis ' + metric.basis",
+  "metric.basis === 'framework' ? 'Specified' : 'Derived'",
+  'identity.appendChild(basis)'
+];
+
+export function basisNotRendered(root = REPO_ROOT): string[] {
+  const body = maskComments(readFileSync(join(root, BASIS_RENDER_FILE), 'utf8'));
+  return BASIS_RENDER_EXPRESSIONS
+    .filter((e) => !body.includes(e))
+    .map((e) => BASIS_RENDER_FILE + ' no longer renders each target\u2019s basis: "' + e + '"');
 }

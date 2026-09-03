@@ -18,7 +18,18 @@ Early-phase derived targets apply to the controlled test, pilot, participating-p
 3. **Tighten before dependency expands.** Identity, medication continuity, abnormal-result closure, uptime, and vulnerability targets receive stricter early floors because a defect can directly interrupt care.
 4. **Use bounded denominators.** P0-P2 values apply to test or participating cohorts; P3 to Wave I; P4 to representative pilots; P5 to the scaled network; P6-P7 to national or expanded-benefit operation; P8 to the mature national system.
 5. **Avoid false precision.** Most derived rates use whole percentage points. Uptime uses hundredths because each step corresponds to a materially different annual downtime budget.
-6. **Recalibrate with evidence.** Independent baseline evidence may justify changing a derived value. The change should be versioned here, retain the mature target, and explain why safety and progression remain protected.
+6. **Recalibrate with evidence.** Independent baseline evidence may justify changing a derived value. The change is recorded in the change log below, retains the mature target, and explains why safety and progression remain protected. This document is regenerated in full on every run, so the log is maintained in `tools/build_data_phase_targets.py` and rendered here; a note written into this file directly would not survive.
+
+## Change log
+
+Every change to a derived value or to the derivation rules, in order. Framework values are not listed: they move when the controlled catalog moves.
+
+| Date | Change | Why |
+|---|---|---|
+| 2026-08-16 | First generated register: 26 metrics, 64 phase targets across 9 phases. | Replaced a hand-ported file that no generator maintained. |
+| 2026-08-16 | Declared the coverage gaps: every metric that stops being published and starts again carries the phases and the reason. | R57. A gap read as an omission and could not be told apart from one. |
+| 2026-08-19 | Added P8 certification rows for KPP-T2 and TPP-6.3, taking the register to 66 phase targets. | R105. Derivation rule 3 names five categories that can directly interrupt care; these two were never certified at maturity. |
+| 2026-09-03 | Rule 6's versioning obligation moved here from the generated document. | R122. The document names itself as the place to record a change and is overwritten on every run, so the rule could not be obeyed where it was written. |
 
 ## Phase target register
 

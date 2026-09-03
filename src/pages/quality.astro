@@ -42,7 +42,10 @@ const cpFamilyCount = new Set(
   QUALITY_DATA.parameters.filter((p) => p.type === 'CP').map((p) => p.family)
 ).size;
 ---
-<BaseLayout title="National Health Assurance: Quality">
+<BaseLayout
+  title="National Health Assurance: Quality"
+  description="The complete parameter catalog and the equations behind every phase target, with the rollout milestone each parameter must meet."
+>
   <main>
 
   <section class="card">

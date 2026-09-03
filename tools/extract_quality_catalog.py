@@ -183,6 +183,60 @@ def clean(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
+# R120 [S12]: the extractor addressed seven tables by index -- tables[114],
+# [116], [120], range(121, 141), [483], [485] and [486] -- which couples it
+# positionally to a 581-table Word document.  The KPP/TPP/CP reads survive a
+# shift because the count assertions below catch it.  phase_records (483),
+# gate_records (485) and target_overrides (486) had no validation of any kind:
+# a table inserted anywhere earlier in the document would have moved all three
+# onto whatever now sits at those indexes, and the only symptom would have
+# been a KeyError naming a column, or -- for a table that happened to share a
+# column name -- silently wrong data.
+#
+# find_table matches on the header row instead, and refuses to guess: zero
+# matches and more than one match are both errors, because "the first table
+# with these headers" is the same positional assumption wearing a disguise.
+FAMILY_INDEX_HEADERS = ("Family", "Domain", "Records", "Accountable owner(s)",
+                        "Primary sensitivity group")
+CP_FAMILY_HEADERS = ("ID", "Definition", "Canonical unit", "Model role",
+                     "Temporal", "Unit status", "Value/source status")
+
+
+def header_of(table) -> tuple[str, ...]:
+    return tuple(clean(cell.text) for cell in table.rows[0].cells)
+
+
+def find_table(document, *headers: str):
+    want = tuple(headers)
+    hits = [t for t in document.tables if header_of(t) == want]
+    if len(hits) == 1:
+        return hits[0]
+    if not hits:
+        raise ValueError(
+            f"No table in the source document has the header row {want}. "
+            "The document's table layout changed; re-identify the table "
+            "rather than restoring an index."
+        )
+    raise ValueError(
+        f"{len(hits)} tables share the header row {want}, so it does not "
+        "identify one. Add a distinguishing column to the match."
+    )
+
+
+def find_tables(document, *headers: str) -> list:
+    """Every table with this header row, in document order.
+
+    Used for the twenty CP family tables, which all share one header and are
+    matched as a set whose size and per-table row counts are both asserted.
+    """
+    want = tuple(headers)
+    return [t for t in document.tables if header_of(t) == want]
+
+
+def FAMILY_INDEX(document):
+    return find_table(document, *FAMILY_INDEX_HEADERS)
+
+
 def table_rows(table) -> list[dict[str, str]]:
     headers = [clean(cell.text) for cell in table.rows[0].cells]
     return [
@@ -220,7 +274,9 @@ def tpp_key(identifier: str) -> str:
 
 def source_rows(document: Document) -> tuple[list[dict], list[dict], list[dict]]:
     kpps = []
-    for row in table_rows(document.tables[114]):
+    for row in table_rows(find_table(document, "ID", "Metric", "Source target",
+                                     "Calculation contract", "Domain / trace",
+                                     "Datasets", "Owner / verifier", "Status")):
         kpps.append(
             {
                 "id": row["ID"],
@@ -242,7 +298,9 @@ def source_rows(document: Document) -> tuple[list[dict], list[dict], list[dict]]
         )
 
     tpps = []
-    for row in table_rows(document.tables[116]):
+    for row in table_rows(find_table(document, "ID", "Metric", "Source target",
+                                     "Calculation / unit", "Datasets",
+                                     "Owner / verifier", "Status")):
         identifier = row["ID"]
         concept = TPP_CONCEPTS[tpp_key(identifier)]
         tpps.append(
@@ -265,13 +323,19 @@ def source_rows(document: Document) -> tuple[list[dict], list[dict], list[dict]]
             }
         )
 
-    family_rows = table_rows(document.tables[120])
+    family_rows = table_rows(FAMILY_INDEX(document))
     family_by_id = {row["Family"]: row for row in family_rows}
     cps = []
-    for table_index, family_row in zip(range(121, 141), family_rows):
+    family_tables = find_tables(document, *CP_FAMILY_HEADERS)
+    if len(family_tables) != len(family_rows):
+        raise ValueError(
+            f"The family index lists {len(family_rows)} families but "
+            f"{len(family_tables)} tables carry the CP family header row"
+        )
+    for family_table, family_row in zip(family_tables, family_rows):
         family = family_row["Family"]
         expected = int(family_row["Records"])
-        rows = table_rows(document.tables[table_index])
+        rows = table_rows(family_table)
         if len(rows) != expected:
             raise ValueError(
                 f"{family}: expected {expected} records, extracted {len(rows)}"
@@ -303,7 +367,9 @@ def source_rows(document: Document) -> tuple[list[dict], list[dict], list[dict]]
 
 def phase_records(document: Document) -> list[dict]:
     records = []
-    for row in table_rows(document.tables[483]):
+    for row in table_rows(find_table(document, "ID", "Anchor", "Purpose",
+                                     "Controlled products / scope",
+                                     "Exit evidence")):
         records.append(
             {
                 "id": row["ID"].replace("PH-", ""),
@@ -326,7 +392,9 @@ def gate_records(document: Document) -> list[dict]:
             "evidence": row["Evidence / trace"],
             "fallback": row["Fallback / repair"],
         }
-        for row in table_rows(document.tables[485])
+        for row in table_rows(find_table(document, "ID", "Gate", "Decision point",
+                                         "Blocking floor / condition",
+                                         "Evidence / trace", "Fallback / repair"))
     ]
 
 
@@ -354,7 +422,8 @@ GATE_PHASES: dict[str, tuple[tuple[str, ...], str]] = {
 
 def target_overrides(document: Document) -> dict[str, list[dict]]:
     overrides: dict[str, list[dict]] = {}
-    for row in table_rows(document.tables[486]):
+    for row in table_rows(find_table(document, "Gate", "Measure", "Progression floor",
+                                     "Mature target", "Interpretation")):
         match = re.match(r"(KPP|TPP)-[A-Z0-9.]+", row["Mature target"])
         if not match:
             raise ValueError(f"Cannot identify parameter in {row['Mature target']}")
@@ -588,7 +657,7 @@ def build_catalog() -> dict:
 
     stamp_documented_gaps(parameters)
 
-    family_rows = table_rows(document.tables[120])
+    family_rows = table_rows(FAMILY_INDEX(document))
     return {
         "source": "National Health Assurance Framework v2.0.0 FINAL",
         "counts": {

@@ -12,7 +12,7 @@ import { runMonteCarlo } from './model';
 import type { MonteCarloResult } from './model-types';
 import {
   DEFLATOR_2023_TO_2024, householdDenominator, MATURE_INDEX, MONTE_CARLO_DRAWS,
-  MONTE_CARLO_SEED, SPONSOR_SHARE
+  MONTE_CARLO_SEED, NHE_2024_OBSERVED, SPONSOR_SHARE
 } from './params';
 import { money, moneyShort, pct, perCap } from './format';
 
@@ -99,7 +99,14 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
      did not, so a change to MONEYFLOW would have printed a percentage that
      disagreed with the figures next to it. */
   const familyShare = SPONSOR_SHARE.household;
-  const famNow = familyShare * 5300, fam2041 = familyShare * baseMature;
+  /* R183 [§S12]: `5300` was a bare literal here, beside a fam2041 that is
+     model-derived. It is the observed 2024 total, which the benchmark chart
+     already published with a band, a basis and a source; both read the same
+     registered constant now. Both sides of the sentence are real 2024
+     dollars - baseMature carries the deflator - so the comparison is on one
+     basis, which is what the row questioned. */
+  const famNow = familyShare * NHE_2024_OBSERVED.mid;
+  const fam2041 = familyShare * baseMature;
   const hhNow = householdDenominator('census').households;
   const hh2041 = householdDenominator('census-2041').households;
   const d41 = mc.modePath.detail[MATURE_INDEX];

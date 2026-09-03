@@ -21,7 +21,10 @@ const wealthBand = WEALTH_DIST.groups.filter((g) => g.id === 'top001')[0];
 const DIST_TOP_HH = Math.round(topBand.hhM * 1e6).toLocaleString('en-US');
 const WEALTH_TOP_HH = Math.round(wealthBand.hhM * 1e6).toLocaleString('en-US');
 ---
-<BaseLayout title="National Health Assurance: Taxes & Financing">
+<BaseLayout
+  title="National Health Assurance: Taxes & Financing"
+  description="How much new revenue National Health Assurance needs, which taxes raise it, who pays more, and who comes out ahead after health savings."
+>
   <main>
 
   <section class="card chapter-intro">

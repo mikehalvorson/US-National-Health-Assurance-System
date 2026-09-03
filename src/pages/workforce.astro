@@ -35,7 +35,10 @@ const UNGOVERNED = UNDER_SPECIFIED.filter((u) => !u.family).map((u) => u.domain)
    very section exists to close, committed on the page R64 landed on. */
 const THICKEST_FAMILY = Math.max(...requirementFamilyCounts().values());
 ---
-<BaseLayout title="National Health Assurance: Workforce">
+<BaseLayout
+  title="National Health Assurance: Workforce"
+  description="Clinical capacity, rural staffing, training pipelines, and what happens to the administrative jobs the system makes unnecessary."
+>
   <main>
 
   <section class="card">

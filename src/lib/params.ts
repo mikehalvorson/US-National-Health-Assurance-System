@@ -88,6 +88,32 @@ export const BASE2023 = {
  * 2023→2024 ≈ +2.9%; GDP deflator ≈ +2.4%. We use 2.6% mid). */
 export const DEFLATOR_2023_TO_2024 = 1.026;
 
+/* ---- Observed 2024 national health expenditure --------------------------
+ * R183 [§S12]. 5300 was typed twice: as the benchmark chart's observed row,
+ * where it carried a label, a band and a basis, and again as a bare literal
+ * in overview.ts's family-share sentence, where it carried nothing. Two
+ * copies of one observed figure, one of them naked, and only the first
+ * discoverable by a reader asking where the number came from.
+ *
+ * The row also charges that the public sentence "compares a nominal figure to
+ * a deflated one". Measured, it does not: the figure it is compared against
+ * is `mc.baseline[MATURE_INDEX] * DEFLATOR_2023_TO_2024`, so both sides are
+ * real 2024 dollars, the same basis the benchmark chart puts them on.
+ *
+ * What the row's arithmetic does show is a different thing worth stating:
+ * growing the calibration base forward (4866.5 x 1.026 x one year's growth
+ * = about 5163) lands below this observed total, so the model's own 2024
+ * baseline runs a little under what was actually spent. That is a
+ * model-versus-observed gap, which the benchmark chart exists to display, not
+ * a unit mismatch. "Today" in a public sentence means the observed figure. */
+export const NHE_2024_OBSERVED = {
+  mid: 5300, low: 5250, high: 5350,
+  label: 'Observed U.S. health spending, 2024',
+  note: 'CMS preliminary estimate',
+  basis: 'Total national health expenditure actually spent in 2024, all payers',
+  url: 'https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/historical'
+};
+
 /* Simulation clock: enactment assumed calendar 2027 (Year 1 = Phase 0).
  * Baseline is grown from 2023 to 2026 before the policy clock starts. */
 export const START_YEAR = 2027;
