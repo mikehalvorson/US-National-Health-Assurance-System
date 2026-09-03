@@ -1193,6 +1193,12 @@ footer.site a { color: var(--text-muted); }
 .gate-when { color: var(--series-5); font-size: 11px; font-weight: 650; margin-top: 1px; }
 .gate-item p { color: var(--text-secondary); font-size: 12px; margin-top: 4px; }
 .gate-fallback { color: var(--text-muted); }
+/* R257 [S11b]: the three gates that set conditions rather than a
+   threshold say so on their own card. Review 5: the class was emitted
+   with no rule, so the note rendered identically to the floor paragraph
+   above it and the distinction it exists to draw was invisible. */
+.gate-qualitative { color: var(--text-muted); font-style: italic;
+  border-left: 2px solid var(--border); padding-left: 8px; margin-top: 6px; }
 .transition-envelope {
   display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center;
   padding: 12px 0 15px; border-bottom: 1px solid var(--gridline);

@@ -6577,11 +6577,11 @@ documentation work.
 | MEASURED SATISFIED ELSEWHERE | `R130` (by `R117` and `R149`) |
 | URLS | remaining `url: ""` in `params.ts`: **8 parameters + 4 engine constants**, every one graded `low` and printed by name in `parameterSourceBacklog()`. Unchanged this run: the eight are the honestly-uncited set, and `R264` below is what makes their being uncited visible where it matters. |
 | MAGIC NUMBERS | `0.28` already registered (`R124`). `0.27` **derived, not registered**: `SPONSOR_SHARE.household` already existed. Wage pass-through: **audited, and it was a double count** — see below. |
-| RENTS | **defaulted off** and removed from all three goal scenarios, with a gate. Consistent with the P15 log: yes — P15 established the seed side is a null set and the row is wholly `taxparams.ts`'s. |
+| RENTS | **defaulted off**, and set `enabled: false` in all three goal scenarios (present and disabled, not removed - review 5 corrected "removed"), with a gate. Consistent with the P15 log: yes — P15 established the seed side is a null set and the row is wholly `taxparams.ts`'s. |
 | 440 vs 430 | the ten are **`plan-defined`**, marked structurally by the generator. Wording for the page, exported as data so `R220` and `§S16` cannot drift from it: *"430 of these records are carried by the controlled framework document. Ten are not: the merit health-talent immigration parameters, which the plan defines and the framework document does not contain. They are listed here with the rest and marked plan-defined, because leaving them out would understate what the plan commits to and calling all 440 controlled would overstate what the framework carries."* |
 | TRANSITIONSHAPE | neither side wrong; the page and the code agree. The real gap was that **only one of the three claims made about the shapes was tested**. All three are gated now. |
 | VOCABULARY | one scale, five grades — and **`R138`'s own "enforced" was false**, see below. |
-| FMEA | probability is **gated on whether the grade it borrows is cited**. 97 of 295 borrowed scores were not. |
+| FMEA | probability is **disclosed** by whether the grade it borrows is cited: 97 of 295 borrowed scores read an uncited grade and now say so. ⚠️ Review 5 corrected this field, which read *"gated on whether the grade it borrows is cited"*. `'borrowed-uncited'` is in `SCORE_PUBLISHING_SOURCES`, so score, band, risk and RPN are unchanged for all 97 rows - only the label and the note differ. The body below says so (*"Gated, not suppressed"*); the header field did not, and **a header that overstates a fix is how a section gets closed on one**. |
 
 #### 🛑 `R125`: the wage pass-through was paid to households twice
 
@@ -6791,3 +6791,125 @@ published risk scores resting on nothing — were both in rows the audit filed a
 sourcing or documentation work. **`R125` was one line in the prompt asking
 whether a mechanism had ever been audited.** The answer was no, and what was
 wrong with it was not what the row expected to find.
+
+### REVIEW 5: the fifth two-axis review, and the eighth self-authored instance
+
+Pinned at `5e1a752..HEAD`, both axes as parallel sub-agents. **Eleven findings,
+all real.** The pattern the previous four reviews established held again, and
+this time the clearest instance was authored in the commit that documents the
+class.
+
+#### 🛑 The three that mattered
+
+**1. A check that cannot fail, written while adding four items to the list of
+checks that cannot fail.** `borrowedCitationDrift()` recomputed
+`familyGradeCited(r.family)` and compared it to `r.probabilitySource` - which
+the record builder had set from that same call, on that same data, twenty lines
+earlier. One pure function on both sides, so no edit outside the builder's own
+ternary could make it fail, and the self-test row consuming it had an empty
+failing set while only its note did work.
+
+Rewritten onto two surfaces that genuinely can diverge: `probabilitySource` and
+`probabilityBasis` are set by separate expressions in the same object literal,
+and the client renders the basis prose while keying the note off the source, so
+editing one ternary and not the other labels a score one way and explains it the
+other. Plus the taxonomy tables - a provenance in use with no published note, or
+one publishing a score it is not allowed to publish. Measured after: 97 of 97
+uncited rows carry the disclosure sentence, 0 of 198 plain ones do, and
+mislabelling a single record fires it.
+
+**2. Golden rule 2, in prose written to be copied into two more sections.**
+`CATALOG_PROVENANCE_NOTE` named *"the controlled framework document"* three
+times, and `quality.astro` renders it. `AGENTS.md` rule 2: *"Never write 'the
+framework says/calls for…' … State things directly as 'the plan' / 'the
+system.'"* The note was `R115`'s deliverable **precisely because `R220` and
+`§S16` must adopt it verbatim**, so the breach would have propagated. Rewritten
+in plan terms - "the plan's controlled parameter dictionary", "has not yet put
+through control" - keeping the distinction the row exists to draw.
+
+**3. `R160` was partial, and its check could not see the biggest instance.**
+`SiteFooter.astro:6` and `SiteHeader.astro:16` both carry a *"sources and
+methodology"* link to the repository ROOT, and both render on **all fourteen
+pages** through `BaseLayout`. `repoLinkTargets()` scanned `src/pages/` only.
+
+So the fix corrected four page-level links and left the two widest ones, behind
+a check structurally incapable of reaching them - **while its own comment
+claimed it "holds the property, not a count."** That is item 42 of the
+checks-that-cannot-fail list ("enforced repo-wide is a claim about surfaces you
+looked at"), authored in the session that added item 42. Both components
+retargeted at `research/`, and the sweep covers `src/components/` now.
+
+⚠️ This is the **fourth** count `R160` has had: the prompt said one page, this
+log said three, the first sweep said five by matching the label instead of the
+href, then four. The row is the campaign's clearest argument for enumerating
+rather than asserting.
+
+#### The rest of the Standards axis
+
+- **A constant compared against itself.** `medicationsSourcingDrift()`'s second
+  branch read `MEDICATIONS_SOURCING.cited.length`, a literal declared twenty
+  lines above in the same module, under a comment claiming it caught a
+  declaration naming citations the data does not have. What the declaration can
+  really be wrong about is whether its names still refer to anything, so the
+  strings are resolved against the bindings now.
+- **A test asserting its own definition.** `tests/lib/model.test.ts` asserted
+  `wageGainNet === wageGain - taxFeedback` and then asserted it again
+  rearranged. Both restate `model.ts` one line over. Replaced with the thing
+  that was actually wrong: KPP-C8's numerator computed both ways from one row,
+  which must differ by exactly the feedback - so routing the gross back in fails
+  by $79.6B instead of passing quietly.
+- **A rendered percentage left behind by its own fix.** `R241` derived
+  `familyShare` from `SPONSOR_SHARE.household` and left `"about 27%"` typed in
+  the sentence beside the dollars it computes. A move in `MONEYFLOW` would have
+  printed a percentage disagreeing with the figures next to it. Rounded from the
+  share now.
+- **A brittle tolerance.** `GAP_FIGURES`' KPP-C8 row ran a `0.05` tolerance
+  against a live gap of `0.047`, so four thousandths of model drift would have
+  failed the build for a rounding reason. Where the prose states a figure to a
+  fixed precision, the comparison is made at that precision.
+- **A disclosure with no styling.** `R257`'s qualitative-gate note emitted
+  `class="gate-qualitative"` and no rule existed for it, so it rendered
+  identically to the floor paragraph it qualifies.
+- **Numbers in new comments that nothing recomputes** - the reviewer listed
+  seven. Left as authored where the neighbouring note computes the live figure
+  (that is the arrangement fix run 6 established), but they are the shape that
+  produced the "183 call sites" defect and should not accumulate.
+
+#### The Spec axis
+
+All seven claims the log makes about this fix run verified true: KPP-C8's
+figures agree across the extractor, the generated catalog, the methodology and
+the tests; `rents` is off in all three goal scenarios and the gate catches all
+three regressions; the ten plan-defined ids equal the addendum's; no consumer
+reads the old drug-family field names; `R130`'s substance is satisfied by
+`frameworkBasisClaims()` (19, drift 0) and `gateFloorChecks()` (8, drift 0); the
+"do not touch" list was respected, `ltc.ts` and `ltc-client.ts` untouched and no
+second literal registry built; and `V22` holds, `params.ts` being purely
+additive with no citation string edited.
+
+Two corrections to this log's own header, both made above:
+
+- **`FMEA:` said probability is "gated" on whether the grade is cited.** It is
+  disclosed, not gated: `'borrowed-uncited'` publishes its score, band, risk and
+  RPN unchanged. The body says so; the header did not. **A header that
+  overstates its fix is how a section gets closed on one.**
+- **`RENTS:` said "removed from" the goal scenarios.** They are present and
+  `enabled: false`.
+
+#### 🆕 Two more traps
+
+- **A patch script's assert fires before the write, and that is what saves
+  you** - twice this run, on a two-match anchor and on a comment whose wording
+  had already changed. Both times nothing was written. The rule from
+  `nha-scripting-traps` held; what is new is that **an anchor written from
+  memory of a file you edited this session is stale by default.**
+- **A tuple in a case list can be the wrong arity and take the file with it.**
+  A CSS edit written as a 2-tuple in a list of 3-tuples threw *after* two other
+  files had been written by earlier `edit()` calls in the same script. Each
+  `edit()` is atomic; a script of several is not. Group edits to one file in one
+  call, and re-read `git diff --stat` after a partial failure.
+
+#### Gates
+
+`pnpm test` **528 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
+**14 pages**, self-tests **253 of 253**. File manifest **128**.

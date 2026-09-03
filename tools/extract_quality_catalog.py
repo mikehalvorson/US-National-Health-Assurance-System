@@ -504,13 +504,18 @@ def stamp_documented_gaps(parameters: list[dict]) -> None:
 PROVENANCE_FRAMEWORK = "framework"
 PROVENANCE_PLAN = "plan-defined"
 
+# Golden rule 2 (AGENTS.md): never tell a reader what the source document
+# says or contains; state things directly as "the plan".  The first draft of
+# this sentence named "the controlled framework document" three times, in
+# prose the Quality tab renders - and named it as the wording R220 and S16
+# must adopt, so the breach would have propagated to two more sections.
 CATALOG_PROVENANCE_NOTE = (
-    "430 of these records are carried by the controlled framework document. "
-    "Ten are not: the merit health-talent immigration parameters, which the "
-    "plan defines and the framework document does not contain. They are "
-    "listed here with the rest and marked plan-defined, because leaving them "
-    "out would understate what the plan commits to and calling all 440 "
-    "controlled would overstate what the framework carries."
+    "430 of these records belong to the plan's controlled parameter "
+    "dictionary. Ten do not: the merit health-talent immigration parameters, "
+    "which the plan adopted later and has not yet put through control. They "
+    "are listed here with the rest and marked plan-defined, because leaving "
+    "them out would understate what the plan commits to, and calling all 440 "
+    "controlled would overstate what has been through control."
 )
 
 

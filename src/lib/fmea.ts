@@ -566,25 +566,49 @@ export function uncitedBorrowedFamilies(): {
   return out;
 }
 
-/* R264: the disclosure has to reach every row it describes, and only those.
-   Two real sides: a row typed 'borrowed-uncited' whose grade is in fact
-   attested, and a row typed plain 'borrowed' whose grade is not. Either way
-   the chart would rank a score under a provenance it does not have. */
+/* R264: the disclosure has to REACH the reader on every row it describes.
+ *
+ * 🛑 Review 5: the first version of this compared `familyGradeCited(r.family)`
+ * against `r.probabilitySource` - which the record builder had set from that
+ * same call, on that same data, twenty lines earlier. One pure function on
+ * both sides of the comparison, so no edit outside the builder's own ternary
+ * could make it fail. It was written in the session whose log entry adds four
+ * items to the list of checks that cannot fail, which is the eighth time this
+ * campaign has authored the defect it was documenting.
+ *
+ * What can actually diverge is the record's two disclosure surfaces. The
+ * builder sets `probabilitySource` and `probabilityBasis` from separate
+ * expressions in the same object literal, and the client renders the basis
+ * prose and keys the note off the source: edit one ternary and not the other
+ * and the chart labels a score one way while its explanation says the other.
+ * The taxonomy tables are the second real side - a provenance in use with no
+ * published note, or one that publishes a score without being allowed to.
+ *
+ * The wiring the old version meant to check is already checked, and by
+ * something that cannot be tautological: `cpConfidenceWiring()` holds the
+ * declared parameter identifiers against `PARAMS_BY_ID` in both directions. */
+export const UNCITED_BASIS_MARK = 'That grade is uncited';
+
 export function borrowedCitationDrift(): string[] {
   const out: string[] = [];
   RECORDS.forEach(function (r) {
     if (r.probabilitySource !== 'borrowed' && r.probabilitySource !== 'borrowed-uncited') {
       return;
     }
-    const cited = familyGradeCited(r.family);
-    if (cited === null) {
-      out.push(r.id + ' borrows from ' + r.family + ', which has no gradeable input');
-      return;
+    const saysUncited = (r.probabilityBasis || '').indexOf(UNCITED_BASIS_MARK) >= 0;
+    const typedUncited = r.probabilitySource === 'borrowed-uncited';
+    if (saysUncited !== typedUncited) {
+      out.push(r.id + ' is typed ' + r.probabilitySource +
+        ' but its published basis ' + (saysUncited ? 'says' : 'does not say') +
+        ' the grade is uncited');
     }
-    const should = cited ? 'borrowed' : 'borrowed-uncited';
-    if (r.probabilitySource !== should) {
-      out.push(r.id + ' is ' + r.probabilitySource + ' but ' + r.family +
-        "'s weakest grade is " + (cited ? 'cited' : 'uncited'));
+    if (PROBABILITY_SOURCE_NOTE[r.probabilitySource] === undefined) {
+      out.push(r.probabilitySource + ' publishes no disclosure note');
+    }
+    if (r.probability > 0 &&
+        SCORE_PUBLISHING_SOURCES.indexOf(r.probabilitySource) < 0) {
+      out.push(r.id + ' publishes a score under ' + r.probabilitySource +
+        ', which is not a score-publishing provenance');
     }
   });
   return [...new Set(out)];

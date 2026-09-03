@@ -1037,7 +1037,16 @@ export function scanSourceLines(
  * `research/` files are the target; the check reads the tree, so a renamed or
  * deleted research file fails the page that cites it, which is the defect
  * P16's review found in research/README.md itself - a path no reader could
- * open. */
+ * open.
+ *
+ * Review 5: this scanned `src/pages/` only, and the two biggest instances
+ * were in `src/components/`. SiteFooter and SiteHeader both carry a "sources
+ * and methodology" link and both render on all fourteen pages through
+ * BaseLayout, so the widest surface was the one the sweep could not see -
+ * while its comment claimed to hold a property rather than a count. Both
+ * directories now. That is the fourth count this row has had (the prompt said
+ * one page, the log said three, the first sweep said five, then four), and the
+ * reason the check must enumerate rather than assert a number. */
 export const REPO_URL =
   'https://github.com/mikehalvorson/US-National-Health-Assurance-System';
 const REPO_LINK = new RegExp('href="' + REPO_URL + '([^"]*)"', 'g');
@@ -1047,7 +1056,8 @@ export function repoLinkTargets(root = REPO_ROOT): {
 }[] {
   const out: { file: string; line: number; path: string; exists: boolean }[] = [];
   for (const rel of enumerateSourceFiles(root)) {
-    if (!rel.startsWith('src/pages/') || !rel.endsWith('.astro')) continue;
+    const reader = rel.startsWith('src/pages/') || rel.startsWith('src/components/');
+    if (!reader || !rel.endsWith('.astro')) continue;
     const lines = readFileSync(join(root, rel), 'utf8').split('\n');
     lines.forEach((line, i) => {
       REPO_LINK.lastIndex = 0;

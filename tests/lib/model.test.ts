@@ -125,15 +125,29 @@ test('R203: an offset with no declared pairing cannot reach a ramp', () => {
    subtracted from `newRevenue`, so those cents are government revenue.
    Households keep `wageGain - taxFeedback`. Two published surfaces credited
    them the gross: the tax page's distribution rows and KPP-C8. */
-test('the detail row publishes the wage gain net of the feedback already booked as revenue', () => {
+/* Review 5: this test used to assert `wageGainNet === wageGain -
+   taxFeedback`, and then assert it again rearranged. Both restate model.ts's
+   own definition one line over, so neither could fail while the definition
+   stood - and the definition is not what was wrong. What was wrong is which
+   figure the PUBLISHED surfaces read, so that is what is tested. */
+test('the published ordinary-taxpayer burden uses the wage gain households keep', () => {
   const path = runPath(sampleParams(effective, null), {});
   const idx = path.years.indexOf(MATURE_YEAR);
   const d = path.detail[idx];
   expect(d.wageGain).toBeGreaterThan(0);
   expect(d.taxFeedback).toBeGreaterThan(0);
-  expect(d.wageGainNet).toBeCloseTo(d.wageGain - d.taxFeedback, 9);
-  /* the point of the field: households and the treasury together get the
-     gross exactly once, not 1.28 times it */
-  expect(d.wageGainNet + d.taxFeedback).toBeCloseTo(d.wageGain, 9);
   expect(d.wageGainNet).toBeLessThan(d.wageGain);
+
+  /* KPP-C8's numerator, computed both ways from the same row. The gross form
+     is the defect R125 removed: newRevenue is already reduced by taxFeedback,
+     so subtracting the gross wage gain relieves the burden twice for the
+     taxed share. The published value must be the larger, by exactly the
+     feedback - if a later edit routes the gross back in, this fails by
+     $79.6B rather than passing quietly. */
+  const burden = (wage: number) =>
+    Math.max(0, d.newRevenue - d.wealthRevenue - d.householdRelief - wage);
+  const published = burden(d.wageGainNet);
+  const gross = burden(d.wageGain);
+  expect(published - gross).toBeCloseTo(d.taxFeedback, 6);
+  expect(published).toBeGreaterThan(gross);
 });

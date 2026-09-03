@@ -93,7 +93,11 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
      DERIVES the household sponsor share from the money-flow map, as
      SPONSOR_SHARE.household, and R21 derived the other four sponsor shares
      for exactly this reason. So it is read, not registered. It is 0.27009,
-     which is what the 27% in the sentence below rounds to. */
+     which is what the percentage in the sentence below rounds to - and that
+     percentage is now rounded FROM it rather than typed beside it. Review 5
+     caught the half-fix: the dollars moved with the share and the sentence
+     did not, so a change to MONEYFLOW would have printed a percentage that
+     disagreed with the figures next to it. */
   const familyShare = SPONSOR_SHARE.household;
   const famNow = familyShare * 5300, fam2041 = familyShare * baseMature;
   const hhNow = householdDenominator('census').households;
@@ -101,7 +105,8 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
   const d41 = mc.modePath.detail[MATURE_INDEX];
   const kppPerHH = 0.05 * d41.newRevenue * DEF * 1e9 / (hh2041 * 1e6);
   const familyNote =
-    "Where that growth lands on families: households sponsor about 27% of " +
+    "Where that growth lands on families: households sponsor about " +
+    Math.round(familyShare * 100) + "% of " +
     "American health spending through premiums, payroll deductions, and " +
     "bills. Doing nothing means that family share grows from roughly " +
     money(famNow) + " today to " + money(fam2041) + " by 2041, " +

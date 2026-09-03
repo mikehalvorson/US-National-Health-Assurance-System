@@ -184,13 +184,17 @@ exemption list exists to show.
 - **KPP-C8** (ordinary-taxpayer burden share, target <= 5%): the base case
   computes 5.6% of program cost after wealth financing, household relief, and
   wage pass-through, and 17 of the 20 scenarios breach the cap, the worst at
-  16.7%. R125 moved this and moved it the unflattering way. The wage
+  16.7%. The wage
   pass-through was subtracted from the burden at its gross value while the 28%
   tax feedback on those same wages had already been credited against the
   revenue requirement, so households were relieved twice for the taxed share
   and the base case read 4.6%, inside the cap. Corrected to the wage gain
-  households actually keep, the base case is outside the cap as well, and the
-  metric is now met on no scenario at all rather than on one favourable run.
+  households actually keep, the base case is outside the cap as well. Three
+  scenarios still meet it: SCN-OPT, SCN-HOSP-LOW and SCN-UNIT-UNDER. An
+  earlier draft of this paragraph said the metric was "met on no scenario at
+  all" two sentences after stating that 17 of 20 breach, which cannot both be
+  true; the review that caught it is the reason this file now names the three
+  rather than characterising them.
   It moved earlier too, when the healthcare model stopped growing the wealth
   base at GDP and adopted the sourced top-capital rate the tax model already
   used; before that the base case computed about 5.9%.

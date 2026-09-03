@@ -255,6 +255,9 @@ export interface GapFigure {
   compute: () => number;
   /* the prose rounds, so state how far it may round */
   tolerance: number;
+  /* or, where the prose states a figure to a fixed precision, say which and
+     the comparison is made at that precision instead of through an epsilon */
+  decimals?: number;
 }
 
 function breachCount(id: string): number {
@@ -290,10 +293,14 @@ export const GAP_FIGURES: GapFigure[] = [
     tolerance: 0.5
   },
   {
+    /* Review 5: the tolerance was 0.05 against a live gap of 0.047 - the
+       prose rounds 5.553 to 5.6 - so four thousandths of model drift would
+       have failed the build for a rounding reason rather than a real one.
+       The prose states one decimal, so it is compared at one decimal. */
     id: 'KPP-C8', what: 'base-case maturity value',
     pattern: /the base case computes ([0-9.]+)% of program cost/,
     compute: function () { return evaluateAtPhase('KPP-C8', 'SCN-BASE', 'P8'); },
-    tolerance: 0.05
+    tolerance: 0, decimals: 1
   },
   {
     id: 'KPP-C8', what: 'breaching scenario count',
@@ -332,7 +339,15 @@ export function documentedGapFigureDrift(): string[] {
     const stated = Number(m[1]);
     const actual = f.compute();
     if (!isFinite(actual)) { out.push(f.id + ': ' + f.what + ' could not be computed'); return; }
-    if (Math.abs(stated - actual) > f.tolerance) {
+    /* Review 5: where the prose states a rounded figure, compare at the
+       precision it states rather than through an epsilon. This row ran a 0.05
+       tolerance against a live gap of 0.047 - the prose rounds 5.553 to 5.6 -
+       so four thousandths of model drift would have failed the build for a
+       rounding reason rather than a real one. */
+    const disagrees = f.decimals === undefined
+      ? Math.abs(stated - actual) > f.tolerance
+      : stated !== Number(actual.toFixed(f.decimals));
+    if (disagrees) {
       out.push(f.id + ' states ' + f.what + ' ' + stated + ', the model computes ' +
         (f.tolerance === 0 ? String(actual) : actual.toFixed(2)));
     }

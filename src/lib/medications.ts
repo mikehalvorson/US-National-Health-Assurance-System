@@ -1399,6 +1399,15 @@ export const MEDICATIONS_SOURCING = {
     'citation, and no family carries an external reference.'
 };
 
+/* The quantities `MEDICATIONS_SOURCING.cited` may name, resolved by binding
+   rather than by spelling, so a renamed or deleted quantity cannot leave the
+   sourcing claim standing. */
+function citedQuantities(): Record<string, number> {
+  /* Shorthand, so each key IS its binding rather than a second spelling of
+     it. Lazy because ALL_DRUG_SPEND_2024 is declared further down the file. */
+  return { ALL_DRUG_SPEND_2024 };
+}
+
 /* Held against the data. A family record carrying a URL, a DOI or a bare
    domain would be a citation this declaration denies, and would mean the
    module's sourcing position had changed without the sentence changing. */
@@ -1411,9 +1420,23 @@ export function medicationsSourcingDrift(records: FamilyRecord[] = RECORDS): str
       out.push(r.id + ' carries an external reference, which MEDICATIONS_SOURCING denies');
     }
   });
-  if (!MEDICATIONS_SOURCING.cited.length) {
-    out.push('the declaration names no cited quantity, but ALL_DRUG_SPEND_2024 is one');
-  }
+  /* Review 5: this branch used to read `MEDICATIONS_SOURCING.cited.length`,
+     a literal array declared twenty lines above in this module - a constant
+     compared against itself, under a comment claiming it caught a declaration
+     that names citations the data does not have.
+
+     What the declaration can actually be wrong about is whether the names in
+     it still refer to anything. `cited` is a list of STRINGS; the quantities
+     are bindings. Rename or drop a binding and the string goes stale silently,
+     which is how a sourcing claim outlives the thing it describes. Resolved
+     against the bindings here, so it cannot. */
+  const bindings = citedQuantities();
+  MEDICATIONS_SOURCING.cited.forEach(function (name) {
+    if (bindings[name] === undefined) {
+      out.push('MEDICATIONS_SOURCING names ' + name +
+        ', which is not a quantity this module defines');
+    }
+  });
   return out;
 }
 
