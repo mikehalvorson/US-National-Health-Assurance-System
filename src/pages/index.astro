@@ -5,6 +5,10 @@ import { RESIDUAL_BILLING_CAVEAT } from '../lib/care';
 import { PROBLEM_STATS } from '../lib/params';
 import { sponsorTableData } from '../lib/overview-tables';
 import { CHAPTERS, chapterMarker } from '../lib/tabs';
+import { ROLLOUT_YEARS } from '../lib/rollout';
+
+/* R292 [S12]: the rollout arc's label spelled its span as a word. */
+const rolloutYears = ROLLOUT_YEARS;
 
 const sponsor = sponsorTableData();
 const base = import.meta.env.BASE_URL; // ends with '/'
@@ -380,7 +384,8 @@ const chapterCards = CHAPTERS.map((tab, index) => {
         readiness gates can hold, resize, or roll back a wave when claims,
         capacity, workforce, fiscal, artificial-intelligence, cyber, legitimacy,
         or continuity evidence is inadequate.</p>
-      <div class="overview-rollout-arc" aria-label="Twelve-year high-level rollout">
+      <div class="overview-rollout-arc" role="list"
+        aria-label={rolloutYears + "-year high-level rollout"}>
         <article>
           <span>Years 1–2 · P0–P1</span>
           <strong>Found</strong>

@@ -1,6 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { PROBABILITY_SCALE } from '../lib/fmea';
+
+/* R292 [S12]: the chart's label spelled its own grid size as words on a
+   role-less div. The grid is square and PROBABILITY_SCALE declares the whole
+   1..5 range, so its size is the side length. */
+const fmeaGridSize = Object.keys(PROBABILITY_SCALE).length;
 ---
 <BaseLayout title="National Health Assurance: Risk">
   <main>
@@ -103,7 +109,8 @@ import ChapterNav from '../components/ChapterNav.astro';
       extreme. Cost-parameter calibration risk is charted separately below,
       because its probability is borrowed rather than native. Select any cell to
       filter the explorer at the foot of the page.</p>
-    <div id="fmea-matrix" class="fmea-matrix-wrap" aria-label="Five by five probability and consequence risk chart"></div>
+    <div id="fmea-matrix" class="fmea-matrix-wrap" aria-label={fmeaGridSize + " by " + fmeaGridSize +
+        " probability and consequence risk chart"}></div>
     <div id="fmea-headlines" class="fmea-headlines" aria-label="The most probable, most consequential, and both"></div>
   </section>
 

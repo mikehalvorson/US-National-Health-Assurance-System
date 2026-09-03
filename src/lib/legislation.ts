@@ -369,3 +369,93 @@ export const ACRONYMS: Record<string, string> = {
   'VA': 'Department of Veterans Affairs',
   'WARN': 'Worker Adjustment and Retraining Notification Act'
 };
+
+/* R297 [§S12]: the enabling act's titles, so the numbering is derived.
+ *
+ * legislation.astro rendered these in five <ol start="..."> groups with the
+ * Roman numeral typed into every <li> as well. Each start value was correct
+ * and each numeral was correct - the groups hold 4, 6, 2, 4 and 3 - and
+ * inserting one title into any group would have silently misnumbered every
+ * group after it, twice per item, with no error and no test. The count is a
+ * collection length now, which is also what the hero tile and the prose read.
+ *
+ * ENABLING_ACT_TITLE_COUNT is annotated `: number` deliberately: a bare
+ * expression would take a literal type and a guard comparing it against
+ * anything else would be dead at compile time. */
+export interface ActTitleGroup { heading: string; titles: string[] }
+
+export const ENABLING_ACT_GROUPS: ActTitleGroup[] = [
+  {
+    heading: 'Rights and payment',
+    titles: [
+      'Entitlement, coverage, rights, and remedies',
+      'Financing, trust funds, and appropriations',
+      'Enrollment and default coverage',
+      'Claims, payment, reconciliation, and appeals',
+    ]
+  },
+  {
+    heading: 'Care and national capacity',
+    titles: [
+      'Drugs, devices, diagnostics, and public manufacturing',
+      'Hospitals and public-service charters',
+      'Workforce, education, compensation, scope, and merit health-talent immigration',
+      'LTC, behavioral health, DVH, and EMS',
+      'Records, data rights, cyber, and AI',
+      'Public health and prevention',
+    ]
+  },
+  {
+    heading: 'Innovation and integrity',
+    titles: [
+      'Biomedical innovation',
+      'Fraud, abuse, and anti-extraction rules',
+    ]
+  },
+  {
+    heading: 'Federalism, finance, and protection',
+    titles: [
+      'State, regional, and tribal transition',
+      'Tax and wealth financing',
+      'Transition protection',
+      'Legitimacy and safety',
+    ]
+  },
+  {
+    heading: 'Continuity and repair',
+    titles: [
+      'Anti-impoundment and continuity',
+      'Adaptation, scorekeeping, and repair',
+      'Conforming amendments',
+    ]
+  },
+];
+
+export const ENABLING_ACT_TITLE_COUNT: number =
+  ENABLING_ACT_GROUPS.reduce((n, g) => n + g.titles.length, 0);
+
+/* The Roman numeral each title carries. Written out rather than computed by a
+   general algorithm, because the act has nineteen titles and a subtraction
+   rule nobody needs is a second thing to get wrong. Indexed from 1; the
+   length is asserted against the group total in the tests. */
+const ROMAN = [
+  '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
+  'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX'
+];
+
+export interface NumberedActTitle { n: number; roman: string; title: string }
+
+/* Each group with its titles numbered from where the preceding groups end. */
+export function numberedActGroups(): Array<{ heading: string; start: number; titles: NumberedActTitle[] }> {
+  let n = 0;
+  return ENABLING_ACT_GROUPS.map((g) => {
+    const start = n + 1;
+    const titles = g.titles.map((title) => {
+      n += 1;
+      if (!ROMAN[n]) throw new Error('no Roman numeral for act title ' + n);
+      return { n: n, roman: ROMAN[n], title: title };
+    });
+    return { heading: g.heading, start: start, titles: titles };
+  });
+}
+

@@ -107,9 +107,18 @@ export interface CareScenario {
   confidence: string;
 }
 
+/* R219 [§S12]: one rendering for every dollar figure on a care card.
+   The template used to type `$0` for the NHA amount while the two rows above
+   it formatted theirs through moneyRange, so a card with a non-zero amount
+   would still have rendered $0 - on the most consequential number on the
+   page. Exported so the card reads its own field through the same rule as
+   its neighbours. */
+export function careMoney(v: number): string {
+  return '$' + Math.round(v).toLocaleString('en-US');
+}
+
 export function moneyRange(lo: number, hi: number): string {
-  const m = (v: number) => '$' + Math.round(v).toLocaleString('en-US');
-  return lo === hi ? m(lo) : m(lo) + ' – ' + m(hi);
+  return lo === hi ? careMoney(lo) : careMoney(lo) + ' – ' + careMoney(hi);
 }
 
 /* ---- Deriving a card's year ---------------------------------------------

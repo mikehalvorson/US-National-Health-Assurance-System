@@ -12,7 +12,7 @@ import { computeOverview } from '../lib/overview';
 import { OUTCOME_STATS, PARAM_DEFS, CALENDAR_ANCHOR_NOTE } from '../lib/params';
 import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
 import {
-  CARE_SCENARIOS, moneyRange,
+  CARE_SCENARIOS, careMoney, moneyRange,
   careChipText, careEarlyText, carePhasingText, careRequirementText,
   RESIDUAL_BILLING_CAVEAT
 } from '../lib/care';
@@ -77,7 +77,7 @@ const careLines = CARE_SCENARIOS.map((s) => ({
             <div class="care-nha">
               <div class="care-nha-line">
                 <div class="care-nha-label">Under NHA</div>
-                <div class="care-nha-val" aria-describedby="care-residual-note">$0</div>
+                <div class="care-nha-val" aria-describedby="care-residual-note">{careMoney(s.nha.amount)}</div>
                 <div class="care-year-chip" data-care-chip={s.id} title={CALENDAR_ANCHOR_NOTE}>{careLines[i].chip}</div>
               </div>
               <div class="care-nha-phasing" data-care-phasing={s.id} hidden={careLines[i].phasing === null}>{careLines[i].phasing}</div>

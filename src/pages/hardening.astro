@@ -1,6 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { LAYERS } from '../lib/hardening';
+
+/* R292 [§S12]: the stepper's label spelled its own item count as a word, on a
+   div with no role, so nothing on screen or in the accessibility tree could
+   contradict it. Read from the collection the client renders. */
+const layerCount = LAYERS.length;
 ---
 <BaseLayout title="National Health Assurance: Executive Hardening">
   <main>
@@ -90,7 +96,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       it blocks, the continuity action that occurs without permission from the
       obstructing official, and the independent body that checks the result.</p>
     <div id="hardening-stepper" class="hardening-stepper"
-      aria-label="Seven layers of executive-branch hardening"></div>
+      aria-label={layerCount + " layers of executive-branch hardening"}></div>
     <div id="hardening-detail" class="hardening-detail"
       aria-live="polite"></div>
   </section>

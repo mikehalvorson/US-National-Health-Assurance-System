@@ -99,7 +99,7 @@ import {
   renderedEquationProseAuditCodes, renderedParamProseAuditCodes, renderedSelfTestNameLeaks,
   repoLinkTargets, unresolvedRepoLinks, gateSplitNotDerived,
   provenanceStampDrift, unresolvedMethodologyPath,
-  typedChapterNumbers, frontDoorChapterCoverage,
+  typedChapterNumbers, frontDoorChapterCoverage, literalCountsInAriaLabels,
   researchPathCitationLeaks, researchReadmeGateCount,
   researchReadmeGateList,
   staleResearchPathExemptions, unsweptSelfTestNameSites,
@@ -2224,6 +2224,13 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('No page types its own chapter number', () => {
         const bad = typedChapterNumbers();
         return { ok: !bad.length, note: bad.join('; ') || 'every chapter number is derived' };
+      }),
+      /* R292 [S12]: a count typed into an aria-label is unverifiable by
+         construction - nothing on screen and nothing in the accessibility
+         tree can contradict it. Derived counts pass; literals do not. */
+      runGuarded('No aria-label asserts a count as a literal', () => {
+        const bad = literalCountsInAriaLabels();
+        return { ok: !bad.length, note: bad.join('; ') || 'no label types a count' };
       }),
       runGuarded('Every chapter in the route registry has a front-door card', () => {
         const c = frontDoorChapterCoverage();

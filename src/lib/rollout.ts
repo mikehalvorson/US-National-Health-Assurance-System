@@ -565,3 +565,12 @@ export const WORKSTREAMS: Workstream[] = [
     cpAllocation: "CP-GOV/IT",
     exit: "MC-12 mature operation", cost: 'allocation-open' }
 ];
+
+/* R292 [§S12]: how many years the rollout spans, from the phase map.
+ *
+ * Two pages spelled this "twelve" inside an aria-label on a role-less div,
+ * where neither a screen reader nor a sighted reader could contradict it.
+ * P8 is the last phase and its year is the span, so the figure moves when the
+ * map moves. Annotated `: number` so a guard comparing it against anything
+ * else is not dead at compile time. */
+export const ROLLOUT_YEARS: number = Math.max(...PHASES.map((p) => p.year));

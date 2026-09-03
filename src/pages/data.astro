@@ -1,6 +1,49 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { PLANES } from '../lib/data-view';
+import { QUALITY_DATA } from '../lib/quality';
+
+/* R290 [§S12]: three of the four cyber tiles below shipped their number as a
+   static string while the catalog carries it as a controlled maturity target.
+   They are read by id now, and the comparator and value come from the record
+   rather than being retyped with a different sign character (the tiles wrote
+   the U+2265 form, the catalog writes ">=").
+ *
+ * The fourth tile is the finding. "Sensitive-access audits: at least 99% of
+ * required cases completed and reviewable" has no record in the catalog -
+ * searching all 440 for the subject, for "audit" and for "reviewable" returns
+ * the AI override capture measure, two cost parameters and nothing else. So
+ * the page was publishing a performance number that the plan's controlled
+ * dictionary does not contain, next to three that it does.
+ *
+ * Deleting it would remove a commitment the chapter's control list makes
+ * ("patient-visible immutable audit" is one of the ten controls beside this
+ * block), and inventing a catalog record for it would be worse. It is
+ * published as what it is: a control the plan requires, with no controlled
+ * target behind it yet, marked so a reader can tell it apart from its three
+ * neighbours. Sourcing it is a parameter question, not a page question. */
+const cyberTarget = (id: string) => {
+  const record = QUALITY_DATA.parameters.filter((p) => p.id === id)[0];
+  if (!record) throw new Error('data.astro cites ' + id + ', which is not in the catalog');
+  return record;
+};
+const CYBER_TILES = [
+  { id: 'TPP-11.1', label: 'Critical-system uptime',
+    range: 'with unsafe or stale service classified as degraded' },
+  { id: 'TPP-11.2', label: 'Downtime continuity',
+    range: 'of essential-care and payment drills passed' },
+  { id: 'TPP-11.3', label: 'Critical remediation',
+    range: 'of critical vulnerabilities fixed within 15 days' }
+].map((t) => ({ ...t, value: cyberTarget(t.id).target }));
+
+/* Written the way the tiles read, from the record's own comparator. */
+const showTarget = (raw: string) => {
+  const m = /^(>=|<=)\s*([\d.]+%)/.exec(raw);
+  return m ? (m[1] === '>=' ? '\u2265' : '\u2264') + m[2] : raw;
+};
+
+const planeCount = PLANES.length;
 ---
 <BaseLayout title="National Health Assurance: Data">
   <main>
@@ -80,8 +123,8 @@ import ChapterNav from '../components/ChapterNav.astro';
       consent or purpose, correction chain, quality flags, and retention
       state. That makes a clinical fact, payment, appeal, or published metric
       reproducible instead of silently overwritable.</p>
-    <div id="data-planes" class="data-plane-grid"
-      aria-label="Six logical data planes in the national information mesh"></div>
+    <div id="data-planes" class="data-plane-grid" role="list"
+      aria-label={planeCount + " logical data planes in the national information mesh"}></div>
     <div class="tbl-scroll data-store-wrap">
       <table class="data data-store-table" id="data-store-table">
         <caption class="sr-only">Major information-mesh datasets and examples</caption>
@@ -188,26 +231,21 @@ import ChapterNav from '../components/ChapterNav.astro';
       incomplete, or corrupted data is treated as degraded.</p>
     <div id="cyber-controls" class="cyber-control-grid"
       aria-label="Required cybersecurity and continuity controls"></div>
-    <div class="tiles cyber-targets" aria-label="Cybersecurity performance targets">
-      <div class="tile">
-        <div class="label">Critical-system uptime</div>
-        <div class="value">≥99.97%</div>
-        <div class="range">with unsafe or stale service classified as degraded</div>
-      </div>
-      <div class="tile">
-        <div class="label">Downtime continuity</div>
-        <div class="value">≥98%</div>
-        <div class="range">of essential-care and payment drills passed</div>
-      </div>
-      <div class="tile">
-        <div class="label">Critical remediation</div>
-        <div class="value">≥99%</div>
-        <div class="range">of critical vulnerabilities fixed within 15 days</div>
-      </div>
-      <div class="tile">
+    <div class="tiles cyber-targets" role="list"
+      aria-label="Cybersecurity performance targets">
+      {CYBER_TILES.map((t) => (
+        <div class="tile" role="listitem">
+          <div class="label">{t.label}</div>
+          <div class="value">{showTarget(t.value)}</div>
+          <div class="range">{t.range}</div>
+        </div>
+      ))}
+      <div class="tile cyber-target-unset" role="listitem">
         <div class="label">Sensitive-access audits</div>
-        <div class="value">≥99%</div>
-        <div class="range">of required cases completed and reviewable</div>
+        <div class="value">Not yet set</div>
+        <div class="range">every access to a sensitive record is logged and
+          visible to the patient; the share of required cases completed and
+          reviewable is a duty the plan states without a numeric target</div>
       </div>
     </div>
   </section>

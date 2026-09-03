@@ -4,7 +4,11 @@ import ChapterNav from '../components/ChapterNav.astro';
 /* R255 [§S2]: the headline years are derived from the phase map and gated
    against the ramps that deliver them; this page renders them, and does not
    restate any milestone year of its own. */
-import { GATES, gateIsMeasurable, ROLLOUT_HEADLINES } from '../lib/rollout';
+import {
+  GATES, gateIsMeasurable, ROLLOUT_HEADLINES, ROLLOUT_YEARS
+} from '../lib/rollout';
+/* R292 [S12]: the timeline's label spelled its own span as a word. */
+const rolloutYears = ROLLOUT_YEARS;
 /* R256 [§S2]: the calendar anchor is stated in params.ts and referenced here. */
 /* R253 + R156 [§S5]: the envelope is computed from transitionTotal and
    itCapital rather than typed, and the cost bridge's exclusion is named here,
@@ -52,7 +56,7 @@ const ENVELOPE_NOTE =
       ))}
     </div>
     <div id="rollout-timeline" class="rollout-timeline"
-      aria-label="Interactive twelve-year phase timeline"></div>
+      aria-label={"Interactive " + rolloutYears + "-year phase timeline"}></div>
     <div id="rollout-detail" class="rollout-detail" aria-live="polite"></div>
     <p class="note">{CALENDAR_ANCHOR_NOTE}</p>
   </section>

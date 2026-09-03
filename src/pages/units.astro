@@ -426,7 +426,8 @@ const GRADED = gradedUnitRows();
       emergency, operating-room, intensive, inpatient, or complex specialty
       capability. Discharge returns the patient to a named local team instead
       of ending at the hospital door.</p>
-    <div class="hospital-care-flow" aria-label="Flow between public-service hospitals and the four diagnostic-treatment unit types">
+    <div class="hospital-care-flow"
+      aria-label={"Flow between public-service hospitals and the " + UNIT_TYPE_KEYS.length + " diagnostic-treatment unit types"}>
       <article class="hospital-layer">
         <span>Regional public-service hospitals</span>
         <strong><abbr class="physical-acronym" title="Emergency department">ED</abbr> &middot; surgery &middot; inpatient &middot; <abbr class="physical-acronym" title="Intensive care unit">ICU</abbr> &middot; complex specialty</strong>

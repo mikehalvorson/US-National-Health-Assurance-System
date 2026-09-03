@@ -1,6 +1,35 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import {
+  DOMAINS, ENABLING_ACT_TITLE_COUNT, numberedActGroups
+} from '../lib/legislation';
+
+/* R297 [§S12]: the title numbering is derived. The five groups used to render
+   <ol start="1">, start="5", start="11", start="13" and start="17" with the
+   Roman numeral typed into every <li>; each was correct, and inserting one
+   title into any group would have misnumbered every group after it twice per
+   item with nothing to notice.
+
+   R240 [§S12]: the three hero tiles below typed 19, 13 and 7 beside each
+   other. The row is the pattern R240 names - a tile deriving one number and
+   typing the next - so all three read their collection.
+
+   R292 [§S12]: the two aria-labels on this page spelled counts as words
+   ("Nineteen-title", "Seven-step") where nothing could contradict them, on
+   containers with no role. Those numbers are derived now too. */
+const actGroups = numberedActGroups();
+const titleCount = ENABLING_ACT_TITLE_COUNT;
+const domainCount = DOMAINS.length;
+const STEPS = [
+  ['Close the legal crosswalk', 'Legislative counsel maps every affected federal section and each state, territorial, and tribal interface to a named disposition.'],
+  ['Enact the ' + titleCount + '-title act', 'Rights, institutions, mandatory funding, revenue, remedies, formulas, defaults, and transition authority take effect on sequenced dates.'],
+  ['Amend legacy code', 'Congress inserts conforming text, savings clauses, severability, transition rules, and revival fallbacks before any repeal can operate.'],
+  ['Fund and appoint', 'Trust funds, direct spending, appropriations, offices, inspectors, scorekeepers, courts, succession, and staffing floors become operational.'],
+  ['Rule and compact', 'Agencies use APA notice and comment; governments execute clear, funded, voluntary compacts with data, audit, cure, and exit terms.'],
+  ['Run systems in parallel', 'Claims, records, pharmacy, hospitals, and eligibility migrate in certified waves while predecessor benefits and pending cases remain protected.'],
+  ['Sunset only after Gate 8', 'Legacy authority closes only after record, financial, workforce, appeal, continuity, and fallback evidence is independently certified.'],
+];
 ---
 <BaseLayout title="National Health Assurance: Legislation">
   <main>
@@ -9,20 +38,20 @@ import ChapterNav from '../components/ChapterNav.astro';
     <span class="legislation-kicker">The legal operating plan</span>
     <h2>Build the successor system in law before retiring the systems it replaces</h2>
     <p class="desc">The plan is built on one National Health Assurance and
-      Health System Transition Act, organized into 19 titles, followed by
+      Health System Transition Act, organized into {titleCount} titles, followed by
       controlled federal conforming amendments and state, regional, and tribal
       implementation instruments. Every legacy legal function receives one
       explicit disposition: preserve, parallel, transfer, amend, preempt,
       sunset, or fall back.</p>
     <div class="legislation-counts" aria-label="Legislative architecture summary">
-      <article><strong>19</strong><span>titles in the enabling act</span></article>
-      <article><strong>13</strong><span>major legal domains to reconcile</span></article>
-      <article><strong>7</strong><span>controlled enactment and activation steps</span></article>
+      <article><strong>{titleCount}</strong><span>titles in the enabling act</span></article>
+      <article><strong>{domainCount}</strong><span>major legal domains to reconcile</span></article>
+      <article><strong>{STEPS.length}</strong><span>controlled enactment and activation steps</span></article>
     </div>
     <div class="legislation-path" aria-label="Path from constitutional authority to mature operation">
       <article><span>Authority</span><strong>Article I powers</strong><small>tax, spend, regulate, implement</small></article>
       <i aria-hidden="true">&rarr;</i>
-      <article><span>New law</span><strong>19-title enabling act</strong><small>rights, money, institutions, remedies</small></article>
+      <article><span>New law</span><strong>{titleCount}-title enabling act</strong><small>rights, money, institutions, remedies</small></article>
       <i aria-hidden="true">&rarr;</i>
       <article><span>Reconcile</span><strong>Conforming amendments</strong><small>federal code, savings clauses, fallbacks</small></article>
       <i aria-hidden="true">&rarr;</i>
@@ -47,51 +76,16 @@ import ChapterNav from '../components/ChapterNav.astro';
     <p class="desc">The titles below are the legal containers; legislative counsel would
       convert each requirement, parameter, appeal, funding formula, and
       continuity trigger into operative sections.</p>
-    <div class="legislation-title-stack" aria-label="Nineteen-title enabling act architecture">
-      <article>
-        <span>Rights and payment</span>
-        <ol start="1">
-          <li><b>I</b> Entitlement, coverage, rights, and remedies</li>
-          <li><b>II</b> Financing, trust funds, and appropriations</li>
-          <li><b>III</b> Enrollment and default coverage</li>
-          <li><b>IV</b> Claims, payment, reconciliation, and appeals</li>
-        </ol>
-      </article>
-      <article>
-        <span>Care and national capacity</span>
-        <ol start="5">
-          <li><b>V</b> Drugs, devices, diagnostics, and public manufacturing</li>
-          <li><b>VI</b> Hospitals and public-service charters</li>
-          <li><b>VII</b> Workforce, education, compensation, scope, and merit health-talent immigration</li>
-          <li><b>VIII</b> LTC, behavioral health, DVH, and EMS</li>
-          <li><b>IX</b> Records, data rights, cyber, and AI</li>
-          <li><b>X</b> Public health and prevention</li>
-        </ol>
-      </article>
-      <article>
-        <span>Innovation and integrity</span>
-        <ol start="11">
-          <li><b>XI</b> Biomedical innovation</li>
-          <li><b>XII</b> Fraud, abuse, and anti-extraction rules</li>
-        </ol>
-      </article>
-      <article>
-        <span>Federalism, finance, and protection</span>
-        <ol start="13">
-          <li><b>XIII</b> State, regional, and tribal transition</li>
-          <li><b>XIV</b> Tax and wealth financing</li>
-          <li><b>XV</b> Transition protection</li>
-          <li><b>XVI</b> Legitimacy and safety</li>
-        </ol>
-      </article>
-      <article>
-        <span>Continuity and repair</span>
-        <ol start="17">
-          <li><b>XVII</b> Anti-impoundment and continuity</li>
-          <li><b>XVIII</b> Adaptation, scorekeeping, and repair</li>
-          <li><b>XIX</b> Conforming amendments</li>
-        </ol>
-      </article>
+    <div class="legislation-title-stack" role="list"
+      aria-label={titleCount + "-title enabling act architecture"}>
+      {actGroups.map((g) => (
+        <article role="listitem">
+          <span>{g.heading}</span>
+          <ol start={g.start}>
+            {g.titles.map((t) => <li><b>{t.roman}</b> {t.title}</li>)}
+          </ol>
+        </article>
+      ))}
     </div>
   </section>
 
@@ -171,14 +165,13 @@ import ChapterNav from '../components/ChapterNav.astro';
       clinical rollout: create the successor authority, prove it can operate,
       migrate by certified wave, and retire the predecessor only after
       continuity evidence passes.</p>
-    <div class="legislation-steps" aria-label="Seven-step legislative implementation sequence">
-      <article><span>01</span><strong>Close the legal crosswalk</strong><p>Legislative counsel maps every affected federal section and each state, territorial, and tribal interface to a named disposition.</p></article>
-      <article><span>02</span><strong>Enact the 19-title act</strong><p>Rights, institutions, mandatory funding, revenue, remedies, formulas, defaults, and transition authority take effect on sequenced dates.</p></article>
-      <article><span>03</span><strong>Amend legacy code</strong><p>Congress inserts conforming text, savings clauses, severability, transition rules, and revival fallbacks before any repeal can operate.</p></article>
-      <article><span>04</span><strong>Fund and appoint</strong><p>Trust funds, direct spending, appropriations, offices, inspectors, scorekeepers, courts, succession, and staffing floors become operational.</p></article>
-      <article><span>05</span><strong>Rule and compact</strong><p>Agencies use APA notice and comment; governments execute clear, funded, voluntary compacts with data, audit, cure, and exit terms.</p></article>
-      <article><span>06</span><strong>Run systems in parallel</strong><p>Claims, records, pharmacy, hospitals, and eligibility migrate in certified waves while predecessor benefits and pending cases remain protected.</p></article>
-      <article><span>07</span><strong>Sunset only after Gate 8</strong><p>Legacy authority closes only after record, financial, workforce, appeal, continuity, and fallback evidence is independently certified.</p></article>
+    <div class="legislation-steps" role="list"
+      aria-label={STEPS.length + "-step legislative implementation sequence"}>
+      {STEPS.map(([title, detail], i) => (
+        <article role="listitem">
+          <span>{String(i + 1).padStart(2, '0')}</span><strong>{title}</strong><p>{detail}</p>
+        </article>
+      ))}
     </div>
     <div class="legislation-passage-note">
       <article><b>Regular legislation</b><span>can carry the full institutional,

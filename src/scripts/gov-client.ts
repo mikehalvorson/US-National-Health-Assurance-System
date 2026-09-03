@@ -121,7 +121,7 @@ function renderCards(container: HTMLElement, group: GovGroup): void {
     }
     line('What it does', m.role);
     line('Why it exists', m.why);
-    line('Replaces', m.replaces, /^New/.test(m.replaces) ? 'gov-new' : 'gov-replaces');
+    line('Replaces', m.replaces, m.novel ? 'gov-new' : 'gov-replaces');
     /* R164 [§S8]: the title, and whose title it is. Same shape as the
        Specified/Derived badge on the Data tab, which §BX1 confirmed carries
        its meaning as text rather than as colour. */
@@ -139,15 +139,22 @@ function renderCards(container: HTMLElement, group: GovGroup): void {
 function renderSummary(): void {
   const host = document.getElementById('gov-summary');
   if (!host) return;
+  /* R167 [§S12]: novelty is read from the declared field. It used to be
+     inferred by testing the free-text `replaces` string against /^New/, which
+     classified all 84 correctly and would have put an entry reading
+     "Nothing - this is a new capability" in the wrong column.
+     R240 [§S12]: the governing-body count used to be the string '9' beside
+     three tiles computed from the data. One typed number in a row of derived
+     ones drifts on the first change and nothing reads it. */
   let total = 0, novel = 0, replacing = 0;
   GOV_GROUPS.forEach(function (g) {
     g.members.forEach(function (m) {
       total++;
-      if (/^New/.test(m.replaces)) novel++; else replacing++;
+      if (m.novel) novel++; else replacing++;
     });
   });
   [
-    { label: 'Governing bodies', value: '9',
+    { label: 'Governing bodies', value: String(GOV_GROUPS.length),
       range: 'fiscal foundations, the operating department and its five administrations, independent oversight, transition, innovation' },
     { label: 'Entities in total', value: String(total),
       range: 'each with statutory duties and published metrics; the leadership ' +

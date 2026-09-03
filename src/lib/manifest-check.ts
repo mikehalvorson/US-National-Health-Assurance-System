@@ -4347,7 +4347,62 @@ export function frontDoorChapterCoverage(root = REPO_ROOT): {
   const page = readFileSync(join(root, 'src/pages/index.astro'), 'utf8');
   const copy = page.slice(page.indexOf('const CHAPTER_COPY'), page.indexOf('const chapterCards'));
   const missing = CHAPTERS
-    .filter((t) => !new RegExp('(^|[^\w])' + t.path + ':').test(copy))
+    /* Same heredoc collapse as above: this read '[^\w]', which in a JS string
+       is the letter w, so the class was "anything but w". It happened to give
+       the right answer for the case that was run. */
+    .filter((t) => !new RegExp('(^|[^\\w])' + t.path + ':').test(copy))
     .map((t) => t.path);
   return { registry: CHAPTERS.length, carded: CHAPTERS.length - missing.length, missing: missing };
+}
+
+/* R292 [§S12]: no aria-label may assert a count as a literal.
+ *
+ * The row names four. Sweeping the class found nine, every one on a container
+ * with no role - so assistive technology ignores the label and a sighted
+ * reader never sees it either. All nine were correct, which is the point:
+ * "six planes" next to a grid rendering seven is a disagreement that cannot
+ * be observed from either side.
+ *
+ * A DERIVED count in a label is fine and is one of the two fixes, so the rule
+ * is about literals: this reads the attribute as written in the source and
+ * skips anything inside an Astro expression. The other fix is role="list",
+ * where the browser announces a count it computes from the rendered children,
+ * which is stronger than any string.
+ *
+ * Number words are listed rather than pattern-matched because "one" and "no"
+ * appear in ordinary label prose; the list holds the ones that read as counts
+ * at the start of a label or before a noun. */
+const ARIA_LABEL = /aria-label="([^"]*)"/g;
+const COUNT_WORDS = [
+  'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen',
+  'seventeen', 'eighteen', 'nineteen', 'twenty'
+];
+
+export function literalCountsInAriaLabels(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  for (const dir of ['src/pages', 'src/components']) {
+    const files: string[] = [];
+    walk(join(root, dir), root, files);
+    for (const rel of files.filter((f) => f.endsWith('.astro')).sort()) {
+      const body = maskComments(readFileSync(join(root, rel), 'utf8'));
+      body.split('\n').forEach((line, i) => {
+        for (const m of line.matchAll(ARIA_LABEL)) {
+          const label = m[1];
+          const digits = /\d/.test(label);
+          /* Two backslashes, and this is the second time in this file that a
+             shell heredoc collapsed the pair into a literal U+0008. The
+             negative test is what caught it: restoring "Seven layers" to a
+             label left the build green, because the pattern was
+             BACKSPACE + word + BACKSPACE and matched nothing. */
+          const word = COUNT_WORDS.filter((w) =>
+            new RegExp('\\b' + w + '\\b', 'i').test(label))[0];
+          if (!digits && !word) continue;
+          out.push(rel + ':' + (i + 1) + ' asserts a count in an aria-label: "'
+            + label + '"' + (digits ? '' : ' (the word "' + word + '")'));
+        }
+      });
+    }
+  }
+  return out;
 }

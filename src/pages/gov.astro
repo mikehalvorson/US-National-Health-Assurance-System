@@ -8,7 +8,19 @@ import { chapterMarker, chapterNumber } from '../lib/tabs';
    chapterMarker, so reordering the registry moves both. chapterNumber throws
    here rather than rendering nothing, because a chapter whose page is not in
    the registry is a navigation dead end this page cannot detect. */
-import { LEADER_BASIS_NOTE } from '../lib/gov';
+import { GOV_GROUPS, LEADER_BASIS_NOTE } from '../lib/gov';
+
+/* R162 [§S12]: "84 entities under 9 governing bodies" was typed twice in this
+   page's prose and computed from nothing. Both figures are right - the data
+   holds 84 members across 9 groups - and both were the sixth instance of a
+   count that agrees with its data until someone edits the data. The summary
+   tiles below already derive the entity total from the same source; the
+   sentences did not.
+   The framework corroborates the nine (it carries a section on why nine
+   institutions); it asserts no total for the entities, so 84 is what the
+   plan's own architecture adds up to and is stated as such. */
+const bodyCount = GOV_GROUPS.length;
+const entityCount = GOV_GROUPS.reduce((n, g) => n + g.members.length, 0);
 ---
 <BaseLayout title="National Health Assurance: Governance">
   <main>
@@ -19,8 +31,9 @@ import { LEADER_BASIS_NOTE } from '../lib/gov';
     <p class="desc">Care, money, law, facilities, information, and people all
       need institutional owners, kept deliberately separate so no single
       body both runs the system and grades it. This chapter lays out the
-      full governance architecture: 84 entities under 9 governing bodies,
-      each with a role, a reason, what it replaces, and who leads it. The
+      full governance architecture: {entityCount} entities under {bodyCount}
+      governing bodies, each with a role, a reason, what it replaces, and
+      who leads it. The
       next chapter shows how that distributed authority is engineered to
       survive a hostile administration.</p>
   </section>
@@ -28,8 +41,8 @@ import { LEADER_BASIS_NOTE } from '../lib/gov';
   <section class="card">
     <h2>The governance architecture</h2>
     <p class="desc">Replacing an industry means replacing its functions,
-      and every function needs an owner. The plan defines 84
-      entities organized under 9 governing bodies. The design follows two
+      and every function needs an owner. The plan defines {entityCount}
+      entities organized under {bodyCount} governing bodies. The design follows two
       principles throughout: separate operations from oversight (the
       department that pays claims never judges its own appeals), and make
       the system hard to sabotage but easy to repair (mandatory payment
