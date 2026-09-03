@@ -6942,3 +6942,192 @@ Two repairs the run needed before it could say anything:
 `pnpm test` **528 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
 **14 pages**, self-tests **253 of 253**. File manifest **128**.
 `negative_test.py` **44 of 44**.
+
+---
+
+## P18 — §S12 Counts, formatting & derived displays · 2026-09-03 · branch `nha-remediation`
+STATUS: complete — all 22 rows landed across 7 commits, plus V4/V10/V11/V12 confirmed
+and 4 negative cases in the audit set
+
+**Entry gate, re-measured rather than trusted:** `## P1` `STATUS: complete` ✅ ·
+`## P7` (`§S6a`) `STATUS: complete`, so `R183` is in scope ✅ · `grep -c 'as unknown as'
+src/lib/data-phases.ts` = **6** ✅ · `grep -c 'isFinite' src/lib/format.ts` = **1** ✅ ·
+`astro build` green at `df93e88` (0/0/1, 253 self-tests, 14 pages), tree clean ✅
+
+DISCREPANCY:
+
+  1. **`R298` quotes the payload as `"targetCount":64`. It is 66**, and has been since
+     P7's `R105` (`92fe1c8`) added two P8 certification rows. The audit's figure was
+     right when written. Two in-repo comments still stated it, and one of them also told
+     a reader the module "asserts nothing at all — no registration on any harness" after
+     its checks had been registered in `selftests.ts`. Both corrected; neither count is
+     restated in a comment now. **Code wins.**
+  2. **`R110`'s expected `basis:"framework" count equals 17` is 19**, same cause.
+     `R111`'s "47 of 64" is 47 of 66: the numerator held, the denominator moved.
+  3. **`§BX4` says removing the cast "turns that loop into a field read" in
+     `data-client.ts`. It does not.** The client's counter is scoped to one phase
+     (5, 6, 6, 7, 6, 7, 9, 7, 13); the payload's counts are whole-catalog figures, 26
+     distinct ids and 66 rows. Different quantities. Nothing to replace; the loop is
+     left alone. **Code wins.**
+  4. **`R163` has the outlier backwards.** It says `gov.astro` renders "Chapter 9" while
+     the index grid renders "08 · Authority", and concludes the page is wrong because
+     "the index runs 01 health → 11 quality and is internally consistent." Measured
+     against `TABS`, which `R266` made the authority, **the index is the outlier**: its
+     grid predates Long-Term Care and Risk, omitted both, and numbered every card from
+     Medications on one or two low. **Seven of eleven numbers disagreed with the page
+     the card linked to.** `gov.astro`'s 9 was right. **Code wins.**
+  5. **`R290` says the four cyber tiles "are `TPP-10.*`/`TPP-11.*` maturity targets."
+     Three are. The fourth is not in the catalog at all** — see below.
+  6. **`R292` names four aria-labels. There are ten.** Nine found by sweeping the class,
+     the tenth by the check written to gate them.
+  7. **`R136` is already closed and was closed by nobody's design.** The row says
+     `PARAM_DEFS` has 31 against a README saying 27. Both are now 32, so it closed in an
+     earlier pass with nothing written to keep it closed.
+  8. **The handoff says `R183` was "already fixed as `R241` — verify and record, do not
+     re-implement."** `R241` moved the *share* to `SPONSOR_SHARE.household`. The `5300`
+     it multiplies never moved, and `5300` is what `R183` is about. **A handoff's list of
+     what is closed is a claim too.**
+  9. **`R183`'s "compares a nominal figure to a deflated one" is wrong.** The other side
+     is `mc.baseline[MATURE_INDEX] * DEFLATOR_2023_TO_2024`, so both are real 2024
+     dollars, the basis the benchmark chart already puts them on. What the row's
+     arithmetic *does* show is that growing the calibration base forward lands near 5163
+     against an observed 5300 — a model-versus-observed gap, which the benchmark chart
+     exists to display. Written into `params.ts` beside the constant. **Code wins.**
+
+LANDED: `R195`+`R196`+`R197` `c38e17a` · `R298`+`R110` `887c2c0` ·
+`R220`+`R163`+`R270` `5fb1693` · `R292`+`R290`+`R297`+`R240`+`R167`+`R162`+`R219`
+`21e41d7` · `R136`+`R269`+`R183`+`R120`+`R122`+`R111` `5f03f71` · `V11` `dc37774` ·
+`R220` (the known wrong count) `1805457`. Audit set: `1c108fd`.
+
+R183: **landed after P7** — P7 is complete, so the row was in scope. Its substance was
+still live despite the handoff saying otherwise.
+
+COUNTS DERIVED: **25 derived expressions introduced across pages and clients**;
+WRONG WHEN DERIVED: **8 — seven on one surface, plus the known one**
+
+  `index.astro`'s chapter grid, against `TABS`:
+    Medications 05 → 06 · Data 06 → 07 · Workforce 07 → 08 · Governance 08 → 09 ·
+    Executive Hardening 09 → 10 · Phased Rollout 10 → 12 · Quality 11 → 13
+  and two chapters had no card at all: **Long-Term Care** and **Risk**.
+
+  Everything else derived to the literal it replaced: 45/85/310/440 and 20 CP families
+  (quality) · 84 entities, 9 bodies, 26 novel, 58 replacing (governance) · 19 titles
+  with starts 1/5/11/13/17, 13 domains, 7 steps (legislation) · 13 domains, 5 bands, 9
+  phases, 8 gates (rollout) · 6 planes, 7 layers, 4 unit types, 12 rollout years ·
+  1,500 draws, 32 distributions, 19 stress scenarios (README) · 26 and 66 (data phases).
+
+  known: `quality-client.ts` 120 vs a 130-record catalog — **live and wrong.**
+  `quality-client.ts:204` rendered *"All 120 KPP/TPP records"* at P8 against 45 KPP +
+  85 TPP. Ten short: the ten merit health-talent immigration parameters `R115`
+  identified, added to the catalog without this sentence moving.
+
+  ⚠️ **The draft of this log entry said "not reproduced", and was wrong.** The claim
+  was written from a grep I misread, and survived until I checked it before appending.
+  This string is written by the client and never appears in `dist`, which is why the
+  rendered-artefact sweep that found everything else could not see it — the same blind
+  spot in the same section that the sweep was added to close. Fixed at `1805457` and
+  verified at **130** in the running app.
+
+  The class was then swept rather than the instance: every numeric literal inside a
+  rendered string across `src/scripts/`, and every two-or-three-digit number before a
+  collection noun in all fourteen built pages. Nothing else is a collection count.
+  Medications' *"61 families"* and *"116 families"* are phase increments, typed,
+  correct, and `V8`'s — outside this section's rows, noted rather than absorbed.
+
+CAST: `as unknown as` removed? **y** — and in **two** files, not one. `R298` is filed
+against `data-phases.ts`; `quality-data.ts` carried the same construction over 440
+parameter objects. Four fields survive? **y** (`source`, `methodologyPath`,
+`metricCount`, `targetCount`). Source stamp now tested? **y**, against the stamp
+`quality-data.ts` carries — two literals typed independently by two generators, neither
+reading the other, so a regeneration of one and not the other fails the build.
+
+  The bigger half: an assertion through `unknown` also **switched off type validation of
+  everything the literal did carry.** 66 metric objects and 440 parameter objects are
+  under the type checker for the first time. Proved, not assumed: retyping one metric id
+  as a number, retyping `counts.KPP` as a string, and dropping `metricCount` from the
+  payload each fail `astro check`.
+
+FORMATTERS: `isFinite` on all 5? **y**. Single negative rendering: **`−$500B`**, U+2212
+before the symbol, asserted as a property over the whole set rather than as five
+expected strings. `R196` files one negative with two renderings; measured it is **three
+formatters** disagreeing with two — `axis` and `perCap` used the hyphen-minus after the
+symbol, **and `pct`, which the row does not name, rendered `-500.0%`.** The property
+test found `pct`; reading the row would not have.
+
+440 WORDING: unchanged and still read from `QUALITY_DATA.provenance`, never retyped —
+"430 of these records belong to the plan's controlled parameter dictionary. Ten do not
+…". Matches P17 log: **yes**. Three surfaces that called all 440 "controlled" were
+narrowed: a heading, a screen-reader caption and an aria-label.
+
+CHAPTER NUMBERS: **17 published numbers checked** (6 hardcoded page eyebrows + 11
+front-door grid cards) against the 13 chapters `TABS` declares, **7 wrong**, all
+derived? **y** — `TABS` owns the number through `chapterNumber()` and
+the format through `chapterMarker()`, and no page may type one.
+
+V4/V10/V11/V12: still pass after derivation? **y**, each derived value equal to the
+literal removed. `V11` was not clean: the rollout page still typed "Thirteen rollout
+domains across five phase bands" in an `sr-only` caption, and the band list it counted
+was a local array inside `rollout-client.ts` that the server-rendered caption could not
+see.
+
+#### Two findings this section could not close, stated rather than absorbed
+
+1. **A published cyber target is not in the controlled catalog.** `data.astro` shipped
+   "Sensitive-access audits — ≥99% of required cases completed and reviewable" beside
+   three tiles that are real `TPP-11.*` records. Searching all 440 parameters for the
+   subject, for "audit" and for "reviewable" returns the AI override-capture measure,
+   two cost parameters, and nothing else. Deleting the tile would drop a duty the
+   chapter's own control list makes; inventing a record would be worse. It now publishes
+   as what it is — a required control with no controlled target yet. **Sourcing it is a
+   parameter question and is open.**
+
+2. **Two negative-harness anchors are ambiguous.** `'a research file cites a path that
+   is not in the repo'` matches twice in `research/README.md`; `'a graded surface
+   invents a confidence level'` matches 17 times in `parameter_baseline_seed.csv`.
+   Both pre-existing, neither file touched here. `replace(find, repl, 1)` means each
+   still mutates one occurrence and proves a real failure — a narrower one than the
+   label claims, and neither can say which occurrence it exercised.
+
+#### The ninth and tenth times the fix authored the defect it was fixing
+
+The campaign's ratio held twice more, and both were the same trap.
+
+**`literalCountsInAriaLabels` shipped unfailable**, with `new RegExp('\b' + w + '\b')` —
+one backslash, which in a JS string is **U+0008, backspace**, not a word boundary. The
+pattern was BACKSPACE + word + BACKSPACE and matched nothing, so restoring "Seven
+layers" to a label left the build green. A shell heredoc collapsed the pair. The same
+edit also broke `frontDoorChapterCoverage`'s `'[^\w]'` into "anything but the letter w",
+which happened to give the right answer for the case that was run.
+
+**Then `literalCountsInScreenReaderText` shipped with the identical defect an hour
+later**, written by the same session, after fixing the first one and writing a comment
+about it — and the text had been staged through a temp file *specifically to avoid
+writing a heredoc into source*. The temp file was written by a heredoc. **Staging does
+not help; only the editor tools are safe for a backslash.**
+
+Both were caught the same way and only that way: break the check, read the exit code.
+Neither would have been caught by any test that was passing.
+
+Two more worth carrying:
+
+- **A sweep can cover the right surface and the wrong element class.** The aria-label
+  sweep read `aria-label` attributes; the rollout page made the same unverifiable claim
+  in a `<caption class="sr-only">`. Same surface — text only a screen reader meets —
+  different element, invisible to the check.
+- **`statedChapterCountDrift` explains this failure in its own doc comment** ("the app
+  has fourteen chapters … four recommendations were scoped against twelve") **and sweeps
+  two markdown files.** `src/pages/`, which is where chapter numbers are published to
+  readers, was never in its scope. Naming the failure mode does not immunise the next
+  thing you write, and it did not immunise the fix written for it.
+
+#### Gates
+
+`pnpm test` **538 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
+**14 pages**, self-tests **262 of 262**. File manifest **128**.
+`negative_test.py` **48 of 48**, 0 MISS, 0 SKIP, restored clean.
+`check_audit_docs.py` **35 pass / 0 fail**.
+
+Nine self-test rows added: the two provenance rows, the two chapter rows, the two count
+sweeps, the README count row, the description row and the basis row. **All nine were
+broken and watched fail before being trusted**, and four are now in
+`baseline-P16/negative_test.py` so the watching repeats.
