@@ -6909,7 +6909,36 @@ Two corrections to this log's own header, both made above:
   `edit()` is atomic; a script of several is not. Group edits to one file in one
   call, and re-read `git diff --stat` after a partial failure.
 
+#### The negative harness, run after the fixes
+
+**44 of 44** (37 failure + 7 note), tree restored, 253 rows.
+
+The rewritten `borrowedCitationDrift()` needed cases of its own: the old
+version compared a pure function against its own output, so nothing could
+desynchronise it and no CASE had ever existed for it - only a NOTE_CASE
+watching the uncited family set move. Both directions are watched now:
+
+- `probabilitySource` pinned to `'borrowed'` while the basis ternary still
+  appends the uncited sentence. Fires. ⚠️ **The old implementation would have
+  caught this one too**, since the edit breaks the source away from the
+  function as well as from the basis. Stated rather than glossed, because
+  claiming a case proves more than it does is the same error class as the
+  check it is testing.
+- The mirror: the basis ternary silenced, the source left correct. Fires, and
+  **this is the one that proves the rewrite added reach.** The old check never
+  read `probabilityBasis`, so 97 rows would have published a score labelled
+  uncited with no explanation saying so, and passed.
+
+Two repairs the run needed before it could say anything:
+
+- `src/lib/fmea.ts` had to join the harness's preloaded originals tuple, or a
+  case naming it dies with `KeyError` **after** mutating the tree.
+- The `R115` case anchored on prose this review had just rewritten for golden
+  rule 2, so its `find` no longer matched. The harness reported a MISS rather
+  than a false pass, which is the property that makes it worth six minutes.
+
 #### Gates
 
 `pnpm test` **528 across 60 files**. `astro check` **0 / 0 / 1**. `astro build`
 **14 pages**, self-tests **253 of 253**. File manifest **128**.
+`negative_test.py` **44 of 44**.
