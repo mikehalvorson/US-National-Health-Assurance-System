@@ -200,8 +200,16 @@ function renderPhaseOverview(): void {
         list.appendChild(line);
       });
       if (phase.id === 'P8') {
+        /* R220 [§S12]: this said "All 120 KPP/TPP records". The catalog holds
+           45 KPP and 85 TPP, so the number the page published at maturity was
+           short by ten - the ten merit health-talent immigration parameters
+           R115 identified, added to the catalog without this sentence moving.
+           It is the count the exit protocol names as the known wrong one, and
+           it is the only figure in this section that was wrong when derived
+           rather than merely typed. Read from the catalog now. */
+        const kppTppCount = DATA.counts.KPP + DATA.counts.TPP;
         const mature = el('span', 'quality-phase-target maturity');
-        mature.appendChild(el('b', '', 'All 120 KPP/TPP records'));
+        mature.appendChild(el('b', '', 'All ' + kppTppCount + ' KPP/TPP records'));
         mature.appendChild(document.createTextNode(' assessed against source targets'));
         list.appendChild(mature);
       }
