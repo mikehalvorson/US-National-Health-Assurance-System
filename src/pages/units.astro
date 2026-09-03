@@ -1,6 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   here rather than rendering nothing, because a chapter whose page is not in
+   the registry is a navigation dead end this page cannot detect. */
 /* R186 [§S9b]: the assumptions behind the unit count, rendered from the same
    data the allocation runs on. Every figure in the method note below used to
    be typed prose beside literals in units-client.ts, and a reader had no way
@@ -54,7 +61,7 @@ const GRADED = gradedUnitRows();
   <main>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 4 &middot; Physical care</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('units')!)} &middot; Physical care</span>
     <h2>Hospitals become public-service infrastructure, then care moves closer to home</h2>
     <p class="desc">The change is larger than building community clinics. It
       starts by removing hospitals from the logic of payer contracts,

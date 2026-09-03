@@ -29,12 +29,24 @@ const assertedRows = publishedRows - eqRows;
    §S12 and §S16 have to land on the same words and copying prose between
    three places is how three places end up saying three things. */
 const provenance = QUALITY_DATA.provenance;
+
+/* R220 [§S12]: the three tiles below typed 45, 85 and 310 while the catalog
+   shipped a counts object carrying all three, and the closing line typed
+   "310-record" a fourth time. All four were correct, which is the reason to
+   derive them rather than a reason to leave them: they are correct until the
+   day the catalog moves, and nothing would have said so.
+   The family count is read the same way, from the records rather than from
+   the cpFamilies list, so it counts what the tile beside it describes. */
+const counts = QUALITY_DATA.counts;
+const cpFamilyCount = new Set(
+  QUALITY_DATA.parameters.filter((p) => p.type === 'CP').map((p) => p.family)
+).size;
 ---
 <BaseLayout title="National Health Assurance: Quality">
   <main>
 
   <section class="card">
-    <h2>The complete controlled parameter catalog</h2>
+    <h2>The complete parameter catalog</h2>
     <p class="desc">The plan controls three different kinds of
       parameters. Key performance parameters define system outcomes,
       technical performance parameters define operating performance, and
@@ -43,23 +55,23 @@ const provenance = QUALITY_DATA.provenance;
       records in the plan's dictionaries and groups them by where they
       matter.</p>
     <p class="desc">{provenance.note}</p>
-    <div class="quality-counts" aria-label="Controlled parameter counts">
+    <div class="quality-counts" aria-label="Parameter counts by kind">
       <div class="quality-count">
         <span class="quality-kicker">System outcomes</span>
-        <strong>45</strong>
+        <strong>{counts.KPP}</strong>
         <b>KPP records</b>
         <small>Coverage, access, quality, equity, fiscal, transition, workforce, and legitimacy outcomes</small>
       </div>
       <div class="quality-count">
         <span class="quality-kicker">Operating performance</span>
-        <strong>85</strong>
+        <strong>{counts.TPP}</strong>
         <b>TPP records</b>
         <small>Eligibility, payment, medicines, facilities, workforce, benefits, data, cyber, rights, and innovation</small>
       </div>
       <div class="quality-count">
         <span class="quality-kicker">Cost and model control</span>
-        <strong>310</strong>
-        <b>CP records in 20 families</b>
+        <strong>{counts.CP}</strong>
+        <b>CP records in {cpFamilyCount} families</b>
         <small>Inputs, states, ledgers, derived outputs, offsets, units, owners, and calibration status</small>
       </div>
     </div>
@@ -166,7 +178,7 @@ const provenance = QUALITY_DATA.provenance;
 
   <section class="card">
     <h2>Explore all {provenance.framework + provenance.planDefined} parameters</h2>
-    <p class="desc">Search the controlled identifier or text, narrow the
+    <p class="desc">Search by identifier or text, narrow the
       catalog by parameter type or concept, and choose a rollout phase. Select
       any row for its calculation, owner, datasets, status, its target
       equation, and the complete phase-by-phase target strip. With a stress
@@ -219,14 +231,14 @@ const provenance = QUALITY_DATA.provenance;
 
     <div class="tbl-scroll quality-table-wrap">
       <table class="data quality-table" id="quality-table">
-        <caption class="sr-only">Complete controlled quality and cost parameter catalog</caption>
+        <caption class="sr-only">Complete quality and cost parameter catalog</caption>
       </table>
     </div>
   </section>
 
   <p class="rollout-source">The catalog covers the complete key-performance
-    and technical-performance dictionaries, the 310-record cost-parameter
-    registry, and the controlled phase and gate tables.
+    and technical-performance dictionaries, the {counts.CP}-record
+    cost-parameter registry, and the phase and gate tables.
     <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/quality-equation-methodology.md" target="_blank" rel="noopener">Sources and methodology</a>.</p>
 
     <ChapterNav />

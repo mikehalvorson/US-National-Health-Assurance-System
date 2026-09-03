@@ -27,3 +27,33 @@ export const TABS: Tab[] = [
   { id: 'tab-rollout', label: 'Phased Rollout', path: 'rollout' },
   { id: 'tab-quality', label: 'Quality', path: 'quality' },
 ];
+
+/* R163 / R270 [§S12]: one chapter number, in one format, from this list.
+ *
+ * Four surfaces were numbering chapters independently. ChapterNav computed
+ * `Chapter 05` from this order; six page eyebrows typed `Chapter 5` by hand;
+ * and index.astro's front-door grid typed its own two-digit sequence over a
+ * hand-maintained list of eleven cards.
+ *
+ * The grid was the one that was wrong, and it was wrong in the direction
+ * nobody checks: it predates Long-Term Care and Risk, so it omitted both and
+ * every number from Medications on was one or two low against this registry.
+ * Seven of its eleven numbers disagreed with the route the card linked to.
+ * R163 read the same disagreement from the other end and concluded gov.astro
+ * was the outlier because "the index is internally consistent"; the index was
+ * consistent with itself and stale against the app.
+ *
+ * Overview is the front door and carries no number. Chapters count from 1 at
+ * Healthcare, which is what both surviving surfaces already did. */
+export const CHAPTERS: Tab[] = TABS.filter((t) => t.path !== '');
+
+export function chapterNumber(path: string): number | null {
+  const i = CHAPTERS.findIndex((t) => t.path === path);
+  return i === -1 ? null : i + 1;
+}
+
+/* The single rendered form. Two digits, so a fourteen-chapter story does not
+   mix "Chapter 9" with "Chapter 10" down one column. */
+export function chapterMarker(n: number): string {
+  return 'Chapter ' + String(n).padStart(2, '0');
+}

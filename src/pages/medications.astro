@@ -1,6 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   here rather than rendering nothing, because a chapter whose page is not in
+   the registry is a navigation dead end this page cannot detect. */
 import { DRUG_BASE, DRUG_BASE_LABELS, drugBaseNote } from '../lib/medications';
 import { drugLeverNote } from '../lib/drug-lever';
 import {
@@ -31,7 +38,7 @@ const retail2023 = DRUG_BASE.retail2023.toFixed(1);
   <main>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 6 · Medicines</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('medications')!)} · Medicines</span>
     <h2>How can one public purchaser lower prices and keep essential drugs available?</h2>
     <p class="desc">National purchasing covers the complete formulary. The
       Public Medicines Corporation, or PMC, does something narrower: it

@@ -63,7 +63,7 @@ import {
   HCBS_WAITING_LIST_TEXT, type GdpKind
 } from './ltc';
 import { FILE_MANIFEST } from './file-manifest';
-import { TABS } from './tabs';
+import { CHAPTERS, TABS } from './tabs';
 /* R298 [§S12]: both provenance stamps, reachable for the first time now that
    neither generated payload is cast through `unknown`. */
 import { DATA_PHASE_METHODOLOGY_PATH, DATA_PHASE_SOURCE } from './data-phases';
@@ -4298,4 +4298,56 @@ export function unresolvedMethodologyPath(root = REPO_ROOT): string[] {
   return existsSync(join(root, rel))
     ? []
     : ['data-phases.ts cites ' + rel + ', which is not in the tree'];
+}
+
+/* R163 / R270 [§S12]: no page may type its own chapter number.
+ *
+ * This is the check whose absence let the front door go stale. The repo had
+ * `statedChapterCountDrift`, whose own comment explains that four
+ * recommendations were scoped against twelve chapters when the app has
+ * fourteen - and it swept README.md and specs/HANDOFF.md. Two markdown files.
+ * The surface actually publishing chapter numbers to readers, `src/pages/`,
+ * was never in its scope, and index.astro's grid was wrong in seven places.
+ *
+ * Scope, stated rather than assumed: the literal string "Chapter" followed by
+ * digits, anywhere under src/pages/ and src/components/, with comments masked
+ * so a note explaining this rule does not trip it. The derived form renders
+ * through chapterMarker() and contains no digits in the source, so it does
+ * not match. Prose that says "the Physical Care chapter" carries no number
+ * and is not in scope. */
+const CHAPTER_NUMBER_DIRS = ['src/pages', 'src/components'];
+const TYPED_CHAPTER_NUMBER = /Chapter\s+\d+/g;
+
+export function typedChapterNumbers(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  for (const dir of CHAPTER_NUMBER_DIRS) {
+    const files: string[] = [];
+    walk(join(root, dir), root, files);
+    for (const rel of files.filter((f) => /\.(astro|ts)$/.test(f)).sort()) {
+      const body = maskComments(readFileSync(join(root, rel), 'utf8'));
+      body.split('\n').forEach((line, i) => {
+        for (const m of line.matchAll(TYPED_CHAPTER_NUMBER)) {
+          out.push(rel + ':' + (i + 1) + ' types "' + m[0] + '" instead of deriving it');
+        }
+      });
+    }
+  }
+  return out;
+}
+
+/* R163 [§S12]: every chapter in the registry reaches the front door.
+ *
+ * The grid renders from TABS now, so a missing card throws at build. This is
+ * the other half - the half that made the stale grid invisible for two
+ * chapters: it reports the membership, so the count in this note is one the
+ * check computes rather than a number someone typed beside it. */
+export function frontDoorChapterCoverage(root = REPO_ROOT): {
+  registry: number; carded: number; missing: string[];
+} {
+  const page = readFileSync(join(root, 'src/pages/index.astro'), 'utf8');
+  const copy = page.slice(page.indexOf('const CHAPTER_COPY'), page.indexOf('const chapterCards'));
+  const missing = CHAPTERS
+    .filter((t) => !new RegExp('(^|[^\w])' + t.path + ':').test(copy))
+    .map((t) => t.path);
+  return { registry: CHAPTERS.length, carded: CHAPTERS.length - missing.length, missing: missing };
 }

@@ -99,6 +99,7 @@ import {
   renderedEquationProseAuditCodes, renderedParamProseAuditCodes, renderedSelfTestNameLeaks,
   repoLinkTargets, unresolvedRepoLinks, gateSplitNotDerived,
   provenanceStampDrift, unresolvedMethodologyPath,
+  typedChapterNumbers, frontDoorChapterCoverage,
   researchPathCitationLeaks, researchReadmeGateCount,
   researchReadmeGateList,
   staleResearchPathExemptions, unsweptSelfTestNameSites,
@@ -2214,6 +2215,23 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('The published methodology path resolves in the tree', () => {
         const bad = unresolvedMethodologyPath();
         return { ok: !bad.length, note: bad.join('; ') || 'the cited document is present' };
+      }),
+      /* R163/R270 [S12]: two halves, because they fail for different reasons.
+         A page typing its own number drifts when the registry is reordered;
+         a chapter with no card is invisible on the front door and moves no
+         number at all. The stale grid was the second kind for two chapters
+         and the first kind for seven. */
+      runGuarded('No page types its own chapter number', () => {
+        const bad = typedChapterNumbers();
+        return { ok: !bad.length, note: bad.join('; ') || 'every chapter number is derived' };
+      }),
+      runGuarded('Every chapter in the route registry has a front-door card', () => {
+        const c = frontDoorChapterCoverage();
+        return {
+          ok: c.missing.length === 0,
+          note: c.carded + ' of ' + c.registry + ' chapters carded' +
+            (c.missing.length ? '; missing ' + c.missing.join(', ') : '')
+        };
       }),
       runGuarded('Data-tab phase targets never regress from their mature target', () => {
         const r = dataPhaseMonotonicity().regressions;

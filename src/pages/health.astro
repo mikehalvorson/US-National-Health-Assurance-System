@@ -1,6 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   here rather than rendering nothing, because a chapter whose page is not in
+   the registry is a navigation dead end this page cannot detect. */
 import { computeOverview } from '../lib/overview';
 import { OUTCOME_STATS, PARAM_DEFS, CALENDAR_ANCHOR_NOTE } from '../lib/params';
 import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
@@ -29,7 +36,7 @@ const careLines = CARE_SCENARIOS.map((s) => ({
   <main>
 
     <section class="card chapter-intro">
-      <span class="chapter-intro-eyebrow">Chapter 1 · The need and the promise</span>
+      <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('health')!)} · The need and the promise</span>
       <h2>What people would receive, what care costs, and what the whole system costs</h2>
       <p class="desc">This chapter is the working core of the plan. It starts
         with the household: what real care episodes cost today versus under
