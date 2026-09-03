@@ -100,6 +100,7 @@ import {
   repoLinkTargets, unresolvedRepoLinks, gateSplitNotDerived,
   provenanceStampDrift, unresolvedMethodologyPath,
   typedChapterNumbers, frontDoorChapterCoverage, literalCountsInAriaLabels,
+  literalCountsInScreenReaderText,
   readmeCountDrift, readmeStatedCounts, baseLayoutCallsWithoutDescription,
   basisNotRendered,
   researchPathCitationLeaks, researchReadmeGateCount,
@@ -2257,6 +2258,14 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('Every rendered phase target shows whether it is derived', () => {
         const bad = basisNotRendered();
         return { ok: !bad.length, note: bad.join('; ') || 'the basis label is rendered on every row' };
+      }),
+      /* V11 [S12]: the same claim in the other place it hides. The first
+         version of the sweep read aria-labels only, and the rollout page's
+         sr-only caption said "Thirteen rollout domains across five phase
+         bands" where neither reader could contradict it. */
+      runGuarded('No screen-reader-only text asserts a count as a literal', () => {
+        const bad = literalCountsInScreenReaderText();
+        return { ok: !bad.length, note: bad.join('; ') || 'no hidden text types a count' };
       }),
       runGuarded('No aria-label asserts a count as a literal', () => {
         const bad = literalCountsInAriaLabels();

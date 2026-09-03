@@ -4549,3 +4549,60 @@ export function basisNotRendered(root = REPO_ROOT): string[] {
     .filter((e) => !body.includes(e))
     .map((e) => BASIS_RENDER_FILE + ' no longer renders each target\u2019s basis: "' + e + '"');
 }
+
+/* R292 [§S12], widened after the first version missed a class of element.
+ *
+ * literalCountsInAriaLabels reads aria-label attributes. V11's rollout page
+ * carried "Thirteen rollout domains across five phase bands" in a
+ * `<caption class="sr-only">` - the same claim, the same invisibility to a
+ * sighted reader, on an element the sweep did not look at. Right surface,
+ * wrong element class.
+ *
+ * So this reads the OTHER screen-reader-only text: sr-only captions, spans
+ * and divs. The two are kept apart rather than merged, because they fail for
+ * different reasons - an attribute is edited by whoever edits the container,
+ * a caption by whoever edits the table - and merging them would give one row
+ * two failure modes and one note. */
+const SR_ONLY_TEXT = /<(caption|span|div|p)[^>]*class="[^"]*\bsr-only\b[^"]*"[^>]*>([^<{]*)</g;
+
+/* The rule is "no count of the items this element describes". A number word
+ * can also state a duration, and "Staggered ten-week travel-nurse rotation"
+ * counts weeks rather than rows - so it is exempt with its reason, the way
+ * RESEARCH_PATH_EXEMPT one screen up handles the same shape.
+ *
+ * Keyed by the exact text, deliberately: reword the caption and the exemption
+ * stops applying, which forces the judgement to be made again rather than
+ * inherited. A flat rule here would push a writer to delete a true duration. */
+export const SR_COUNT_EXEMPT: Record<string, string> = {
+  'Staggered ten-week travel-nurse rotation':
+    'ten-week is the length of a rotation, not the size of a collection'
+};
+
+export function literalCountsInScreenReaderText(root = REPO_ROOT): string[] {
+  const out: string[] = [];
+  for (const dir of ['src/pages', 'src/components']) {
+    const files: string[] = [];
+    walk(join(root, dir), root, files);
+    for (const rel of files.filter((f) => f.endsWith('.astro')).sort()) {
+      const body = maskComments(readFileSync(join(root, rel), 'utf8'));
+      body.split('\n').forEach((line, i) => {
+        for (const m of line.matchAll(SR_ONLY_TEXT)) {
+          const text = m[2];
+          if (SR_COUNT_EXEMPT[text.trim()]) continue;
+          const digits = /\d/.test(text);
+          /* Two backslashes. This is the THIRD time in this session that a
+             shell heredoc collapsed the pair into a literal U+0008, and the
+             second in this file: staging the text through a temp file did not
+             help, because the temp file was written by a heredoc too. Only
+             the editor tools are safe for a backslash. */
+          const word = COUNT_WORDS.filter((w) =>
+            new RegExp('\\b' + w + '\\b', 'i').test(text))[0];
+          if (!digits && !word) continue;
+          out.push(rel + ':' + (i + 1) + ' asserts a count in screen-reader-only text: "'
+            + text.trim() + '"' + (digits ? '' : ' (the word "' + word + '")'));
+        }
+      });
+    }
+  }
+  return out;
+}

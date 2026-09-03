@@ -4,7 +4,7 @@
    via the timeline's dataset.wired guard. */
 import {
   PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS, WORKSTREAM_COST_NOTE,
-  gateIsMeasurable, QUALITATIVE_GATE_NOTE,
+  gateIsMeasurable, QUALITATIVE_GATE_NOTE, PHASE_BANDS,
   WORKSTREAM_GATE, WORKSTREAM_OWNER, UNIT_BUILDOUT_STEPS
 } from '../lib/rollout';
 
@@ -93,13 +93,7 @@ function selectPhase(id: string): void {
 function renderDomainMatrix(): void {
   const table = document.getElementById('rollout-domain-matrix') as HTMLTableElement | null;
   if (!table) return;
-  const bands = [
-    ['P0–P1', 'Foundation'],
-    ['P2–P3', 'First operation'],
-    ['P4–P5', 'Pilots and scale'],
-    ['P6–P7', 'National and benefits'],
-    ['P8', 'Maturity']
-  ];
+  const bands = PHASE_BANDS;
   const thead = table.createTHead();
   const row = thead.insertRow();
   const domainHead = document.createElement('th');

@@ -5,7 +5,7 @@ import ChapterNav from '../components/ChapterNav.astro';
    against the ramps that deliver them; this page renders them, and does not
    restate any milestone year of its own. */
 import {
-  GATES, gateIsMeasurable, ROLLOUT_HEADLINES, ROLLOUT_YEARS
+  DOMAINS, GATES, gateIsMeasurable, PHASE_BANDS, ROLLOUT_HEADLINES, ROLLOUT_YEARS
 } from '../lib/rollout';
 /* R292 [S12]: the timeline's label spelled its own span as a word. */
 const rolloutYears = ROLLOUT_YEARS;
@@ -69,11 +69,11 @@ const ENVELOPE_NOTE =
     <p class="desc">Coverage cannot outrun identity and payment; cost-sharing
       cannot disappear before staffed diagnostic and specialist capacity
       exists; expanded benefits cannot outrun workforce and home-care
-      readiness. The lanes below preserve all thirteen domain workstreams in
+      readiness. The lanes below preserve all {DOMAINS.length} domain workstreams in
       the integrated roadmap.</p>
     <div class="tbl-scroll">
       <table class="data rollout-matrix" id="rollout-domain-matrix">
-        <caption class="sr-only">Thirteen rollout domains across five phase bands</caption>
+        <caption class="sr-only">{DOMAINS.length} rollout domains across {PHASE_BANDS.length} phase bands</caption>
       </table>
     </div>
   </section>

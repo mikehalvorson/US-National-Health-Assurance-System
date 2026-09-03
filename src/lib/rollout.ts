@@ -574,3 +574,17 @@ export const WORKSTREAMS: Workstream[] = [
  * map moves. Annotated `: number` so a guard comparing it against anything
  * else is not dead at compile time. */
 export const ROLLOUT_YEARS: number = Math.max(...PHASES.map((p) => p.year));
+
+/* V11 [§S12]: the phase bands the domain matrix is columned by.
+ *
+ * This was a local array inside rollout-client.ts, while the sr-only caption
+ * stating how many bands there are is rendered server-side from the page. The
+ * two could not see each other, so the caption was a count of something in
+ * another module. Both read this now. */
+export const PHASE_BANDS: Array<[string, string]> = [
+  ['P0\u2013P1', 'Foundation'],
+  ['P2\u2013P3', 'First operation'],
+  ['P4\u2013P5', 'Pilots and scale'],
+  ['P6\u2013P7', 'National and benefits'],
+  ['P8', 'Maturity']
+];
