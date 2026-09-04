@@ -7214,3 +7214,221 @@ rule 2.
 Gates after the review fixes: **540 vitest across 60 files · `astro check` 0/0/1 ·
 14 pages · 264 self-tests · file manifest 128 · `negative_test.py` 48/48, 0 MISS,
 0 SKIP.**
+
+## P19 — §S13 Acronym layer · 2026-09-04 · branch `nha-remediation`
+STATUS: complete — 8 implementable rows, all landed, across 2 commits
+
+ENTRY GATE: `## P1` `STATUS: complete` ✅ · the two `\b(' + escaped` hits in the
+  two named clients, exactly 2 ✅ (and three more the prompt did not name) ·
+  `## P13` (`§S9c`) complete, `AE1` entry read before starting ✅ ·
+  `astro build` exit 0, both trees clean ✅ · 540 vitest / 264 self-tests /
+  manifest 128 re-measured, not inherited ✅
+
+LANDED:
+  - `2fda55e` — `R306` `R305` `R301` `R307` `R189` `R101` `R74`, the deletion
+  - `R159` closed by verification, no code — see DISCREPANCY 2
+  - `eef732d` — `R305` `R306`, the build gate
+  - `937e557` (audit set) — four negative cases for the new gate
+
+DELETED: six dictionaries (`src/lib/data-view.ts` 52, `src/lib/legislation.ts`
+  54, `src/lib/workforce.ts` 27, `src/lib/hardening.ts` 16, and the inline
+  56-key map in `src/scripts/quality-client.ts`), five decorators
+  (`data-client` `hardening-client` `legislation-client` `quality-client`
+  `workforce-client`), five dead CSS classes, one glossary key (`PA`), one
+  dead glossary key (`OI`). Expanders remaining repo-wide: **1**.
+
+IDENTIFIER WRAPPING: CP-POP-004 / KPP-A1 / TPP-11.1 render un-wrapped? **y** —
+  measured in the running app, not argued. **968 fragment
+  wraps across the five pages that had a tab-local decorator; 1 across all
+  fourteen afterwards**, and that 1 is the hand-authored `CBO-scored` in
+  `index.astro`, which is correct markup. The before figure covers five pages
+  and the after figure covers fourteen, because only five could carry the
+  defect and all fourteen were swept to confirm it.
+
+SR-DATA: resolved to **"System requirement, data"** — chosen because the
+  canonical `SR` is "System requirement", so the disagreement was between two
+  canonical entries, not the one the brief named. The divergent copy read
+  "System Requirement - Data"; the hyphen reads as a dash in a hover.
+
+OTHER MAPS FOUND: hardening **y** · workforce **y** · units **n** (removed in
+  P13) · legislation **y** · **and a sixth the brief does not list: the inline
+  map in `quality-client.ts`.**
+
+AE1: `acronyms.ts` `"PA"` **deleted outright, not contained**; regions half
+  (`R307`/P13) **landed** in P13 and still holds. `KNOWN_STATE_ACRONYM_COLLISIONS`
+  shrank from `['PA','VA']` to `['VA']`, which is how P13's self-test said this
+  row would show its work.
+
+### DISCREPANCY
+
+Six, four of them load-bearing.
+
+1. 🛑 **The brief's two structural counts are both wrong, in opposite
+   directions.** It says six decorators and five dictionaries. There are
+   **five decorators** — `units-client.ts`'s went in P13, and the brief cites
+   it at a line number it no longer occupies — and **six dictionaries**,
+   because `quality-client.ts` declares its own 56-key map inline rather than
+   importing one. That sixth map is named in neither audit document and had
+   never been diffed against anything. It is a strict subset of `acronyms.ts`
+   with zero divergences, verified by two independent counting methods
+   (evaluating the literal, and counting quoted-key lines) which agreed at 56.
+   **The code won on both counts.**
+
+2. 🛑 **`R159`'s premise is stale, and implementing its recommended fix would
+   have re-created the defect this section removes.** The row says the seven
+   institution acronyms in the authority table carry no `<abbr>` and no
+   legend. Measured on the running hardening page: **all seven are wrapped
+   with correct titles**, by `acronyms-client.ts`, which postdates the
+   finding. Its recommended fix — hardcode `<abbr>` into the page, as
+   `index.astro` does — would have added a seventh copy of glossary text.
+   Closed by verification, not by code.
+
+   The row's second half asks whether `NHAC`, `THDO`, `CHAO` and `A1-HCAC` are
+   defined anywhere, having found only three of the seven expanded in the
+   framework extract. They are: all four are entries in the governance entity
+   roster in `src/lib/gov.ts`, and the glossary values match that roster
+   character for character. The expansions are sourced, not invented for a
+   tooltip.
+
+3. 🛑 **A fourth divergence the brief does not name, inside the canonical
+   file.** `acronyms.ts` carried `"SR": "System requirement"` and
+   `"SR-DATA": "System Requirement, Data"`. P0 diffed the tab-local maps
+   against canon and found three; it did not diff canon against itself.
+
+4. 🆕 **Three more divergences in a surface no pass of the audit has looked
+   at, and one of them was rendering both spellings at once.** Sixteen
+   `<abbr title>` attributes are typed into `.astro` markup. Three disagreed
+   with the glossary — `ED`, `EMS`, `ICU`, all sentence case against canon's
+   title case. On the units page `EMS` rendered **twice, differently**:
+   "Emergency medical services" from the markup and "Emergency Medical
+   Services" injected by the decorator. That is this section's own acceptance
+   criterion — no acronym has two expansions — failing on a deployed page, and
+   the brief could not see it because it diffed dictionaries and these are
+   attributes. Aligned, and gated.
+
+5. **`R101` and the brief are each half right about `OI`.** `R101` calls it a
+   dead key; the brief says it is not, because `hardening.ts` carries it live.
+   The key was live and **the entry was dead**: `OI` occurs only as the `OI-`
+   catalog-code prefix, which the canonical lookaround rejects by design.
+   Zero bare occurrences across all fourteen rendered pages and every
+   non-generated file in `src/`. Dropped — on the measurement, not on
+   `R101`'s say-so.
+
+6. **`R307`'s "PA is the only collision" is true of the scope it was measured
+   in and false of the glossary.** All 18 keys of the old units-local map were
+   checked against 51 postal codes; against the 217-key site-wide glossary the
+   colliding set is `{PA, VA}`, which is what P13's own pin already says.
+
+### WHAT THE DEFECT ACTUALLY WAS
+
+Reproduced before touching anything, in the running app rather than in `dist`,
+because the wrapping is done by a client script and never appears in build
+output.
+
+On one load of the quality tab: **1,480 `<abbr>` elements, of which 936 wrapped
+a fragment of a longer identifier.** Per key, loose pattern against canonical:
+**CP 315 / 3 · TPP 50 / 6 · KPP 30 / 6 · LTC 16 / 4.** Every spurious wrap
+carried an `aria-label`, so a screen reader announced "Key Performance
+Parameter" and then "-B7". Data 12, hardening 11, workforce 9, legislation 0.
+
+The fix is the deletion. `acronymPattern()` already rejected the case in a
+comment that named it.
+
+### WHAT THE DELETION COST, MEASURED
+
+Nothing, and this was checked rather than asserted. Five keys stopped appearing
+on the quality page: `BH`, `IT`, `NCCA`, `NEEA`, `OMB`. Walking every text node
+under `<main>` with the canonical pattern: `BH`, `NCCA`, `NEEA`, `OMB` have
+**zero** matches in any visible node — they were `CP-BH-001`, `NEEA/NCCA`,
+`OMB/apportionment`. `IT` has two, both inside SVG `<text>`, which every
+decorator skips deliberately because an HTML `<abbr>` nested in `<svg>` is
+invalid and would hide the chart label.
+
+The three surviving hover surfaces after the change: `acronym` 1,311 injected
+site-wide, `overview-acronym` 8 and `physical-acronym` 8 hardcoded into page
+markup. No page shows two expansions of one key, checked on all fourteen.
+
+Two properties the deleted decorators lacked and the survivor has: they skipped
+only `abbr, script, style`, so four of the five would have injected `<abbr>`
+into SVG, and **none of them honoured `data-no-acronyms`** — the attribute P13
+added to close `AE1`. Latent today only because the units page is the sole
+state-code surface and no longer has a local decorator.
+
+### THE GATE, AND THE TWO TIMES IT CAUGHT ITSELF
+
+The guards written with the deletion all live in vitest, and
+`pnpm build` does not run vitest. So the invariant that mattered most had no
+gate. `acronymLayerFaults()` is that gate, registered as a self-test.
+
+It failed on its own source twice, and both failures are worth keeping.
+
+🛑 **First run: it reported `manifest-check.ts` as a second acronym matcher,
+because the needle it searches for is spelled in its own source.** Exempting
+the checker from its own rule would have left a hole exactly where a future
+decorator could be written. The needle is assembled from char codes instead,
+so the rule stays total.
+
+🛑 **Second run: it reported `manifest-check.ts` again — this time on the
+comment that explains why the needle is not spelled.** The explanation
+reintroducing the thing it explains. Fixed by masking comments before the
+source-shape scan, which is this file's existing convention.
+
+🛑 **The vitest file was reimplementing the same four rules, and the copy
+drifted within the hour.** It read raw source where the gate reads masked
+source, so it reported `manifest-check.ts` as a second decorator after the gate
+had stopped doing so. One implementation now, called from both places; vitest
+keeps only what the gate cannot see.
+
+Every guard was broken and its exit code read: fifteen mutations against the
+vitest file across its three shapes, and the gate six ways. Two tests changed
+shape when the duplication was collapsed and were broken again afterwards
+rather than credited to the runs that exercised their earlier form. **Two of the six build mutations also tripped `astro check`**,
+which would have let a dead gate look alive, so the gate's own return value was
+read directly under each mutation rather than inferred from the build.
+
+### A RENDERED NOTE THIS SECTION BROKE
+
+`R70`'s self-test note read "PA and VA collide with state abbreviations".
+Removing `PA` left one entry, and the sentence became **"VA collide"**. That
+note is rendered on the health page, so golden rule 2 binds it. The verb agrees
+with the list now. A section that shrinks a pinned list should expect to have
+broken the sentence written around the pair.
+
+### THE BACKSLASH TRAP, TWO MORE TIMES
+
+Fourteenth and fifteenth instances, both in read-only measurement code, both
+caught by an assert or a crash rather than by reading the code.
+
+- A `grep -F` for the double-escaped word boundary reported hits in
+  `gov-client.ts`. **The shell had collapsed the argument**, so grep searched
+  for the two-character `\b` and matched a regex literal. Re-measured in
+  Python: **zero** occurrences under `src/scripts/`.
+- A heredoc'd Python regex containing `[^"\\]` arrived as `[^"\]` and died with
+  "unterminated character set". A second heredoc silently ate the backslashes
+  in a `String.raw` needle and the assert refused to write.
+
+Both constants in the shipped gate are assembled from `String.fromCharCode`,
+with a comment saying not to simplify them back.
+
+### NOT DONE, AND WHY
+
+- **`R294` not implemented** — superseded by `R301`, premise retracted at
+  `§CA3`. Confirmed by the measurement: the two decorators were running
+  cumulatively, exactly as `§CA3` says, and both classes appeared on the same
+  page for the same key.
+- **The dead-key class is recorded, not swept.** `OI` was dropped because a row
+  named it. `SR`, `SR-DATA`, `EH`, `FA` and `BH` are the same shape — glossary
+  keys whose only real-world form is a catalog-code prefix the canonical
+  matcher rejects. They fire on nothing. Removing them is a decision for a
+  section that owns the vocabulary, not a deletion to slip into this one.
+- **A runtime-injected `<abbr>` is absent with JavaScript off and absent from
+  the static HTML.** Every hover on twelve of the fourteen pages now depends on
+  a client script. That is the trade the single glossary buys and it was
+  already the site's posture; naming it because `R159`'s recommended fix was
+  the alternative.
+
+GATES: **548 vitest across 61 files · `astro check` 0 errors / 0 warnings /
+1 hint · `tsc --noEmit` clean · 14 pages · 265 self-tests · file manifest 128 ·
+`negative_test.py` 52/52, 0 MISS, 0 SKIP · `check_audit_docs.py` 35 pass /
+0 fail.** README moves 264 → 265, read out of the gate's own error message
+rather than incremented.
