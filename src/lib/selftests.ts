@@ -119,7 +119,7 @@ import {
   gdpKindStyleFaults, ltcOecdRangeDrift, ltcPlanningInputFaults,
   ltcRepeatedLiterals, ltcRepeatedWatched, deadLtcExports,
   regionAssignmentReport, regionColoring, regionCountyAgreement,
-  regionSelection, scoreChartEncoding, stateAcronymCollisions,
+  regionSelection, scoreChartEncoding, acronymLayerFaults, stateAcronymCollisions,
   supportRateDrift, unitModelDrift, workforceProseDrift,
   retiredTreeTargets, REVENUE_ENGINE, routeDrift, SPLIT_HOME, statedChapterCountDrift,
   typedEnvelopeLiterals, typedHouseholdCounts, undeclaredEnrichers,
@@ -3253,10 +3253,16 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       /* R70: the glossary keys that are also state abbreviations, pinned.
          The containers that render bare state codes opt out of decoration, so
          this is a tripwire on the vocabulary rather than the fix. Growing the
-         list fails here; shrinking it also fails, which is how §S13's R307
-         will show its work. */
+         list fails here; shrinking it also fails, which is how R307 showed its
+         work: the list went from two entries to one when the glossary stopped
+         expanding PA. */
       runGuarded('No unrecorded glossary entry collides with a state abbreviation', () => {
         const c = stateAcronymCollisions();
+        /* The note is rendered, and it used to read "PA and VA collide". With
+           one entry left that sentence became "VA collide", so the verb agrees
+           with the list rather than with the pair the sentence was written
+           for. */
+        const many = c.collisions.length !== 1;
         return {
           ok: !c.unexpected.length && !c.resolved.length,
           note: c.unexpected.length
@@ -3264,7 +3270,25 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
             : c.resolved.length
               ? c.resolved.join(', ') + ' no longer collide; update KNOWN_STATE_ACRONYM_COLLISIONS'
               : c.collisions.join(' and ') +
-                ' collide with state abbreviations and are kept off state-code containers by data-no-acronyms'
+                (many ? ' collide' : ' collides') +
+                ' with state abbreviations and ' + (many ? 'are' : 'is') +
+                ' kept off state-code containers by data-no-acronyms'
+        };
+      }),
+      /* R305 + R306 [S13]: one glossary, one decorator, checked at build time.
+         The vitest suite carries thirteen guards on this layer and the build
+         runs none of them, so the shape that shipped a broken decorator to
+         five chapters had no gate. This is that gate. It also refuses a page
+         that hardcodes an expansion contradicting the glossary, which is how
+         one page came to render two spellings of EMS at once. */
+      runGuarded('One acronym glossary, one decorator, and no page disagrees with either', () => {
+        const faults = acronymLayerFaults();
+        return {
+          ok: !faults.length,
+          note: faults.slice(0, 3).join(' | ') ||
+            'the glossary and its decorator each live in exactly one file, no client script '
+            + 'builds a word-boundary matcher, and every expansion typed into page markup '
+            + 'matches the glossary'
         };
       })
     ]

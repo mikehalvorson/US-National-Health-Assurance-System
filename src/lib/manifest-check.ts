@@ -2826,6 +2826,115 @@ export function countyFileAudit(root = REPO_ROOT): {
  * title. Removing one also fails, which is what happened here. */
 export const KNOWN_STATE_ACRONYM_COLLISIONS = ['VA'];
 
+/* R305 + R306 + R301 [S13]: one glossary and one decorator, at build time.
+ *
+ * The vitest suite holds thirteen guards on this layer. None of them runs
+ * during `pnpm build`, so the invariant that mattered most had no gate: a
+ * reintroduced per-tab decorator would ship, and the last one shipped for
+ * five chapters. What is checked here is the shape that caused the defect,
+ * not the defect itself, because the defect only shows in a browser.
+ *
+ * The tell for a second decorator is rebuilding an alternation out of the
+ * glossary keys, not the class name or the regex flavour. The tell for the
+ * original bug is a source-built word boundary in a client script: `-` is a
+ * non-word character, so `\bCP\b` matches the CP in CP-POP-004. src/lib keeps
+ * legitimate uses of one in kappa-check and manifest-check, which match prose
+ * and identifiers rather than glossary keys; a client script has no reason to
+ * write one, and all five deleted decorators did.
+ *
+ * The fourth fault is the one measurement found and the section brief did not:
+ * a title attribute typed into page markup is a second copy of glossary text
+ * and drifts from it silently. Three had, and units.astro was rendering two
+ * spellings of EMS at once. */
+const ACRONYM_HOME = 'src/lib/acronyms.ts';
+const ACRONYM_DECORATOR = 'src/scripts/acronyms-client.ts';
+const ACRONYM_SOURCE_ROOTS = ['src'];
+
+/* The two characters a source file writes to put a word boundary into a RegExp
+   built from a string. Assembled from char codes rather than typed: every
+   attempt in this campaign to carry a backslash through a shell produced
+   U+0008, and a pattern that matches nothing passes on everything. */
+const SOURCE_WORD_BOUNDARY =
+  String.fromCharCode(92) + String.fromCharCode(92) + 'b';
+
+/* `escaped.join('|')`, assembled rather than typed for the same reason and a
+   sharper one: this file is inside the tree it scans, and the first run of
+   this gate failed on itself, reporting manifest-check.ts as a second acronym
+   matcher. Exempting the checker from its own rule would have left a hole
+   exactly where a future decorator could be written; not spelling the needle
+   leaves the rule total. Do not "simplify" either constant back to a literal. */
+const MATCHER_BUILDER =
+  'escaped.join(' + String.fromCharCode(39) + '|' + String.fromCharCode(39) + ')';
+
+/* Keys deliberately hardcoded in page markup and deliberately not in the
+   glossary. PBMs because the canonical matcher cannot wrap a plural: the
+   trailing s is a word char and the lookahead rejects it. ER because the lay
+   overview says Emergency Room where the clinical chapters say Emergency
+   Department, which is the key the glossary carries. */
+const HARDCODED_OUTSIDE_GLOSSARY: Record<string, string> = {
+  PBMs: 'Pharmacy Benefit Managers',
+  ER: 'Emergency Room'
+};
+
+const HARDCODED_ABBR = /<abbr[^>]*title="([^"]*)"[^>]*>([^<]+)<\/abbr>/g;
+
+/* Single-line generated payloads. Reading them proves nothing here and costs
+   about 600 KB per build; both are emitted by a generator and neither can hold
+   a decorator. */
+const GENERATED_PAYLOADS = new Set([
+  'src/lib/quality-data.ts',
+  'src/lib/data-phases.ts'
+]);
+
+export function acronymLayerFaults(root = REPO_ROOT): string[] {
+  const files: string[] = [];
+  for (const dir of ACRONYM_SOURCE_ROOTS) walk(join(root, dir), root, files);
+  const sources = files.filter((f) => /\.(ts|astro)$/.test(f) && !GENERATED_PAYLOADS.has(f));
+
+  const faults: string[] = [];
+  for (const rel of sources) {
+    const text = readFileSync(join(root, rel), 'utf8');
+    /* The four source-shape rules read masked text, following this file's own
+       convention. The second run of this gate failed on the comment two
+       screens up, which spells the needle in order to explain why the needle
+       is not spelled - the explanation reintroducing the thing it explains.
+       The <abbr> rule below reads raw text instead, because it scans .astro
+       markup that maskComments is not written for. */
+    const code = maskComments(text);
+
+    if (rel !== ACRONYM_HOME && /\bconst ACRONYMS\b/.test(code)) {
+      faults.push(rel + ' declares a second acronym dictionary');
+    }
+    if (rel !== ACRONYM_HOME && code.includes(MATCHER_BUILDER)) {
+      faults.push(rel + ' builds a second acronym matcher');
+    }
+    if (rel.startsWith('src/scripts/') && rel !== ACRONYM_DECORATOR
+      && /createElement\('abbr'\)|el\('abbr'/.test(code)) {
+      faults.push(rel + ' wraps its own acronyms');
+    }
+    if (rel.startsWith('src/scripts/') && code.includes(SOURCE_WORD_BOUNDARY)) {
+      faults.push(rel + ' builds a pattern with a word boundary, which matches '
+        + 'inside a hyphenated identifier');
+    }
+    if (rel.endsWith('.astro')) {
+      HARDCODED_ABBR.lastIndex = 0;
+      let hit: RegExpExecArray | null;
+      while ((hit = HARDCODED_ABBR.exec(text)) !== null) {
+        const key = hit[2].trim();
+        const title = hit[1].replace(/&amp;|&#38;/g, '&');
+        const expected = SITE_ACRONYMS[key] ?? HARDCODED_OUTSIDE_GLOSSARY[key];
+        if (expected === undefined) {
+          faults.push(rel + ' hardcodes ' + key + ', which the glossary does not define');
+        } else if (expected !== title) {
+          faults.push(rel + ' hardcodes ' + key + ' as "' + title
+            + '", the glossary says "' + expected + '"');
+        }
+      }
+    }
+  }
+  return faults;
+}
+
 export function stateAcronymCollisions(root = REPO_ROOT): {
   collisions: string[]; unexpected: string[]; resolved: string[];
 } {

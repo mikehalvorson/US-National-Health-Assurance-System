@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { ACRONYMS, acronymPattern } from '../../src/lib/acronyms';
+import { acronymLayerFaults } from '../../src/lib/manifest-check';
 
 /* P19 [S13]: one dictionary, one expander, and a shape that cannot come back.
  *
@@ -15,9 +16,10 @@ import { ACRONYMS, acronymPattern } from '../../src/lib/acronyms';
  * <abbr> carrying an aria-label, so a screen reader announced "Key Performance
  * Parameter" and then "-B7".
  *
- * These tests read source text rather than behaviour, because the defect was a
- * shape: any file that rebuilds a key alternation is a second decorator whether
- * or not it currently misbehaves. */
+ * The source-shape half of this lives in acronymLayerFaults(), because the
+ * build runs that and does not run vitest. This file calls it and then covers
+ * what it cannot see: what the matcher actually does, which keys the deletion
+ * had to preserve, and which spelling each divergence resolved to. */
 
 const SRC = fileURLToPath(new URL('../../src', import.meta.url));
 
@@ -41,42 +43,17 @@ const files = sourceFiles();
 const rel = (f: string) => f.slice(SRC.length + 1).replace(/\\/g, '/');
 const read = (f: string) => readFileSync(f, 'utf8');
 
-/* The two characters a source file writes to put a word boundary into a
-   RegExp built from a string: a backslash escaping a backslash, then b.
-   Written with String.raw because every previous attempt in this campaign to
-   type it through a shell produced U+0008 and a check that passed on
-   everything. */
-const DOUBLE_ESCAPED_WORD_BOUNDARY = String.raw`\\b`;
-
 describe('acronym layer', () => {
-  test('the repo has exactly one acronym dictionary', () => {
-    const holders = files.filter((f) => /\bconst ACRONYMS\b/.test(read(f))).map(rel);
-    expect(holders).toEqual(['lib/acronyms.ts']);
-  });
-
-  test('the repo has exactly one acronym decorator', () => {
-    /* the tell is rebuilding a key alternation, not the class name or the
-       regex flavour, so a decorator that "modernised" to the lookaround would
-       still be caught here */
-    const builders = files.filter((f) => read(f).includes("escaped.join('|')")).map(rel);
-    expect(builders).toEqual(['lib/acronyms.ts']);
-
-    const wrappers = files
-      .filter((f) => rel(f).startsWith('scripts/'))
-      .filter((f) => /createElement\('abbr'\)|el\('abbr'/.test(read(f)))
-      .map(rel);
-    expect(wrappers).toEqual(['scripts/acronyms-client.ts']);
-  });
-
-  test('no client script builds a pattern with a word boundary', () => {
-    /* src/lib keeps legitimate uses in kappa-check and manifest-check, which
-       match prose and identifiers rather than glossary keys; a client script
-       has no reason to write one, and every deleted decorator did. */
-    const offenders = files
-      .filter((f) => rel(f).startsWith('scripts/'))
-      .filter((f) => read(f).includes(DOUBLE_ESCAPED_WORD_BOUNDARY))
-      .map(rel);
-    expect(offenders).toEqual([]);
+  test('one dictionary, one decorator, no second matcher anywhere in src', () => {
+    /* The source-shape rules live in acronymLayerFaults() because the build
+       runs that and does not run vitest. This test used to reimplement them
+       and the copy drifted inside an hour: it read raw source where the gate
+       reads masked source, so it reported manifest-check.ts as a second
+       decorator on the strength of a comment. One implementation, called from
+       both places. What this file adds is everything the gate cannot see -
+       the matcher's behaviour, the keys the deletion had to preserve, and the
+       decisions that resolved the divergences. */
+    expect(acronymLayerFaults()).toEqual([]);
   });
 
   test('the canonical matcher refuses a key inside a longer identifier', () => {
@@ -192,48 +169,18 @@ describe('acronym layer', () => {
     }
   });
 
-  test('no page hardcodes an expansion that contradicts the glossary', () => {
-    /* Found by measurement after the deletion, in a surface neither the
-       section brief nor its pre-measurement looked at: they diffed the
-       src/lib dictionaries, and these are title attributes typed into page
-       markup. Three of the sixteen disagreed with the glossary, and on the
-       units page EMS was rendering BOTH - "Emergency medical services" typed
-       into the markup and "Emergency Medical Services" injected by the
-       decorator, two hovers for one acronym on one page.
-
-       A hardcoded <abbr> is legitimate: it survives with JavaScript off and
-       it is present before the sweep runs. What is not legitimate is a second
-       spelling. Two keys are deliberately outside the glossary and are named
-       here rather than excused by a wildcard. */
-    const OUTSIDE_GLOSSARY: Record<string, string> = {
-      /* the glossary's canonical matcher cannot wrap a plural: the trailing s
-         is a word char and the lookahead rejects it, so the plural form has
-         to be hardcoded to get a hover at all */
-      PBMs: 'Pharmacy Benefit Managers',
-      /* the lay overview says Emergency Room where the clinical chapters say
-         Emergency Department; the glossary carries ED */
-      ER: 'Emergency Room'
-    };
-    const abbr = /<abbr[^>]*title="([^"]*)"[^>]*>([^<]+)<\/abbr>/g;
-    const wrong: string[] = [];
-    let hardcoded = 0;
-    for (const f of files.filter((x) => x.endsWith('.astro'))) {
-      const text = read(f);
-      let m: RegExpExecArray | null;
-      abbr.lastIndex = 0;
-      while ((m = abbr.exec(text)) !== null) {
-        hardcoded += 1;
-        const key = m[2].trim();
-        const title = m[1].replace(/&amp;|&#38;/g, '&');
-        const expected = ACRONYMS[key] ?? OUTSIDE_GLOSSARY[key];
-        if (expected === undefined) {
-          wrong.push(`${rel(f)}: ${key} is neither in the glossary nor declared here`);
-        } else if (expected !== title) {
-          wrong.push(`${rel(f)}: ${key} reads "${title}", the glossary says "${expected}"`);
-        }
-      }
-    }
-    expect(wrong).toEqual([]);
+  test('the pages still hardcode the sixteen abbrs the gate checks', () => {
+    /* acronymLayerFaults() checks that each hardcoded title agrees with the
+       glossary. It cannot notice all of them being deleted, which would make
+       that rule vacuously true. The count is the part a rule about agreement
+       cannot carry. Three of these sixteen disagreed with the glossary before
+       this section, and units.astro was rendering both "Emergency medical
+       services" (typed into the markup) and "Emergency Medical Services"
+       (injected by the decorator) at the same time. */
+    const abbr = /<abbr[^>]*title="[^"]*"[^>]*>[^<]+<\/abbr>/g;
+    const hardcoded = files
+      .filter((f) => f.endsWith('.astro'))
+      .reduce((n, f) => n + (read(f).match(abbr) || []).length, 0);
     expect(hardcoded).toBe(16);
   });
 
