@@ -39,65 +39,6 @@ function eqScenarioName(): string {
   return s ? s.name : eqScenario;
 }
 
-const ACRONYMS: Record<string, string> = {
-  'A1-HCAC': 'Article I Health Claims and Appeals Court',
-  'ACA': 'Affordable Care Act',
-  'ACDRH': 'Administration for Care Delivery and Regional Health',
-  'AI': 'Artificial Intelligence',
-  'AICIO': 'Artificial Intelligence Clinical Integration Office',
-  'AMDDT': 'Administration for Medicines, Devices, Diagnostics, and Therapeutics',
-  'API': 'Application Programming Interface',
-  'BH': 'Behavioral Health',
-  'CHAO': 'Congressional Health Accountability Office',
-  'CP': 'Cost Parameter',
-  'DME': 'Durable Medical Equipment',
-  'DNHA': 'Department of National Health Assurance',
-  'DVH': 'Dental, Vision, and Hearing',
-  'ED': 'Emergency Department',
-  'EMS': 'Emergency Medical Services',
-  'EPTO': 'Employer and Payroll Transition Office',
-  'FA': 'Specified assumption',
-  'GDP': 'Gross Domestic Product',
-  'HATC': 'Health Administration Transition Corps',
-  'HCCA': 'Health Cybersecurity and Continuity Authority',
-  'HFASB': 'Health Financing Actuary and Stabilization Board',
-  'IT': 'Information Technology',
-  'KPP': 'Key Performance Parameter',
-  'LTC': 'Long-Term Care',
-  'NBIA': 'National Biomedical Innovation Agency',
-  'NCCA': 'National Coverage and Claims Authority',
-  'NCDSO': 'National Clinical Data Standards Office',
-  'NDPA': 'National Drug Purchasing Authority',
-  'NEEA': 'National Enrollment and Eligibility Authority',
-  'NEMTA': 'National EMS and Medical Transport Authority',
-  'NHAC': 'National Health Accountability Commission',
-  'NHASB': 'National Health Adaptation and Scorekeeping Board',
-  'NHETF': 'National Health Equalization Trust Fund',
-  'NHRA': 'National Health Records Authority',
-  'NHSA': 'National Hospital Stewardship Authority',
-  'NHTCA': 'National Health Transition and Continuity Authority',
-  'NHWB': 'National Health Workforce Board',
-  'NHWECA': 'National Health Workforce Education and Capacity Authority',
-  'NOPRSL': 'National Office of Patient Rights, Safety, and Legitimacy',
-  'NPSMIB': 'National Patient Safety and Medical Injury Board',
-  'NSAA': 'National Specialty Access Authority',
-  'OCDTI': 'Office of Community Diagnostic and Treatment Infrastructure',
-  'OMB': 'Office of Management and Budget',
-  'PBM': 'Pharmacy Benefit Manager',
-  'PCU': 'National Pharmacy Claims Utility',
-  'PILO': 'Public-Interest Licensing Office',
-  'PMC': 'Public Medicines Corporation',
-  'PROO': 'Patient Rights and Ombudsman Office',
-  'RHA': 'Regional Health Administrators',
-  'SRCO': 'State and Regional Compact Office',
-  'SUD': 'Substance Use Disorder',
-  'TBD': 'To Be Determined',
-  'THDO': 'Treasury Health Disbursement Office',
-  'TPP': 'Technical Performance Parameter',
-  'TRTO': 'Tribal and Rural Transition Office',
-  'USD': 'United States Dollars'
-};
-
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -762,39 +703,6 @@ function renderTable(parameters: QualityParameter[]): void {
   });
 }
 
-function addAcronymHovers(root: HTMLElement | null): void {
-  if (!root) return;
-  const keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
-  const escaped = keys.map(function (key) { return key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
-  const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style, option, svg, .eq-formula')) continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(node.nodeValue || '')) textNodes.push(node);
-  }
-  textNodes.forEach(function (node) {
-    const text = node.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    pattern.lastIndex = 0;
-    text.replace(pattern, function (match: string, acronym: string, offset: number) {
-      if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-      const abbr = el('abbr', 'quality-acronym', acronym);
-      abbr.title = ACRONYMS[acronym];
-      abbr.setAttribute('aria-label', acronym + ': ' + ACRONYMS[acronym]);
-      fragment.appendChild(abbr);
-      lastIndex = offset + match.length;
-      return match;
-    });
-    if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    node.parentNode!.replaceChild(fragment, node);
-  });
-}
-
 function refresh(): void {
   const parameters = filteredParameters();
   if (!parameters.some(function (parameter) { return parameter.id === selectedId; })) {
@@ -816,8 +724,6 @@ function refresh(): void {
     if (sel) sel.innerHTML = '<p class="quality-empty">Adjust the filters to select a parameter.</p>';
   }
   renderTable(parameters);
-  addAcronymHovers(byId('quality-selected'));
-  addAcronymHovers(byId('quality-table'));
 }
 
 function initQuality(): void {
@@ -873,7 +779,6 @@ function initQuality(): void {
   if (selHost) selHost.addEventListener('click', eqNodeClickDelegate);
   renderEqExplorer();
 
-  addAcronymHovers(document.querySelector('main'));
   refresh();
 
   const search = byId('quality-search');

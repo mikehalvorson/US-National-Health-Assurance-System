@@ -2800,20 +2800,31 @@ export function countyFileAudit(root = REPO_ROOT): {
   return { faults, records: rows.length, population, states: stateToPrefix.size, meta };
 }
 
-/* R70: an acronym key that is also a US state abbreviation.
+/* R70 + R307: an acronym key that is also a US state abbreviation.
  *
- * This is a tripwire, not the fix. The fix on this page is that the three
- * containers rendering bare state codes carry `data-no-acronyms`, which both
- * decorators honour. But the glossary is where the hazard originates, and it
- * grows: `PA` and `VA` collide today, and `IN`, `OR`, `OK`, `ID`, `ME`, `HI`,
- * `DE` and `MS` are all expansions someone could add without ever thinking
- * about a map.
+ * R307 landed and this list shrank from two to one, which is how it shows its
+ * work. `PA` is gone from the glossary. It expanded to "Physician assistant"
+ * and it never once fired: across all fourteen rendered pages, and across
+ * every non-generated file in src/, the only bare `PA` was the entry itself
+ * and the comments discussing this collision. The page that names the role
+ * writes "Physician assistants" in full. So the entry carried a screen-reader
+ * hazard for a hover that had no text to attach to, and deleting it removes
+ * the hazard at its source rather than containing it. Same disposition as
+ * `IV`, for the same reason.
  *
- * So the collisions are pinned. A new one fails the build and lands on
- * whoever added it, rather than surfacing as Pennsylvania being read out as a
- * job title. Removing one also fails, which is correct: the site-wide half of
- * this is R307 in §S13, and when it lands this list is how it proves it. */
-export const KNOWN_STATE_ACRONYM_COLLISIONS = ['PA', 'VA'];
+ * `VA` stays, because it is doing real work: four occurrences across the
+ * health and legislation chapters, every one of them the Department of
+ * Veterans Affairs and correctly expanded. It is contained rather than
+ * removed, by the `data-no-acronyms` hosts on every surface that renders a
+ * state code.
+ *
+ * This is a tripwire, not the fix. The glossary is where the hazard
+ * originates, and it grows: `IN`, `OR`, `OK`, `ID`, `ME`, `HI`, `DE` and `MS`
+ * are all expansions someone could add without ever thinking about a map. So
+ * the collisions are pinned. A new one fails the build and lands on whoever
+ * added it, rather than surfacing as Pennsylvania being read out as a job
+ * title. Removing one also fails, which is what happened here. */
+export const KNOWN_STATE_ACRONYM_COLLISIONS = ['VA'];
 
 export function stateAcronymCollisions(root = REPO_ROOT): {
   collisions: string[]; unexpected: string[]; resolved: string[];

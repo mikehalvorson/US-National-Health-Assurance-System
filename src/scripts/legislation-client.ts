@@ -1,7 +1,7 @@
 /* Legislation tab client: master-detail domain browser + acronym hovers.
    Port of docs/js/legislation.js:358-485. Runs on astro:page-load; idempotent
    via the list container's dataset.wired guard. */
-import { DOMAINS, ACRONYMS } from '../lib/legislation';
+import { DOMAINS } from '../lib/legislation';
 
 function element(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
@@ -61,7 +61,6 @@ function renderDetail(list: HTMLElement, host: HTMLElement, index: number): void
   host.appendChild(badges);
   host.appendChild(grid);
   host.appendChild(sources);
-  addAcronymHovers(host);
 }
 
 function renderList(list: HTMLElement, host: HTMLElement): void {
@@ -79,41 +78,6 @@ function renderList(list: HTMLElement, host: HTMLElement): void {
   renderDetail(list, host, 0);
 }
 
-function addAcronymHovers(root: HTMLElement | null): void {
-  if (!root) return;
-  const keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
-  const escaped = keys.map(function (key) { return key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
-  const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style')) continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(node.nodeValue || '')) textNodes.push(node);
-  }
-  textNodes.forEach(function (node) {
-    const text = node.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    pattern.lastIndex = 0;
-    text.replace(pattern, function (match: string, acronym: string, offset: number) {
-      if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-      const abbr = document.createElement('abbr');
-      abbr.className = 'legislation-acronym';
-      abbr.title = ACRONYMS[acronym];
-      abbr.setAttribute('aria-label', acronym + ': ' + ACRONYMS[acronym]);
-      abbr.textContent = acronym;
-      fragment.appendChild(abbr);
-      lastIndex = offset + match.length;
-      return match;
-    });
-    if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    node.parentNode!.replaceChild(fragment, node);
-  });
-}
-
 function initLegislation(): void {
   const list = document.getElementById('legislation-law-list');
   const host = document.getElementById('legislation-law-detail');
@@ -121,7 +85,6 @@ function initLegislation(): void {
   if (list.dataset.wired === '1') return;
   list.dataset.wired = '1';
   renderList(list, host);
-  addAcronymHovers(document.querySelector('main'));
 }
 
 /* Also init on first load without waiting for astro:page-load: if this module

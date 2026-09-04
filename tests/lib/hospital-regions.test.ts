@@ -379,8 +379,8 @@ describe('R70 -- an acronym key that is also a state', () => {
     const c = stateAcronymCollisions();
     expect(c.unexpected).toEqual([]);
     expect(c.resolved).toEqual([]);
-    expect(c.collisions).toEqual(['PA', 'VA']);
-    expect(KNOWN_STATE_ACRONYM_COLLISIONS).toEqual(['PA', 'VA']);
+    expect(c.collisions).toEqual(['VA']);
+    expect(KNOWN_STATE_ACRONYM_COLLISIONS).toEqual(['VA']);
   });
 
   test('stateCollisions asks the state table rather than naming two keys', () => {

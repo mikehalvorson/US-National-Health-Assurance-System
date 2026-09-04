@@ -1,6 +1,10 @@
 /* Legislation crosswalk data, ported verbatim from docs/js/legislation.js
-   (DOMAINS 10-306, ACRONYMS 308-356). A major-law-family planning crosswalk,
-   not legal advice. Fidelity-critical: do not re-derive. */
+   (DOMAINS 10-306). A major-law-family planning crosswalk, not legal advice.
+   Fidelity-critical: do not re-derive.
+
+   The acronym map that was here (docs/js/legislation.js 308-356) is gone. Its
+   54 keys were a subset of src/lib/acronyms.ts, which the site-wide decorator
+   applies to every page. */
 
 export interface Domain {
   title: string;
@@ -312,63 +316,6 @@ export const DOMAINS: Domain[] = [
     ]
   }
 ];
-
-export const ACRONYMS: Record<string, string> = {
-  'AI': 'Artificial Intelligence',
-  'APA': 'Administrative Procedure Act',
-  'ARPA-H': 'Advanced Research Projects Agency for Health',
-  'BARDA': 'Biomedical Advanced Research and Development Authority',
-  'BPCIA': 'Biologics Price Competition and Innovation Act',
-  'CBO': 'Congressional Budget Office',
-  'CFR': 'Code of Federal Regulations',
-  'CHAMPVA': 'Civilian Health and Medical Program of the Department of Veterans Affairs',
-  'CHIP': "Children's Health Insurance Program",
-  'CIRCIA': 'Cyber Incident Reporting for Critical Infrastructure Act',
-  'CISA': 'Cybersecurity and Infrastructure Security Agency',
-  'COBRA': 'Consolidated Omnibus Budget Reconciliation Act',
-  'DVH': 'Dental, Vision, and Hearing',
-  'EMS': 'Emergency Medical Services',
-  'EMTALA': 'Emergency Medical Treatment and Labor Act',
-  'ERISA': 'Employee Retirement Income Security Act',
-  'FDA': 'Food and Drug Administration',
-  'FDCA': 'Federal Food, Drug, and Cosmetic Act',
-  'FDCPA': 'Fair Debt Collection Practices Act',
-  'FEHBA': 'Federal Employees Health Benefits Act',
-  'FISMA': 'Federal Information Security Modernization Act',
-  'FLSA': 'Fair Labor Standards Act',
-  'FOIA': 'Freedom of Information Act',
-  'FCRA': 'Fair Credit Reporting Act',
-  'FTC': 'Federal Trade Commission',
-  'HCBS': 'Home and Community-Based Services',
-  'HIPAA': 'Health Insurance Portability and Accountability Act',
-  'HITECH': 'Health Information Technology for Economic and Clinical Health Act',
-  'HSA': 'Health Savings Account',
-  'IEN': 'Internationally Educated Nurse',
-  'IHS': 'Indian Health Service',
-  'IMG': 'International Medical Graduate',
-  'INA': 'Immigration and Nationality Act',
-  'IRA': 'Inflation Reduction Act',
-  'HPSA': 'Health Professional Shortage Area',
-  'MUA': 'Medically Underserved Area',
-  'MUP': 'Medically Underserved Population',
-  'WHO': 'World Health Organization',
-  'IRC': 'Internal Revenue Code',
-  'JCT': 'Joint Committee on Taxation',
-  'LTC': 'Long-Term Care',
-  'MHPAEA': 'Mental Health Parity and Addiction Equity Act',
-  'NHA': 'National Health Assurance',
-  'NIH': 'National Institutes of Health',
-  'NLRA': 'National Labor Relations Act',
-  'OI': 'Open Issue',
-  'PACE': 'Program of All-Inclusive Care for the Elderly',
-  'PHSA': 'Public Health Service Act',
-  'PREP': 'Public Readiness and Emergency Preparedness Act',
-  'RFRA': 'Religious Freedom Restoration Act',
-  'TRICARE': 'Department of Defense health program for service members, retirees, and families',
-  'USC': 'United States Code',
-  'VA': 'Department of Veterans Affairs',
-  'WARN': 'Worker Adjustment and Retraining Notification Act'
-};
 
 /* R297 [§S12]: the enabling act's titles, so the numbering is derived.
  *

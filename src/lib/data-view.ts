@@ -1,7 +1,12 @@
 /* Data-tab content, ported verbatim from docs/js/data.js
-   (ACRONYMS 10-63, FIXES 65-102, PLANES 104-111, STORE_ROWS 113-121,
+   (FIXES 65-102, PLANES 104-111, STORE_ROWS 113-121,
    CARE_ACTORS 123-172, PUBLIC_ACTORS 174-223, CYBER_CONTROLS 225-236,
-   mesh-core service list 523-530). Fidelity-critical: do not re-derive. */
+   mesh-core service list 523-530). Fidelity-critical: do not re-derive.
+
+   The acronym map that was here (docs/js/data.js 10-63) is gone. Its 52 keys
+   were a subset of src/lib/acronyms.ts, which the site-wide decorator applies
+   to every page; the local copy only ever added the identifier-wrapping bug
+   its `\b` matcher caused. */
 
 export interface FixItem {
   problem: string;
@@ -16,61 +21,6 @@ export interface Actor {
   sends: string;
   receives: string;
 }
-
-export const ACRONYMS: Record<string, string> = {
-  "ACDRH": "Administration for Care Delivery and Regional Health",
-  "AHIRC": "Administration for Health Information, Records, and Cybersecurity",
-  "AICIO": "Artificial Intelligence Clinical Integration Office",
-  "AI": "Artificial Intelligence",
-  "AMDDT": "Administration for Medicines, Devices, Diagnostics, and Therapeutics",
-  "API": "Application Programming Interface",
-  "BH": "Behavioral Health",
-  "CHAO": "Congressional Health Accountability Office",
-  "CIRBAS": "Clinician Identity and Role-Based Access System",
-  "DMRCO": "Data Migration and Records Continuity Office",
-  "DNHA": "Department of National Health Assurance",
-  "DVH": "Dental, Vision, and Hearing",
-  "EHR": "Electronic Health Record",
-  "EMS": "Emergency Medical Services",
-  "FTE": "Full-Time Equivalent",
-  "HCCA": "Health Cybersecurity and Continuity Authority",
-  "HIV": "Human Immunodeficiency Virus",
-  "HRPO": "Health Rights and Privacy Office",
-  "IT": "Information Technology",
-  "KPP": "Key Performance Parameter",
-  "LDA": "Laboratory and Diagnostics Authority",
-  "LTC": "Long-Term Care",
-  "NAIG": "National API and Interoperability Gateway",
-  "NBIA": "National Biomedical Innovation Agency",
-  "NCCA": "National Coverage and Claims Authority",
-  "NCDSO": "National Clinical Data Standards Office",
-  "NCDTN": "National Community Diagnostic and Treatment Network",
-  "NEEA": "National Enrollment and Eligibility Authority",
-  "NHAC": "National Health Accountability Commission",
-  "NHASB": "National Health Adaptation and Scorekeeping Board",
-  "NHIS": "National Health Identifier Service",
-  "NHRA": "National Health Records Authority",
-  "NHSA": "National Hospital Stewardship Authority",
-  "NHTCA": "National Health Transition and Continuity Authority",
-  "NHWB": "National Health Workforce Board",
-  "NLLHR": "National Longitudinal Health Record",
-  "NMPI": "National Master Patient Index",
-  "NPSMIB": "National Patient Safety and Medical Injury Board",
-  "NRLS": "National Record Locator Service",
-  "NSAA": "National Specialty Access Authority",
-  "OCDTI": "Office of Community Diagnostic and Treatment Infrastructure",
-  "PACP": "Patient Access and Consent Portal",
-  "PCU": "National Pharmacy Claims Utility",
-  "PMC": "Public Medicines Corporation",
-  "PRTO": "Public Reporting and Transparency Office",
-  "RHA": "Regional Health Administrators",
-  "SRAE": "Secure Research and Analytics Enclave",
-  "SR-DATA": "System Requirement - Data",
-  "STI": "Sexually Transmitted Infection",
-  "SUD": "Substance Use Disorder",
-  "THDO": "Treasury Health Disbursement Office",
-  "TPP": "Technical Performance Parameter"
-};
 
 export const FIXES: FixItem[] = [
   {

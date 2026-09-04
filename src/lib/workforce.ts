@@ -1,6 +1,8 @@
 /* Workforce data + planning constants, ported verbatim from docs/js/workforce.js
-   (constants 11-15, SCENARIOS 17-39, LEGACY 41-97, CREATED 99-163,
-   ACRONYMS 165-183). Fidelity-critical: do not re-derive. Values are in
+   (constants 11-15, SCENARIOS 17-39, LEGACY 41-97, CREATED 99-163). The
+   acronym map that was here (docs/js/workforce.js 165-183) is gone; its 27
+   keys were a subset of src/lib/acronyms.ts, applied site-wide.
+   Fidelity-critical: do not re-derive. Values are in
    thousands of jobs unless noted. The LTC direct-care block at the bottom is
    new (long-term care aides) and is kept OUTSIDE the insurance-transition
    ledger above, whose entrant-pace math must not absorb millions of aides. */
@@ -820,32 +822,3 @@ export function ltcWageFloorCost(): {
   };
 }
 
-export const ACRONYMS: Record<string, string> = {
-  "AHWCS": "Administration for Health Workforce, Compensation, and Scope",
-  "NHWB": "National Health Workforce Board",
-  "NPCB": "National Physician Compensation Board",
-  "NCSWB": "National Clinical Scope and Workforce Board",
-  "NHWECA": "National Health Workforce Education and Capacity Authority",
-  "RS-CORPS": "Rural Service Corps",
-  "HATC": "Health Administration Transition Corps",
-  "HTIP": "Health Talent Immigration Pathway",
-  "NHTIB": "National Health Talent Immigration Board",
-  "HCRB": "Health Credential Recognition Board",
-  "HPSA": "Health Professional Shortage Area",
-  "MUA": "Medically Underserved Area",
-  "IMG": "International Medical Graduate",
-  "IEN": "Internationally Educated Nurse",
-  "WHO": "World Health Organization",
-  "BLS": "Bureau of Labor Statistics",
-  "PBM": "Pharmacy Benefit Manager",
-  "FTE": "Full-Time Equivalent",
-  "RN": "Registered Nurse",
-  "LPN": "Licensed Practical Nurse",
-  "EMS": "Emergency Medical Services",
-  "LTC": "Long-Term Care",
-  "LTSS": "Long-Term Services and Supports",
-  "HCBS": "Home and Community-Based Services",
-  "DVH": "Dental, Vision, and Hearing",
-  "AI": "Artificial Intelligence",
-  "ICU": "Intensive Care Unit"
-};

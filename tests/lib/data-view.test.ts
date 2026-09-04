@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { FIXES, PLANES, STORE_ROWS, CARE_ACTORS, PUBLIC_ACTORS, CYBER_CONTROLS, ACRONYMS } from '../../src/lib/data-view';
+import { FIXES, PLANES, STORE_ROWS, CARE_ACTORS, PUBLIC_ACTORS, CYBER_CONTROLS } from '../../src/lib/data-view';
 import { DATA_PHASES } from '../../src/lib/data-phases';
 
 test('data-view: shapes match the docs catalog counts', () => {
@@ -10,7 +10,6 @@ test('data-view: shapes match the docs catalog counts', () => {
   expect(CARE_ACTORS).toHaveLength(8);
   expect(PUBLIC_ACTORS).toHaveLength(8);
   expect(CYBER_CONTROLS).toHaveLength(10);
-  expect(Object.keys(ACRONYMS).length).toBeGreaterThan(40);
 });
 
 test('data-phases: P0..P8 with grouped metrics', () => {

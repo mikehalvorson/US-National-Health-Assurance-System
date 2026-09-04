@@ -736,14 +736,18 @@ function renderScores(): void {
  * Marking a container with it is what actually closes R70, and the reason it
  * is needed is worth stating plainly:
  *
- * the site-wide glossary defines `PA` as "Physician assistant" and `VA` as
- * "Department of Veterans Affairs", and acronyms-client.ts runs a
+ * the site-wide glossary defined `PA` as "Physician assistant" and defines
+ * `VA` as "Department of Veterans Affairs", and acronyms-client.ts runs a
  * MutationObserver over <main> -- so it decorates anything this file renders,
  * 200ms after it renders it. The audit downgraded the Pennsylvania collision
  * to latent on the grounds that decoration ran once at init against a region
- * whose states do not collide. With that observer in place it is not latent:
- * select R11 and the detail line comes back with PA and VA wrapped,
- * aria-label and all, which reads them out to a screen reader as job titles.
+ * whose states do not collide. With that observer in place it was not latent:
+ * select R11 and the detail line came back with PA and VA wrapped, aria-label
+ * and all, which reads them out to a screen reader as job titles.
+ *
+ * R307 [S13] then removed `PA` from the glossary outright, because nothing on
+ * the site ever wrote the role as `PA`. `VA` stays and is real prose
+ * elsewhere, so containment is still what protects this page.
  *
  * So the containers that render bare state codes declare themselves. The
  * decorator respects the declaration, and so will the next one. */

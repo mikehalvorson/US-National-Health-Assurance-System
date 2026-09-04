@@ -496,10 +496,11 @@ export function scoreBarFraction(
  * R70 — an acronym key that is also a state
  * ------------------------------------------------------------------------- */
 
-/* The collision R70 is about, as a predicate rather than as a list of two.
-   `PA` and `VA` are the pair that collide today; `IN`, `OR`, `OK`, `ID`, `ME`
-   and `HI` are all plausible future glossary entries that would collide the
-   same way, which is why this asks the state table rather than naming them. */
+/* The collision R70 is about, as a predicate rather than as a list.
+   `VA` is the one that collides today, `PA` having been removed from the
+   glossary by R307; `IN`, `OR`, `OK`, `ID`, `ME` and `HI` are all plausible
+   future glossary entries that would collide the same way, which is why this
+   asks the state table rather than naming them. */
 export function stateCollisions(
   keys: readonly string[], stateNames: Record<string, string>
 ): string[] {

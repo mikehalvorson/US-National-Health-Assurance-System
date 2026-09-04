@@ -3,7 +3,7 @@
    Port of docs/js/workforce.js:190-528. Runs on astro:page-load; idempotent
    via the legacy list's dataset.wired guard. */
 import {
-  SCENARIOS, LEGACY, CREATED, ACRONYMS,
+  SCENARIOS, LEGACY, CREATED,
   LTC_WORKFORCE, ltcWageFloorCost, WORKER_SUPPORT_RATE_BASIS,
   workforceLedgerFigures, createdScopeStatement, TOTAL_US_EMPLOYMENT_SERIES,
   type ScenarioId
@@ -25,41 +25,6 @@ function fmtShort(value: number): string {
 function setText(id: string, text: string): void {
   const e = document.getElementById(id);
   if (e) e.textContent = text;
-}
-
-function addAcronymHovers(root: HTMLElement | null): void {
-  if (!root) return;
-  const keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
-  const escaped = keys.map(function (key) { return key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
-  const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style')) continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(node.nodeValue || '')) textNodes.push(node);
-  }
-  textNodes.forEach(function (node) {
-    const text = node.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    pattern.lastIndex = 0;
-    text.replace(pattern, function (match: string, acronym: string, offset: number) {
-      if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-      const abbr = document.createElement('abbr');
-      abbr.className = 'workforce-acronym';
-      abbr.title = ACRONYMS[acronym];
-      abbr.setAttribute('aria-label', acronym + ': ' + ACRONYMS[acronym]);
-      abbr.textContent = acronym;
-      fragment.appendChild(abbr);
-      lastIndex = offset + match.length;
-      return match;
-    });
-    if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    node.parentNode!.replaceChild(fragment, node);
-  });
 }
 
 function setBar(id: string, value: number, denominator: number): void {
@@ -163,7 +128,6 @@ function renderLegacyDetail(id: string): void {
   host.appendChild(field('Evidence and confidence',
     item.evidence + ' Confidence: ' + item.confidence + '. ' + item.confidenceReason));
   host.appendChild(field('Work that continues', item.continues));
-  addAcronymHovers(host);
 }
 
 function renderLegacyList(): void {
@@ -206,7 +170,6 @@ function renderLegacyList(): void {
     });
     host.appendChild(button);
   });
-  addAcronymHovers(host);
   renderLegacyDetail(selectedLegacy);
 }
 
@@ -277,7 +240,6 @@ function renderCreatedChart(): void {
     '<span><i class="transitioned"></i> fillable by displaced workers</span>' +
     '<span><i class="entrants"></i> clinicians, technicians, graduates, or other entrants</span>';
   host.appendChild(legend);
-  addAcronymHovers(host);
 }
 
 /* LTC direct-care workforce: the one figure that must match the fiscal model
@@ -331,7 +293,6 @@ function initWorkforce(): void {
      see it. OEWS is a different measure of the same year, ~9% smaller. */
   setText('wf-labor-series', TOTAL_US_EMPLOYMENT_SERIES);
   renderLtcWorkforce();
-  addAcronymHovers(document.querySelector('main'));
 }
 
 /* Also init on first load without waiting for astro:page-load: if this module

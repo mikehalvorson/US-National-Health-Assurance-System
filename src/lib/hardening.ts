@@ -1,5 +1,12 @@
 /* Executive-hardening data, ported verbatim from docs/js/hardening.js
-   (LAYERS 9-73, ACRONYMS 75-92). Fidelity-critical: do not re-derive. */
+   (LAYERS 9-73). Fidelity-critical: do not re-derive.
+
+   The acronym map that was here (docs/js/hardening.js 75-92) is gone. Its 16
+   keys were a subset of src/lib/acronyms.ts, applied site-wide. Two of them
+   disagreed with the canonical text and were resolved there: LTC keeps
+   "Long-Term Care" (matching the canonical LTSS and NLTCA entries), and OI was
+   dropped, because it only ever appears as the OI- catalog-code prefix, which
+   the canonical matcher rejects by design. */
 
 export interface Layer {
   title: string;
@@ -77,21 +84,3 @@ export const LAYERS: Layer[] = [
   }
 ];
 
-export const ACRONYMS: Record<string, string> = {
-  "A1-HCAC": "Article I Health Claims and Appeals Court",
-  "DNHA": "Department of National Health Assurance",
-  "THDO": "Treasury Health Disbursement Office",
-  "NHAC": "National Health Accountability Commission",
-  "NHASB": "National Health Adaptation and Scorekeeping Board",
-  "CHAO": "Congressional Health Accountability Office",
-  "NHTCA": "National Health Transition and Continuity Authority",
-  "NHETF": "National Health Equalization Trust Fund",
-  "HCCA": "Health Cybersecurity and Continuity Authority",
-  "OMB": "Office of Management and Budget",
-  "RIF": "Reduction in force",
-  "LTC": "Long-term care",
-  "TPP": "Technical Performance Parameter",
-  "SR": "System requirement",
-  "OI": "Open issue",
-  "EH": "Executive-hardening control"
-};

@@ -4,7 +4,7 @@
    the fix grid's dataset.wired guard. */
 import { DATA_PHASES, methodologyUrl } from '../lib/data-phases';
 import {
-  ACRONYMS, FIXES, PLANES, STORE_ROWS, CARE_ACTORS, PUBLIC_ACTORS,
+  FIXES, PLANES, STORE_ROWS, CARE_ACTORS, PUBLIC_ACTORS,
   CYBER_CONTROLS, MESH_SERVICES, type Actor
 } from '../lib/data-view';
 
@@ -158,7 +158,6 @@ function selectDataPhase(id: string): void {
   if (methodology) {
     methodology.href = methodologyUrl(phase.id.toLowerCase());
   }
-  addAcronymHovers(detail);
 }
 
 function renderFixes(): void {
@@ -348,42 +347,6 @@ function renderCyberControls(): void {
   });
 }
 
-function addAcronymHovers(root: HTMLElement | null): void {
-  const target = root || document.querySelector('main');
-  if (!target) return;
-  const keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
-  const escaped = keys.map(function (key) { return key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
-  const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
-  const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style')) continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(node.nodeValue || '')) textNodes.push(node);
-  }
-  textNodes.forEach(function (node) {
-    const text = node.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    pattern.lastIndex = 0;
-    text.replace(pattern, function (match: string, acronym: string, offset: number) {
-      if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-      const abbr = document.createElement('abbr');
-      abbr.className = 'data-acronym';
-      abbr.title = ACRONYMS[acronym];
-      abbr.setAttribute('aria-label', acronym + ': ' + ACRONYMS[acronym]);
-      abbr.textContent = acronym;
-      fragment.appendChild(abbr);
-      lastIndex = offset + match.length;
-      return match;
-    });
-    if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    node.parentNode!.replaceChild(fragment, node);
-  });
-}
-
 function initData(): void {
   const host = document.getElementById('data-fixes');
   if (!host) return; // not on the data page
@@ -395,7 +358,6 @@ function initData(): void {
   renderStoreTable();
   renderTransferMap();
   renderCyberControls();
-  addAcronymHovers(null);
 }
 
 /* Also init on first load without waiting for astro:page-load: if this module

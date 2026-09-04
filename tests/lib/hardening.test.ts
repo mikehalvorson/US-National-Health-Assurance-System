@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { LAYERS, ACRONYMS } from '../../src/lib/hardening';
+import { LAYERS } from '../../src/lib/hardening';
 
 test('LAYERS: 7 defense layers, first is rights-above-operator', () => {
   expect(LAYERS).toHaveLength(7);
@@ -8,7 +8,6 @@ test('LAYERS: 7 defense layers, first is rights-above-operator', () => {
   expect(LAYERS.every((l) => l.summary && l.attack && l.continuity && l.check && l.proof)).toBe(true);
 });
 
-test('ACRONYMS: dictionary maps abbreviations to expansions', () => {
-  expect(ACRONYMS.DNHA).toContain('Department of National Health Assurance');
-  expect(Object.keys(ACRONYMS).length).toBeGreaterThan(10);
-});
+/* P19 [S13]: this module's 16-key acronym map is gone. The keys it held are
+   asserted against the one surviving glossary in tests/lib/acronym-layer.test.ts,
+   which also refuses a new per-tab map anywhere in src/. */

@@ -1,7 +1,7 @@
 /* Executive-hardening tab client: 7-layer "Defense in depth" stepper +
    acronym hovers. Port of docs/js/hardening.js:94-212. Runs on
    astro:page-load; idempotent via the stepper's dataset.wired guard. */
-import { LAYERS, ACRONYMS } from '../lib/hardening';
+import { LAYERS } from '../lib/hardening';
 
 function appendField(host: HTMLElement, label: string, value: string): void {
   const field = document.createElement('div');
@@ -13,41 +13,6 @@ function appendField(host: HTMLElement, label: string, value: string): void {
   field.appendChild(heading);
   field.appendChild(body);
   host.appendChild(field);
-}
-
-function addAcronymHovers(root: HTMLElement | null): void {
-  if (!root) return;
-  const keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
-  const escaped = keys.map(function (key) { return key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
-  const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style')) continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(node.nodeValue || '')) textNodes.push(node);
-  }
-  textNodes.forEach(function (node) {
-    const text = node.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    pattern.lastIndex = 0;
-    text.replace(pattern, function (match: string, acronym: string, offset: number) {
-      if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-      const abbr = document.createElement('abbr');
-      abbr.className = 'hardening-acronym';
-      abbr.title = ACRONYMS[acronym];
-      abbr.setAttribute('aria-label', acronym + ': ' + ACRONYMS[acronym]);
-      abbr.textContent = acronym;
-      fragment.appendChild(abbr);
-      lastIndex = offset + match.length;
-      return match;
-    });
-    if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    node.parentNode!.replaceChild(fragment, node);
-  });
 }
 
 function selectLayer(stepper: HTMLElement, detail: HTMLElement, index: number): void {
@@ -81,7 +46,6 @@ function selectLayer(stepper: HTMLElement, detail: HTMLElement, index: number): 
   detail.appendChild(head);
   detail.appendChild(summary);
   detail.appendChild(grid);
-  addAcronymHovers(detail);
 }
 
 function renderStepper(stepper: HTMLElement, detail: HTMLElement): void {
@@ -111,7 +75,6 @@ function initHardening(): void {
   if (stepper.dataset.wired === '1') return;
   stepper.dataset.wired = '1';
   renderStepper(stepper, detail);
-  addAcronymHovers(document.querySelector('main'));
 }
 
 /* Also init on first load without waiting for astro:page-load: if this module

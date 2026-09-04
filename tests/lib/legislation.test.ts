@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest';
 import {
-  ACRONYMS,
   DOMAINS,
   ENABLING_ACT_GROUPS,
   ENABLING_ACT_TITLE_COUNT,
@@ -15,10 +14,8 @@ test('DOMAINS: 13 legal domains, first is Coverage', () => {
   expect(DOMAINS.every((d) => d.laws.length > 0 && d.change && d.preserve && d.method && d.phase)).toBe(true);
 });
 
-test('ACRONYMS: dictionary maps abbreviations to expansions', () => {
-  expect(ACRONYMS.ERISA).toContain('Employee Retirement');
-  expect(Object.keys(ACRONYMS).length).toBeGreaterThan(30);
-});
+/* P19 [S13]: this module's 54-key acronym map is gone. See
+   tests/lib/acronym-layer.test.ts. */
 
 /* R297 [§S12] — the enabling act's numbering is derived from the group sizes
    rather than typed into five `start` attributes and nineteen Roman numerals.

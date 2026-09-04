@@ -1,13 +1,18 @@
-/* Dashboard-wide acronym glossary. Single source of truth for the hover
-   expansions the client decorator (src/scripts/acronyms-client.ts) attaches to
-   inline prose and source copy on every tab. Merged from the former per-tab
-   maps (legislation, data, hardening, workforce, quality, units) plus the
-   governance entity roster (gov.ts codes) and the external bodies cited across
-   the health, tax, ltc, medications, and overview tabs.
+/* Dashboard-wide acronym glossary. The only acronym dictionary in the repo,
+   and the only source of the hover expansions src/scripts/acronyms-client.ts
+   attaches to inline prose and source copy on every tab. It absorbed the
+   per-tab maps (legislation, data, hardening, workforce, quality, units) plus
+   the governance entity roster (gov.ts codes) and the external bodies cited
+   across the health, tax, ltc, medications, and overview tabs.
+
+   The per-tab maps and their decorators are gone. Every one of them built its
+   matcher with `\b`, and `-` is a non-word character, so `\bCP\b` matched the
+   CP in CP-POP-004: on one load of the quality tab that wrapped 315 CP
+   fragments where 3 were real prose. acronymPattern() below is the reason
+   this cannot recur, and a build gate keeps the shape from coming back.
 
    Keep values free of em dashes (site rule) and free of source-document codes.
-   Add an entry here rather than in a tab-local map so the hover shows up
-   everywhere the acronym appears. */
+   Add an entry here; there is nowhere else to add one. */
 
 export const ACRONYMS: Record<string, string> = {
   "A1-HCAC": "Article I Health Claims and Appeals Court",
@@ -168,13 +173,11 @@ export const ACRONYMS: Record<string, string> = {
   "OBBBA": "One Big Beautiful Bill Act",
   "OCDTI": "Office of Community Diagnostic and Treatment Infrastructure",
   "OECD": "Organisation for Economic Co-operation and Development",
-  "OI": "Open Issue",
   "OIG": "Office of Inspector General",
   "OIG-AF": "Office of Inspector General and Anti-Fraud",
   "OMB": "Office of Management and Budget",
   "ONC": "Office of the National Coordinator for Health Information Technology",
   "OOP": "Out-of-Pocket",
-  "PA": "Physician assistant",
   "PACE": "Program of All-Inclusive Care for the Elderly",
   "PACP": "Patient Access and Consent Portal",
   "PBM": "Pharmacy Benefit Manager",
@@ -204,7 +207,7 @@ export const ACRONYMS: Record<string, string> = {
   "SCF": "Survey of Consumer Finances",
   "SOI": "Statistics of Income",
   "SR": "System requirement",
-  "SR-DATA": "System Requirement, Data",
+  "SR-DATA": "System requirement, data",
   "SRAE": "Secure Research and Analytics Enclave",
   "SRCO": "State and Regional Compact Office",
   "STI": "Sexually Transmitted Infection",
