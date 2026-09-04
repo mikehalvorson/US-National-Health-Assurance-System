@@ -6,8 +6,7 @@ import { chapterMarker, chapterNumber } from '../lib/tabs';
    in a format ChapterNav did not use, next to a nav computing the same number
    from the registry. The number now comes from TABS and the format from
    chapterMarker, so reordering the registry moves both. chapterNumber throws
-   here rather than rendering nothing, because a chapter whose page is not in
-   the registry is a navigation dead end this page cannot detect. */
+   on a route the registry does not carry, rather than rendering nothing. */
 /* R262 [§S2]: the benefit's start year is read off the roadmap, not typed.
    It used to say 2026 - before the model's Year 1 and ten years before the
    phase that carries long-term care. */
@@ -42,7 +41,7 @@ const usPerCapita = LTC_GDP_2021.find((r) => r.kind === 'us')!.perCapita
   <main>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('ltc')!)} · Long-term care</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('ltc'))} · Long-term care</span>
     <h2>Who pays when someone needs help getting through the day, for years?</h2>
     <p class="desc">Long-term care is help with the ordinary business of living:
       bathing, dressing, eating, moving, remembering, staying safe. Most people

@@ -4277,13 +4277,40 @@ export function deadLtcExports(root = REPO_ROOT): DeadExport[] {
  * two sides of this check are two independently authored literals.
  *
  * The stamp is not rendered on any page, and this check must not start
- * rendering it: it reports that the two disagree and shows both, and the
- * self-test row that consumes it is named for the property, not the value. */
+ * rendering it. The FIRST version of this comment said exactly that and then
+ * put both stamps into the note - and health.astro renders a failing row as
+ * `'✗ ' + r.name + ': ' + r.note`, so the one state in which the check speaks
+ * is the state in which it would have printed the plan's own document title to
+ * a public page. Golden rule 2, defeated by the mechanism written to respect
+ * it. The note now names the files and the remedy and carries no stamp; a
+ * developer reads the values from the two sources. */
 export function provenanceStampDrift(): string[] {
   if (DATA_PHASE_SOURCE === NHA_QUALITY_DATA.source) return [];
-  return ['the two generated catalogs claim different provenance: data-phases.ts'
-    + ' says "' + DATA_PHASE_SOURCE + '", quality-data.ts says "'
-    + NHA_QUALITY_DATA.source + '"'];
+  return ['data-phases.ts and quality-data.ts declare different provenance'
+    + ' stamps; regenerate both from the same document'];
+}
+
+/* R298 [§S12]: the third acceptance clause - "the declared framework version
+ * matches the repo's".
+ *
+ * provenanceStampDrift holds the two generators to each other, which is a
+ * different property: both can agree and both be stale. This one holds the
+ * stamp to the document actually sitting in the repository, so replacing the
+ * source document without regenerating fails the build.
+ *
+ * The filename is the only machine-readable statement of the version the repo
+ * carries. Normalised rather than parsed: underscores to spaces, extension
+ * dropped, which is exactly how the stamp is written. Same rule-2 discipline
+ * as above - the note names neither the stamp nor the filename. */
+export function frameworkVersionDrift(root = REPO_ROOT): string[] {
+  const docs = readdirSync(root)
+    .filter((f) => f.endsWith('.docx'))
+    .map((f) => f.replace(/\.docx$/, '').split('_').join(' '));
+  if (!docs.length) return []; /* no document in the tree: not this check's claim */
+  return docs.includes(DATA_PHASE_SOURCE)
+    ? []
+    : ['the catalogs were generated against a framework document the repository'
+      + ' no longer carries; regenerate them, or restore the document'];
 }
 
 /* R298 [§S12]: the methodology path the payload publishes, resolved against
@@ -4371,15 +4398,40 @@ export function frontDoorChapterCoverage(root = REPO_ROOT): {
  *
  * Number words are listed rather than pattern-matched because "one" and "no"
  * appear in ordinary label prose; the list holds the ones that read as counts
- * at the start of a label or before a noun. */
-const ARIA_LABEL = /aria-label="([^"]*)"/g;
+ * at the start of a label or before a noun.
+ *
+ * Review of P18 widened this to THREE surfaces and one scanner. The other two
+ * are sr-only text, where the rollout page made the identical claim in a
+ * <caption>, and <meta name="description">, where this section's own commits
+ * put two literal counts on pages that derive those very numbers a few lines
+ * away. Each surface keeps its own self-test row - they fail for different
+ * reasons, and one row with three failure modes reports none of them clearly -
+ * but the matching lives in one place now.
+ *
+ * That sharing is the actual fix for something this section got wrong twice:
+ * the sr-only sweep was a retyped copy of the aria sweep, and it shipped with
+ * the same collapsed backslash, unable to fail, an hour after the first was
+ * repaired. Duplicated bodies duplicate defects. */
 const COUNT_WORDS = [
   'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
   'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen',
   'seventeen', 'eighteen', 'nineteen', 'twenty'
 ];
 
-export function literalCountsInAriaLabels(root = REPO_ROOT): string[] {
+interface CountedSurface {
+  what: string;    /* how a finding names the place */
+  pattern: RegExp; /* global; the counted text is capture group 1 */
+}
+
+/* Kept beside the scanner so an exemption reads as a judgement about ONE
+   string, not a hole in the rule. Keyed by exact text: reword the caption and
+   the exemption lapses, which forces the judgement to be made again. */
+export const SR_COUNT_EXEMPT: Record<string, string> = {
+  'Staggered ten-week travel-nurse rotation':
+    'ten-week is the length of a rotation, not the size of a collection'
+};
+
+function literalCountsIn(surface: CountedSurface, root: string): string[] {
   const out: string[] = [];
   for (const dir of ['src/pages', 'src/components']) {
     const files: string[] = [];
@@ -4387,24 +4439,44 @@ export function literalCountsInAriaLabels(root = REPO_ROOT): string[] {
     for (const rel of files.filter((f) => f.endsWith('.astro')).sort()) {
       const body = maskComments(readFileSync(join(root, rel), 'utf8'));
       body.split('\n').forEach((line, i) => {
-        for (const m of line.matchAll(ARIA_LABEL)) {
-          const label = m[1];
-          const digits = /\d/.test(label);
-          /* Two backslashes, and this is the second time in this file that a
-             shell heredoc collapsed the pair into a literal U+0008. The
-             negative test is what caught it: restoring "Seven layers" to a
-             label left the build green, because the pattern was
-             BACKSPACE + word + BACKSPACE and matched nothing. */
+        for (const m of line.matchAll(surface.pattern)) {
+          const text = m[1];
+          if (SR_COUNT_EXEMPT[text.trim()]) continue;
+          const digits = /\d/.test(text);
+          /* Two backslashes. Written as one this is U+0008, the pattern
+             matches nothing, and the check passes on everything - which is
+             how both of the sweeps this function replaces first shipped. */
           const word = COUNT_WORDS.filter((w) =>
-            new RegExp('\\b' + w + '\\b', 'i').test(label))[0];
+            new RegExp('\\b' + w + '\\b', 'i').test(text))[0];
           if (!digits && !word) continue;
-          out.push(rel + ':' + (i + 1) + ' asserts a count in an aria-label: "'
-            + label + '"' + (digits ? '' : ' (the word "' + word + '")'));
+          out.push(rel + ':' + (i + 1) + ' asserts a count in ' + surface.what
+            + ': "' + text.trim() + '"'
+            + (digits ? '' : ' (the word "' + word + '")'));
         }
       });
     }
   }
   return out;
+}
+
+export function literalCountsInAriaLabels(root = REPO_ROOT): string[] {
+  return literalCountsIn(
+    { what: 'an aria-label', pattern: /aria-label="([^"]*)"/g }, root);
+}
+
+/* The same claim in an element the aria sweep does not read. */
+export function literalCountsInScreenReaderText(root = REPO_ROOT): string[] {
+  return literalCountsIn({
+    what: 'screen-reader-only text',
+    pattern: /<(?:caption|span|div|p)[^>]*class="[^"]*\bsr-only\b[^"]*"[^>]*>([^<{]*)</g
+  }, root);
+}
+
+/* The page head. Not rendered as text, but it is what a search result and a
+   link preview show, so a stale count there is published all the same. */
+export function literalCountsInMetaDescriptions(root = REPO_ROOT): string[] {
+  return literalCountsIn(
+    { what: 'a meta description', pattern: /\bdescription="([^"]*)"/g }, root);
 }
 
 /* R136 [§S12]: the README's other three counts, gated the way R155 gated the
@@ -4478,26 +4550,21 @@ export function readmeCountDrift(root = REPO_ROOT): string[] {
  * three-word one is the same defect wearing the fix. */
 const DESCRIPTION_MIN_CHARS = 60;
 
-export function pagesWithoutDescription(root = REPO_ROOT): string[] {
-  const out: string[] = [];
-  const files: string[] = [];
-  walk(join(root, 'src/pages'), root, files);
-  for (const rel of files.filter((f) => f.endsWith('.astro')).sort()) {
-    const route = rel.replace(/^src\/pages\//, '').replace(/\.astro$/, '');
-    const built = join(root, 'dist', route === 'index' ? '' : route, 'index.html');
-    if (!existsSync(built)) continue; /* not built yet: the build gate runs before pages render */
-    const html = readFileSync(built, 'utf8');
-    const m = html.match(/<meta name="description" content="([^"]*)"/);
-    if (!m) out.push(rel + ' renders no meta description');
-    else if (m[1].trim().length < DESCRIPTION_MIN_CHARS) {
-      out.push(rel + ' renders a ' + m[1].trim().length + '-character description');
-    }
-  }
-  return out;
-}
+/* Review of P18: pagesWithoutDescription was written here, exported, and
+   imported by nothing. It read dist/**, which the build gate cannot do -
+   the gate runs at astro:build:start, before any page is rendered - so it
+   could never have been registered as a self-test in the first place.
+   Deleted rather than wired: baseLayoutCallsWithoutDescription reads the
+   source, runs in the gate, and the rendered output was verified by hand
+   across all fourteen pages. */
 
 /* The source half, which is the one that can run during the build gate: every
-   caller of BaseLayout passes a non-empty description literal. */
+   caller of BaseLayout passes a real description.
+   Review of P18: the first version matched `description="..."` only, so the
+   three pages that DERIVE their description - the fix the count sweep asks
+   for - were reported as passing none. The two rules pull in opposite
+   directions unless this one knows about expressions, so it accepts either
+   form and measures length only on the literal it can read. */
 export function baseLayoutCallsWithoutDescription(root = REPO_ROOT): string[] {
   const out: string[] = [];
   const files: string[] = [];
@@ -4510,10 +4577,12 @@ export function baseLayoutCallsWithoutDescription(root = REPO_ROOT): string[] {
       continue;
     }
     const tag = body.slice(open, body.indexOf('>', open) + 1);
-    const m = tag.match(/description="([^"]*)"/);
-    if (!m) out.push(rel + ' passes no description to BaseLayout');
-    else if (m[1].trim().length < DESCRIPTION_MIN_CHARS) {
-      out.push(rel + ' passes a ' + m[1].trim().length + '-character description');
+    const literal = tag.match(/description="([^"]*)"/);
+    const derived = /description=\{/.test(tag);
+    if (!literal && !derived) {
+      out.push(rel + ' passes no description to BaseLayout');
+    } else if (literal && literal[1].trim().length < DESCRIPTION_MIN_CHARS) {
+      out.push(rel + ' passes a ' + literal[1].trim().length + '-character description');
     }
   }
   return out;
@@ -4548,61 +4617,4 @@ export function basisNotRendered(root = REPO_ROOT): string[] {
   return BASIS_RENDER_EXPRESSIONS
     .filter((e) => !body.includes(e))
     .map((e) => BASIS_RENDER_FILE + ' no longer renders each target\u2019s basis: "' + e + '"');
-}
-
-/* R292 [§S12], widened after the first version missed a class of element.
- *
- * literalCountsInAriaLabels reads aria-label attributes. V11's rollout page
- * carried "Thirteen rollout domains across five phase bands" in a
- * `<caption class="sr-only">` - the same claim, the same invisibility to a
- * sighted reader, on an element the sweep did not look at. Right surface,
- * wrong element class.
- *
- * So this reads the OTHER screen-reader-only text: sr-only captions, spans
- * and divs. The two are kept apart rather than merged, because they fail for
- * different reasons - an attribute is edited by whoever edits the container,
- * a caption by whoever edits the table - and merging them would give one row
- * two failure modes and one note. */
-const SR_ONLY_TEXT = /<(caption|span|div|p)[^>]*class="[^"]*\bsr-only\b[^"]*"[^>]*>([^<{]*)</g;
-
-/* The rule is "no count of the items this element describes". A number word
- * can also state a duration, and "Staggered ten-week travel-nurse rotation"
- * counts weeks rather than rows - so it is exempt with its reason, the way
- * RESEARCH_PATH_EXEMPT one screen up handles the same shape.
- *
- * Keyed by the exact text, deliberately: reword the caption and the exemption
- * stops applying, which forces the judgement to be made again rather than
- * inherited. A flat rule here would push a writer to delete a true duration. */
-export const SR_COUNT_EXEMPT: Record<string, string> = {
-  'Staggered ten-week travel-nurse rotation':
-    'ten-week is the length of a rotation, not the size of a collection'
-};
-
-export function literalCountsInScreenReaderText(root = REPO_ROOT): string[] {
-  const out: string[] = [];
-  for (const dir of ['src/pages', 'src/components']) {
-    const files: string[] = [];
-    walk(join(root, dir), root, files);
-    for (const rel of files.filter((f) => f.endsWith('.astro')).sort()) {
-      const body = maskComments(readFileSync(join(root, rel), 'utf8'));
-      body.split('\n').forEach((line, i) => {
-        for (const m of line.matchAll(SR_ONLY_TEXT)) {
-          const text = m[2];
-          if (SR_COUNT_EXEMPT[text.trim()]) continue;
-          const digits = /\d/.test(text);
-          /* Two backslashes. This is the THIRD time in this session that a
-             shell heredoc collapsed the pair into a literal U+0008, and the
-             second in this file: staging the text through a temp file did not
-             help, because the temp file was written by a heredoc too. Only
-             the editor tools are safe for a backslash. */
-          const word = COUNT_WORDS.filter((w) =>
-            new RegExp('\\b' + w + '\\b', 'i').test(text))[0];
-          if (!digits && !word) continue;
-          out.push(rel + ':' + (i + 1) + ' asserts a count in screen-reader-only text: "'
-            + text.trim() + '"' + (digits ? '' : ' (the word "' + word + '")'));
-        }
-      });
-    }
-  }
-  return out;
 }

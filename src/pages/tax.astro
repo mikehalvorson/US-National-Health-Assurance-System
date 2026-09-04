@@ -6,8 +6,7 @@ import { chapterMarker, chapterNumber } from '../lib/tabs';
    in a format ChapterNav did not use, next to a nav computing the same number
    from the registry. The number now comes from TABS and the format from
    chapterMarker, so reordering the registry moves both. chapterNumber throws
-   here rather than rendering nothing, because a chapter whose page is not in
-   the registry is a navigation dead end this page cannot detect. */
+   on a route the registry does not carry, rather than rendering nothing. */
 /* R217 [§S5]: the distributional section quoted 13,200 households for the top
    0.01% - the WEALTH_DIST figure, which drives the INEQUALITY chart - while
    describing the chart that runs on GROUPS.t10000, 12,000. A 10% divergence
@@ -28,7 +27,7 @@ const WEALTH_TOP_HH = Math.round(wealthBand.hhM * 1e6).toLocaleString('en-US');
   <main>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('tax')!)} · Paying for it</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('tax'))} · Paying for it</span>
     <h2>The same care, financed differently</h2>
     <p class="desc">The healthcare chapter showed the system costs about
       what the country already spends. This chapter answers the harder

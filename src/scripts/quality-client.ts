@@ -736,6 +736,18 @@ function renderTable(parameters: QualityParameter[]): void {
       const typeCell = el('td');
       typeCell.appendChild(el('span', 'quality-type quality-type-' +
         parameter.type.toLowerCase(), parameter.type));
+      /* R220 [S12], review: the row asks to "split the display into controlled
+         (430) and provisional (10)". Deriving the counts and dropping the word
+         "controlled" from three headings was half of it; the ten records the
+         plan adopted later and has not put through control still looked
+         exactly like the 430 that have. The generator already marks each
+         record, so the split is a read, not a second list. */
+      if (parameter.provenance === 'plan-defined') {
+        const badge = el('span', 'quality-provisional', 'provisional');
+        badge.setAttribute('title',
+          'Adopted by the plan later and not yet through control');
+        typeCell.appendChild(badge);
+      }
       row.appendChild(typeCell);
       row.appendChild(el('td', 'quality-where',
         parameter.where + (parameter.family ? ' · ' + parameter.family : '')));

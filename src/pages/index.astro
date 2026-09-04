@@ -22,9 +22,11 @@ const base = import.meta.env.BASE_URL; // ends with '/'
 
    Only the words are held here now, keyed by route. The order, the numbering
    and the membership come from TABS, so a chapter added to the registry
-   appears here or the build fails: chapterCards() throws on a route with no
-   copy, and manifest-check's uncardedChapters() reports it as a self-test
-   rather than leaving a reader to notice. */
+   appears here or the build fails: building chapterCards throws on a route
+   with no copy, and manifest-check's frontDoorChapterCoverage() reports the
+   same gap as a self-test rather than leaving a reader to notice.
+   Review of P18: this named uncardedChapters(), which does not exist, and
+   called chapterCards a function. Both corrected. */
 const CHAPTER_COPY: Record<string, { kicker: string; blurb: string }> = {
   health: {
     kicker: 'The need and the promise',
@@ -86,12 +88,17 @@ const chapterCards = CHAPTERS.map((tab, index) => {
     throw new Error('index.astro has no chapter card for the route "' + tab.path +
       '", which TABS lists as a chapter');
   }
-  return { path: tab.path, n: index + 1, kicker: copy.kicker, blurb: copy.blurb };
+  return {
+    path: tab.path, label: tab.label, n: index + 1,
+    kicker: copy.kicker, blurb: copy.blurb
+  };
 });
 ---
 <BaseLayout
   title="National Health Assurance: Story & System Dashboard"
-  description="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models."
+  description={"A guided, evidence-linked dashboard explaining the proposed U.S." +
+    " National Health Assurance system, its " + rolloutYears + "-year rollout," +
+    " operating architecture, safeguards, and interactive cost and financing models."}
 >
   <main>
     <section class="card">
@@ -437,7 +444,7 @@ const chapterCards = CHAPTERS.map((tab, index) => {
       <div class="overview-chapter-grid">
         {chapterCards.map((c) => (
           <a href={base + c.path}>
-            <span>{chapterMarker(c.n)} &middot; {c.kicker}</span><strong>{CHAPTERS[c.n - 1].label}</strong>
+            <span>{chapterMarker(c.n)} &middot; {c.kicker}</span><strong>{c.label}</strong>
             <small>{c.blurb}</small>
           </a>
         ))}

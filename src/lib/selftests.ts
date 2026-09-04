@@ -100,7 +100,8 @@ import {
   repoLinkTargets, unresolvedRepoLinks, gateSplitNotDerived,
   provenanceStampDrift, unresolvedMethodologyPath,
   typedChapterNumbers, frontDoorChapterCoverage, literalCountsInAriaLabels,
-  literalCountsInScreenReaderText,
+  literalCountsInScreenReaderText, literalCountsInMetaDescriptions,
+  frameworkVersionDrift,
   readmeCountDrift, readmeStatedCounts, baseLayoutCallsWithoutDescription,
   basisNotRendered,
   researchPathCitationLeaks, researchReadmeGateCount,
@@ -2266,6 +2267,21 @@ export const SELF_TEST_SOURCES: SelfTestSource[] = [
       runGuarded('No screen-reader-only text asserts a count as a literal', () => {
         const bad = literalCountsInScreenReaderText();
         return { ok: !bad.length, note: bad.join('; ') || 'no hidden text types a count' };
+      }),
+      /* Review of P18: the third surface the same claim hides on. This
+         section's own commits put "twelve-year" and "nineteen-title" into
+         meta descriptions on the two pages that derive those numbers a few
+         lines away, where neither sweep could see them. */
+      runGuarded('No meta description asserts a count as a literal', () => {
+        const bad = literalCountsInMetaDescriptions();
+        return { ok: !bad.length, note: bad.join('; ') || 'no description types a count' };
+      }),
+      /* R298 [S12], review: the row's third acceptance clause. The stamp
+         agreeing with the other generator is a different property from the
+         stamp agreeing with the document the repo actually carries. */
+      runGuarded('The catalogs name the framework document the repo carries', () => {
+        const bad = frameworkVersionDrift();
+        return { ok: !bad.length, note: bad.join('; ') || 'the declared version is present' };
       }),
       runGuarded('No aria-label asserts a count as a literal', () => {
         const bad = literalCountsInAriaLabels();

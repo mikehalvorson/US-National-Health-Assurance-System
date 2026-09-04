@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { methodologyUrl } from '../lib/data-phases';
 import { PLANES } from '../lib/data-view';
 import { QUALITY_DATA } from '../lib/quality';
 
@@ -154,7 +155,7 @@ const planeCount = PLANES.length;
     <p class="note">Early-phase derived targets apply to the stated test,
       pilot, participating-provider, or Wave I cohort. They are not national
       claims. <a id="data-methodology-link"
-        href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#p0"
+        href={methodologyUrl("p0")}
         target="_blank" rel="noopener">See every derivation and justification</a>.</p>
   </section>
 
@@ -241,6 +242,13 @@ const planeCount = PLANES.length;
           <div class="label">{t.label}</div>
           <div class="value">{showTarget(t.value)}</div>
           <div class="range">{t.range}</div>
+          {/* R290 [§S12], review: the row's complaint is that these tiles
+              "carry no provenance marker at all", in the chapter whose own
+              roadmap distinguishes Specified from Derived so a reader knows
+              which numbers are controlled. Deriving the value closed half of
+              it; this is the other half, in the same vocabulary the phase
+              register uses. */}
+          <span class="cyber-target-basis">Specified &middot; {t.id}</span>
         </div>
       ))}
       <div class="tile cyber-target-unset" role="listitem">
@@ -249,13 +257,14 @@ const planeCount = PLANES.length;
         <div class="range">every access to a sensitive record is logged and
           visible to the patient; the share of required cases completed and
           reviewable is a duty the plan states without a numeric target</div>
+        <span class="cyber-target-basis">No controlled parameter</span>
       </div>
     </div>
   </section>
 
   <p class="rollout-source">Derived phase targets and their assumptions are
     documented in the
-    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md"
+    <a href={methodologyUrl()}
       target="_blank" rel="noopener">data phase-target methodology</a>.</p>
 
     <ChapterNav />

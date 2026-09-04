@@ -17,10 +17,15 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { DATA_PHASES, DATA_PHASE_COUNTS, DATA_PHASE_GAPS } from './data-phases';
+import {
+  DATA_PHASES, DATA_PHASE_COUNTS, DATA_PHASE_GAPS,
+  DATA_PHASE_METHODOLOGY_PATH
+} from './data-phases';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const METHODOLOGY = 'research/data_phase_target_methodology.md';
+/* R298 [S12], review: a fifth hand-typed copy of the path the payload
+   carries as a field. Read, not retyped. */
+const METHODOLOGY = DATA_PHASE_METHODOLOGY_PATH;
 
 /* The generator escapes a pipe inside a cell so the row keeps its shape. */
 function cell(value: string): string {

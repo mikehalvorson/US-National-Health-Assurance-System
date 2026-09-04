@@ -6946,8 +6946,12 @@ Two repairs the run needed before it could say anything:
 ---
 
 ## P18 — §S12 Counts, formatting & derived displays · 2026-09-03 · branch `nha-remediation`
-STATUS: complete — all 22 rows landed across 7 commits, plus V4/V10/V11/V12 confirmed
-and 4 negative cases in the audit set
+STATUS: complete — 21 rows landed across 8 commits and `R238` measured already closed,
+plus V4/V10/V11/V12 confirmed and 4 negative cases in the audit set
+
+⚠️ **The first version of this line said "all 22 rows landed" while `LANDED` below lists
+21.** `R238` is closed and was closed before this section started, which is a different
+claim and belongs where it now sits rather than inside a total.
 
 **Entry gate, re-measured rather than trusted:** `## P1` `STATUS: complete` ✅ ·
 `## P7` (`§S6a`) `STATUS: complete`, so `R183` is in scope ✅ · `grep -c 'as unknown as'
@@ -7054,10 +7058,28 @@ formatters** disagreeing with two — `axis` and `perCap` used the hyphen-minus 
 symbol, **and `pct`, which the row does not name, rendered `-500.0%`.** The property
 test found `pct`; reading the row would not have.
 
+  ⚠️ **Not the whole of `R197`, and this field first said it was.** Its acceptance test
+  is *"axis labels carry at most one decimal"*, and only the T branch was fixed:
+  `axis(4.567)` still renders `$4.567B`. That is deliberate — ticks come from
+  `niceTicks`, and rounding 4.5 to 5 would print one label on two neighbouring ticks —
+  and it is argued in the file and pinned in a test. But the row asks for the property
+  outright, so **the sub-unit branch is a declared departure, not a completion.**
+
 440 WORDING: unchanged and still read from `QUALITY_DATA.provenance`, never retyped —
 "430 of these records belong to the plan's controlled parameter dictionary. Ten do not
-…". Matches P17 log: **yes**. Three surfaces that called all 440 "controlled" were
-narrowed: a heading, a screen-reader caption and an aria-label.
+…". Three surfaces that called all 440 "controlled" were narrowed: a heading, a
+screen-reader caption and an aria-label. **And the ten now render as `provisional` in
+the catalog table**, which is the display split `R220` asks for and which removing a
+word from three headings did not deliver.
+
+  Matches P17 log: **yes, but P17's log carries two wordings and this field did not say
+  which.** Its summary table records *"430 of these records are carried by the
+  controlled framework document…"*; P17's own review 5 then found that sentence names
+  the source document three times, breaching golden rule 2 on a page that renders it,
+  and rewrote it. The shipped text is the rewritten one. Matching the summary table
+  verbatim, which is what *"use P17's logged wording verbatim"* reads like, would have
+  re-broken what that review fixed. **True of the wording that survives, and ambiguous
+  as first written.**
 
 CHAPTER NUMBERS: **17 published numbers checked** (6 hardcoded page eyebrows + 11
 front-door grid cards) against the 13 chapters `TABS` declares, **7 wrong**, all
@@ -7131,3 +7153,64 @@ Nine self-test rows added: the two provenance rows, the two chapter rows, the tw
 sweeps, the README count row, the description row and the basis row. **All nine were
 broken and watched fail before being trusted**, and four are now in
 `baseline-P16/negative_test.py` so the watching repeats.
+
+### REVIEW 6 — P18 fix run, both axes at `df93e88..HEAD` · 2026-09-03
+
+Six for six on finding real defects. **Fifteen findings, all real**, and the ratio the
+campaign tracks held again: the pass that removed a defect authored fresh ones of the
+same class. This time the class was the section's own subject, published counts.
+
+**The three that matter most, all self-inflicted by this fix run:**
+
+1. 🛑 **A comment asserting a safety property the code did not have, copied into six
+   pages.** *"chapterNumber throws here rather than rendering nothing"* — it returned
+   `number | null`, and all six call sites silenced that with `!`. An unregistered route
+   would have rendered **"Chapter null"** on a public page, which is exactly the failure
+   the comment said was impossible. It throws now, and the assertions are gone.
+
+2. 🛑 **Two literal counts put INTO meta descriptions by the commits that derived those
+   same numbers a few lines above.** `rollout.astro` derived `rolloutYears` for its
+   aria-label and typed *"twelve-year"* in its description; `legislation.astro` deleted
+   *"Nineteen-title"* from an aria-label as the defect and typed it in its description.
+   Neither sweep read `<meta>`. A third sweep found a third instance the review had not
+   named, `medications.astro`'s *"200-family"*.
+
+3. 🛑 **`provenanceStampDrift`'s comment said "this check must not start rendering
+   [the stamp]" and then put both stamps in its note** — and `health.astro` renders a
+   failing row as `'✗ ' + r.name + ': ' + r.note`, so the one state in which the check
+   speaks is the state in which it prints the plan's own document title to a public
+   page. Golden rule 2, defeated by the mechanism written to respect it. Both new
+   provenance notes now name the files and the remedy and carry no stamp.
+
+**Spec axis, three requirements this run reported as done and had not finished:**
+
+- **`R298`'s `basis` union.** The row says *"make `basis` a union — `'framework' |
+  'derived'`"*; it shipped as `string`. Now a union, so an invented third value is a
+  build error.
+- **`R298`'s "no consumer hardcodes the methodology path".** Four did, and a fifth copy
+  sat in `methodology-check.ts`. All five read the field now, through `methodologyUrl()`.
+- **`R298`'s "the declared framework version matches the repo's".** `provenanceStampDrift`
+  holds the two generators to each other, which is a **different property** — both can
+  agree and both be stale. `frameworkVersionDrift` holds the stamp to the document
+  actually in the tree.
+- **`R220`'s display split** and **`R290`'s provenance badge**, both delivered above.
+
+**Smells, accepted and fixed:** the two count sweeps were near-identical retyped bodies,
+**which is why the second shipped with the same collapsed backslash as the first**. One
+scanner, three surfaces now. A dead export, `pagesWithoutDescription`, read `dist/**`
+and could never have run in a gate that fires before pages render; deleted. The grid
+re-indexed `CHAPTERS[c.n - 1]` when the map already held the tab.
+
+**Three false comments corrected**, all written by this fix run: the `throws` claim
+above, a reference to `uncardedChapters()` which does not exist, and two
+mutually-contradictory ordinals both claiming to be "the second time in this file".
+
+**Three log fields overstated and now corrected in place:** `STATUS` said "all 22 rows
+landed" while `LANDED` listed 21; `FORMATTERS` claimed `R197`'s property outright when
+only the T branch was fixed; `440 WORDING` said "matches P17 log" without saying which
+of P17's two wordings, one of which its own review had retired for breaching golden
+rule 2.
+
+Gates after the review fixes: **540 vitest across 60 files · `astro check` 0/0/1 ·
+14 pages · 264 self-tests · file manifest 128 · `negative_test.py` 48/48, 0 MISS,
+0 SKIP.**

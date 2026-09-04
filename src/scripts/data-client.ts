@@ -2,7 +2,7 @@
    grid, store table, transfer map, cyber controls, acronym hovers.
    Port of docs/js/data.js:238-633. Runs on astro:page-load; idempotent via
    the fix grid's dataset.wired guard. */
-import { DATA_PHASES } from '../lib/data-phases';
+import { DATA_PHASES, methodologyUrl } from '../lib/data-phases';
 import {
   ACRONYMS, FIXES, PLANES, STORE_ROWS, CARE_ACTORS, PUBLIC_ACTORS,
   CYBER_CONTROLS, MESH_SERVICES, type Actor
@@ -96,7 +96,7 @@ function selectDataPhase(id: string): void {
     ? 'Targets are controlled national maturity values.'
     : 'Derived values apply only to the named test, pilot, Wave I, scaled, or national denominator. Specified values remain controlling where shown.';
   const method = document.createElement('a');
-  method.href = 'https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#' + phase.id.toLowerCase();
+  method.href = methodologyUrl(phase.id.toLowerCase());
   method.target = '_blank';
   method.rel = 'noopener';
   method.textContent = "Open this phase's derivation register";
@@ -156,7 +156,7 @@ function selectDataPhase(id: string): void {
 
   const methodology = document.getElementById('data-methodology-link') as HTMLAnchorElement | null;
   if (methodology) {
-    methodology.href = 'https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#' + phase.id.toLowerCase();
+    methodology.href = methodologyUrl(phase.id.toLowerCase());
   }
   addAcronymHovers(detail);
 }

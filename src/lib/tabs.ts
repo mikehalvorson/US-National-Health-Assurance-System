@@ -47,9 +47,21 @@ export const TABS: Tab[] = [
  * Healthcare, which is what both surviving surfaces already did. */
 export const CHAPTERS: Tab[] = TABS.filter((t) => t.path !== '');
 
-export function chapterNumber(path: string): number | null {
+/* Review of P18: six pages carried a comment saying "chapterNumber throws here
+   rather than rendering nothing", and it did not throw - it returned null, and
+   every call site silenced that with a non-null assertion. An unregistered
+   route would have rendered "Chapter null" on a public page, which is the
+   failure the comment claimed was impossible.
+   It throws now, because the comment described the right behaviour: a page
+   whose route is not in the registry is a navigation dead end, and rendering
+   is the wrong moment to discover it quietly. The assertions are gone. */
+export function chapterNumber(path: string): number {
   const i = CHAPTERS.findIndex((t) => t.path === path);
-  return i === -1 ? null : i + 1;
+  if (i === -1) {
+    throw new Error('no chapter number for route "' + path +
+      '": it is not in TABS, so the page is a navigation dead end');
+  }
+  return i + 1;
 }
 
 /* The single rendered form. Two digits, so a fourteen-chapter story does not

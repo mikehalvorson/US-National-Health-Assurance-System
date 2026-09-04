@@ -6,9 +6,8 @@ import { chapterMarker, chapterNumber } from '../lib/tabs';
    in a format ChapterNav did not use, next to a nav computing the same number
    from the registry. The number now comes from TABS and the format from
    chapterMarker, so reordering the registry moves both. chapterNumber throws
-   here rather than rendering nothing, because a chapter whose page is not in
-   the registry is a navigation dead end this page cannot detect. */
-import { DRUG_BASE, DRUG_BASE_LABELS, drugBaseNote } from '../lib/medications';
+   on a route the registry does not carry, rather than rendering nothing. */
+import { DRUG_BASE, DRUG_BASE_LABELS, drugBaseNote, FAMILIES } from '../lib/medications';
 import { drugLeverNote } from '../lib/drug-lever';
 import {
   familyGradeCounts, FORM_CLASSES, PHASE_FOR_CLASS, phasePrinciple
@@ -36,12 +35,14 @@ const retail2023 = DRUG_BASE.retail2023.toFixed(1);
 ---
 <BaseLayout
   title="National Health Assurance: Medications"
-  description="How public purchasing, public manufacturing and shortage protection lower drug costs, modelled across a 200-family portfolio."
+  description={"How public purchasing, public manufacturing and shortage" +
+    " protection lower drug costs, modelled across a " + FAMILIES.length +
+    "-family portfolio."}
 >
   <main>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('medications')!)} · Medicines</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('medications'))} · Medicines</span>
     <h2>How can one public purchaser lower prices and keep essential drugs available?</h2>
     <p class="desc">National purchasing covers the complete formulary. The
       Public Medicines Corporation, or PMC, does something narrower: it
