@@ -6,17 +6,76 @@ export interface Triangular {
   high: number;
 }
 
+/* R138 [§S11b]: one confidence vocabulary, and it is the FIVE-grade one.
+ *
+ * The recommendation reads the other way - it says `OUTCOME_STATS` "invents"
+ * `medium-high` against `PARAM_DEFS`'s high/medium/low, and to pick one.
+ * Measured before implementing: `research/parameter_baseline_seed.csv` grades
+ * 85 rows on five levels, **19 of them on the two hyphenated grades**, and
+ * `SOURCED_GRADES` in `baseline-registry.ts` already gates "medium or better"
+ * against `['high', 'medium-high', 'medium']` at build time. So the hyphenated
+ * grades are not an invention: they are the repo's established scale with a
+ * build gate behind them, and `PARAM_DEFS`'s three are the narrow surface.
+ *
+ * Enforcing high/medium/low repo-wide would have re-graded nineteen sourced
+ * seed rows - a substantive change to what the project claims about its own
+ * evidence, dressed as a vocabulary cleanup. The scale is declared here
+ * instead, ordered best to worst, and every surface is held to it.
+ *
+ * ORDER IS MEANINGFUL. `SOURCED_GRADES` is this list's first three, and a
+ * self-test holds it to that rather than letting the two lists drift. */
+export const CONFIDENCE_GRADES = [
+  'high', 'medium-high', 'medium', 'low-medium', 'low'
+] as const;
+
+export type Confidence = typeof CONFIDENCE_GRADES[number];
+
+/* Every surface that grades something reads its grade out of data - a CSV
+   column, a generated catalog - so it arrives as `string`. These are the
+   one place a string becomes a grade, which is what makes the scale
+   enforceable rather than merely declared. */
+export function isConfidence(g: string): g is Confidence {
+  return (CONFIDENCE_GRADES as readonly string[]).includes(g);
+}
+
+export function isSourcedGrade(g: string): boolean {
+  return isConfidence(g) && CONFIDENCE_GRADES.indexOf(g) < 3;
+}
+
 export interface ParamDef extends Triangular {
   id: string;
   group?: string;
   unit?: string;
-  label?: string;
-  confidence?: 'high' | 'medium' | 'low';
+  /* R249 [§S16]: required. Every parameter carries one, and the equation
+     layer read it as `(def && def.label) || pid`, so an unlabelled parameter
+     would have been drawn as its raw id with nothing reporting it. */
+  label: string;
+  confidence?: Confidence;
   source?: string;
   url?: string;
   adjustable?: boolean;
   sliderMin?: number;
   sliderMax?: number;
+  /* R33 [§S6a]: set when the declared range does NOT contain the range this
+     parameter's own research file recommends. The divergence may be entirely
+     defensible - providerPaymentFactor's is - but it has to be visible, and
+     it has to say which way it leans, because two divergences leaning
+     opposite ways cancel in the headline and neither shows. */
+  divergence?: ParamDivergence;
+  /* R169 [§S18], review of P24: the plan requirement whose figure this
+     parameter's source note states ("the plan's own target ... 55%"). Data,
+     never drawn: golden rule 2 keeps the id off every page, and the note
+     states the figure in words. requirements.ts holds every note sentence
+     that names the plan and states a figure (a year aside) to naming one,
+     unless the figure is declared as no requirement's, and each named one to
+     existing and to every figure it states. */
+  requirement?: string;
+}
+
+export interface ParamDivergence {
+  recommended: string;
+  leans: 'optimistic' | 'conservative';
+  note: string;
 }
 
 /* ---- Engine: sampled parameters ------------------------------------------
@@ -40,6 +99,7 @@ export interface SampledParams {
   governanceRate: number;
   careModelSavings: number;
   lowValueCapture: number;
+  lowValuePool: number;
   extractionSavings: number;
   ltcExpansion: number;
   ltcWageFloor: number;
@@ -100,10 +160,23 @@ export interface DetailRow {
   stateMoe: number;
   empContrib: number;
   newRevenue: number;
+  /* R23 [§S5]: `householdRelief` is deliberately unclamped - a negative
+     value in the pre-coverage years is a true statement - so it reports its
+     sign rather than hiding it. `newRevenue`'s clamp was removed: it could
+     not fire anywhere in the declared parameter space. */
+  householdReliefNegative: boolean;
   wealthRevenue: number;
   householdRelief: number;
   wageGain: number;
   taxFeedback: number;
+  /* R125 [§S11b]: the wage gain households actually keep.
+     `taxFeedback` is `wageGain * wageTaxFeedbackRate` and is subtracted from
+     `newRevenue`, so those dollars are government revenue. Two published
+     surfaces credited households the GROSS anyway - the tax page's
+     distribution rows and KPP-C8 - which relieved them by 128% of the wages
+     the model passes through. Every household-facing surface reads this
+     field; `wageGain` stays gross because the revenue arithmetic is right. */
+  wageGainNet: number;
   pubShare: number;
 }
 

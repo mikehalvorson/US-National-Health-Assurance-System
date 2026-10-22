@@ -3,7 +3,7 @@
  * renderBenchmarkChart (lines 390-440). Rows of value ranges (lo..hi) with an
  * optional central marker, on a shared axis. Hand-rolled SVG; no framework.
  * ========================================================================= */
-import { el, niceTicks, barPath, div, tipRow, showTip, hideTip } from './chart-util';
+import { el, niceTicks, barPath, div, tipRow, showTip, hideTip, bindTipFocus, type TipPoint } from './chart-util';
 import { money, moneyShort, axis } from './format';
 
 export interface BenchmarkRow {
@@ -13,6 +13,11 @@ export interface BenchmarkRow {
   mid?: number;
   color: string;
   note?: string;
+  /* R26 [§S6a]: what the row's dollars MEAN. Two lines on one axis that
+     answer different accounting questions are not a comparison, and the
+     framework's own claim went years without anyone able to state which
+     question it answered. Required, so a new row cannot arrive without one. */
+  basis: string;
 }
 
 export interface BenchmarkOpts {
@@ -34,7 +39,7 @@ export function renderBenchmarkChart(
   const x = function (v: number): number { return M.l + (W - M.l - M.r) * ((v - lo) / (hi - lo)); };
 
   const svg = el('svg', {
-    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img',
+    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'group',
     'aria-label': (opts && opts.aria) || 'Benchmark comparison'
   }, container);
 
@@ -53,7 +58,16 @@ export function renderBenchmarkChart(
       const nt = el('text', { x: M.l - 10, y: cy + 12, class: 'row-note', 'text-anchor': 'end' }, svg);
       nt.textContent = r.note;
     }
-    const g = el('g', { class: 'bench-row', tabindex: 0 }, svg);
+    const g = el('g', {
+      class: 'bench-row', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: the tooltip is a role-less div in <body> with no
+         association to this node, so focus alone announced nothing. The name
+         carries the same numbers the hover does. */
+      'aria-label': r.label + ': ' +
+        (r.mid != null ? 'central ' + money(r.mid) + ', ' : '') +
+        'range ' + moneyShort(r.lo) + ' to ' + moneyShort(r.hi) +
+        (r.note ? ', ' + r.note : '')
+    }, svg);
     el('path', {
       d: barPath(x(r.lo), cy - 5, Math.max(2, x(r.hi) - x(r.lo)), 10, 4, 'right'),
       fill: r.color, 'fill-opacity': 0.35
@@ -61,15 +75,18 @@ export function renderBenchmarkChart(
     if (r.mid != null) {
       el('circle', { cx: x(r.mid), cy: cy, r: 5, fill: r.color, class: 'marker' }, g);
     }
-    function tipIt(evt: { clientX: number; clientY: number }): void {
+    function tipIt(evt: TipPoint): void {
       const box = document.createElement('div');
       const head = div('tip-head', box); head.textContent = r.label;
       if (r.mid != null) tipRow(box, r.color, 'central', money(r.mid), true);
       tipRow(box, '', 'range', moneyShort(r.lo) + ' – ' + moneyShort(r.hi), false);
       if (r.note) tipRow(box, '', '', r.note, false);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
     }
     g.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     g.addEventListener('pointerleave', hideTip);
+    /* R166 [S14]: the row is a tab stop, so it needs the focus pair as well as
+       the pointer pair. Without it, tabbing here showed nothing at all. */
+    bindTipFocus(g, tipIt);
   });
 }

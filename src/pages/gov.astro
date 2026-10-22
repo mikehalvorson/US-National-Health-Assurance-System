@@ -1,18 +1,41 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import RemovalRuling from '../components/RemovalRuling.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   on a route the registry does not carry, rather than rendering nothing. */
+import { GOV_GROUPS, LEADER_BASIS_NOTE } from '../lib/gov';
+
+/* R162 [§S12]: "84 entities under 9 governing bodies" was typed twice in this
+   page's prose and computed from nothing. Both figures are right - the data
+   holds 84 members across 9 groups - and both were the sixth instance of a
+   count that agrees with its data until someone edits the data. The summary
+   tiles below already derive the entity total from the same source; the
+   sentences did not.
+   The framework corroborates the nine (it carries a section on why nine
+   institutions); it asserts no total for the entities, so 84 is what the
+   plan's own architecture adds up to and is stated as such. */
+const bodyCount = GOV_GROUPS.length;
+const entityCount = GOV_GROUPS.reduce((n, g) => n + g.members.length, 0);
 ---
-<BaseLayout title="National Health Assurance: Governance">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Governance"
+  description="The institutions that would operate, decide, audit and enforce National Health Assurance, and what each one replaces."
+>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 9 · Authority</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('gov'))} · Authority</span>
     <h2>Who operates, decides, audits, and enforces</h2>
     <p class="desc">Care, money, law, facilities, information, and people all
       need institutional owners, kept deliberately separate so no single
       body both runs the system and grades it. This chapter lays out the
-      full governance architecture: 84 entities under 9 governing bodies,
-      each with a role, a reason, what it replaces, and who leads it. The
+      full governance architecture: {entityCount} entities under {bodyCount}
+      governing bodies, each with a role, a reason, what it replaces, and
+      who leads it. The
       next chapter shows how that distributed authority is engineered to
       survive a hostile administration.</p>
   </section>
@@ -20,8 +43,8 @@ import ChapterNav from '../components/ChapterNav.astro';
   <section class="card">
     <h2>The governance architecture</h2>
     <p class="desc">Replacing an industry means replacing its functions,
-      and every function needs an owner. The plan defines 84
-      entities organized under 9 governing bodies. The design follows two
+      and every function needs an owner. The plan defines {entityCount}
+      entities organized under {bodyCount} governing bodies. The design follows two
       principles throughout: separate operations from oversight (the
       department that pays claims never judges its own appeals), and make
       the system hard to sabotage but easy to repair (mandatory payment
@@ -30,13 +53,13 @@ import ChapterNav from '../components/ChapterNav.astro';
       one governing body; click any box for the full entry, including the
       position in charge and what it answers for.</p>
     <div class="tiles" id="gov-summary"></div>
-    <p class="note">Leadership titles follow standard federal practice:
+    <p class="note" id="leader-basis-note">{LEADER_BASIS_NOTE}</p>
+    <p class="note">Those proposals follow standard federal practice:
       Senate-confirmed heads for benefit-paying executive bodies, with
       nonexecutive scorekeeping and adjudication assigned only to
-      constitutionally appropriate legislative offices or courts. After the
-      Supreme Court's June 29, 2026 decision in <i>Trump v. Slaughter</i>,
-      this dashboard does not assume that an executive regulator can be
-      insulated from presidential removal. "Replaces" identifies the function
+      constitutionally appropriate legislative offices or courts.
+      <RemovalRuling /> This dashboard therefore does not assume that an
+      executive regulator can be insulated from presidential removal. "Replaces" identifies the function
       absorbed, not a claim that the named organization vanishes on day one;
       the Transition body manages every handoff.</p>
   </section>
@@ -44,7 +67,6 @@ import ChapterNav from '../components/ChapterNav.astro';
   <div id="gov-groups"></div>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

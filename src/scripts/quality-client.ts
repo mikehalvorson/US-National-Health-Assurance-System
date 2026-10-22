@@ -6,18 +6,26 @@
    over from the retired docs/ build for DOM parity. It renders only at
    runtime in phase-filtered cells, so the build-time HTML tests never saw
    it; converted to a hyphen 2026-08-12 when docs/ parity stopped mattering. */
-import { QUALITY_DATA as DATA } from '../lib/quality';
+import { QUALITY_DATA as DATA, whereItMatters, withoutSourceCodes } from '../lib/quality';
 import type { QualityParameter } from '../lib/quality-data';
 import {
-  EQUATIONS, DIAGRAM_GROUPS, computeTargets, evaluateAtPhase, EQ_PHASES,
-  RAMP_META, MODEL_META, paramValueAt, rampValueAt, modelValueAt, collectDeps
+  EQUATIONS, DIAGRAM_GROUPS, computeTargets, evaluateAtPhase, EQ_PHASES, NOT_RELEVANT_TEXT,
+  RAMP_META, MODEL_META, MODEL_REGISTRY, RAMP_REGISTRY, paramValueAt, rampValueAt, modelValueAt,
+  collectDeps
 } from '../lib/equations';
-import type { EqTargets, ExprNode, RampId, ModelId } from '../lib/equations';
+import type { EqTargets, ExprNode } from '../lib/equations';
+import { keyOrThrow, lookupOrThrow } from '../lib/registry-lookup';
 import { renderEquation } from '../lib/equation-render';
-import { buildDiagram, renderDiagram } from '../lib/equation-diagram';
-import type { Diagram } from '../lib/equation-diagram';
+import { buildDiagram, isLeafKind, leafLabel, renderDiagram } from '../lib/equation-diagram';
+import type { Diagram, LeafKind } from '../lib/equation-diagram';
 import { SCENARIOS } from '../lib/scenarios';
-import { PARAMS_BY_ID } from '../lib/params';
+import { PARAM_REGISTRY } from '../lib/params';
+import { captureFocus, restoreFocus } from '../lib/focus-restore';
+import { debounce, SEARCH_DEBOUNCE_MS } from '../lib/timing';
+import { arrivalSelection, defaultNodeFor, homeGroupFor } from '../lib/explorer-selection';
+import { committedFloorControls, committedFloorRows } from '../lib/rollout-kinds';
+import { denominatorText, scopeNoteText } from '../lib/data-phases';
+import type { FocusScope } from '../lib/focus-restore';
 
 let selectedId = 'KPP-A1';
 const PHASES = DATA.phases;
@@ -39,69 +47,11 @@ function eqScenarioName(): string {
   return s ? s.name : eqScenario;
 }
 
-const ACRONYMS: Record<string, string> = {
-  'A1-HCAC': 'Article I Health Claims and Appeals Court',
-  'ACA': 'Affordable Care Act',
-  'ACDRH': 'Administration for Care Delivery and Regional Health',
-  'AI': 'Artificial Intelligence',
-  'AICIO': 'Artificial Intelligence Clinical Integration Office',
-  'AMDDT': 'Administration for Medicines, Devices, Diagnostics, and Therapeutics',
-  'API': 'Application Programming Interface',
-  'BH': 'Behavioral Health',
-  'CHAO': 'Congressional Health Accountability Office',
-  'CP': 'Cost Parameter',
-  'DME': 'Durable Medical Equipment',
-  'DNHA': 'Department of National Health Assurance',
-  'DVH': 'Dental, Vision, and Hearing',
-  'ED': 'Emergency Department',
-  'EMS': 'Emergency Medical Services',
-  'EPTO': 'Employer and Payroll Transition Office',
-  'FA': 'Specified assumption',
-  'GDP': 'Gross Domestic Product',
-  'HATC': 'Health Administration Transition Corps',
-  'HCCA': 'Health Cybersecurity and Continuity Authority',
-  'HFASB': 'Health Financing Actuary and Stabilization Board',
-  'IT': 'Information Technology',
-  'KPP': 'Key Performance Parameter',
-  'LTC': 'Long-Term Care',
-  'NBIA': 'National Biomedical Innovation Agency',
-  'NCCA': 'National Coverage and Claims Authority',
-  'NCDSO': 'National Clinical Data Standards Office',
-  'NDPA': 'National Drug Purchasing Authority',
-  'NEEA': 'National Enrollment and Eligibility Authority',
-  'NEMTA': 'National EMS and Medical Transport Authority',
-  'NHAC': 'National Health Accountability Commission',
-  'NHASB': 'National Health Adaptation and Scorekeeping Board',
-  'NHETF': 'National Health Equalization Trust Fund',
-  'NHRA': 'National Health Records Authority',
-  'NHSA': 'National Hospital Stewardship Authority',
-  'NHTCA': 'National Health Transition and Continuity Authority',
-  'NHWB': 'National Health Workforce Board',
-  'NHWECA': 'National Health Workforce Education and Capacity Authority',
-  'NOPRSL': 'National Office of Patient Rights, Safety, and Legitimacy',
-  'NPSMIB': 'National Patient Safety and Medical Injury Board',
-  'NSAA': 'National Specialty Access Authority',
-  'OCDTI': 'Office of Community Diagnostic and Treatment Infrastructure',
-  'OMB': 'Office of Management and Budget',
-  'PBM': 'Pharmacy Benefit Manager',
-  'PCU': 'National Pharmacy Claims Utility',
-  'PILO': 'Public-Interest Licensing Office',
-  'PMC': 'Public Medicines Corporation',
-  'PROO': 'Patient Rights and Ombudsman Office',
-  'RHA': 'Regional Health Administrators',
-  'SRCO': 'State and Regional Compact Office',
-  'SUD': 'Substance Use Disorder',
-  'TBD': 'To Be Determined',
-  'THDO': 'Treasury Health Disbursement Office',
-  'TPP': 'Technical Performance Parameter',
-  'TRTO': 'Tribal and Rural Transition Office',
-  'USD': 'United States Dollars'
-};
-
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
   if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
+  /* the catalog's ids stay; the source document's other codes do not */
+  if (text !== undefined) node.textContent = withoutSourceCodes(text);
   return node;
 }
 function natural(a: string, b: string): number {
@@ -160,16 +110,12 @@ function renderPhaseOverview(): void {
   host.innerHTML = '';
   const milestones: Record<string, { id: string; value: string; kind: string; gate?: string }[]> = {};
   PHASES.forEach(function (phase) { milestones[phase.id] = []; });
-  DATA.parameters.forEach(function (parameter) {
-    parameter.rollout.forEach(function (entry) {
-      if (entry.kind !== 'maturity target' &&
-          entry.kind !== 'derived interim target' &&
-          entry.kind !== 'equation-derived target' &&
-          entry.kind !== 'data-plan interim target') {
-        milestones[entry.phase].push({
-          id: parameter.id, value: entry.value, kind: entry.kind, gate: entry.gate
-        });
-      }
+  /* R247 [§S16]: this showed every row whose kind was NOT one of four, so a
+     new or misspelled kind would have been published here as a committed
+     floor. It shows the kinds declared as committed floors, and no others. */
+  committedFloorRows(DATA.parameters).forEach(function (row) {
+    milestones[row.entry.phase].push({
+      id: row.parameter.id, value: row.entry.value, kind: row.entry.kind, gate: row.entry.gate
     });
   });
 
@@ -200,8 +146,16 @@ function renderPhaseOverview(): void {
         list.appendChild(line);
       });
       if (phase.id === 'P8') {
+        /* R220 [§S12]: this said "All 120 KPP/TPP records". The catalog holds
+           45 KPP and 85 TPP, so the number the page published at maturity was
+           short by ten - the ten merit health-talent immigration parameters
+           R115 identified, added to the catalog without this sentence moving.
+           It is the count the exit protocol names as the known wrong one, and
+           it is the only figure in this section that was wrong when derived
+           rather than merely typed. Read from the catalog now. */
+        const kppTppCount = DATA.counts.KPP + DATA.counts.TPP;
         const mature = el('span', 'quality-phase-target maturity');
-        mature.appendChild(el('b', '', 'All 120 KPP/TPP records'));
+        mature.appendChild(el('b', '', 'All ' + kppTppCount + ' KPP/TPP records'));
         mature.appendChild(document.createTextNode(' assessed against source targets'));
         list.appendChild(mature);
       }
@@ -225,31 +179,21 @@ function renderFloorTable(): void {
   thead.appendChild(head);
   table.appendChild(thead);
   const tbody = el('tbody');
-  const rows: { parameter: QualityParameter; entry: QualityParameter['rollout'][number] }[] = [];
-  DATA.parameters.forEach(function (parameter) {
-    parameter.rollout.forEach(function (entry) {
-      if (entry.kind === 'maturity target' ||
-          entry.kind === 'derived interim target' ||
-          entry.kind === 'equation-derived target' ||
-          entry.kind === 'data-plan interim target') return;
-      rows.push({ parameter: parameter, entry: entry });
-    });
-  });
+  /* R247 [§S16]: the same inclusion as the phase overview above. */
+  const rows = committedFloorRows(DATA.parameters);
   rows.sort(function (a, b) {
     return natural(a.entry.phase + a.parameter.id, b.entry.phase + b.parameter.id);
   });
   rows.forEach(function (item) {
     const tr = el('tr');
-    const gate = DATA.gates.filter(function (candidate) {
-      return candidate.id === item.entry.gate;
-    })[0];
     tr.appendChild(el('th', 'text-nowrap',
       item.entry.phase + (item.entry.gate ? ' / ' + item.entry.gate : '')));
     tr.appendChild(el('td', 'text-nowrap', item.parameter.id));
     tr.appendChild(el('td', 'quality-floor-value', item.entry.value));
     tr.appendChild(el('td', '', item.parameter.target));
-    tr.appendChild(el('td', '',
-      gate ? gate.decision : 'P5 delivery-scale exit milestone'));
+    /* P22 [§S16] new finding: every ungated row said "P5 delivery-scale
+       exit milestone" here, including two floors at P7. */
+    tr.appendChild(el('td', '', committedFloorControls(item.entry, DATA.gates, PHASES)));
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
@@ -260,35 +204,49 @@ function renderFloorTable(): void {
  * Equation panel + flow diagrams
  * ========================================================================= */
 function fmtVal(v: number, decimals: number): string {
-  if (!isFinite(v)) return 'not yet measurable';
+  /* One sentence for one state, wherever the reader meets it (R226-adjacent,
+     §S3). A non-finite equation result means the metric has no quantity at
+     this phase, not that the number is large or missing. */
+  if (!isFinite(v)) return NOT_RELEVANT_TEXT;
   if (Math.abs(v) >= 10000) return Math.round(v).toLocaleString('en-US');
   return v.toFixed(decimals);
 }
-function leafValueText(kind: string, refId: string): string {
-  if (kind === 'param') {
-    const d = PARAMS_BY_ID[refId];
+/* Review 3 of P22: one entry per leaf kind (equation-diagram.ts's
+   LeafKind), where this function and buildLeafPanel each switched on it. */
+const LEAF_VALUE: Record<LeafKind, (refId: string) => string> = {
+  param: function (refId) {
+    const d = lookupOrThrow(PARAM_REGISTRY, refId);
     const v = paramValueAt(eqScenario, refId);
-    return fmtVal(v, Math.abs(v) < 10 ? 2 : 1) + (d && d.unit ? ' ' + d.unit : '');
-  }
-  if (kind === 'ramp') return fmtVal(rampValueAt(eqScenario, refId as RampId, eqPhase), 2);
-  if (kind === 'model') {
-    const v = modelValueAt(eqScenario, refId as ModelId, eqPhase);
+    return fmtVal(v, Math.abs(v) < 10 ? 2 : 1) + (d.unit ? ' ' + d.unit : '');
+  },
+  ramp: function (refId) {
+    return fmtVal(rampValueAt(eqScenario, keyOrThrow(RAMP_REGISTRY, refId), eqPhase), 2);
+  },
+  model: function (refId) {
+    const v = modelValueAt(eqScenario, keyOrThrow(MODEL_REGISTRY, refId), eqPhase);
     return fmtVal(v, Math.abs(v) >= 100 ? 0 : 2);
   }
-  return '';
+};
+const LEAF_TYPE_LABEL: Record<LeafKind, string> = {
+  param: 'COST MODEL INPUT', ramp: 'BUILD STATE', model: 'FISCAL ENGINE'
+};
+
+function leafValueText(kind: string, refId: string): string {
+  return isLeafKind(kind) ? LEAF_VALUE[kind](refId) : '';
 }
 function eqResolve(node: ExprNode): { text: string; title?: string; cls?: string; nodeId?: string } {
   switch (node.k) {
     case 'num': {
+      /* a computed baseline of 1,000 or more shows in whole units */
       const txt = Math.abs(node.v) >= 1000
-        ? node.v.toLocaleString('en-US')
+        ? node.v.toLocaleString('en-US', { maximumFractionDigits: 0 })
         : String(+node.v.toFixed(4));
       return { text: txt, title: node.label, cls: 'eq-num' };
     }
     case 'param':
       return {
         text: node.id, cls: 'eq-tok-param', nodeId: 'param:' + node.id,
-        title: ((PARAMS_BY_ID[node.id] && PARAMS_BY_ID[node.id].label) || node.id) +
+        title: lookupOrThrow(PARAM_REGISTRY, node.id).label +
           ' = ' + leafValueText('param', node.id) + ' (' + eqScenarioName() + ')'
       };
     case 'ramp':
@@ -344,7 +302,7 @@ function buildEquationPanel(id: string, compact?: boolean): HTMLElement {
   deps.params.forEach(function (pid) {
     rows.push({
       sym: pid, nodeId: 'param:' + pid,
-      label: (PARAMS_BY_ID[pid] && PARAMS_BY_ID[pid].label) || pid,
+      label: lookupOrThrow(PARAM_REGISTRY, pid).label,
       val: leafValueText('param', pid)
     });
   });
@@ -390,14 +348,26 @@ function buildEquationPanel(id: string, compact?: boolean): HTMLElement {
     panel.appendChild(wrap);
   }
 
-  /* computed value strip for catalog parameters */
-  if (cat && !compact) {
+  /* Computed value strip for catalog parameters.
+     R232 [§S3]: this strip used to be gated on `!compact`, and the only view
+     where the published value is also on screen is the one that passes
+     compact = true. So the explorer showed the equation's number and never the
+     published one, the detail card showed the published one and never the
+     equation's, and a reader comparing them had to hold nine values across a
+     scroll. The gate is gone: both appear in the same view. */
+  if (cat) {
     const t = eqTargets()[id];
     if (t) {
+      const clamps = cat.rollout.filter(function (e) { return e.bounded; }).length;
       const stripHead = el('div', 'quality-phase-strip-head');
       stripHead.appendChild(el('b', '', 'Equation value by phase (' + eqScenarioName() + ')'));
       stripHead.appendChild(el('span', '',
-        'Raw equation output; the catalog holds committed floors where they are stricter.'));
+        'Raw equation output; the catalog holds committed floors where they are stricter.' +
+        (clamps
+          ? ' A committed floor replaces it at ' + clamps +
+            (clamps === 1 ? ' phase' : ' phases') +
+            '; compare against the published strip above, which marks each one.'
+          : '')));
       panel.appendChild(stripHead);
       const strip = el('div', 'quality-phase-strip quality-eq-strip');
       const startIdx = EQ_PHASES.indexOf(cat._phaseStart || 'P0');
@@ -407,7 +377,7 @@ function buildEquationPanel(id: string, compact?: boolean): HTMLElement {
         top.appendChild(el('b', '', ph));
         cell.appendChild(top);
         if (i < startIdx || !t[ph] || !isFinite(t[ph].num)) {
-          cell.appendChild(el('p', 'quality-no-target', 'Not yet measurable'));
+          cell.appendChild(el('p', 'quality-no-target', NOT_RELEVANT_TEXT));
         } else {
           cell.classList.add('has-target');
           cell.appendChild(el('p', 'quality-cell-value', t[ph].text));
@@ -439,27 +409,20 @@ function currentDiagram(): Diagram {
   }
   return diagramCache[eqGroup];
 }
-function defaultNodeFor(groupId: string): string | null {
-  const group = DIAGRAM_GROUPS.filter(function (g) { return g.id === groupId; })[0];
-  if (!group) return null;
-  const kpps = group.members.filter(function (id) {
-    return EQUATIONS[id] && EQUATIONS[id].kind === 'KPP';
-  });
-  return kpps[0] || group.members[0] || null;
-}
 function buildLeafPanel(nodeId: string): HTMLElement {
   const panel = el('div', 'quality-eq-card');
   const sep = nodeId.indexOf(':');
   const kind = nodeId.slice(0, sep);
   const refId = nodeId.slice(sep + 1);
   let label = refId;
-  if (kind === 'param') label = (PARAMS_BY_ID[refId] && PARAMS_BY_ID[refId].label) || refId;
-  if (kind === 'ramp') label = RAMP_META[refId as RampId].label;
-  if (kind === 'model') label = MODEL_META[refId as ModelId].label;
+  /* R249 [§S16]: the three registries read the one way, each naming itself
+     and the id when it has no entry, where they used to fall back to the raw
+     id (parameters) or throw a TypeError through a cast (ramps, models). */
+  if (isLeafKind(kind)) label = leafLabel(kind, refId);
   const head = el('div', 'quality-eq-card-head');
   const idLine = el('div', 'quality-id-line');
   idLine.appendChild(el('span', 'quality-type quality-type-input',
-    kind === 'param' ? 'COST MODEL INPUT' : (kind === 'ramp' ? 'BUILD STATE' : 'FISCAL ENGINE')));
+    isLeafKind(kind) ? LEAF_TYPE_LABEL[kind] : ''));
   idLine.appendChild(el('b', '', refId));
   head.appendChild(idLine);
   head.appendChild(el('h3', '', label));
@@ -487,10 +450,36 @@ function buildLeafPanel(nodeId: string): HTMLElement {
   }
   return panel;
 }
+/* R242 [S14]: the explorer's keyboard support is correct and its render
+ * strategy defeats it. `renderDiagram` opens with `container.innerHTML = ''`
+ * and `renderEqExplorer` empties the detail panel, so the element the user
+ * just activated by Enter or Space is removed from the document while it holds
+ * focus. Measured in the browser before the fix: activating a node left
+ * `document.activeElement` on `<body>` and the activated `<g>` reporting
+ * `isConnected === false`. Reaching an adjacent node then meant tabbing from
+ * the top of the document - which, until R268 landed in this same section,
+ * meant fifteen links before any content.
+ *
+ * Both rebuilds are owned by `renderEqExplorer`, so the capture and restore
+ * live here rather than in `equation-diagram.ts`: a fix inside `renderDiagram`
+ * would cover the diagram and leave the inputs-legend buttons broken, and the
+ * row declares a test for each. */
+/* The decision lives in lib/focus-restore.ts so that it can be unit-tested: a
+   client script touches `document` while it is evaluated, so vitest cannot
+   import one, and review 8 of P20 found both of R242's declared tests
+   unimplemented for that reason. What stays here is the wiring. */
+function eqScopes(): { scope: FocusScope | null; attribute: string }[] {
+  return [
+    { scope: byId('quality-eq-diagram') as FocusScope | null, attribute: 'data-node-id' },
+    { scope: byId('quality-eq-detail') as FocusScope | null, attribute: 'data-eq-node' }
+  ];
+}
+
 function renderEqExplorer(): void {
   const host = byId('quality-eq-diagram');
   const detail = byId('quality-eq-detail');
   if (!host || !detail) return;
+  const savedFocus = captureFocus(document.activeElement, eqScopes());
   const group = DIAGRAM_GROUPS.filter(function (g) { return g.id === eqGroup; })[0];
   const descNode = byId('quality-eq-groupdesc');
   if (descNode && group) descNode.textContent = group.desc;
@@ -507,21 +496,22 @@ function renderEqExplorer(): void {
   if (eqNode) {
     detail.appendChild(eqNode.indexOf(':') >= 0 ? buildLeafPanel(eqNode) : buildEquationPanel(eqNode));
   }
+  restoreFocus(savedFocus, eqScopes().map(function (e) { return e.scope; }));
 }
 function eqNodeClickDelegate(event: Event): void {
   const btn = (event.target as Element).closest('[data-eq-node]') as HTMLElement | null;
   if (!btn) return;
   const nodeId = btn.dataset.eqNode || '';
-  const diagram = currentDiagram();
-  const inDiagram = diagram.nodes.some(function (nd) { return nd.id === nodeId; });
-  if (!inDiagram) {
-    /* jump to the diagram that owns this equation */
-    const d = EQUATIONS[nodeId];
-    if (d) {
-      eqGroup = d.group;
-      const groupSel = byId('quality-eq-group') as HTMLSelectElement | null;
-      if (groupSel) groupSel.value = eqGroup;
-    }
+  /* R250 [§S16]: a leaf clicked in the catalog panel's legend used to open
+     a detail panel for a node the diagram beside it does not draw. The
+     equation whose legend it sits in is the catalog's selection when the
+     click came from that panel, and the explorer's own node otherwise. */
+  const fromCatalog = event.currentTarget === byId('quality-selected');
+  const home = homeGroupFor(nodeId, eqGroup, fromCatalog ? selectedId : eqNode);
+  if (home !== eqGroup) {
+    eqGroup = home;
+    const groupSel = byId('quality-eq-group') as HTMLSelectElement | null;
+    if (groupSel) groupSel.value = eqGroup;
   }
   eqNode = nodeId;
   renderEqExplorer();
@@ -557,8 +547,7 @@ function renderSelected(parameter: QualityParameter): void {
   host.appendChild(header);
 
   const fields = el('div', 'quality-detail-grid');
-  fields.appendChild(detailField('Where it matters',
-    parameter.where + (parameter.family ? ' · ' + parameter.family : '')));
+  fields.appendChild(detailField('Where it matters', whereItMatters(parameter)));
   fields.appendChild(detailField('Accountable owner / verifier',
     parameter.ownerVerifier));
   fields.appendChild(detailField(
@@ -600,16 +589,49 @@ function renderSelected(parameter: QualityParameter): void {
       entries.forEach(function (entry) {
         let text = entry.value;
         let kindNote = (entry.gate ? entry.gate + ' · ' : '') + entry.kind;
+        let showRaw = entry.bounded ? entry.raw : '';
         if (entry.kind === 'equation-derived target' && eqScenario !== 'SCN-BASE') {
           const t = eqTargets()[parameter.id];
           if (t && t[phase.id] && isFinite(t[phase.id].num)) {
             text = t[phase.id].text;
             kindNote = 'equation-derived · ' + eqScenarioName();
+            /* Under a stress scenario the strip already shows the raw value,
+               so the base-case clamp note would describe a different number. */
+            showRaw = '';
           }
         }
         const value = el('p', 'quality-cell-value', text);
         value.appendChild(el('small', '', kindNote));
+        /* R232 [§S3]: when the published number is a committed floor carried
+           forward, say what the equation gave instead of showing only the
+           number that won. */
+        if (showRaw) value.appendChild(el('small', 'quality-cell-raw', 'equation: ' + showRaw));
+        /* R299 [§S16]: the population changes here, so the number beside the
+           previous phase's is not the same measure. */
+        if (entry.scopeChange) {
+          value.appendChild(el('small', 'quality-cell-scope', scopeNoteText(entry.scopeChange)));
+        }
+        /* R299, third review of P22: the register's denominator for this
+           phase (derivation rule 4), so a ladder that crosses bands is marked
+           in the strip where the numbers sit side by side. */
+        if (entry.denominator) {
+          value.appendChild(el('small', 'quality-cell-scope', denominatorText(entry.denominator)));
+        }
         cell.appendChild(value);
+        /* R232 [§S3]: applyEquationTargets and applyPhaseTargets have both been
+           composing an explanation per entry, and nothing in the application
+           read it - not this page, not the Data tab, not any of the seven
+           clients. Rendered here in the collapsible form the Data tab already
+           uses for its per-target rationales. */
+        if (entry.interpretation) {
+          const why = document.createElement('details');
+          why.className = 'quality-cell-why';
+          const label = document.createElement('summary');
+          label.textContent = 'Why this value';
+          why.appendChild(label);
+          why.appendChild(el('p', '', entry.interpretation));
+          cell.appendChild(why);
+        }
       });
     }
     strip.appendChild(cell);
@@ -691,9 +713,23 @@ function renderTable(parameters: QualityParameter[]): void {
       const typeCell = el('td');
       typeCell.appendChild(el('span', 'quality-type quality-type-' +
         parameter.type.toLowerCase(), parameter.type));
+      /* R220 [S12], review: the row asks to "split the display into controlled
+         (430) and provisional (10)". Deriving the counts and dropping the word
+         "controlled" from three headings was half of it; the ten records the
+         plan adopted later and has not put through control still looked
+         exactly like the 430 that have. The generator already marks each
+         record, so the split is a read, not a second list. */
+      if (parameter.provenance === 'plan-defined') {
+        const badge = el('span', 'quality-provisional', 'provisional');
+        badge.setAttribute('title',
+          'Adopted by the plan later and not yet through control');
+        typeCell.appendChild(badge);
+      }
       row.appendChild(typeCell);
-      row.appendChild(el('td', 'quality-where',
-        parameter.where + (parameter.family ? ' · ' + parameter.family : '')));
+      /* R302 [§S16]: a TPP carries no trace, so its cell says so rather
+         than repeating the group heading above it, which is what the old
+         copy of the concept produced on all 85. */
+      row.appendChild(el('td', 'quality-where', whereItMatters(parameter)));
       const target = el('td', 'quality-target', targetForTable(parameter, phase));
       if (phase !== 'all' && !entriesForPhase(parameter, phase).length) {
         target.classList.add('not-specified');
@@ -705,39 +741,6 @@ function renderTable(parameters: QualityParameter[]): void {
   });
 }
 
-function addAcronymHovers(root: HTMLElement | null): void {
-  if (!root) return;
-  const keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
-  const escaped = keys.map(function (key) { return key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
-  const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style, option, svg, .eq-formula')) continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(node.nodeValue || '')) textNodes.push(node);
-  }
-  textNodes.forEach(function (node) {
-    const text = node.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    pattern.lastIndex = 0;
-    text.replace(pattern, function (match: string, acronym: string, offset: number) {
-      if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-      const abbr = el('abbr', 'quality-acronym', acronym);
-      abbr.title = ACRONYMS[acronym];
-      abbr.setAttribute('aria-label', acronym + ': ' + ACRONYMS[acronym]);
-      fragment.appendChild(abbr);
-      lastIndex = offset + match.length;
-      return match;
-    });
-    if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    node.parentNode!.replaceChild(fragment, node);
-  });
-}
-
 function refresh(): void {
   const parameters = filteredParameters();
   if (!parameters.some(function (parameter) { return parameter.id === selectedId; })) {
@@ -745,8 +748,16 @@ function refresh(): void {
   }
   const results = byId('quality-results');
   if (results) {
+    /* R246 [S14]: this is the page's only live region, and it holds one
+       sentence. It names the selection because #quality-selected stopped
+       being a live region - it was announcing a 3,043-character card on
+       every keystroke, which is the defect, not the feature. */
+    const selectedName = selectedId
+      ? (DATA.parameters.filter(function (p) { return p.id === selectedId; })[0] || { id: '' }).id
+      : '';
     results.textContent = parameters.length.toLocaleString('en-US') +
-      ' of ' + DATA.counts.total.toLocaleString('en-US') + ' parameters shown';
+      ' of ' + DATA.counts.total.toLocaleString('en-US') + ' parameters shown' +
+      (selectedName ? ', showing ' + selectedName : '');
   }
 
   if (selectedId) {
@@ -759,16 +770,44 @@ function refresh(): void {
     if (sel) sel.innerHTML = '<p class="quality-empty">Adjust the filters to select a parameter.</p>';
   }
   renderTable(parameters);
-  addAcronymHovers(byId('quality-selected'));
-  addAcronymHovers(byId('quality-table'));
 }
+
+/* R304 [S14]: the search box ran a full refresh on every keystroke. Measured
+ * in the browser on this page: refresh() itself is only 4-68 ms, but each
+ * rebuild replaces the catalog table, which acronyms-client.ts then answers
+ * with a TreeWalker over the whole <main> - and the document did not stop
+ * mutating until 996 ms after a single keystroke, across 132 mutation records.
+ * At typing speed those sweeps queue behind each other.
+ *
+ * 180 ms is under acronyms-client.ts's own 200 ms coalescing window, so a
+ * burst of keystrokes produces one render and one sweep rather than one of
+ * each per character. Every other control still calls refresh() directly:
+ * a change event fires once, and delaying it would only feel slow. */
+const refreshDebounced = debounce(function () { refresh(); }, SEARCH_DEBOUNCE_MS);
 
 function initQuality(): void {
   const overview = byId('quality-phase-overview');
+  /* Review 8: the debounce timer is module state and outlived a navigation
+     away from this tab, so a pending refresh fired against a document that no
+     longer held the catalog. It is harmless - refresh() bails on a missing
+     host - but a timer nobody cancels is the shape that bites later. */
+  refreshDebounced.cancel();
   if (!overview) return; // not on the quality page
   if (overview.dataset.wired === '1') return;
   overview.dataset.wired = '1';
-  selectedId = 'KPP-A1';
+  /* R223 [§S15]: both selections reset on arrival. The explorer's view
+     settings (scenario, group, phase) are kept between visits by the owner's
+     decision of 2026-10-07 and are declared as such in lifecycle-check.ts;
+     the selected node is not a view setting. It persisted while selectedId
+     reset, so after a return
+     visit the explorer and the catalog pointed at different parameters -
+     measured, explorer TPP-1.1 against catalog KPP-A1. Review 2 of P21:
+     resetting both to their own defaults still split them in every group
+     but the first, so both now come from one decision (explorer-selection.ts):
+     the group's default node, and the catalog on it when it is a parameter. */
+  const arrival = arrivalSelection(eqGroup, function (id) { return !!EQUATIONS[id] && !!paramById(id); });
+  selectedId = arrival.selectedId;
+  eqNode = arrival.eqNode;
 
   populateConcepts();
   renderPhaseOverview();
@@ -816,7 +855,6 @@ function initQuality(): void {
   if (selHost) selHost.addEventListener('click', eqNodeClickDelegate);
   renderEqExplorer();
 
-  addAcronymHovers(document.querySelector('main'));
   refresh();
 
   const search = byId('quality-search');
@@ -825,7 +863,7 @@ function initQuality(): void {
   const phase = byId('quality-phase');
   const reset = byId('quality-reset');
   const table = byId('quality-table');
-  if (search) search.addEventListener('input', refresh);
+  if (search) search.addEventListener('input', refreshDebounced);
   if (type) type.addEventListener('change', refresh);
   if (concept) concept.addEventListener('change', refresh);
   if (phase) phase.addEventListener('change', refresh);

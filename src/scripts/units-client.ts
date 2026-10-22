@@ -1,12 +1,33 @@
 /* Physical Care tab client. Ports docs/js/unitsmap.js (Albers composite US
    projection + county dot map), docs/js/hospitalregions.js (13-region
-   administration map, controls, scores, acronym decoration), and
-   docs/js/unitsapp.js (need-based county unit allocation, verdict, type
-   cards, state table, integrity). Data is fetched from public/data at the
+   administration map, controls, scores) and docs/js/unitsapp.js (need-based
+   county unit allocation, verdict, type cards, state table, integrity).
+   The acronym decoration this file used to port is gone: one glossary and
+   one decorator, site-wide, in src/lib/acronyms.ts and
+   src/scripts/acronyms-client.ts. Data is fetched from public/data at the
    configured base path rather than reproduced into a module. init on
    astro:page-load; idempotent via #units-map dataset.wired; module state is
    reset on init for View-Transition safety. */
 import { el, div, showTip, hideTip, tipRow } from '../lib/chart-util';
+import { PARAMS_BY_ID } from '../lib/params';
+import { renderDataTable } from '../lib/overview-tables';
+import { animationFrames, boundToPage, coalesceOn, debounce } from '../lib/timing';
+import {
+  UNITS_FILES, UNITS_SURFACES, unitsFailures, unitsLoadPlan, usableFile, type UnitsLoadPlan
+} from '../lib/units-load';
+import {
+  canReuseMap, dotFilterOf, newDotModel, updateDots,
+  type DotFilter, type DotModel, type DotSurface, type TypeColors
+} from '../lib/county-dots';
+import {
+  allocateCounty, countyUnitsTableData, NETWORK_ABSORPTION, networkCost, UNIT_TYPE_KEYS,
+  UNIT_TYPES, unitsCostComparison,
+  type AllocationTotals, type NetworkCost, type UnitCounts
+} from '../lib/units';
+import {
+  assignRegionColors, regionAdjacency, regionAssignmentFaults, scoreBarFraction,
+  type Region, type RegionsData
+} from '../lib/hospital-regions';
 
 const BASE = import.meta.env.BASE_URL;
 function $(id: string): HTMLElement | null { return document.getElementById(id); }
@@ -105,16 +126,77 @@ function buildUsProjection(statesGeo: StatesGeo, W: number, H: number): Projecti
 }
 
 /* ---- county unit map ---- */
-type TypeColors = { a: string; b: string; c: string; d: string };
 
-function renderUnitsMap(container: HTMLElement, statesGeo: StatesGeo,
-    counties: County[], typeFilter: string, typeColors: TypeColors): void {
-  container.innerHTML = '';
+/* The county map as one page instance built it.
+
+   It used to be rebuilt on every refresh: the container emptied, the state
+   outlines projected again although the projection never changes, and 3,144
+   circles created, each with a pointermove and a pointerleave listener of its
+   own. Measured in headless Chrome against the dev server, the two versions
+   alternated in one sitting, medians of a warm refresh from the visits slider
+   with the slider on screen: 46 ms of script, 16 ms of style recalculation,
+   7 ms of paint, 77 ms of frame.
+
+   Now the svg, the outlines and one circle per county are built once, and a
+   refresh hands updateDots() in src/lib/county-dots.ts a surface over this
+   svg. It writes `r`, `fill` and `display` only where they change and moves
+   only the circles that are out of order: a step of the slider resizes a few
+   hundred dots of the 3,144 and moves a few hundred. The same refresh in the
+   same sitting: 10 ms of script, 5 ms of style recalculation, 7 ms of paint,
+   27 ms of frame.
+
+   The circles are known by identity, not by FIPS code: a version that named
+   each dot by its county's code through the same update measured about 3 ms
+   more script per refresh, from hashing and looking up 3,144 strings. It
+   bought nothing a rebuild does not already cover, because canReuseMap()
+   rebuilds whenever the county list is not the one the circles were made for.
+
+   The tests of updateDots() run it against a model of this svg and compare
+   what it draws with the old rebuild's rule. They cannot see the three
+   adapters in `surface` below or the pointer handler; those are checked by
+   driving the page in a browser. */
+interface CountyMap {
+  svg: SVGElement;
+  /* the county list the map was built from; a new page instance loads a new one */
+  counties: County[];
+  /* the counties that have a circle, in county file order, matching model.dots */
+  plotted: County[];
+  model: DotModel<Element>;
+  surface: DotSurface<Element>;
+}
+
+/* Module state that holds DOM nodes, which is what ClientRouter strands: it
+   swaps <body> on navigation and would leave this describing an svg no longer
+   in the document. initUnits() clears it for each page instance, and
+   renderMapUnits() builds again unless canReuseMap() says this one is still
+   on the page and was built from the current county list. */
+let countyMap: CountyMap | null = null;
+
+/* The figures behind the dot under the pointer. */
+function showCountyTip(c: County, evt: PointerEvent): void {
+  const typeColors = typeColorsPlain();
+  const box = document.createElement('div');
+  div('tip-head', box).textContent = c.n + ', ' + c.s;
+  tipRow(box, '', 'Population', c.p.toLocaleString('en-US') +
+    ' (' + Math.round(c.r * 100) + '% rural)', false);
+  tipRow(box, typeColors.a, 'Type A micro-units', String(c.units!.a), false);
+  tipRow(box, typeColors.b, 'Type B neighborhood', String(c.units!.b), false);
+  tipRow(box, typeColors.c, 'Type C rural enhanced', String(c.units!.c), false);
+  tipRow(box, typeColors.d, 'Type D urban public-health', String(c.units!.d), false);
+  tipRow(box, '', 'Total', String(c.units!.total), true);
+  showTip(box, evt);
+}
+
+function buildCountyMap(statesGeo: StatesGeo, counties: County[]): CountyMap {
   const W = 960, H = 620;
   const proj = buildUsProjection(statesGeo, W, H);
 
-  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg units-map',
-    role: 'img', 'aria-label': 'Map of proposed community diagnostic-treatment units by county' }, container);
+  /* Not attached here: the caller draws the dots first, so the page takes the
+     finished map in one insertion. Named apart from the region map's `svg`:
+     the accessibility tests find a pointer site by the name its listener is
+     added to. */
+  const countySvg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg units-map',
+    role: 'img', 'aria-label': 'Map of proposed community diagnostic-treatment units by county' });
 
   /* state boundaries */
   statesGeo.features.forEach(function (f) {
@@ -130,149 +212,93 @@ function renderUnitsMap(container: HTMLElement, statesGeo: StatesGeo,
         d += 'Z';
       });
     });
-    el('path', { d: d, class: 'map-state' }, svg);
+    el('path', { d: d, class: 'map-state' }, countySvg);
   });
 
-  /* county dots, biggest first so small ones stay hoverable */
-  function countOf(c: County): number {
-    if (typeFilter === 'all') return c.units!.total;
-    return c.units![typeFilter as 'a' | 'b' | 'c' | 'd'];
-  }
-  let maxCount = 1;
-  counties.forEach(function (c) { maxCount = Math.max(maxCount, countOf(c)); });
-  const sorted = counties.slice().sort(function (x, y) { return countOf(y) - countOf(x); });
-
-  function colorOf(c: County): string {
-    if (typeFilter !== 'all') return typeColors[typeFilter as 'a' | 'b' | 'c' | 'd'];
-    /* dominant type colors the dot in "all" view */
-    const u = c.units!;
-    let best: 'a' | 'b' | 'c' | 'd' = 'b', bv = u.b;
-    if (u.a > bv) { best = 'a'; bv = u.a; }
-    if (u.c > bv) { best = 'c'; bv = u.c; }
-    if (u.d > bv) { best = 'd'; bv = u.d; }
-    return typeColors[best];
-  }
-
-  sorted.forEach(function (c) {
-    const n = countOf(c);
-    if (n <= 0) return;
+  /* county dots, after the outlines so they draw on top, one per county that
+     projects; updateDots() gives them their radius, fill and order */
+  const plotted: County[] = [];
+  const circles: Element[] = [];
+  counties.forEach(function (c) {
     const xy = proj(c.lo, c.la);
     if (!isFinite(xy[0]) || !isFinite(xy[1])) return;
-    const rr = Math.max(1.1, 1.1 * Math.sqrt(n));
-    const dot = el('circle', {
-      cx: xy[0].toFixed(1), cy: xy[1].toFixed(1), r: Math.min(rr, 16).toFixed(1),
-      fill: colorOf(c), 'fill-opacity': 0.55, class: 'map-dot', tabindex: -1
-    }, svg);
-    function tipIt(evt: PointerEvent): void {
-      const box = document.createElement('div');
-      div('tip-head', box).textContent = c.n + ', ' + c.s;
-      tipRow(box, '', 'Population', c.p.toLocaleString('en-US') +
-        ' (' + Math.round(c.r * 100) + '% rural)', false);
-      tipRow(box, typeColors.a, 'Type A micro-units', String(c.units!.a), false);
-      tipRow(box, typeColors.b, 'Type B neighborhood', String(c.units!.b), false);
-      tipRow(box, typeColors.c, 'Type C rural enhanced', String(c.units!.c), false);
-      tipRow(box, typeColors.d, 'Type D urban public-health', String(c.units!.d), false);
-      tipRow(box, '', 'Total', String(c.units!.total), true);
-      showTip(box, evt.clientX, evt.clientY);
-    }
-    dot.addEventListener('pointermove', tipIt as EventListener);
-    dot.addEventListener('pointerleave', hideTip);
+    circles.push(el('circle', {
+      cx: xy[0].toFixed(1), cy: xy[1].toFixed(1), 'fill-opacity': 0.55, class: 'map-dot', tabindex: -1
+    }, countySvg));
+    plotted.push(c);
   });
+  const model = newDotModel(circles);
+
+  /* One listener pair for every dot, where each dot used to carry its own
+     pair and closure. Over an outline or open water no county is under the
+     pointer and the tooltip goes, as it did when the pointer left a dot. */
+  countySvg.addEventListener('pointermove', function (evt) {
+    const i = model.position.get(evt.target as Element);
+    if (i === undefined) hideTip();
+    else showCountyTip(plotted[i], evt as PointerEvent);
+  });
+  countySvg.addEventListener('pointerleave', hideTip);
+
+  return {
+    svg: countySvg,
+    counties: counties,
+    plotted: plotted,
+    model: model,
+    surface: {
+      children: function () { return countySvg.children; },
+      write: function (dot, name, value) {
+        if (value === null) dot.removeAttribute(name);
+        else dot.setAttribute(name, value);
+      },
+      move: function (dot, before) { countySvg.insertBefore(dot, before); }
+    }
+  };
+}
+
+/* Bring the dots in line with the current allocation and type filter. */
+function drawCountyDots(map: CountyMap): void {
+  updateDots(map.model, map.plotted.map(function (c) { return c.units!; }),
+    typeFilter, typeColorsPlain(), map.surface);
 }
 
 /* =========================================================================
  * County unit allocation (docs/js/unitsapp.js, verbatim)
  * ========================================================================= */
-interface UnitCounts { a: number; b: number; c: number; d: number; total: number }
 interface County { f: string; n: string; s: string; p: number; r: number; la: number; lo: number; units?: UnitCounts }
-interface UnitType {
-  key: string; name: string; color: string;
-  opLo: number; opMode: number; opHi: number; capital: number;
-  throughput: number; staff: string; role: string;
-}
 
-const UNIT_TYPES: Record<'a' | 'b' | 'c' | 'd', UnitType> = {
-  a: { key: 'a', name: 'Type A: Micro-unit',
-    color: 'var(--series-2)',
-    opLo: 0.30, opMode: 0.45, opHi: 0.65, capital: 0.25,
-    throughput: 15000, staff: '2–3 (nurse/tech + teleclinician link)',
-    role: 'Sits inside pharmacies, groceries, schools, workplaces, and transit hubs. Vitals, point-of-care tests, vaccinations, prescription refills, screening, and a teleclinician on screen for anything ambiguous.' },
-  b: { key: 'b', name: 'Type B: Neighborhood unit',
-    color: 'var(--series-1)',
-    opLo: 1.2, opMode: 1.6, opHi: 2.2, capital: 1.8,
-    throughput: 30000, staff: '~10 (physician or senior NP/PA lead, nurses, techs)',
-    role: 'The default urgent-care replacement and the network\'s workhorse: ECG, basic labs, X-ray, splinting, common procedures, uncomplicated respiratory/ENT/UTI/skin/musculoskeletal care, chronic-disease measurement and follow-up.' },
-  c: { key: 'c', name: 'Type C: Rural enhanced unit',
-    color: 'var(--series-3)',
-    opLo: 2.0, opMode: 2.6, opHi: 3.5, capital: 3.5,
-    throughput: 12000, staff: '~14 (adds observation nursing, ultrasound, EMS liaison)',
-    role: 'Everything Type B does, plus tele-specialty, longer observation, point-of-care ultrasound, limited IV therapy, EMS coordination, maternal and pediatric triage, and mobile outreach. Built to hold a patient safely when the nearest hospital is an hour away.' },
-  d: { key: 'd', name: 'Type D: Urban public-health unit',
-    color: 'var(--series-6)',
-    opLo: 2.5, opMode: 3.4, opHi: 4.5, capital: 4.5,
-    throughput: 40000, staff: '~20 (adds behavioral-health and public-health staff)',
-    role: 'High-volume urban front door: respiratory surge capacity, vaccines, STI and reproductive services, behavioral-health touchpoints, addiction-care linkage, wound care, heat/smoke/climate response, and neighborhood outreach.' }
-};
+/* R185 [§S9b]: UNIT_TYPES, the visit splits, the population thresholds and the
+   absorption range used to be literals in this file, which meant they were
+   unreachable at build time and unreadable by anything that had to agree with
+   them. They are src/lib/units.ts now, with a confidence grade and a named
+   owner apiece, and the allocation rules moved with them so the page and the
+   build run the same code rather than two copies of it. */
+let visitsPerCapita = NETWORK_ABSORPTION.default;
 
-let visitsPerCapita = 1.5;
-
-interface Totals { a: number; b: number; c: number; d: number; total: number; pop: number; floored: number }
-interface CostRow { op: number; opLo: number; opHi: number; capital: number }
-interface Costs {
-  a: CostRow; b: CostRow; c: CostRow; d: CostRow;
-  opTotal: number; opTotalLo: number; opTotalHi: number; capitalTotal: number;
-}
-interface Allocated { totals: Totals; costs: Costs }
+/* Code review [§S9b]: `Totals` and `UnitCounts` were declared here as
+   well as in units.ts. One shape, one declaration. */
+interface Allocated { totals: AllocationTotals; costs: NetworkCost }
 
 const DATA: { counties: County[] | null; states: StatesGeo | null; regions: RegionsData | null; error: string | null } =
   { counties: null, states: null, regions: null, error: null };
-let typeFilter = 'all';
+let typeFilter: DotFilter = 'all';
 let allocated: Allocated | null = null;
 
 function allocate(): void {
-  const T = UNIT_TYPES;
-  const totals: Totals = { a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0, floored: 0 };
+  const totals: AllocationTotals = {
+    a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0,
+    flooredAccess: 0, flooredLastResort: 0, visits: 0
+  };
   DATA.counties!.forEach(function (c) {
-    const urbanPop = c.p * (1 - c.r), ruralPop = c.p * c.r;
-    const uv = urbanPop * visitsPerCapita, rv = ruralPop * visitsPerCapita;
-
-    let a = uv * 0.28 / T.a.throughput;
-    const dRaw = uv * 0.15;
-    let d = 0, bExtra = 0;
-    if (urbanPop >= 200000) d = dRaw / T.d.throughput;
-    else bExtra = dRaw; /* small-city D demand folds into B */
-    let b = (uv * 0.57 + bExtra + rv * 0.30) / T.b.throughput;
-    let cc = rv * 0.70 / T.c.throughput;
-
-    a = Math.round(a); b = Math.round(b); cc = Math.round(cc); d = Math.round(d);
-
-    /* rural access floor: majority-rural or small counties keep a C */
-    if ((c.r >= 0.5 || c.p < 20000) && ruralPop > 0 && cc === 0) { cc = 1; totals.floored++; }
-    /* every county gets at least one unit of its dominant character */
-    if (a + b + cc + d === 0) {
-      if (c.r >= 0.5) cc = 1; else b = 1;
-      totals.floored++;
-    }
-    c.units = { a: a, b: b, c: cc, d: d, total: a + b + cc + d };
-    totals.a += a; totals.b += b; totals.c += cc; totals.d += d;
-    totals.total += c.units.total; totals.pop += c.p;
+    const out = allocateCounty(c, visitsPerCapita);
+    c.units = out.units;
+    totals.a += out.units.a; totals.b += out.units.b;
+    totals.c += out.units.c; totals.d += out.units.d;
+    totals.total += out.units.total; totals.pop += c.p;
+    totals.visits += c.p * visitsPerCapita;
+    totals.flooredAccess += out.flooredAccess;
+    totals.flooredLastResort += out.flooredLastResort;
   });
-
-  const costs = {} as Costs;
-  (['a', 'b', 'c', 'd'] as const).forEach(function (k) {
-    costs[k] = {
-      op: totals[k] * T[k].opMode / 1000,       /* $B/yr */
-      opLo: totals[k] * T[k].opLo / 1000,
-      opHi: totals[k] * T[k].opHi / 1000,
-      capital: totals[k] * T[k].capital / 1000  /* $B one-time */
-    };
-  });
-  costs.opTotal = costs.a.op + costs.b.op + costs.c.op + costs.d.op;
-  costs.opTotalLo = costs.a.opLo + costs.b.opLo + costs.c.opLo + costs.d.opLo;
-  costs.opTotalHi = costs.a.opHi + costs.b.opHi + costs.c.opHi + costs.d.opHi;
-  costs.capitalTotal = costs.a.capital + costs.b.capital + costs.c.capital + costs.d.capital;
-
-  allocated = { totals: totals, costs: costs };
+  allocated = { totals: totals, costs: networkCost(totals) };
 }
 
 /* ---- renderers ---- */
@@ -282,7 +308,7 @@ function renderTypeCards(): void {
   const host = $('unit-type-cards');
   if (!host) return;
   host.innerHTML = '';
-  (['a', 'b', 'c', 'd'] as const).forEach(function (k) {
+  UNIT_TYPE_KEYS.forEach(function (k) {
     const t = UNIT_TYPES[k];
     const n = allocated!.totals[k];
     const card = document.createElement('div');
@@ -320,22 +346,55 @@ function renderTypeCards(): void {
   });
 }
 
+/* R188 [§S9b]: the two numbers this tile puts side by side.
+ *
+ * The page has always printed its own bottom-up operating total against the
+ * healthcare model's unit parameter, and both §BE7 and Part 1 read that as a
+ * top-down / bottom-up disagreement. It is not one. The parameter prices the
+ * controlled target; the bottom-up total prices the need-based count, which is
+ * larger. Scale the same type mix down to the target and the two agree.
+ *
+ * The parameter's range is READ from params.ts rather than retyped here. §S9a
+ * had to add a check because "$15-36B" was a hardcoded copy; a copy that is
+ * derived does not need one. */
+function unitsCostParam(): { low: number; high: number; mode: number } {
+  const p = PARAMS_BY_ID['unitsCost'];
+  return { low: p.low, high: p.high, mode: p.mode };
+}
+
 function renderVerdict(): void {
   const host = $('unit-verdict');
   if (!host) return;
   const t = allocated!.totals, c = allocated!.costs;
+  const param = unitsCostParam();
+  /* Code review [§S9b]: this recomputed the scaling inline while
+     unitsCostComparison() did the same arithmetic in units.ts, and the
+     self-test only ever exercised the units.ts path -- so the number a reader
+     saw was not the number the build checked. Done-when clause 2 asks for the
+     relationship "stated in one place". This is that one place. */
+  const cmp = unitsCostComparison(t);
+  const target = cmp.targetUnits;
+  const atTarget = cmp.targetOp;
   host.innerHTML = '';
   const tiles = [
     { label: 'Total units, need-based', value: t.total.toLocaleString('en-US'),
       range: 'at ' + visitsPerCapita.toFixed(2) + ' network visits/person/yr' },
-    { label: "Plan's minimum (SR-ACC-010)", value: '≥ 15,000',
-      range: t.total > 16500
-        ? 'the floor undercounts need by ~' + Math.round(100 * (t.total - 15000) / 15000) +
+    /* Golden rule 2 [§S9b]: this label carried the plan's internal requirement
+       identifier into rendered prose. The rule is site-wide and this page is
+       outside narrativeCatalogCodes' five surfaces, so nothing caught it. */
+    { label: "Plan's minimum", value: '≥ ' + target.toLocaleString('en-US'),
+      range: t.total > target * 1.1
+        ? 'the floor undercounts need by ~' + Math.round(100 * (t.total - target) / target) +
           '%; either build ~' + Math.round(t.total / 1000) + 'k or certify existing urgent-care/retail/FQHC sites into the network'
         : 'consistent with the need-based count at these assumptions' },
     { label: 'Network operating cost', value: fmtB(c.opTotal) + '/yr',
       range: fmtB(c.opTotalLo) + ' – ' + fmtB(c.opTotalHi) +
-        ' · healthcare model\'s parameter covers $15–36B' },
+        ' for these ' + t.total.toLocaleString('en-US') + ' units' },
+    { label: 'The same model at ' + (target / 1000) + 'k units',
+      value: fmtB(atTarget) + '/yr',
+      range: 'the healthcare model carries $' + param.low + '–' + param.high +
+        'B for this network, centred on $' + param.mode +
+        'B. The two price different counts, not different units.' },
     { label: 'One-time build-out', value: fmtB(c.capitalTotal),
       range: "part of the model's IT-and-infrastructure capital envelope" }
   ];
@@ -350,21 +409,80 @@ function renderVerdict(): void {
 }
 
 function typeColorsPlain(): TypeColors {
-  /* resolve CSS variables for SVG fills (SVG attr can use var(), but
-     resolve anyway for safety in older browsers) */
-  return { a: 'var(--series-2)', b: 'var(--series-1)',
-           c: 'var(--series-3)', d: 'var(--series-6)' };
+  /* SVG fill attributes take var() directly; read them from the unit model so
+     a recoloured type recolours the map and the cards together. */
+  return {
+    a: UNIT_TYPES.a.color, b: UNIT_TYPES.b.color,
+    c: UNIT_TYPES.c.color, d: UNIT_TYPES.d.color
+  };
 }
 
 function renderMapUnits(): void {
   const host = $('units-map');
-  if (!host) return;
-  renderUnitsMap(host, DATA.states!, DATA.counties!, typeFilter, typeColorsPlain());
+  /* R193 [§S9c]: the outlines are their own fetch now, so this can be reached
+     with counties loaded and us-states.json missing. The caller writes the
+     message; this just declines to draw. */
+  if (!host || !DATA.states || !DATA.counties) return;
+  if (canReuseMap(countyMap, DATA.counties)) {
+    drawCountyDots(countyMap);
+    return;
+  }
+  const map = buildCountyMap(DATA.states, DATA.counties);
+  drawCountyDots(map);
+  host.innerHTML = '';
+  host.appendChild(map.svg);
+  countyMap = map;
 }
 
-function renderStateTable(): void {
+/* Review 9 of P20: the county dots' figures were reachable only by hover.
+
+   The table carries every county with a unit and all four type columns, so it
+   does not follow the map's type filter - the filter is a lens on the same
+   rows. The first version rebuilt it on every filter click and every input
+   event of the visits slider, measured at up to 680 ms of blocked main thread
+   per click with the table open, against 17 to 67 ms for the map alone.
+
+   Now it is built when first opened, and an open table is rebuilt once the
+   slider settles rather than per step. */
+const COUNTY_TABLE_SETTLE_MS = 250;
+const rebuildCountyTableSoon = debounce(buildCountyTable, COUNTY_TABLE_SETTLE_MS);
+
+function buildCountyTable(): void {
+  const table = $('units-county-table') as HTMLTableElement | null;
+  if (!table || !DATA.counties) return;
+  renderDataTable(table, countyUnitsTableData(DATA.counties));
+  table.dataset.fresh = '1';
+}
+
+/* A table inside a closed disclosure is not rebuilt by a refresh. The refresh
+   marks it stale on the element itself - not in module state, which a
+   ClientRouter swap would leave describing a table that no longer exists - and
+   the table is built when the disclosure opens. An open table is rebuilt by
+   `whileOpen`, which each caller chooses. */
+function markTableStale(id: string, build: () => void, whileOpen: () => void): void {
+  const table = $(id);
+  const details = table ? table.closest('details') : null;
+  if (!table || !details) return;
+  delete table.dataset.fresh;
+  /* assigned, not added: re-running this replaces the handler instead of
+     stacking one per allocation change */
+  details.ontoggle = function (): void {
+    if (details.open && table.dataset.fresh !== '1') build();
+  };
+  if (details.open) whileOpen();
+}
+
+/* The allocation by state. It used to be rebuilt on every refresh, disclosure
+   open or not, which cost about 6 ms of script a refresh: with the map no
+   longer rebuilt, that was the largest piece left. Alternating the two in one
+   sitting, a slider step went from 17.4 to 11.5 ms of script and its frame
+   from 36 to 30 ms. It is built when opened now, like the county table, and
+   while open it is rebuilt with each refresh, because 51 rows are cheap enough
+   to stay in step with a drag. The cost of that is the county table's already:
+   until a reader opens it, its text is not in the page for find-in-page. */
+function buildStateTable(): void {
   const tbl = $('units-state-table') as HTMLTableElement | null;
-  if (!tbl) return;
+  if (!tbl || !DATA.counties) return;
   const byState: Record<string, { a: number; b: number; c: number; d: number; total: number; pop: number; st?: string }> = {};
   DATA.counties!.forEach(function (c) {
     const s = byState[c.s] || (byState[c.s] = { a: 0, b: 0, c: 0, d: 0, total: 0, pop: 0 });
@@ -384,10 +502,16 @@ function renderStateTable(): void {
   rows.forEach(function (s) {
     const tr = tbl.insertRow();
     [s.st!, s.pop.toLocaleString('en-US'), s.a, s.b, s.c, s.d, s.total,
-     Math.round(s.pop / s.total).toLocaleString('en-US')].forEach(function (v) {
-      tr.insertCell().textContent = String(v);
+     Math.round(s.pop / s.total).toLocaleString('en-US')].forEach(function (v, i) {
+      const cell = tr.insertCell();
+      /* R70 [§S9c]: column 0 is 51 bare state codes, so PA and VA were being
+         decorated here on every page view with the details open -- a second
+         live vector on this page, and one no pass of the audit reached. */
+      if (i === 0) stateCodeHost(cell);
+      cell.textContent = String(v);
     });
   });
+  tbl.dataset.fresh = '1';
 }
 
 function renderIntegrity(): void {
@@ -399,8 +523,11 @@ function renderIntegrity(): void {
   host.textContent =
     'Data integrity: ' + n.toLocaleString('en-US') + ' counties loaded · ' +
     (pop / 1e6).toFixed(1) + 'M people covered · every county has at least one unit: ' +
-    (allCovered ? 'yes' : 'NO (bug)') + ' · ' + allocated!.totals.floored +
-    ' counties reached only by the rural access floor.';
+    (allCovered ? 'yes' : 'NO (bug)') + ' · ' +
+    allocated!.totals.flooredAccess +
+    ' counties reached only by the rural access floor, ' +
+    allocated!.totals.flooredLastResort +
+    ' only by the last-resort floor.';
 }
 
 function refreshUnits(): void {
@@ -408,10 +535,22 @@ function refreshUnits(): void {
   renderTypeCards();
   renderVerdict();
   renderMapUnits();
-  renderStateTable();
+  markTableStale('units-state-table', buildStateTable, buildStateTable);
+  markTableStale('units-county-table', buildCountyTable, rebuildCountyTableSoon);
   renderIntegrity();
-  decorateAcronyms(mainEl());
 }
+
+/* The visits slider called refreshUnits() from its input listener, so every
+   input event paid for a whole refresh before the next event could be
+   handled: the allocation over 3,144 counties, the tiles, the map's 3,144
+   dots and the state table. Measured in the dev server at 10 to 54 ms of
+   blocked main thread per event, and at 60 to 191 ms in an earlier session;
+   twelve events sent 16 ms apart ran twelve refreshes.
+
+   The readout still changes on every event. The refresh runs at most once a
+   frame and reads visitsPerCapita when the frame arrives, so the page always
+   ends on the slider's final value. */
+const refreshUnitsNextFrame = coalesceOn(refreshUnits, animationFrames);
 
 /* ---- controls ---- */
 function wireUnitControls(): void {
@@ -421,14 +560,14 @@ function wireUnitControls(): void {
     slider.addEventListener('input', function () {
       visitsPerCapita = parseFloat(slider.value);
       lab.textContent = visitsPerCapita.toFixed(2) + ' visits/person/yr';
-      refreshUnits();
+      refreshUnitsNextFrame();
     });
     lab.textContent = visitsPerCapita.toFixed(2) + ' visits/person/yr';
   }
 
   document.querySelectorAll('#units-filter button').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      typeFilter = (btn as HTMLElement).getAttribute('data-type') || 'all';
+      typeFilter = dotFilterOf((btn as HTMLElement).getAttribute('data-type'));
       document.querySelectorAll('#units-filter button').forEach(function (b) {
         (b as HTMLElement).className = b === btn ? 'active' : '';
       });
@@ -440,40 +579,27 @@ function wireUnitControls(): void {
 /* =========================================================================
  * Hospital administration regions (docs/js/hospitalregions.js, verbatim)
  * ========================================================================= */
-interface Region {
-  id: string; name: string; states: string[]; population: number;
-  rural_share: number; centroid: number[]; mean_state_centroid_miles?: number;
-}
-interface RegionsData {
-  regions: Region[];
-  model: { tested_region_counts: { regions: number; total: number }[]; selected_region_count: number };
-}
-
 let selectedId = 'R01';
 
-const STATE_TO_ABBR: Record<string, string> = {
-  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
-  'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
-  'District of Columbia': 'DC', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI',
-  'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-  'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME',
-  'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN',
-  'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE',
-  'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM',
-  'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-  'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI',
-  'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX',
-  'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA',
-  'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
-};
+/* R71/R190/R72/R191 [§S9c]: the name table and the colour list used to be
+   literals here.
 
-const REGION_COLORS = [
-  'var(--series-1)', 'var(--series-6)', 'var(--series-3)',
-  'var(--series-2)', 'var(--series-5)', 'var(--series-1)',
-  'var(--series-8)', 'var(--series-4)', 'var(--series-6)',
-  'var(--series-2)', 'var(--series-5)', 'var(--series-7)',
-  'var(--series-3)'
-];
+   The name table was 51 entries of `'Pennsylvania': 'PA'` maintained beside
+   the identical table in tools/model_hospital_regions.py, and the render loop
+   dropped any GeoJSON feature it could not find in it -- silently, under an
+   SVG description telling screen readers that every state is drawn. The
+   colour list was thirteen entries drawn from eight variables, applied by
+   array index, with no notion of which regions share a border.
+
+   Both now come from the model file, which the model tool emits: one name
+   table, one adjacency graph, and a colouring computed from it. */
+function stateToAbbr(model: RegionsData): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const abbr of Object.keys(model.model.state_names)) {
+    out[model.model.state_names[abbr]] = abbr;
+  }
+  return out;
+}
 
 function featurePath(feature: GeoFeature, projection: Projection): string {
   const geometry = feature.geometry;
@@ -512,10 +638,19 @@ function updateSelection(id: string): void {
   const head = document.createElement('strong');
   head.textContent = region.id + ' ' + region.name;
   detail.appendChild(head);
+  detail.appendChild(document.createTextNode(' · '));
+  /* R70 [§S9c]: the state codes go in their own marked span rather than the
+     whole line, so the rest of the sentence still gets its hovers. */
+  const states = stateCodeHost(document.createElement('span'));
+  states.textContent = region.states.join(', ');
+  detail.appendChild(states);
   detail.appendChild(document.createTextNode(
-    ' · ' + region.states.join(', ') +
     ' · ' + formatPopulation(region.population) +
     ' · ' + Math.round(region.rural_share * 100) + '% rural' +
+    /* R11 is the multi-state case and R09 the single-state one; the model
+       writes 0 miles for a single-state region rather than omitting the
+       field, so this reads a 0 as "no distance to average" and both the
+       missing and the zero case land on the same sentence. */
     (region.mean_state_centroid_miles
       ? ' · mean state-centroid distance ' +
         region.mean_state_centroid_miles.toLocaleString('en-US') + ' miles'
@@ -528,49 +663,81 @@ function renderRegionMap(): void {
   if (!container) return;
   container.innerHTML = '';
   const width = 960, height = 610;
+  const model = DATA.regions!;
   const projection = buildUsProjection(DATA.states!, width, height);
+  const abbrOf = stateToAbbr(model);
   const regionForState: Record<string, Region> = {};
-  const colorForRegion: Record<string, string> = {};
-  DATA.regions!.regions.forEach(function (region, index) {
-    colorForRegion[region.id] = REGION_COLORS[index % REGION_COLORS.length];
+  model.regions.forEach(function (region) {
     region.states.forEach(function (state) { regionForState[state] = region; });
   });
+
+  /* R72/R191 [§S9c]: adjacency-aware, so no two regions that share a border
+     share a fill and dissolve into one shape on a map whose only job is
+     showing where the borders are. */
+  const colorForRegion = assignRegionColors(
+    model.regions, regionAdjacency(model.regions, model.model.state_adjacency));
+
+  /* R71/R190 [§S9c]: measured before the loop, not discovered inside it.
+     `if (!region) return;` used to drop an unresolvable feature and carry on
+     under a description asserting that every state is drawn. */
+  const featureNames = DATA.states!.features.map(stateNameOf);
+  const faults = regionAssignmentFaults(
+    model.regions, model.model.state_names, featureNames);
+  /* Code review [§S9c]: read once. The same 51-entry key walk appeared
+     four times in this function. */
+  const jurisdictions = Object.keys(model.model.state_names).length;
 
   const svg = el('svg', {
     viewBox: '0 0 ' + width + ' ' + height,
     class: 'chart-svg hospital-region-map',
-    role: 'img',
+    role: 'group',
     'aria-labelledby': 'hospital-region-map-title hospital-region-map-desc'
   }, container);
   const title = el('title', { id: 'hospital-region-map-title' }, svg);
-  title.textContent = 'Thirteen proposed nonprofit hospital administration regions';
+  title.textContent = model.regions.length +
+    ' proposed nonprofit hospital administration regions';
   const desc = el('desc', { id: 'hospital-region-map-desc' }, svg);
-  desc.textContent =
-    'Every state and the District of Columbia is assigned once. Hover or focus a state for its region, population, and rural share.';
+  /* The description states what was drawn. It used to state what was intended,
+     which is the same sentence exactly as long as nothing has gone wrong. */
+  desc.textContent = faults.length
+    ? jurisdictions + ' state-level jurisdictions were expected; ' +
+      faults.length + ' could not be placed and are missing from this map: ' +
+      faults.map(function (f) { return f.state + ' ' + f.problem; }).join('; ') +
+      '. Hover or focus a state for its region, population, and rural share.'
+    : jurisdictions +
+      ' state-level jurisdictions, the fifty states and the District of Columbia, each assigned to exactly one region and each drawn once. ' +
+      'Hover or focus a state for its region, population, and rural share.';
 
   DATA.states!.features.forEach(function (feature) {
     const name = stateNameOf(feature);
-    const abbreviation = STATE_TO_ABBR[name];
+    const abbreviation = abbrOf[name];
     const region = regionForState[abbreviation];
+    /* Still skips, because there is nothing to draw -- but the skip is now
+       counted above and reported below, so absence is never silent. */
     if (!region) return;
     const path = el('path', {
       d: featurePath(feature, projection),
       class: 'hospital-map-state' + (region.id === selectedId ? ' is-selected' : ''),
-      fill: colorForRegion[region.id],
+      fill: colorForRegion.get(region.id)!,
       'fill-opacity': '0.52',
       tabindex: '0',
+      role: 'button',
       'data-region': region.id,
       'aria-label': name + ', ' + region.name + ' hospital administration region'
     }, svg);
     function showRegionTip(event: PointerEvent): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = region.id + ' · ' + region.name;
-      const states = div('tip-row', box);
+      /* R70 [§S9c]: marked for the same reason as the detail line. The
+         tooltip host currently sits outside <main>, so no decorator reaches
+         it today; that is a fact about where one element is appended, not a
+         property anything holds, and this costs one attribute. */
+      const states = stateCodeHost(div('tip-row', box));
       states.textContent = region.states.join(', ');
       const metrics = div('tip-row', box);
       metrics.textContent = formatPopulation(region.population) +
         ' · ' + Math.round(region.rural_share * 100) + '% rural';
-      showTip(box, event.clientX || 20, event.clientY || 20);
+      showTip(box, { clientX: event.clientX || 20, clientY: event.clientY || 20 });
     }
     path.addEventListener('pointermove', showRegionTip as EventListener);
     path.addEventListener('pointerleave', hideTip);
@@ -581,9 +748,16 @@ function renderRegionMap(): void {
     path.addEventListener('click', function () {
       updateSelection(region.id);
     });
+    path.addEventListener('keydown', function (event) {
+      const key = (event as KeyboardEvent).key;
+      if (key === 'Enter' || key === ' ') {
+        event.preventDefault();
+        updateSelection(region.id);
+      }
+    });
   });
 
-  DATA.regions!.regions.forEach(function (region) {
+  model.regions.forEach(function (region) {
     const point = projection(region.centroid[0], region.centroid[1]);
     const label = el('text', {
       x: point[0].toFixed(1),
@@ -593,6 +767,23 @@ function renderRegionMap(): void {
     }, svg);
     label.textContent = region.id.replace('R', '');
   });
+
+  /* R71/R190 [§S9c]: and a sighted reader is told too. A screen-reader-only
+     correction would leave the map looking complete to everyone else. */
+  const note = $('hospital-region-integrity');
+  if (note) {
+    note.textContent = faults.length
+      ? 'Map integrity: ' + faults.length + ' of ' +
+        jurisdictions +
+        ' states could not be placed and are missing from the map above (' +
+        faults.map(function (f) { return f.state + ' ' + f.problem; }).join('; ') + ').'
+      : 'Map integrity: all ' + jurisdictions +
+        ' state-level jurisdictions are assigned to exactly one of the ' +
+        model.regions.length + ' regions and drawn exactly once, checked against the ' +
+        featureNames.length + ' outlines on this map. No two regions that share a border share a color.';
+    /* the shared warning style, so a fault is not a grey footnote */
+    note.className = faults.length ? 'note warnbox' : 'note';
+  }
 }
 
 function renderRegionControls(): void {
@@ -611,26 +802,50 @@ function renderRegionControls(): void {
   updateSelection(selectedId);
 }
 
+/* R192 [§S9c]: the bar used to be proportional to the composite score, and
+ * the composite score is lower-is-better -- so the winning candidate drew the
+ * shortest bar and read, at a glance, as the worst of the seven. The caption
+ * said "lower is better" and the aria-label stated the score correctly, which
+ * makes the chart labelled and still backwards: taller-means-more is a
+ * stronger convention than a caption.
+ *
+ * The bar now encodes advantage over the worst candidate, so the best option
+ * is the tallest. The printed number stays the raw score, because that is the
+ * figure the methodology publishes and a reader may want to compare. */
+const SCORE_BAR_MAX_PX = 49;
+const SCORE_BAR_MIN_PX = 7;
+
 function renderScores(): void {
   const host = $('hospital-region-scores');
   if (!host) return;
   host.innerHTML = '';
-  const tested = DATA.regions!.model.tested_region_counts;
-  const max = Math.max.apply(null, tested.map(function (row) { return row.total; }));
+  const model = DATA.regions!.model;
+  const tested = model.tested_region_counts;
+  /* the stylesheet lays this out as seven columns because the model happens
+     to score seven candidate counts; drive it from the data so scoring an
+     eighth does not silently overflow the row. */
+  host.style.gridTemplateColumns = 'repeat(' + tested.length + ', minmax(0, 1fr))';
+  const worst = Math.max.apply(null, tested.map(function (row) { return row.total; }));
+  const best = Math.min.apply(null, tested.map(function (row) { return row.total; }));
   tested.forEach(function (row) {
+    const selected = row.regions === model.selected_region_count;
     const cell = document.createElement('div');
-    cell.className = 'hospital-score' +
-      (row.regions === DATA.regions!.model.selected_region_count ? ' is-selected' : '');
+    cell.className = 'hospital-score' + (selected ? ' is-selected' : '');
+    /* R245 [S14]: without a role the sentence below was never announced. */
+    cell.setAttribute('role', 'group');
     cell.setAttribute(
       'aria-label',
       row.regions + ' regions, composite score ' + row.total.toFixed(3) +
-      (row.regions === DATA.regions!.model.selected_region_count ? ', selected' : '')
+      ' where lower is better' + (selected ? ', selected' : '')
     );
     const value = document.createElement('span');
     value.textContent = row.total.toFixed(3);
     const bar = document.createElement('span');
     bar.className = 'hospital-score-bar';
-    bar.style.height = Math.max(7, Math.round(49 * row.total / max)) + 'px';
+    /* the best candidate fills the axis, the worst sits at the floor */
+    bar.style.height = Math.round(SCORE_BAR_MIN_PX +
+      (SCORE_BAR_MAX_PX - SCORE_BAR_MIN_PX) *
+      scoreBarFraction(row.total, best, worst)) + 'px';
     const label = document.createElement('span');
     label.textContent = String(row.regions);
     cell.appendChild(value);
@@ -641,69 +856,54 @@ function renderScores(): void {
 }
 
 /* =========================================================================
- * Acronym decoration (docs/js/hospitalregions.js, verbatim)
+ * State codes are not acronyms
  * ========================================================================= */
-const ACRONYMS: Record<string, string> = {
-  'CMS': 'Centers for Medicare & Medicaid Services',
-  'DOJ': 'Department of Justice',
-  'ECG': 'Electrocardiogram',
-  'ED': 'Emergency department',
-  'EMS': 'Emergency medical services',
-  'ENT': 'Ear, nose, and throat',
-  'FQHC': 'Federally Qualified Health Center',
-  'FTC': 'Federal Trade Commission',
-  'HHS': 'Department of Health and Human Services',
-  'ICU': 'Intensive care unit',
-  'IV': 'Intravenous',
-  'NHSA': 'National Hospital Stewardship Authority',
-  'NP': 'Nurse practitioner',
-  'PA': 'Physician assistant',
-  'RHA': 'Regional Health Administrators',
-  'STI': 'Sexually transmitted infection',
-  'UTI': 'Urinary tract infection',
-  'VHA': 'Veterans Health Administration'
-};
-const acronymPattern = new RegExp('\\b(' + Object.keys(ACRONYMS).join('|') + ')\\b', 'g');
-let decorating = false;
+/* R70 [§S9c] + code review: this module used to carry its own 17-entry
+ * acronym glossary and its own decorator, ported from
+ * docs/js/hospitalregions.js. Both are gone.
+ *
+ * Sixteen of the seventeen keys duplicated src/lib/acronyms.ts, which
+ * src/scripts/acronyms-client.ts already applies to every page under a
+ * MutationObserver -- so this module's decorator was re-doing work that had
+ * already happened, 200ms earlier, on the same nodes. The seventeenth, IV,
+ * moved into the site-wide glossary, which is what that file's own header
+ * says to do with a tab-local entry.
+ *
+ * It also mattered for R70. `stateAcronymCollisions` pins the set of glossary
+ * keys that collide with US state abbreviations, and it reads
+ * src/lib/acronyms.ts -- so a second glossary here sat outside the tripwire,
+ * and a future `'OR': 'Operating room'` added to it would not have failed the
+ * build. One glossary, one decorator, one pin.
+ *
+ * What stays is the part that fixes the live bug: the containers rendering
+ * bare state codes mark themselves, and the site-wide decorator skips them.
+ */
 
-function decorateAcronyms(root: HTMLElement | null): void {
-  if (!root || decorating) return;
-  decorating = true;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const nodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style, option') || !acronymPattern.test(node.nodeValue || '')) {
-      acronymPattern.lastIndex = 0;
-      continue;
-    }
-    acronymPattern.lastIndex = 0;
-    nodes.push(node);
-  }
-  nodes.forEach(function (node) {
-    const fragment = document.createDocumentFragment();
-    const value = node.nodeValue || '';
-    let last = 0;
-    value.replace(acronymPattern, function (match: string, acronym: string, offset: number): string {
-      fragment.appendChild(document.createTextNode(value.slice(last, offset)));
-      const abbr = document.createElement('abbr');
-      abbr.className = 'physical-acronym';
-      abbr.title = ACRONYMS[acronym];
-      abbr.textContent = acronym;
-      fragment.appendChild(abbr);
-      last = offset + match.length;
-      return match;
-    });
-    fragment.appendChild(document.createTextNode(value.slice(last)));
-    node.parentNode!.replaceChild(fragment, node);
-    acronymPattern.lastIndex = 0;
-  });
-  decorating = false;
-}
+/* The attribute src/scripts/acronyms-client.ts honours in its skip list.
+ * Marking a container with it is what actually closes R70, and the reason it
+ * is needed is worth stating plainly:
+ *
+ * the site-wide glossary defined `PA` as "Physician assistant" and defines
+ * `VA` as "Department of Veterans Affairs", and acronyms-client.ts runs a
+ * MutationObserver over <main> -- so it decorates anything this file renders,
+ * 200ms after it renders it. The audit downgraded the Pennsylvania collision
+ * to latent on the grounds that decoration ran once at init against a region
+ * whose states do not collide. With that observer in place it was not latent:
+ * select R11 and the detail line came back with PA and VA wrapped, aria-label
+ * and all, which reads them out to a screen reader as job titles.
+ *
+ * R307 [S13] then removed `PA` from the glossary outright, because nothing on
+ * the site ever wrote the role as `PA`. `VA` stays and is real prose
+ * elsewhere, so containment is still what protects this page.
+ *
+ * So the containers that render bare state codes declare themselves. The
+ * decorator respects the declaration, and so will the next one. */
+const ACRONYM_SAFE = 'data-no-acronyms';
 
-function mainEl(): HTMLElement | null {
-  return document.querySelector('main');
+/* Marks an element as state codes rather than prose, and returns it. */
+function stateCodeHost<T extends HTMLElement>(node: T): T {
+  node.setAttribute(ACRONYM_SAFE, '');
+  return node;
 }
 
 /* =========================================================================
@@ -716,54 +916,138 @@ function initUnits(): void {
   guard.dataset.wired = '1';
 
   /* reset module state for a fresh page instance (View-Transition safe) */
-  visitsPerCapita = 1.5;
+  rebuildCountyTableSoon.cancel();
+  /* a frame the slider requested on the page being left would otherwise run
+     refreshUnits() after DATA is emptied below, and allocate() throws on a
+     null county list */
+  refreshUnitsNextFrame.cancel();
+  visitsPerCapita = NETWORK_ABSORPTION.default;
   typeFilter = 'all';
   selectedId = 'R01';
   allocated = null;
+  /* the previous page instance's svg left with its <body> */
+  countyMap = null;
   DATA.counties = null; DATA.states = null; DATA.regions = null; DATA.error = null;
 
-  const main = mainEl();
-  decorateAcronyms(main);
+  /* R193 [§S9c]: three files, two independent sections, and it used to be one
+   * Promise.all with one .catch that wrote the same error into both maps. A
+   * 404 on hospital-regions.json destroyed the county map even though
+   * counties.json had loaded fine, and vice versa.
+   *
+   * allSettled, and each section renders if the files it actually needs
+   * arrived. The two maps share us-states.json -- that one failing does take
+   * both down, correctly, because neither can be drawn without the outlines,
+   * and the message says which file it was. */
+  async function grab(name: string): Promise<unknown> {
+    const r = await fetch(BASE + 'data/' + name);
+    if (!r.ok) throw new Error(name + ' ' + r.status);
+    return r.json();
+  }
+  /* P21 [§S15]: bound to this page instance. A fetch still in flight when the
+     reader left and came back used to land on the NEW page and wire it a
+     second time - measured with the requests held in headless Chrome: 2
+     listeners on the slider, the region select and each filter button,
+     against 1 without the round trip. The guard element is this instance's
+     own, so once the page leaves, the continuation does nothing. */
+  Promise.allSettled(UNITS_FILES.map(grab)).then(boundToPage(guard, function (res) {
+    /* R75 [§S15]: a request that failed and a file that arrived in a shape
+       the page cannot read are both failures (units-load.ts); only a file
+       with no failure recorded is read below. */
+    const failures = unitsFailures(res);
 
-  Promise.all([
-    fetch(BASE + 'data/counties.json').then(function (r) {
-      if (!r.ok) throw new Error('counties.json ' + r.status);
-      return r.json();
-    }),
-    fetch(BASE + 'data/us-states.json').then(function (r) {
-      if (!r.ok) throw new Error('us-states.json ' + r.status);
-      return r.json();
-    }),
-    fetch(BASE + 'data/hospital-regions.json').then(function (r) {
-      if (!r.ok) throw new Error('hospital-regions.json ' + r.status);
-      return r.json();
-    })
-  ]).then(function (res) {
-    DATA.counties = (res[0] as County[]).map(function (c) {
-      return { f: c.f, n: c.n, s: c.s, p: c.p, r: c.r, la: c.la, lo: c.lo };
-    });
-    DATA.states = res[1] as StatesGeo;
-    DATA.regions = res[2] as RegionsData;
+    /* R92 [§S9c]: counties.json declares its own vintages now, so it is an
+       object with a `counties` array rather than a bare array. */
+    const countyFile = usableFile(res, failures, 'counties.json') as { meta: unknown; counties: County[] } | null;
+    const counties = countyFile ? countyFile.counties : null;
+    const states = usableFile(res, failures, 'us-states.json') as StatesGeo | null;
+    const regions = usableFile(res, failures, 'hospital-regions.json') as RegionsData | null;
+    if (counties) {
+      DATA.counties = counties.map(function (c) {
+        return { f: c.f, n: c.n, s: c.s, p: c.p, r: c.r, la: c.la, lo: c.lo };
+      });
+    }
+    DATA.states = states;
+    DATA.regions = regions;
+    const failedFiles = UNITS_FILES.filter(function (f) { return failures[f] !== undefined; });
+    DATA.error = failedFiles.length
+      ? failedFiles.map(function (f) { return f + ' (' + (failures[f]?.reason ?? '') + ')'; }).join('; ')
+      : null;
 
-    /* county unit network */
-    wireUnitControls();
-    refreshUnits();
+    /* R75 [§S15]: the plan in units-load.ts decides what can be drawn, from
+       the files each element needs, and names the file in every element that
+       cannot. The county network needs counties and draws its dot map only
+       with the outlines as well; the region scores need only the regions. */
+    const plan = unitsLoadPlan(failures);
+    if (plan.can('unit-verdict')) {
+      wireUnitControls();
+      refreshUnits();
+    }
+    if (plan.can('hospital-region-map')) renderRegionMap();
+    if (plan.can('hospital-region-select')) {
+      renderRegionControls();
+      renderScores();
+    }
+    showUnavailable(plan);
+  }));
+}
 
-    /* hospital administration regions */
-    renderRegionMap();
-    renderRegionControls();
-    renderScores();
-    decorateAcronyms(mainEl());
-  }).catch(function (e) {
-    DATA.error = String(e);
-    const host = $('units-map');
-    if (host) host.textContent =
-      'County data failed to load (' + DATA.error +
-      '). The Physical Care tab needs its data files under public/data.';
-    const rhost = $('hospital-region-map');
-    if (rhost) rhost.textContent = 'Regional model data failed to load (' + DATA.error + ').';
+/* R75 [§S15]: every element the plan cannot draw says why, in a form that
+   fits the element: a note in a container, the text of a readout, the only
+   option of a select, the caption of a table. A control is disabled; the
+   element beside it that it drives carries the sentence. */
+function showUnavailable(plan: UnitsLoadPlan): void {
+  UNITS_SURFACES.forEach(function (s) {
+    const host = $(s.id);
+    if (!host) return;
+    if (plan.disabled.indexOf(s.id) >= 0) {
+      if (host instanceof HTMLInputElement) host.disabled = true;
+      host.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button').forEach(function (c) {
+        c.disabled = true;
+      });
+      return;
+    }
+    const message = plan.messages[s.id];
+    if (message === undefined) return;
+    /* each branch replaces what the element holds in one step, the rule
+       src/scripts/README.md gives every renderer */
+    if (s.kind === 'select' && host instanceof HTMLSelectElement) {
+      const option = document.createElement('option');
+      option.textContent = message;
+      host.replaceChildren(option);
+      host.disabled = true;
+    } else if (s.kind === 'table' && host instanceof HTMLTableElement) {
+      const caption = document.createElement('caption');
+      caption.textContent = message;
+      host.replaceChildren(caption);
+    } else if (s.kind === 'block') {
+      /* an HTML paragraph: chart-util's el() builds SVG nodes, and an SVG
+         <p> would be in the document and draw nothing */
+      const note = document.createElement('p');
+      note.className = 'note';
+      note.textContent = message;
+      host.replaceChildren(note);
+    } else {
+      host.textContent = message;
+    }
   });
 }
+
+/* The cancels in initUnits() run for a page arriving. This runs for the page
+   leaving, and it is the half that covers a navigation to a chapter with no
+   county map: initUnits() returns at its own guard there, so nothing would
+   drop a frame the slider had just asked for, and it would run against the
+   swapped document. Every renderer looks its host up and finds none, so
+   nothing throws today; a callback nobody cancels is the shape that bites
+   later.
+
+   Registered once for the life of the document: ClientRouter re-adds this
+   module's script tag on every navigation, and the browser does not evaluate
+   a module it has already run, so this is not the per-visit listener leak
+   that comes from registering inside an init. */
+document.addEventListener('astro:before-swap', function () {
+  refreshUnitsNextFrame.cancel();
+  rebuildCountyTableSoon.cancel();
+});
 
 /* Also init on first load without waiting for astro:page-load: if this module
    finishes evaluating after ClientRouter fired that event, the listener alone

@@ -19,10 +19,24 @@ const pathname = Astro.url.pathname;
   <script>import '../scripts/acronyms-client.ts';</script>
 </head>
 <body>
+  {/* R268 [S14]: the first focusable element on every page. Without it the
+       header's sources link and TabNav's fourteen chapter links stand between
+       a keyboard user and the content, and <ClientRouter /> returns focus to
+       the top of the document on every in-app navigation, so the cost is paid
+       again on every chapter change. It sits outside .wrap so that nothing a
+       page or component adds can precede it in tab order. */}
+  <a class="skip-link" href="#main">Skip to content</a>
   <div class="wrap">
     <SiteHeader />
     <TabNav pathname={pathname} />
-    <slot />
+    {/* The skip link's target lives beside the link. Review 9 of P20: it
+        was hand-copied into all fourteen pages, so a fifteenth page could
+        ship a skip link that goes nowhere. tabindex="-1" because a bare
+        <main> is not focusable, and href="#main" would move the reading
+        position while leaving the tab order where it was. */}
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
     <SiteFooter />
   </div>
 </body>

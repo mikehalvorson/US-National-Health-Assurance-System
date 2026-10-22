@@ -1,5 +1,7 @@
 # Long-Term Care: sources and methodology
 
+Compiled 2026-08-02. Last revised 2026-10-20.
+
 Evidence base for the Long-Term Care tab. Every figure used on the page traces
 to a source here with a confidence grade. Dollar figures are stated at the scale
 of their source year; the fiscal model's net-new LTC cost is carried in real
@@ -48,9 +50,68 @@ of their source year; the fiscal model's net-new LTC cost is carried in real
 - **The workforce is underpaid and short.** The direct-care workforce (home
   care aides, residential aides, nursing assistants) reached about 5.4 million
   in 2024; the median wage was $17.36/hr and median annual earnings were just
-  under $26,000; home-care turnover ran near 75%. PHI projects about 9.7 million
-  total direct-care job openings from 2024 to 2034. Confidence: high. Source:
-  PHI, "Direct Care Workers in the United States: Key Facts 2024/2025."
+  under $26,000. PHI projects about 9.7 million total direct-care job openings
+  from 2024 to 2034. Confidence: high. Source: PHI, "Direct Care Workers in the
+  United States: Key Facts 2024/2025." PHI's reports call home-care turnover
+  high and state no rate for it; their one turnover percentage is the median
+  of nearly 100 percent for nursing assistants in nursing homes.
+
+- **Home-care turnover ran near 75% in 2024.** The median turnover rate for
+  professional (paid) caregivers in home care was 75.0% in 2024, down from
+  79.2% in 2023, in Activated Insights' (formerly Home Care Pulse) 2025
+  Benchmarking Report, an annual national survey of agencies; its industry
+  sample was 1,149 providers with 3,776 locations. This is the source PHI
+  itself cites for home-care turnover (Key Facts 2025, notes 24 and 46:
+  Activated Insights' "Key Findings from the 2025 Benchmarking Report" webinar,
+  June 26, 2025). The report is sold, so the figure was read where its
+  publisher, a partner association and PHI state it, on 2026-10-20:
+  - Home Care Association of America (HCAOA, which co-brands an edition of the
+    report), newsletter of 2025-07-30, quoting the 2025 edition: "professional
+    caregiver turnover is moving in the right direction", "dropping from 79.2%
+    to 75.0% in 2024."
+    <https://www.hcaoa.org/newsletters/activated-insights-benchmarking-report-now-available-member-discount-included>
+  - HCAOA, newsletter of 2024-07-17, on the 2024 edition, which names the
+    series a median: "The median turnover rate for professional caregivers
+    jumped two percentage points, from 77.1% in 2022 to 79.2% in 2023". The
+    75.0% is that series' next year, so it is a median too.
+    <https://www.hcaoa.org/newsletters/home-care-turnover-rate-jumps-to-80hcaoa-is-here-to-help-members>
+  - Activated Insights, release of 2025-07-01 (also on PR Newswire): "with
+    turnover rates dropping to 75%, the lowest level reported in the past five
+    years." It names neither the year nor the population.
+    <https://activatedinsights.com/latest-news/activated-insights-releases-2025-benchmarking-report-unveiling-key-drivers-of-retention-and-revenue-in-home-based-care-industry/>
+  - PHI, Key Facts & FAQ web page (a living page, modified 2026-09-15): "turnover
+    in home care was nearly 75 percent in 2024", with no source named.
+    <https://www.phinational.org/policy-research/direct-care-workforce-key-facts/>
+  - The sample size is from Activated Insights' page for the 2025 HCAOA
+    edition: "the Industry exemplifying 1,149 providers and 3,776 locations."
+
+  Activated Insights' own pages do not agree with that reading, or with each
+  other, on which year a figure belongs to. Read 2026-10-20:
+  - Its Retain product page for home-based care (a living page): "Home care
+    agencies had a median professional caregiver turnover rate of 76% in 2025,
+    according to the 2025 Activated Insights Benchmarking Report." That pairs
+    76% with the edition HCAOA quotes at 75.0%.
+    <https://activatedinsights.com/retain/home-based-care/>
+  - Its article "Caregiver Retention in Home and Senior Care" (modified
+    2026-09-14): "In 2024, the median turnover rate for caregivers was 79%, the
+    highest since 2018 when it hit a staggering 81.6%." HCAOA gives that
+    description to the 2023 figure in the 2024 edition, so this page labels a
+    figure by its edition, not by the year measured.
+    <https://activatedinsights.com/articles/caregiver-retention/>
+  - Its webinar page for the 2026 edition (released 2026-07-15, published
+    2026-09-21): "median caregiver turnover still sits at 76%, essentially
+    unchanged for two years", with no year named.
+
+  The site follows HCAOA and PHI, which agree on the measurement year: 75% for
+  2024. That also keeps turnover in the same year as the wages and headcounts.
+  If the 2026 edition's figure is the 76% now on the publisher's pages, it is
+  a year later and one point higher. Confidence: medium. It is an industry
+  survey of agencies that choose to take part, and its figure is the survey's
+  median, not a rate measured across the whole workforce. It was read through
+  the statements of its publisher and a partner, not the report's tables, and
+  the publisher's pages label its years inconsistently.
+  PHI notes that "a large-scale, comprehensive assessment of turnover across
+  the full direct care workforce does not exist."
 
 ## 2. Systems in other countries that work
 
@@ -106,11 +167,19 @@ of their source year; the fiscal model's net-new LTC cost is carried in real
   Glance 2023, "Long-term care spending and unit costs"; cross-checked against
   the A-Mark Foundation's HaG 2023 digest.
 
-- **Dollars per person (the second reading in each tooltip).** Long-term care
-  spending per person is derived transparently as (share of GDP) x (GDP per
+- **Dollars per person (the second reading on each bar).** Long-term care
+  spending per person is computed as (share of GDP) x (GDP per
   capita, USD PPP, 2021, World Bank NY.GDP.PCAP.PP.CD): Norway ~$3,227,
   Netherlands ~$3,017, Denmark ~$2,218, Sweden ~$2,114, Germany ~$1,566, Japan
-  ~$1,012, United States ~$929, OECD average ~$922. This is the same spending
+  ~$1,012, United States ~$929, OECD average ~$922. The GDP-per-capita
+  figures used, to the nearest $10, are Norway 92,200, Denmark 69,310,
+  Netherlands 68,570, United States 71,460, Germany 62,640, Sweden 62,180,
+  OECD average 51,220 and Japan 46,000. These are the values the published
+  pairs imply and are consistent with the World Bank series named above;
+  they have not been independently re-read from it, and they are stated
+  here so the arithmetic can be checked. The chart computes each dollar
+  figure from the share and the GDP per capita rather than storing it, so
+  correcting a country's share corrects its dollars with it. This is the same spending
   divided by population, so it is a same-unit (per-person) comparison, not a
   cross-scale one. The point it makes: in raw price-adjusted dollars the U.S.
   sits near the OECD average, because the U.S. economy is large; the failure is
@@ -133,12 +202,26 @@ rather than assumed free; and one accountable public body plans capacity.
   largest benefit expansion and is not double-counted with the existing $415B of
   LTSS spending; it represents the *net new* national spending a universal,
   home-first benefit adds above today's baseline. Anchor: CBO comprehensive-LTSS
-  option (+~4.4% of NHE). Confidence: medium.
+  option: NHE about 5 percent larger with the LTSS benefit in its Option 5
+  (Working Paper 2020-08, read 2026-10-20; the note had said ~4.4%, a figure
+  the paper gives only for its 2028 NHE projection against CMS's).
+  Confidence: medium.
 
 - **The governing body already exists.** The plan assigns long-term care to the
   National Long-Term Care Authority (NLTCA) under the Administration for Care
   Delivery and Regional Health, with a 70% home-and-community service target
   (`gov.ts`). Confidence: high (design).
+
+- **No federal staffing ratio is assumed (reviewed 2026-10-10).** CMS repealed
+  the 2024 nursing-home minimum staffing standards (3.48 total nurse staffing
+  hours per resident day, 0.55 of them RN, plus 24/7 on-site RN coverage) with
+  effect from February 2, 2026; the repeal is a row in
+  `healthcare-docs-tracker.csv`. Nothing in this file was built on that
+  standard: the benefit's cost is anchored on CBO's comprehensive-LTSS option
+  and the workforce below is sized from projected demand and a full-time
+  fraction, not from a staffing ratio. So the repeal moves no figure here, and
+  a later federal or plan-level staffing floor would be a new cost to add, not
+  one already counted. Confidence: high (that the figures do not depend on it).
 
 - **Workforce assessment (three honest headcounts).** The binding constraint is
   the direct-care workforce (aides), not physicians. The staffing figure is
@@ -157,8 +240,9 @@ rather than assumed free; and one accountable public body plans capacity.
     fraction are planning assumptions).
 
   Separately, PHI's **~9.7M "total openings" 2024-2034** is a flow (new jobs plus
-  all replacement hires as workers churn out at ~75% home-care turnover), not a
-  point-in-time headcount; it is quoted in prose and never drawn as a bar next to
+  the jobs left when workers "transfer to other occupations or exit the labor
+  force", in PHI's words), not a point-in-time headcount and not a turnover
+  rate. It is quoted in prose and never drawn as a bar next to
   the stock figures. The 2034 horizon is PHI/BLS's ten-year projection window and
   also ~8 years into a 2026 start. The Workforce tab sizes this as its own block
   (`LTC_WORKFORCE` in `workforce.ts`), kept out of the insurance-transition
@@ -184,7 +268,12 @@ rather than assumed free; and one accountable public body plans capacity.
 - KFF, waiting lists for Medicaid HCBS 2016-2024; 10 Things About LTSS.
 - Mathematica / Medicaid.gov, Medicaid LTSS users and expenditures 2022.
 - AARP, Valuing the Invaluable 2023 Update.
-- PHI, Direct Care Workers in the United States: Key Facts 2024 and 2025.
+- PHI, Direct Care Workers in the United States: Key Facts 2024 and 2025;
+  Understanding the Direct Care Workforce: Key Facts & FAQ (web page).
+- Activated Insights (formerly Home Care Pulse), 2025 Benchmarking Report for
+  home care, home health and hospice (home-care turnover), read through the
+  publisher's release of 2025-07-01 and HCAOA's newsletters of 2024-07-17 and
+  2025-07-30.
 - OECD, Health at a Glance 2023, "Long-term care spending and unit costs";
   Spending on Long-Term Care.
 - A-Mark Foundation, "How Is Long-Term Care Handled by OECD Countries?" (2024),

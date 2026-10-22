@@ -1,8 +1,15 @@
 /* Household annual calculator: client DOM port of docs/js/care.js
    renderHouseholdCalc (204-272). The tax-share line reads live model numbers
    via getModelNumbers(), supplied by the Overview client so it tracks the
-   shared Monte Carlo run. KPP-C8: ordinary households bear <=5% of new financing. */
-import { HOUSEHOLD_PROFILES, HOUSEHOLDS_M, moneyRange } from './care';
+   shared Monte Carlo run. The plan's household-protection cap holds ordinary
+   households to no more than 5% of new financing.
+
+   R205 [§S8]: the "today" column is not one year, and each line says which
+   year it is from. See HouseholdComponent in care.ts for why. */
+import {
+  HOUSEHOLD_PROFILES, HOUSEHOLDS_M, householdVintageNote, moneyRange,
+  RESIDUAL_BILLING_CAVEAT
+} from './care';
 import { money } from './format';
 
 export interface HouseholdModelNumbers { newRevenueB: number }
@@ -39,6 +46,17 @@ export function renderHouseholdCalc(
   const nhaCol = div('hh-col hh-col-nha', grid);
   const foot = div('hh-foot note', container);
 
+  /* R205: one line per component, so a reader meets the vintage where they
+     meet the number rather than in a footnote about all four profiles. */
+  function vintageLine(c: {
+    dataYear: number; dollarYear: number; denominatorYear?: number; source: string;
+  }): string {
+    const dollars = c.dollarYear === c.dataYear ? '' : ', in ' + c.dollarYear + ' dollars';
+    const over = c.denominatorYear === undefined || c.denominatorYear === c.dataYear
+      ? '' : ' over a ' + c.denominatorYear + ' denominator';
+    return c.dataYear + ' figure' + over + dollars + '. ' + c.source + '.';
+  }
+
   function render(): void {
     const p = HOUSEHOLD_PROFILES.filter(function (x) { return x.id === sel.value; })[0] ||
               HOUSEHOLD_PROFILES[0];
@@ -49,14 +67,17 @@ export function renderHouseholdCalc(
     todayCol.innerHTML = ''; nhaCol.innerHTML = '';
 
     div('hh-col-head', todayCol, 'Today (per year)');
+    div('hh-line-note', todayCol, householdVintageNote());
     const tPrem = div('hh-line', todayCol);
     div('hh-line-label', tPrem, 'Premiums');
     div('hh-line-val', tPrem, moneyRange(p.premium.lo, p.premium.hi));
     div('hh-line-note', todayCol, p.premium.note);
+    div('hh-line-vintage', todayCol, vintageLine(p.premium));
     const tOop = div('hh-line', todayCol);
     div('hh-line-label', tOop, 'Out-of-pocket care costs');
     div('hh-line-val', tOop, moneyRange(p.oop.lo, p.oop.hi));
     div('hh-line-note', todayCol, p.oop.note);
+    div('hh-line-vintage', todayCol, vintageLine(p.oop));
     const tTot = div('hh-line hh-total', todayCol);
     div('hh-line-label', tTot, 'Typical total');
     div('hh-line-val', tTot, moneyRange(p.premium.lo + p.oop.lo, p.premium.hi + p.oop.hi));
@@ -68,7 +89,7 @@ export function renderHouseholdCalc(
     const nOop = div('hh-line', nhaCol);
     div('hh-line-label', nOop, 'Point-of-care costs for covered care');
     div('hh-line-val', nOop, '$0');
-    div('hh-line-note', nhaCol, 'covered medically necessary care is free at the point of use (KPP-A3 allows ≤0.5% billing exceptions); non-covered extras remain private');
+    div('hh-line-note', nhaCol, RESIDUAL_BILLING_CAVEAT);
     const nTax = div('hh-line', nhaCol);
     div('hh-line-label', nTax, 'Avg. household share of new taxes if financed per the plan’s cap');
     div('hh-line-val', nTax, '≤ $' + Math.round(kppShare).toLocaleString('en-US'));
@@ -78,7 +99,7 @@ export function renderHouseholdCalc(
       'The rest falls on wealth, high-income, employer, and health-sector taxes, if those levers deliver.');
 
     foot.textContent =
-      'Honest caveats: employer payroll contributions are widely expected to show up partly in wages over time (not modeled); ' +
+      'What this leaves out: employer payroll contributions are widely expected to show up partly in wages over time (not modeled); ' +
       'the uninsured today spend little on average because they skip care, so the comparison understates what coverage is worth to them; ' +
       'and the tax line depends entirely on Congress honoring the plan’s household-protection cap.';
   }

@@ -1,5 +1,7 @@
 # Workforce transition and staffing methodology
 
+Compiled 2026-07-18. Last revised 2026-10-11.
+
 ## Purpose
 
 This note documents the derived job counts used on the dashboard's Workforce
@@ -467,6 +469,27 @@ AI and telehealth are capacity interventions, not headcount:
   staffing-cut instruction.
 - Productivity counts only after human accountability, safety, workload,
   equity, quality, downtime, and manual-fallback tests pass.
+
+## Merit immigration evidence sources
+
+Added 2026-10-11. The Workforce chapter's immigration evidence block states
+these figures; each is cited here.
+
+| Figure on the page | Source | Confidence |
+|---|---|---|
+| 25.6% of active U.S. physicians are international medical graduates (2024) | AAMC physician workforce data, as recorded in `02_hospital_clinical_workforce_education.md` | High: AAMC is the definitive source for the physician headcount (RB-02-CLIN-003) |
+| 5.2% of U.S. registered nurses got their entry-level nursing education abroad (2022) | NCSBN, [The 2022 National Nursing Workforce Survey](https://www.journalofnursingregulation.com/article/S2155-8256(23)00047-9/fulltext) (Smiley et al., *Journal of Nursing Regulation*, April 2023): 94.8% of RNs obtained it in the United States | High: a national survey, peer-reviewed; 5.2% is 100% less the 94.8% it reports |
+| 58% projected nonmetropolitan physician shortage; 11% for RNs (2038) | HRSA, [Health Workforce Projections](https://bhw.hrsa.gov/data-research/projecting-health-workforce-supply-demand), December 2025 (see "Existing shortages are the binding constraint" above) | Medium: projections that assume current patterns, as the page says |
+| Canada: work permits in about two weeks and labour-market decisions in ten business days, each met 80% of the time | Government of Canada, [Global Talent Stream](https://www.canada.ca/en/employment-social-development/services/foreign-workers/global-talent.html) | High: the government's published service standard |
+| Canada: dedicated healthcare Express Entry draws since 2023 | IRCC, Express Entry category-based selection, first healthcare round June 28, 2023 ([rounds of invitations](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html)) | High: the published rounds |
+| Australia: ranked selection from an expression-of-interest pool against a 65-point floor | Department of Home Affairs, [SkillSelect expression of interest](https://immi.homeaffairs.gov.au/visas/working-in-australia/skillselect/expression-of-interest) | High: the program's own rules |
+| Germany: a lower Blue Card salary threshold for shortage occupations; a six-point Opportunity Card since June 2024 | Residence Act section 18g; German Missions, [Opportunity Card (Chancenkarte)](https://canada.diplo.de/ca-en/consular-services/visa/long-term/chancenkarte-2678582) | High: the statute and the program's own rules |
+| United States: Conrad 30 waives the two-year home-return rule for physicians serving three years in an HPSA, MUA or MUP | USCIS, [Conrad 30 Waiver Program](https://www.uscis.gov/working-in-the-united-states/students-and-exchange-visitors/conrad-30-waiver-program) | High: the program's own rules |
+| WHO: the 2010 Global Code of Practice and the 2023 support and safeguards list | WHO, [Health workforce support and safeguards list 2023](https://www.who.int/publications/i/item/9789240069787); the Code, resolution WHA63.16 (2010) | High: the instruments themselves |
+
+The confidence column grades each figure's source. The page's confidence
+labels on the five programs are a different thing: the plan's judgement of
+how well each program's record transfers, not a property of the sources.
 
 ## Exclusions and limitations
 

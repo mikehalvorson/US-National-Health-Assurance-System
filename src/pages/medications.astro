@@ -1,12 +1,61 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+import { RAND_PEER_COUNTRIES, US_PEER_BRAND_PRICE_RATIO, US_PEER_DRUG_PRICE_RATIO } from '../lib/params';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   on a route the registry does not carry, rather than rendering nothing. */
+import { DRUG_BASE, DRUG_BASE_LABELS, drugBaseNote, FAMILIES, savingsLedger, savingsMoney } from '../lib/medications';
+import { medicationsSliderRange } from '../lib/manifest-check';
+import { drugLeverNote } from '../lib/drug-lever';
+import {
+  familyGradeCounts, FORM_CLASSES, PHASE_FOR_CLASS, phasePrinciple
+} from '../lib/medications';
+
+/* R174 [§S7]: BY6 found `high` stamped on a portfolio the data layer graded
+   nowhere. The grade is now the measured mix. */
+const grades = familyGradeCounts();
+const principle = phasePrinciple();
+
+/* R296 [§S7]: the spend bar's labels and the widths that encode them are the
+   same two numbers, read once from the model's own decomposition. The bar used
+   to be a hand-typed 65/35 split labelled with a CMS figure that is not the
+   model's retail component. */
+/* Code review [§S7]: the segments were rounded to the nearest billion and
+   the total to one decimal, so the page printed "$461B plus $257B is a
+   $717.9B drug base" and 461 + 257 is 718. All three now come from one
+   place, at one precision, and a self-test does the reader's addition. */
+const retail = DRUG_BASE_LABELS.retail;
+const nonRetail = DRUG_BASE_LABELS.nonRetail;
+const drugBase = DRUG_BASE_LABELS.total;
+const retailWidth = DRUG_BASE_LABELS.retailWidth;
+const nonRetailWidth = DRUG_BASE_LABELS.nonRetailWidth;
+const retail2023 = DRUG_BASE.retail2023.toFixed(1);
+/* Owner pass, 2026-10-19: the midpoint a reader sees before the client runs,
+   from calcSavings() at the sliders' defaults; it had been typed ($43.1B),
+   with nothing holding it, and went stale when the drug base moved. Review 1
+   of the owner decisions: the defaults are read from the markup below, which
+   sets them once (medicationsSliderRange reads the same attributes), where
+   this typed them again. The stress boundary stays typed: a test holds it to
+   the sliders' extremes (statedStressBoundary). */
+const shareSlider = medicationsSliderRange('medications-share');
+const reductionSlider = medicationsSliderRange('medications-reduction');
+if (!shareSlider || !reductionSlider) throw new Error('medications.astro: a savings slider is missing its range');
+const ledger = savingsLedger(shareSlider.value, reductionSlider.value);
+const pmcMidpoint = savingsMoney(ledger.pmc);
 ---
-<BaseLayout title="National Health Assurance: Medications">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Medications"
+  description={"How public purchasing, public manufacturing and shortage" +
+    " protection lower drug costs, modelled across a " + FAMILIES.length +
+    "-family portfolio."}
+>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 6 · Medicines</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('medications'))} · Medicines</span>
     <h2>How can one public purchaser lower prices and keep essential drugs available?</h2>
     <p class="desc">National purchasing covers the complete formulary. The
       Public Medicines Corporation, or PMC, does something narrower: it
@@ -23,11 +72,23 @@ import ChapterNav from '../components/ChapterNav.astro';
       interrupting care. The PMC supplies that alternative for a controlled
       portfolio. It does not replace the complete private drug industry or
       relax FDA quality requirements.</p>
+    <p class="desc">One note on the grades below. A pill on a product family
+      grades how its qualification phase was derived, not how well evidenced
+      the family is: high where the essential forms decide the phase on their
+      own, medium where the phase follows the product's manufacturing
+      character and the family says why. The portfolio itself is the plan's
+      specification. Where a grade on this page does rate published evidence,
+      such as the negotiation figures further down, it says so and carries its
+      citation.</p>
     <div class="medications-hero-stats">
       <article>
         <strong>200</strong>
         <span>controlled product families</span>
-        <small>specified portfolio <span class="conf high">high</span></small>
+        <small>specified portfolio; {grades.high} of {grades.high + grades.medium}
+          families qualify on their essential forms alone, {grades.medium} on a
+          stated judgement
+          <span class="conf high">phase basis high</span>
+          <span class="conf medium">phase basis medium</span></small>
       </article>
       <article>
         <strong>61 → 200</strong>
@@ -37,7 +98,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       <article>
         <strong>$43B/yr</strong>
         <span>illustrative PMC-attributed purchase saving</span>
-        <small>planning midpoint <span class="conf low">low</span></small>
+        <small>modal planning midpoint <span class="conf low">low</span></small>
       </article>
     </div>
   </section>
@@ -91,21 +152,22 @@ import ChapterNav from '../components/ChapterNav.astro';
     <div class="medications-cost-layout">
       <div class="medications-cost-stack">
         <article>
-          <strong>$467B</strong>
-          <span>retail prescription drugs in 2024</span>
-          <small>Official CMS account, up 7.9% from 2023
+          <strong>${retail2023}B</strong>
+          <span>retail prescription drugs in 2023</span>
+          <small>Official CMS account for 2023, as CMS's latest release
+            states it, and the line the model calibrates on
             <span class="conf high">high</span></small>
         </article>
         <article>
           <strong>$680–730B</strong>
-          <span>retail plus hospital and clinician-administered drugs</span>
+          <span>retail plus hospital and clinician-administered drugs in 2024</span>
           <small>Derived because CMS embeds non-retail drugs in service lines
             <span class="conf medium">medium</span></small>
         </article>
         <article>
-          <strong>2.78×</strong>
-          <span>U.S. prices relative to 33 comparison countries</span>
-          <small>2022 all-drug price ratio; brand-name ratio was 4.22×
+          <strong>{US_PEER_DRUG_PRICE_RATIO}×</strong>
+          <span>U.S. prices relative to {RAND_PEER_COUNTRIES} comparison countries</span>
+          <small>2022 all-drug price ratio; brand-name ratio was {US_PEER_BRAND_PRICE_RATIO}×
             <span class="conf high">high</span></small>
         </article>
       </div>
@@ -114,12 +176,21 @@ import ChapterNav from '../components/ChapterNav.astro';
         <p>CMS reports medicines dispensed by retail and mail-order pharmacies
           as a separate category. Infused, injected, and other
           clinician-administered medicines are recorded inside hospital and
-          physician-service spending. The fiscal model uses a $717.9B
-          2024-scale drug base inside the derived range.</p>
-        <div class="medications-spend-bar" aria-label="Modeled all-drug spending split">
-          <span style="width:65%">$467B retail</span>
-          <span style="width:35%">modeled non-retail</span>
+          physician-service spending. The fiscal model adds an estimate of that
+          second group to the retail line and states the total in real 2024
+          dollars: ${retail}B plus ${nonRetail}B is a ${drugBase}B drug base,
+          inside the derived range.</p>
+        <div role="group" class="medications-spend-bar" aria-label="Modeled all-drug spending split">
+          <span style={`width:${retailWidth}%`}>${retail}B modeled retail</span>
+          <span style={`width:${nonRetailWidth}%`}>${nonRetail}B modeled non-retail</span>
         </div>
+        <p class="note">Both segments are the model's own. The retail segment
+          is the 2023 CMS line expressed in real 2024 dollars, which is not the
+          same quantity as a CMS total for 2024: this site calibrates every
+          figure on CMS's 2023 account, as its latest release states it, and
+          reports results in real 2024 dollars. The same release gives the
+          2024 retail line; the model grows its 2023 line rather than carrying
+          CMS's 2024 figure beside it.</p>
         <p class="note">The international ratio is evidence of price headroom,
           not a promise that every U.S. price can fall to the comparison
           average. U.S. generic prices were already lower in the RAND study.</p>
@@ -142,7 +213,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       price structure outside the negotiation exception. Medicare also pays
       plans and providers rather than directly buying the nation's complete
       drug supply.</p>
-    <div class="medications-law-flow" aria-label="Current Medicare negotiation limits">
+    <div role="group" class="medications-law-flow" aria-label="Current Medicare negotiation limits">
       <article>
         <span>1 · Screen</span>
         <strong>High expenditure</strong>
@@ -228,12 +299,28 @@ import ChapterNav from '../components/ChapterNav.astro';
       <span>One family can satisfy several inclusion reasons.</span>
     </div>
     <div id="medications-family-list" class="medications-family-list"
-      aria-live="polite"></div>
+      role="region" aria-label="Drug families in the selected class"></div>
     <p class="note">The portfolio deliberately includes conventional oral
       generics, complex sterile injectables, inhaled products, selected
       biologics, insulin, oncology drugs, maternal and neonatal medicines,
       antidotes, and emergency-response products. Manufacturing difficulty
       determines when a family qualifies, not whether it matters.</p>
+    <div class="medications-phase-principle">
+      <h3>What decides a family's phase</h3>
+      <p>A family qualifies in the phase its hardest essential form requires.
+        Nothing else moves it: the order below is the order of manufacturing
+        difficulty, and every family's phase is read off its class.</p>
+      <ol>
+        {principle.map((row) => (
+          <li><strong>{row.phase}</strong> {row.formClass}</li>
+        ))}
+      </ol>
+      <p class="note">This is why insulin qualifies at
+        {' ' + PHASE_FOR_CLASS[FORM_CLASSES[3]]}, the last phase. It reflects the
+        difficulty of making a biologic, not a judgement that insulin matters
+        less. Each family below states its class, and the fifteen whose forms
+        do not decide it say why in their own words.</p>
+    </div>
   </section>
 
   <section class="card">
@@ -345,15 +432,17 @@ import ChapterNav from '../components/ChapterNav.astro';
     <span class="medications-kicker">Savings without double counting</span>
     <h2>Attribute part of the national price lever to products the PMC supplies</h2>
     <p class="desc">The fiscal model applies a 25–55% mature net price
-      reduction to the complete $717.9B drug base through national purchasing,
-      reference pricing, formulary management, and public production together.
-      This calculator identifies how much of that same saving could be
-      associated with the PMC portfolio. It does not add a new offset.</p>
+      reduction to the complete ${drugBase}B drug base through national
+      purchasing, reference pricing, formulary management, and public
+      production together. This calculator identifies how much of that same
+      saving could be associated with the PMC portfolio. It does not add a new
+      offset.</p>
+    <p class="note">{drugBaseNote()}</p>
     <div class="medications-savings-layout">
       <div class="medications-savings-controls">
         <label>
           <span>Share of national drug spending supplied by PMC
-            <output id="medications-share-value">15%</output></span>
+            <output id="medications-share-value">{shareSlider.value}%</output></span>
           <input id="medications-share" type="range" min="5" max="25"
             step="1" value="15">
           <small>5–25% planning range; portfolio claims share is not yet observed
@@ -361,37 +450,39 @@ import ChapterNav from '../components/ChapterNav.astro';
         </label>
         <label>
           <span>Net acquisition-cost reduction on PMC products
-            <output id="medications-reduction-value">40%</output></span>
+            <output id="medications-reduction-value">{reductionSlider.value}%</output></span>
           <input id="medications-reduction" type="range" min="25" max="55"
             step="1" value="40">
-          <small>Same range as the fiscal model's national drug-price parameter
+          <small>The same range as the fiscal model's national drug-price
+            parameter, but a separate control
             <span class="conf medium">medium</span></small>
         </label>
+        <p class="note">{drugLeverNote()}</p>
         <p id="medications-savings-formula" class="medications-savings-formula">
-          $717.9B × 15% × 40% = $43.1B per year</p>
+          ${drugBase}B × {shareSlider.value}% × {reductionSlider.value}% = {pmcMidpoint} per year</p>
       </div>
       <div class="medications-savings-result">
         <span>PMC-attributed annual purchase saving</span>
-        <strong id="medications-pmc-savings">$43.1B</strong>
+        <strong id="medications-pmc-savings">{pmcMidpoint}</strong>
         <small>Illustrative 2024-scale midpoint; stress boundary is
-          approximately $9–99B per year. <span class="conf low">low</span></small>
+          approximately $9–96B per year. <span class="conf low">low</span></small>
       </div>
     </div>
     <div class="medications-savings-ledger">
       <div class="medications-savings-track" aria-hidden="true">
-        <span id="medications-pmc-share-bar" style="width:15%"></span>
+        <span id="medications-pmc-share-bar" style={'width:' + shareSlider.value + '%'}></span>
       </div>
       <article>
         <span>PMC-attributed slice</span>
-        <strong id="medications-pmc-savings-copy">$43.1B</strong>
+        <strong id="medications-pmc-savings-copy">{pmcMidpoint}</strong>
       </article>
       <article>
         <span>Remaining national purchasing and formulary slice</span>
-        <strong id="medications-purchasing-savings">$244B</strong>
+        <strong id="medications-purchasing-savings">{savingsMoney(ledger.purchasing)}</strong>
       </article>
       <article>
         <span>Complete modeled drug-price lever</span>
-        <strong id="medications-total-drug-savings">$287B</strong>
+        <strong id="medications-total-drug-savings">{savingsMoney(ledger.whole)}</strong>
       </article>
     </div>
     <p class="note">The saving lowers the public system's cost and therefore
@@ -453,7 +544,6 @@ import ChapterNav from '../components/ChapterNav.astro';
   </section>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

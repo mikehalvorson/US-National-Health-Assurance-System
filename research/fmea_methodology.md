@@ -1,5 +1,7 @@
 # Failure Modes and Effects Analysis methodology
 
+Compiled 2026-08-02. Last revised 2026-08-02.
+
 How the Risk tab derives a failure mode, an effect, a probability, and a
 consequence for every controlled target, and where the catalog is missing the
 information needed to score one. The tab is labeled Risk because it will grow to

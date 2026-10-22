@@ -1,0 +1,537 @@
+/* R54 [§S0]: self-tests for data-phases.ts.
+ *
+ * The module shipped metricCount and targetCount as fields and asserted
+ * nothing at all - no registration on any harness. Both figures verified by
+ * hand (V4), but the Quality tab reuses this data verbatim, so an error here
+ * reaches two public chapters with no independent check.
+ *
+ * R110 [§S12]: two claims in this comment had gone stale, which is the defect
+ * the file exists to prevent, one level up. It said the module "asserts
+ * nothing at all" after these functions were registered in selftests.ts, and
+ * it stated targetCount as 64 after P7's R105 added two P8 certification rows
+ * and moved it to 66. Neither figure is restated here now: the count is the
+ * payload's own field, and the tests read it rather than a copy.
+ *
+ * Kept out of data-phases.ts because that file is a verbatim port marked
+ * "Fidelity-critical: do not re-derive"; the data stays untouched and the
+ * assertions live next to it.
+ */
+import { DATA_PHASES, DATA_PHASE_GAPS, DATA_PHASE_REWORDINGS } from './data-phases';
+import type { DataMetric, DataPhase } from './data-phases';
+import type { QualityData } from './quality-data';
+import { parseNum } from './phase-targets';
+import { QUALITY_DATA } from './quality';
+import { kindDecl, kindsWhere } from './rollout-kinds';
+import { phasesNamedIn } from './rollout';
+
+/* AN5 retracted AB3: all four of the catalog's IDs are canonical. The document's
+   suffix convention is broader than the pattern the audit tested, so this admits
+   both the dotted numeric form (TPP-10.6, KPP-A1) and the letter-suffixed one
+   (TPP-FORM1, TPP-USE1, KPP-TRUST1). */
+const ID_PATTERN = /^(KPP|TPP)-[A-Z]*\d+(\.\d+)?$/;
+
+/* Review 3 of P24: exported, so the Source Package claim check walks the same
+   way instead of writing its own three nested loops. */
+export function everyMetric(phases: readonly DataPhase[] = DATA_PHASES): Array<{ phase: string; metric: DataMetric }> {
+  const out: Array<{ phase: string; metric: DataMetric }> = [];
+  for (const phase of phases) {
+    for (const group of phase.groups) {
+      for (const metric of group.metrics) out.push({ phase: phase.id, metric: metric });
+    }
+  }
+  return out;
+}
+
+export function dataPhaseMetricIds(): string[] {
+  return [...new Set(everyMetric().map((m) => m.metric.id))].sort();
+}
+
+export function dataPhaseTargetCount(): number {
+  return everyMetric().length;
+}
+
+export function dataPhaseIdFormat(): { nonConforming: string[] } {
+  return {
+    nonConforming: dataPhaseMetricIds().filter((id) => !ID_PATTERN.test(id))
+  };
+}
+
+export function frameworkBasisEntries(): Array<{ phase: string; id: string }> {
+  return everyMetric()
+    .filter((m) => m.metric.basis === 'framework')
+    .map((m) => ({ phase: m.phase, id: m.metric.id }));
+}
+
+/* R117 [§S2]: check what a `basis: "framework"` target CLAIMS, not just that the
+   word is spelled right.
+ *
+ * build_data_phase_targets.py raises on an unknown basis value and stops there,
+ * while the verification data sits in the same function it never reads:
+ * load_quality_parameters() returns each parameter's `rollout`, which the
+ * catalog extractor filled from the framework's own gate and milestone tables.
+ * A `framework` basis asserts that the framework fixed this number at this
+ * phase, so the catalog's entry at that phase is the thing to check it against.
+ *
+ * String equality is the wrong instrument, because these rows restate the
+ * catalog in the page's own words: the generator declares '>=98% API
+ * conformance' where the catalog says '>=98%', and '>=65% population within
+ * the unit-network coverage milestone' where the catalog says '>=65% by phase
+ * end'. Comparing the parsed (comparator, number, unit) triple compares the
+ * claim; comparing the strings compares the wording.
+ *
+ * R130 [§S11b]: this comment used to say "sixteen of the seventeen". There
+ * are nineteen rows and all nineteen are reworded, so both halves were wrong
+ * and nothing maintained either. The self-test note beside this computes both
+ * figures, so the count belongs there and the property belongs here.
+ *
+ * Only these three kinds come from the catalog. 'derived interim target',
+ * 'data-plan interim target' and 'equation-derived target' are added or
+ * rewritten downstream by phase-targets.ts and equations.ts, and checking a
+ * framework claim against a data-plan entry would be checking the generator
+ * against itself. */
+const CATALOG_KINDS = new Set<string>(kindsWhere(function (d) { return d.fromCatalog; }));
+
+/* Review 3 of P24: what every phase claim states, shared by the catalog check
+   here and the Source Package check (source-package.ts), which had each
+   declared it. */
+export interface PhaseClaim {
+  id: string;
+  phase: string;
+  declared: string;
+  problem: string; /* '' when the claim resolves */
+}
+export interface FrameworkClaim extends PhaseClaim {
+  catalogValue: string | null;
+  kind: string | null;
+}
+
+export function frameworkBasisClaims(): FrameworkClaim[] {
+  const byId = new Map(QUALITY_DATA.parameters.map((p) => [p.id, p] as const));
+
+  return everyMetric()
+    .filter((row) => row.metric.basis === 'framework')
+    .map((row) => {
+      const base: FrameworkClaim = {
+        id: row.metric.id,
+        phase: row.phase,
+        declared: row.metric.phaseTarget,
+        catalogValue: null,
+        kind: null,
+        problem: ''
+      };
+      const entries = (byId.get(row.metric.id)?.rollout || [])
+        .filter((e) => e.phase === row.phase && CATALOG_KINDS.has(e.kind));
+      if (!entries.length) {
+        return { ...base, problem: 'no framework entry at this phase' };
+      }
+      const claim = parseNum(row.metric.phaseTarget);
+      if (!claim) return { ...base, problem: 'the declared target states no number' };
+
+      let nearest: FrameworkClaim | null = null;
+      for (const entry of entries) {
+        const source = parseNum(entry.value);
+        const detail = { ...base, catalogValue: entry.value, kind: entry.kind };
+        if (!source) {
+          nearest = nearest || { ...detail, problem: 'the catalog entry states no number' };
+          continue;
+        }
+        const problem = source.num !== claim.num
+          ? 'declares ' + claim.num + ', the catalog carries ' + source.num
+          : source.cmp !== claim.cmp
+            ? 'declares ' + (claim.cmp || 'no comparator') + ', the catalog carries ' +
+              (source.cmp || 'no comparator')
+            : source.unit !== claim.unit
+              ? 'declares ' + claim.unit + ', the catalog carries ' + source.unit
+              : '';
+        if (!problem) return { ...detail, problem: '' };
+        nearest = nearest || { ...detail, problem: problem };
+      }
+      return nearest as FrameworkClaim;
+    });
+}
+
+export function frameworkBasisDrift(): FrameworkClaim[] {
+  return frameworkBasisClaims().filter((c) => c.problem !== '');
+}
+
+/* R57 [§S2]: a metric that stops being published and starts again must say why.
+ *
+ * The row filed one case - TPP-11.1 uptime, tracked at P1-P3 and P6-P8, absent
+ * at P4 and P5, which are the phases when hospitals, laboratories and units
+ * first depend on the rail. Measuring the register found nine more metrics with
+ * the same shape, so the remedy is a rule and not a paragraph.
+ *
+ * The generator owns the declarations and refuses to write data-phases.ts if
+ * one is missing or stale. This recomputes the gaps from the shipped payload,
+ * so the two cannot drift apart and a hand edit to the generated file fails the
+ * build rather than publishing an unexplained gap. */
+export interface CoverageGapDrift {
+  id: string;
+  measured: string[];
+  declared: string[] | null;
+}
+
+export function measuredCoverageGaps(): Array<{ id: string; phases: string[] }> {
+  const order = DATA_PHASES.map((p) => p.id);
+  const seen = new Map<string, number[]>();
+  DATA_PHASES.forEach((phase, index) => {
+    for (const group of phase.groups) {
+      for (const metric of group.metrics) {
+        seen.set(metric.id, [...(seen.get(metric.id) || []), index]);
+      }
+    }
+  });
+
+  const out: Array<{ id: string; phases: string[] }> = [];
+  for (const [id, indexes] of seen) {
+    const missing: string[] = [];
+    for (let i = Math.min(...indexes); i <= Math.max(...indexes); i += 1) {
+      if (!indexes.includes(i)) missing.push(order[i]);
+    }
+    if (missing.length) out.push({ id: id, phases: missing });
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function coverageGapDrift(): CoverageGapDrift[] {
+  const declared = new Map(DATA_PHASE_GAPS.map((g) => [g.id, g] as const));
+  const out: CoverageGapDrift[] = [];
+
+  for (const gap of measuredCoverageGaps()) {
+    const match = declared.get(gap.id);
+    if (!match || match.phases.join() !== gap.phases.join()) {
+      out.push({ id: gap.id, measured: gap.phases, declared: match ? match.phases : null });
+    }
+  }
+  const measured = new Set(measuredCoverageGaps().map((g) => g.id));
+  for (const gap of DATA_PHASE_GAPS) {
+    if (!measured.has(gap.id)) out.push({ id: gap.id, measured: [], declared: gap.phases });
+  }
+  return out;
+}
+
+export function unreasonedCoverageGaps(): string[] {
+  return DATA_PHASE_GAPS.filter((g) => g.reason.trim().length < 40).map((g) => g.id);
+}
+
+export interface Regression {
+  id: string;
+  from: string;
+  to: string;
+  fromValue: number;
+  toValue: number;
+}
+
+/* A phase target must move toward its mature target, never away from it. The
+   direction is set by the mature target's comparator: >= tightens upward,
+   <= tightens downward. */
+export function dataPhaseMonotonicity(): { regressions: Regression[] } {
+  const byId = new Map<string, Array<{ phase: string; metric: DataMetric }>>();
+  for (const row of everyMetric()) {
+    const list = byId.get(row.metric.id) || [];
+    list.push(row);
+    byId.set(row.metric.id, list);
+  }
+
+  const regressions: Regression[] = [];
+  for (const [id, rows] of byId) {
+    const mature = parseNum(rows[0].metric.matureTarget);
+    if (!mature || !mature.cmp) continue; /* no comparator: no declared direction */
+    const rising = mature.cmp === '>=';
+    for (let i = 1; i < rows.length; i += 1) {
+      const prev = parseNum(rows[i - 1].metric.phaseTarget);
+      const cur = parseNum(rows[i].metric.phaseTarget);
+      if (!prev || !cur) continue;
+      const wrongWay = rising ? cur.num < prev.num : cur.num > prev.num;
+      if (wrongWay) {
+        regressions.push({
+          id: id,
+          from: rows[i - 1].phase,
+          to: rows[i].phase,
+          fromValue: prev.num,
+          toValue: cur.num
+        });
+      }
+    }
+  }
+  return { regressions };
+}
+
+/* R110 [§S12], the one item of §AB7's test list nothing had written: the
+ * uptime justifications state an annualized downtime in hours and minutes,
+ * and that figure is derivable from the phase target at 8760 hours a year.
+ *
+ * The two sides are independent. The generator's PHASES table types the
+ * percentage in `phaseTarget` and types the hours and minutes into
+ * `justification` as prose; neither is computed from the other, so a target
+ * edited without its sentence, or a sentence edited without its target,
+ * publishes an uptime percentage next to a downtime it does not imply.
+ *
+ * Scope, stated rather than assumed: any metric whose justification states
+ * "<n> hours <m> minutes" and whose phase target carries a percentage. Rows
+ * that state no figure are not faults here - but `uptimeDowntimeRows()`
+ * reports how many DO state one, and the test pins that count, because a
+ * check that only inspects the rows carrying a figure makes deleting the
+ * figure the way to pass it. */
+const HOURS_MINUTES = /(\d+)\s+hours?\s+(\d+)\s+minutes?/;
+const TARGET_PCT = /(\d+(?:\.\d+)?)\s*%/;
+const HOURS_PER_YEAR = 8760;
+
+export interface DowntimeClaim {
+  phase: string;
+  id: string;
+  uptimePct: number;
+  statedMinutes: number;
+  impliedMinutes: number;
+}
+
+/* Every row that states a downtime figure, with what its target implies. */
+export function uptimeDowntimeRows(): DowntimeClaim[] {
+  const out: DowntimeClaim[] = [];
+  for (const { phase, metric } of everyMetric()) {
+    const said = HOURS_MINUTES.exec(metric.justification);
+    if (!said) continue;
+    const pct = TARGET_PCT.exec(metric.phaseTarget);
+    if (!pct) continue;
+    const uptime = Number(pct[1]);
+    out.push({
+      phase: phase,
+      id: metric.id,
+      uptimePct: uptime,
+      statedMinutes: Number(said[1]) * 60 + Number(said[2]),
+      impliedMinutes: ((100 - uptime) / 100) * HOURS_PER_YEAR * 60
+    });
+  }
+  return out;
+}
+
+/* The prose rounds to the nearest minute and says "about", so a minute of
+ * rounding is allowed and nothing more. */
+export function uptimeDowntimeDrift(): string[] {
+  return uptimeDowntimeRows()
+    .filter((r) => Math.abs(r.statedMinutes - r.impliedMinutes) > 1)
+    .map((r) => r.phase + ' ' + r.id + ' states ' + r.statedMinutes
+      + ' minutes of annualized downtime; ' + r.uptimePct + '% uptime implies '
+      + r.impliedMinutes.toFixed(1));
+}
+
+/* R104 [§S16]: P8 is "Mature information-mesh certification" and said it
+ * assessed "the complete mesh", while it certified 13 of the register's 26
+ * metrics (11 before R105). Every metric the register publishes now has a P8
+ * row at its controlled maturity target, and the generator refuses one that
+ * does not. This holds the shipped payload to the same rule, so a hand edit
+ * cannot quietly drop one. */
+export function uncertifiedAtMaturity(): string[] {
+  const certified = new Set(everyMetric().filter((m) => m.phase === 'P8').map((m) => m.metric.id));
+  return dataPhaseMetricIds().filter((id) => !certified.has(id));
+}
+
+/* R106 [§S16]: a controlled maturity target that names a phase is a claim about
+ * that phase. KPP-B7's read ">=95% population within access standard by P8",
+ * and TPP-2.1's ">=95% by P8", with no P8 row for either. The phase is read
+ * out of the target string the register publishes beside every row. */
+export function matureTargetPhasesWithoutRows(): string[] {
+  const at = new Map<string, Set<string>>();
+  const mature = new Map<string, string>();
+  for (const m of everyMetric()) {
+    at.set(m.metric.id, (at.get(m.metric.id) || new Set<string>()).add(m.phase));
+    mature.set(m.metric.id, m.metric.matureTarget);
+  }
+  const out: string[] = [];
+  for (const [id, target] of mature) {
+    for (const named of phasesNamedIn(target)) {
+      if (!at.get(id)!.has(named)) out.push(id + ' names ' + named + ' and has no row there');
+    }
+  }
+  return out.sort();
+}
+
+/* R299 [§S16]: a ladder that changes what it measures says so where it does.
+ *
+ * The row filed two ladders that read as one improving series while the
+ * population under the number moved (TPP-10.5, TPP-11.2). Measured over the
+ * register: many consecutive pairs change their wording once the comparator
+ * and the number are set aside. The generator declares each as a change of
+ * population, carried on the row as `scopeChange` and shown beside it on the
+ * Data tab and in the Quality tab's phase strip, or as a rewording (the payload's
+ * `rewordings`). This recomputes the wording changes from the shipped payload
+ * and holds both directions: every change is marked or declared a rewording,
+ * and no row is marked where nothing changed. */
+const TARGET_NUMBER = /^\s*(?:≥|≤|>=|<=|<|>)?\s*[\d.,]+\s*%?\s*/;
+
+export function scopeChangeDrift(): string[] {
+  const reworded = new Set(DATA_PHASE_REWORDINGS.map((r) => r.id + ' ' + r.phase));
+  const last = new Map<string, string>();
+  const out: string[] = [];
+  for (const { phase, metric } of everyMetric()) {
+    const words = metric.phaseTarget.replace(TARGET_NUMBER, '').trim();
+    const before = last.get(metric.id);
+    const changed = before !== undefined && before !== words;
+    const key = metric.id + ' ' + phase;
+    const declared = !!metric.scopeChange || reworded.has(key);
+    if (changed && !declared) out.push(key + ' changes what it measures with no marker');
+    if (!changed && declared) out.push(key + ' is marked where its wording does not change');
+    if (metric.scopeChange && reworded.has(key)) out.push(key + ' is marked both ways');
+    last.set(metric.id, words);
+  }
+  return out;
+}
+
+/* R299's second test: "the population is stated in every phase target
+ * string". Words are compared as stems: letters only, four or more, on their
+ * first five. Three checks hold it.
+ *
+ * 1. Every string names its measure: it shares a word with the metric's
+ *    name. (The review of P22 replaced "longer than three characters",
+ *    which "by P8" passes.)
+ * 2. Where a ladder declares a change of population, the string at that
+ *    phase states the new population itself rather than leaving it to the
+ *    note. Review 2 of P22 found check 1 too weak for this: a string that
+ *    only repeats the metric's name passes it, and declared changes had
+ *    such strings (the log has the list).
+ * 3. A framework row keeps the population words its controlled value
+ *    states. The same review found TPP-10.2 at P8 publishing "medication-
+ *    record completeness" for a controlled ">=95% covered persons". */
+function stemOf(word: string): string {
+  return word.toLowerCase().slice(0, 5);
+}
+
+function wordsOf(text: string): string[] {
+  return text.match(/[A-Za-z]{4,}/g) || [];
+}
+
+function stems(text: string): Set<string> {
+  return new Set(wordsOf(text).map(stemOf));
+}
+
+function targetStems(metric: DataMetric): Set<string> {
+  return stems(metric.phaseTarget.replace(TARGET_NUMBER, ''));
+}
+
+export function targetsNotNamingTheirMeasure(phases: readonly DataPhase[] = DATA_PHASES): string[] {
+  const out: string[] = [];
+  for (const { phase, metric } of everyMetric(phases)) {
+    const name = stems(metric.name);
+    if (![...targetStems(metric)].some((s) => name.has(s))) out.push(metric.id + ' ' + phase + ': ' + metric.phaseTarget);
+  }
+  return out;
+}
+
+/* A declaration reads "<new> rather than <old>" (or "<new>, without
+   <old>"). The new population's own words are those not in the old one,
+   less quantifiers, which are not a population; the string must carry one
+   that is not also in the metric's name, or, when the name already says
+   the new population ("downtime exercises"), one of the new words. */
+const NEW_VERSUS_OLD = /,? rather than |,? without /;
+const QUANTIFIERS = new Set(['only', 'every', 'whole', 'each']);
+
+/* Each returns the rows it checked beside its faults, so a register with
+   none of the rows it is for reads as nothing checked, not as a pass. */
+export interface RowCheck { checked: number; faults: string[] }
+
+export function populationsNotStated(phases: readonly DataPhase[] = DATA_PHASES): RowCheck {
+  const out: string[] = [];
+  let checked = 0;
+  for (const { phase, metric } of everyMetric(phases)) {
+    if (!metric.scopeChange) continue;
+    checked++;
+    const parts = metric.scopeChange.split(NEW_VERSUS_OLD);
+    const now = parts[0] || '';
+    const before = stems(parts.slice(1).join(' '));
+    const own = [...stems(now)].filter((s) => !before.has(s) && !QUANTIFIERS.has(s));
+    const name = stems(metric.name);
+    const beyondName = own.filter((s) => !name.has(s));
+    const required = beyondName.length ? beyondName : own;
+    const key = metric.id + ' ' + phase;
+    if (!required.length) { out.push(key + ': its declared change names no population of its own'); continue; }
+    const said = targetStems(metric);
+    if (!required.some((s) => said.has(s))) {
+      out.push(key + ': "' + metric.phaseTarget + '" leaves "' + now + '" to the note');
+    }
+  }
+  return { checked: checked, faults: out };
+}
+
+/* The controlled value at the row's phase, from a catalog-authored entry
+   (the kind table's fromCatalog column), so a value the enrichers wrote
+   from this register cannot be compared with itself. Phase and gate
+   wording ("by phase end", "before ...", "to move ...") is not a
+   population and is set aside. A phase id needs no rule: "by P8" has no
+   word of four letters, so it never reaches the comparison. */
+const PHASE_WORDING = /\s*(?:\bby phase end\b.*|\bbefore\b.*|\bto move\b.*)$/i;
+
+export function frameworkPopulationDropped(
+  phases: readonly DataPhase[] = DATA_PHASES, Q: QualityData = QUALITY_DATA
+): RowCheck {
+  const out: string[] = [];
+  let checked = 0;
+  for (const { phase, metric } of everyMetric(phases)) {
+    if (metric.basis !== 'framework') continue;
+    checked++;
+    const key = metric.id + ' ' + phase;
+    const p = Q.parameters.find((x) => x.id === metric.id);
+    const entry = (p ? p.rollout : []).find((e) => e.phase === phase && kindDecl(e.kind).fromCatalog);
+    if (!entry) { out.push(key + ': a framework row with no controlled value at its phase'); continue; }
+    const controlled = entry.value.replace(TARGET_NUMBER, '').replace(PHASE_WORDING, '');
+    const said = targetStems(metric);
+    const dropped = wordsOf(controlled).filter((w) => !said.has(stemOf(w)));
+    if (dropped.length) {
+      out.push(key + ': "' + metric.phaseTarget + '" drops "' + dropped.join(' ') + '" from "' + entry.value + '"');
+    }
+  }
+  return { checked: checked, faults: out };
+}
+
+/* R299's first test, "no metric's phase ladder changes denominator without a
+ * visible marker". Derivation rule 4 gives each phase band a denominator;
+ * a ladder that crosses bands is marked by the phase's denominator, shown
+ * on the Data tab's phase panel and on the Quality strip; a change within a
+ * band is marked by the row's scope note (scopeChangeDrift above). This
+ * holds the first half: every phase that publishes a row states its
+ * denominator, and it reports the crossings that marking covers. */
+export function denominatorFaults(phases: readonly DataPhase[] = DATA_PHASES): RowCheck {
+  const out: string[] = [];
+  for (const p of phases) {
+    if (p.groups.some((g) => g.metrics.length) && !(p.denominator || '').trim()) {
+      out.push(p.id + ' publishes targets and states no denominator');
+    }
+  }
+  const of = new Map(phases.map((p) => [p.id, p.denominator]));
+  const last = new Map<string, string>();
+  let crossings = 0;
+  for (const { phase, metric } of everyMetric(phases)) {
+    const before = last.get(metric.id);
+    if (before !== undefined && of.get(before) !== of.get(phase)) crossings++;
+    last.set(metric.id, phase);
+  }
+  return { checked: crossings, faults: out };
+}
+
+/* ...and the Quality strip carries it on every entry the register publishes. */
+export function denominatorsMissingFromQuality(
+  phases: readonly DataPhase[] = DATA_PHASES, Q: QualityData = QUALITY_DATA
+): string[] {
+  const out: string[] = [];
+  for (const p of phases) {
+    for (const m of p.groups.flatMap((g) => g.metrics)) {
+      const param = Q.parameters.find((x) => x.id === m.id);
+      const rows = (param ? param.rollout : []).filter((e) => e.phase === p.id);
+      if (!rows.length || rows.some((e) => e.denominator !== p.denominator)) out.push(m.id + ' ' + p.id);
+    }
+  }
+  return out;
+}
+
+/* The Quality strip carries the same note on that phase's rows. */
+export function scopeChangesMissingFromQuality(): string[] {
+  const out: string[] = [];
+  for (const { phase, metric } of everyMetric()) {
+    if (!metric.scopeChange) continue;
+    const p = QUALITY_DATA.parameters.find((x) => x.id === metric.id);
+    const rows = (p ? p.rollout : []).filter((e) => e.phase === phase);
+    if (!rows.length || rows.some((e) => e.scopeChange !== metric.scopeChange)) {
+      out.push(metric.id + ' ' + phase);
+    }
+  }
+  return out;
+}

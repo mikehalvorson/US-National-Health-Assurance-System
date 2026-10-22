@@ -1,11 +1,113 @@
 /* Legislation crosswalk data, ported verbatim from docs/js/legislation.js
-   (DOMAINS 10-306, ACRONYMS 308-356). A major-law-family planning crosswalk,
-   not legal advice. Fidelity-critical: do not re-derive. */
+   (DOMAINS 10-306). A major-law-family planning crosswalk, not legal advice.
+   Fidelity-critical: do not re-derive.
+
+   Two deliberate changes since the port. R98 [§S17]: Domains 5 and 6 were
+   "...and production" and "...and integrity" here and "...and public
+   production" and "...and program integrity" in the crosswalk methodology.
+   They take the crosswalk's titles, and research-check.ts holds the two
+   lists equal in order. (Title V of the enabling act, "...and public
+   manufacturing", is a different object: an act title, not a domain.)
+
+   And R96 [§S17]: Domains 1 and 3 carried a substantive `preserve` field and
+   no Preserve badge. Coverage's field preserves the veteran, military and
+   tribal delivery missions and every existing right until the successor is
+   live; Employer plans' field begins "Keep ..." and says "Preserve claims and
+   remedies". Both carry the badge now. The plan's conforming-change table
+   (research/framework_v2_extract.md, Table D7A-06) says, in its
+   continuity column, to preserve the VA, TRICARE and IHS duties until an
+   explicit transfer, and for the employer family to protect collective
+   bargaining, restitution, state safety authority and lawful supplemental
+   markets; it assigns no disposition per domain. (Review 2 of P23: this
+   said the table preserves both families' duties.) preserveBadgeFaults()
+   in legislation-check.ts holds every domain to the badge.
+
+   The acronym map that was here (docs/js/legislation.js 308-356) is gone. Its
+   54 keys were a subset of src/lib/acronyms.ts, which the site-wide decorator
+   applies to every page. */
+
+/* R247 [§S16], the row's widened half (BY10); R95 in §S17 asks for the same
+   registry, and this is it, so the two sections share one enum.
+
+   The legal disposition vocabulary was declared five times and enforced in
+   none: the crosswalk methodology, this file's free-string `actions`, the
+   page's prose ("... sunset, or fall back"), the page's key ("Fallback"),
+   and the stylesheet the client reaches by lowercasing an action. Two of
+   them already disagreed on the seventh word. Now this list is the one
+   declaration: `actions` is typed from it, an unknown action throws at
+   import, the page renders its key and its sentence from it, and a check
+   holds the crosswalk's own list to it, in order. */
+export const DISPOSITIONS = [
+  'Preserve', 'Parallel', 'Transfer', 'Amend', 'Preempt', 'Sunset', 'Fallback'
+] as const;
+export type Disposition = (typeof DISPOSITIONS)[number];
+
+/* What each disposition does, as the page's key says it. */
+export const DISPOSITION_KEY: Record<Disposition, string> = {
+  Preserve: 'stays operative',
+  Parallel: 'runs beside the successor',
+  Transfer: 'moves a function',
+  Amend: 'changes existing text',
+  Preempt: 'displaces only a conflict',
+  Sunset: 'closes after certification',
+  Fallback: 'revives a safe default'
+};
+
+/* The vocabulary as one English list, for the page's sentence. The names
+   keep their capitals, as the key under the sentence shows them: lowercased,
+   "Fallback" read as a noun in a list of verbs (review of P22), and the old
+   hand-typed "fall back" is the spelling split R247 removed. */
+export function dispositionSentenceList(): string {
+  const names: string[] = [...DISPOSITIONS];
+  return names.slice(0, -1).join(', ') + ', or ' + names[names.length - 1];
+}
+
+/* R76 + R97 [§S17]: the removal-law ruling, stated once.
+ *
+ * Five places told a reader about Trump v. Slaughter - the Article II card and
+ * the current-law alert on the Legislation page, the Governance page, the
+ * Executive Hardening limits, and the crosswalk methodology - in four
+ * different sentences, and none said the Court overruled Humphrey's Executor,
+ * the 1935 precedent independent-agency design rested on. Every one of them
+ * now renders this sentence through src/components/RemovalRuling.astro, and
+ * the crosswalk states it word for word; research-check.ts holds both.
+ *
+ * What it says is what the Court did, checked against the slip opinion: the
+ * syllabus reads "If anything more is left of Humphrey's, the Court overrules
+ * it." It does not say the ruling reaches every multimember body. The Court
+ * decided the FTC alone. On the same day, in Trump v. Cook (No. 25A312), it
+ * denied the President's application to remove a Federal Reserve governor
+ * while her challenge proceeds, because she had not had the notice and
+ * opportunity to respond the statute's for-cause protection requires. The
+ * government did not contest that protection; the majority, answering a
+ * dissent that called it unconstitutional, described its ruling as
+ * "upholding the constitutionality of the Federal Reserve as currently
+ * structured" (slip opinion, n. 6). The P23 record paraphrased CRS LSB11448
+ * as saying the Court upheld the protection; the first review replaced that
+ * with "without deciding whether the protection is valid", from news
+ * reports; the second review read the slip opinion, which supports the
+ * wording above. */
+export const REMOVAL_RULING = {
+  caseName: 'Trump v. Slaughter',
+  decided: 'June 29, 2026',
+  url: 'https://www.supremecourt.gov/opinions/25pdf/25-332_qn12.pdf',
+  held: "held the FTC's for-cause removal protection unconstitutional and overruled",
+  overruled: "Humphrey's Executor v. United States",
+  after: '(1935), the precedent on which removal protection for multimember independent agencies had rested.'
+} as const;
+
+/* The sentence as plain text, for the crosswalk check and for anything that
+   cannot render the component. */
+export function removalRulingSentence(): string {
+  const r = REMOVAL_RULING;
+  return 'In ' + r.caseName + ', decided ' + r.decided + ', the Supreme Court ' + r.held + ' ' +
+    r.overruled + ' ' + r.after;
+}
 
 export interface Domain {
   title: string;
   short: string;
-  actions: string[];
+  actions: Disposition[];
   laws: string[];
   change: string;
   preserve: string;
@@ -18,7 +120,7 @@ export const DOMAINS: Domain[] = [
   {
     title: 'Coverage and public programs',
     short: 'Coverage',
-    actions: ['Parallel', 'Transfer', 'Amend', 'Sunset', 'Fallback'],
+    actions: ['Preserve', 'Parallel', 'Transfer', 'Amend', 'Sunset', 'Fallback'],
     laws: [
       'Social Security Act Title XVIII (Medicare)',
       'Social Security Act Title XIX (Medicaid)',
@@ -67,7 +169,7 @@ export const DOMAINS: Domain[] = [
   {
     title: 'Employer insurance and labor',
     short: 'Employer plans',
-    actions: ['Parallel', 'Amend', 'Preempt', 'Sunset'],
+    actions: ['Preserve', 'Parallel', 'Amend', 'Preempt', 'Sunset'],
     laws: [
       'ERISA benefit, fiduciary, reporting, remedies, and preemption provisions',
       'COBRA continuation provisions in ERISA, the IRC, and the PHSA',
@@ -108,7 +210,7 @@ export const DOMAINS: Domain[] = [
     ]
   },
   {
-    title: 'Drugs, devices, diagnostics, and production',
+    title: 'Drugs, devices, diagnostics, and public production',
     short: 'Medicines',
     actions: ['Preserve', 'Parallel', 'Transfer', 'Amend'],
     laws: [
@@ -131,7 +233,7 @@ export const DOMAINS: Domain[] = [
     ]
   },
   {
-    title: 'Hospitals, providers, payment, and integrity',
+    title: 'Hospitals, providers, payment, and program integrity',
     short: 'Providers',
     actions: ['Preserve', 'Parallel', 'Transfer', 'Amend'],
     laws: [
@@ -313,59 +415,135 @@ export const DOMAINS: Domain[] = [
   }
 ];
 
-export const ACRONYMS: Record<string, string> = {
-  'AI': 'Artificial Intelligence',
-  'APA': 'Administrative Procedure Act',
-  'ARPA-H': 'Advanced Research Projects Agency for Health',
-  'BARDA': 'Biomedical Advanced Research and Development Authority',
-  'BPCIA': 'Biologics Price Competition and Innovation Act',
-  'CBO': 'Congressional Budget Office',
-  'CFR': 'Code of Federal Regulations',
-  'CHAMPVA': 'Civilian Health and Medical Program of the Department of Veterans Affairs',
-  'CHIP': "Children's Health Insurance Program",
-  'CIRCIA': 'Cyber Incident Reporting for Critical Infrastructure Act',
-  'CISA': 'Cybersecurity and Infrastructure Security Agency',
-  'COBRA': 'Consolidated Omnibus Budget Reconciliation Act',
-  'DVH': 'Dental, Vision, and Hearing',
-  'EMS': 'Emergency Medical Services',
-  'EMTALA': 'Emergency Medical Treatment and Labor Act',
-  'ERISA': 'Employee Retirement Income Security Act',
-  'FDA': 'Food and Drug Administration',
-  'FDCA': 'Federal Food, Drug, and Cosmetic Act',
-  'FDCPA': 'Fair Debt Collection Practices Act',
-  'FEHBA': 'Federal Employees Health Benefits Act',
-  'FISMA': 'Federal Information Security Modernization Act',
-  'FLSA': 'Fair Labor Standards Act',
-  'FOIA': 'Freedom of Information Act',
-  'FCRA': 'Fair Credit Reporting Act',
-  'FTC': 'Federal Trade Commission',
-  'HCBS': 'Home and Community-Based Services',
-  'HIPAA': 'Health Insurance Portability and Accountability Act',
-  'HITECH': 'Health Information Technology for Economic and Clinical Health Act',
-  'HSA': 'Health Savings Account',
-  'IEN': 'Internationally Educated Nurse',
-  'IHS': 'Indian Health Service',
-  'IMG': 'International Medical Graduate',
-  'INA': 'Immigration and Nationality Act',
-  'IRA': 'Inflation Reduction Act',
-  'HPSA': 'Health Professional Shortage Area',
-  'MUA': 'Medically Underserved Area',
-  'MUP': 'Medically Underserved Population',
-  'WHO': 'World Health Organization',
-  'IRC': 'Internal Revenue Code',
-  'JCT': 'Joint Committee on Taxation',
-  'LTC': 'Long-Term Care',
-  'MHPAEA': 'Mental Health Parity and Addiction Equity Act',
-  'NHA': 'National Health Assurance',
-  'NIH': 'National Institutes of Health',
-  'NLRA': 'National Labor Relations Act',
-  'OI': 'Open Issue',
-  'PACE': 'Program of All-Inclusive Care for the Elderly',
-  'PHSA': 'Public Health Service Act',
-  'PREP': 'Public Readiness and Emergency Preparedness Act',
-  'RFRA': 'Religious Freedom Restoration Act',
-  'TRICARE': 'Department of Defense health program for service members, retirees, and families',
-  'USC': 'United States Code',
-  'VA': 'Department of Veterans Affairs',
-  'WARN': 'Worker Adjustment and Retraining Notification Act'
-};
+/* The owner's 2026-10-10 decision: after P23 every domain carried Preserve
+   and Amend, so those two badges told no domain apart. The dispositions
+   every domain shares are read from the data, stated once above the list,
+   and left off each domain's badges, which show what sets it apart. The
+   data keeps every disposition (R95 and R96 read it); only the drawing
+   changes, and if a domain stops sharing one, it comes back as a badge. */
+type DomainActions = { actions: readonly Disposition[] };
+
+export function sharedDispositions(domains: readonly DomainActions[] = DOMAINS): Disposition[] {
+  return DISPOSITIONS.filter((d) => domains.length > 0 && domains.every((x) => x.actions.indexOf(d) >= 0));
+}
+
+export function distinctDispositions(domain: DomainActions, shared: readonly Disposition[] = sharedDispositions()): Disposition[] {
+  return domain.actions.filter((a) => shared.indexOf(a) < 0);
+}
+
+export function sharedDispositionSentence(shared: readonly Disposition[] = sharedDispositions()): string {
+  if (!shared.length) return '';
+  const parts = shared.map((d) => d + ' (' + DISPOSITION_KEY[d] + ')');
+  const list = parts.length === 1 ? parts[0] : parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1];
+  return 'Every domain carries ' + list + ', so ' + (shared.length === 1 ? 'it is' : 'they are') +
+    ' stated here once; each domain shows the dispositions that set it apart.';
+}
+
+/* R247 [§S16]: the type holds the literal above at compile time. This holds
+   whatever reaches DOMAINS at run time, and throws at import, naming the
+   domain and the string, rather than rendering a misspelling as a badge with
+   a class no rule styles. */
+export function undeclaredDispositions(domains: { title: string; actions: readonly string[] }[]): string[] {
+  const known: readonly string[] = DISPOSITIONS;
+  const out: string[] = [];
+  domains.forEach(function (d) {
+    d.actions.forEach(function (a) {
+      if (known.indexOf(a) < 0) out.push(d.title + ': "' + a + '"');
+    });
+  });
+  return out;
+}
+const STRAY_DISPOSITIONS = undeclaredDispositions(DOMAINS);
+if (STRAY_DISPOSITIONS.length) {
+  throw new Error('legislation.ts: undeclared disposition in ' + STRAY_DISPOSITIONS.join(', '));
+}
+
+/* R297 [§S12]: the enabling act's titles, so the numbering is derived.
+ *
+ * legislation.astro rendered these in five <ol start="..."> groups with the
+ * Roman numeral typed into every <li> as well. Each start value was correct
+ * and each numeral was correct - the groups hold 4, 6, 2, 4 and 3 - and
+ * inserting one title into any group would have silently misnumbered every
+ * group after it, twice per item, with no error and no test. The count is a
+ * collection length now, which is also what the hero tile and the prose read.
+ *
+ * ENABLING_ACT_TITLE_COUNT is annotated `: number` deliberately: a bare
+ * expression would take a literal type and a guard comparing it against
+ * anything else would be dead at compile time. */
+export interface ActTitleGroup { heading: string; titles: string[] }
+
+export const ENABLING_ACT_GROUPS: ActTitleGroup[] = [
+  {
+    heading: 'Rights and payment',
+    titles: [
+      'Entitlement, coverage, rights, and remedies',
+      'Financing, trust funds, and appropriations',
+      'Enrollment and default coverage',
+      'Claims, payment, reconciliation, and appeals',
+    ]
+  },
+  {
+    heading: 'Care and national capacity',
+    titles: [
+      'Drugs, devices, diagnostics, and public manufacturing',
+      'Hospitals and public-service charters',
+      'Workforce, education, compensation, scope, and merit health-talent immigration',
+      'LTC, behavioral health, DVH, and EMS',
+      'Records, data rights, cyber, and AI',
+      'Public health and prevention',
+    ]
+  },
+  {
+    heading: 'Innovation and integrity',
+    titles: [
+      'Biomedical innovation',
+      'Fraud, abuse, and anti-extraction rules',
+    ]
+  },
+  {
+    heading: 'Federalism, finance, and protection',
+    titles: [
+      'State, regional, and tribal transition',
+      'Tax and wealth financing',
+      'Transition protection',
+      'Legitimacy and safety',
+    ]
+  },
+  {
+    heading: 'Continuity and repair',
+    titles: [
+      'Anti-impoundment and continuity',
+      'Adaptation, scorekeeping, and repair',
+      'Conforming amendments',
+    ]
+  },
+];
+
+export const ENABLING_ACT_TITLE_COUNT: number =
+  ENABLING_ACT_GROUPS.reduce((n, g) => n + g.titles.length, 0);
+
+/* The Roman numeral each title carries. Written out rather than computed by a
+   general algorithm, because the act has nineteen titles and a subtraction
+   rule nobody needs is a second thing to get wrong. Indexed from 1; the
+   length is asserted against the group total in the tests. */
+const ROMAN = [
+  '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
+  'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX'
+];
+
+export interface NumberedActTitle { n: number; roman: string; title: string }
+
+/* Each group with its titles numbered from where the preceding groups end. */
+export function numberedActGroups(): Array<{ heading: string; start: number; titles: NumberedActTitle[] }> {
+  let n = 0;
+  return ENABLING_ACT_GROUPS.map((g) => {
+    const start = n + 1;
+    const titles = g.titles.map((title) => {
+      n += 1;
+      if (!ROMAN[n]) throw new Error('no Roman numeral for act title ' + n);
+      return { n: n, roman: ROMAN[n], title: title };
+    });
+    return { heading: g.heading, start: start, titles: titles };
+  });
+}
+

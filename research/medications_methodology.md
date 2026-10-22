@@ -1,5 +1,7 @@
 # Medications and Public Medicines Corporation methodology
 
+Compiled 2026-07-19. Last revised 2026-10-21.
+
 Evidence and calculation notes for the Medications chapter of the National
 Health Assurance dashboard. Compiled 2026-07-19. Dollar figures are shown in
 real 2024 dollars unless otherwise stated.
@@ -23,28 +25,67 @@ same total, not an additional saving.
 
 ### Retail prescription drugs
 
-- **Value:** $467.0 billion in 2024, up 7.9% from 2023.
+- **Value:** $432.9 billion in 2023, as CMS's 2024 release states it (the
+  2023 release gave $449.7 billion; recalibrated 2026-10-19, owner).
 - **Scope:** Medicines dispensed through retail and mail-order pharmacies.
-- **Source:** CMS, [National Health Expenditure Fact
-  Sheet](https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/nhe-fact-sheet)
-  and [2024 NHE
-  Highlights](https://www.cms.gov/files/document/highlights.pdf).
+- **Source:** CMS, National Health Expenditure Accounts, 2024 release,
+  Table 2 ([historical NHE data](https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/historical)).
+  This is the line `params.ts` calibrates on, as `BASE2023.rxRetail`, and the
+  one the dashboard's retail figures are derived from. In real 2024 dollars it
+  is $444.2 billion. The same release gives $467.0 billion for 2024, 7.9%
+  above it, so the two years now come from one account.
 - **Confidence:** High. This is the official CMS National Health Expenditure
-  account.
+  account, and the site publishes the same calibration year on every page.
+
+#### Reconciliation note: the 2024 retail figure this file used to carry
+
+This entry previously read *"$467.0 billion in 2024, up 7.9% from 2023."* That
+pair implies a 2023 retail base of $432.8 billion, which is $16.9 billion below
+the $449.7 billion CMS line the model uses. Both figures cited CMS National
+Health Expenditure data, so they cannot both describe the same account. Holding
+the $449.7 billion 2023 line fixed, the stated 7.9% growth implies a 2024 retail
+total near $485 billion, not $467.0 billion; holding $467.0 billion fixed, the
+implied growth is 3.85%, not 7.9%.
+
+The 2023 line is kept and the 2024 figure is dropped, for two reasons.
+
+1. The dashboard calibrates on the last finalized CMS year and states results
+   in real 2024 dollars. A CMS 2024 actual and a 2023-calibrated figure
+   deflated for display are different quantities, and the chapter was placing
+   them side by side as though they were comparable.
+2. The 2024 NHE table in `research/03_drugs_pharmacy_diagnostics_devices.md`,
+   which is where the $467.0 billion came from, records that the CMS source PDF
+   returned HTTP 403 on direct fetch and that its figures are drawn from
+   search-result excerpts rather than the published table. It flags itself as a
+   follow-up data pull. The 2023 table in
+   `research/01_macro_financing_population_offsets.md` was read whole.
+
+**Settled 2026-10-19** by the direct pull this note asked for: CMS's 2024
+release, Table 2, gives retail prescription drugs at $432.9 billion for 2023
+and $467.0 billion for 2024 (+7.9%). The two were one account all along; the
+later release revised 2023. On the owner's recalibration the model's 2023
+line is $432.9 billion; it still grows 2023 rather than carrying 2024's.
 
 ### Retail plus clinician-administered drugs
 
 - **Value:** Approximately $680–730 billion in 2024.
-- **Scope:** The $467.0 billion retail line plus an estimated $212–264 billion
-  of infused, injected, and other medicines recorded inside hospital and
+- **Scope:** A published retail line plus an estimated $212–264 billion of
+  infused, injected, and other medicines recorded inside hospital and
   physician-service categories.
+- **Note (code review):** this range is quoted from RB-03-RX-002 as
+  published. It is **not** re-derived from the retail line the model owns, and
+  it should not be read as though it were: RB-03-RX-002 built it on a 2024 retail
+  figure of $467.0B, which the reconciliation note above sets aside. The
+  model’s own decomposition is separate and exact: $444.2B retail plus
+  $256.5B non-retail is the $700.7B base, which sits inside this range without
+  reproducing its endpoints.
 - **Source:** CMS NHE for retail spending; MedPAC, [Prescription Drugs section
   of the July 2024 Data
   Book](https://www.medpac.gov/wp-content/uploads/2024/07/July2024_MedPAC_DataBook_Sec10_SEC.pdf),
   for the accounting distinction.
 - **Confidence:** Medium. CMS does not publish one unified national total for
   all retail and clinician-administered medicines. The dashboard's fiscal model
-  uses a $717.9 billion 2024-scale base, which lies inside this range.
+  uses a $700.7 billion 2024-scale base, which lies inside this range.
 
 ### International price comparison
 
@@ -193,7 +234,7 @@ The chapter reports an illustrative annual purchasing-savings attribution:
 
 `2024-scale all-drug spending × PMC portfolio spend share × net acquisition-cost reduction`
 
-The fixed all-drug base is $717.9 billion, matching the healthcare fiscal
+The fixed all-drug base is $700.7 billion, matching the healthcare fiscal
 model. Two user-adjustable assumptions define the attribution:
 
 - **PMC portfolio spend share:** 5–25%, with a 15% planning midpoint.
@@ -201,11 +242,11 @@ model. Two user-adjustable assumptions define the attribution:
   midpoint. This is the same sourced range used by the fiscal model's national
   drug-price parameter.
 
-The midpoint is about $43 billion per year:
+The midpoint is about $42 billion per year:
 
-`$717.9B × 15% × 40% = $43.1B`
+`$700.7B × 15% × 40% = $42.0B`
 
-The displayed stress range is approximately $9–99 billion per year. It pairs
+The displayed stress range is approximately $9–96 billion per year. It pairs
 the low values and high values, so it is a boundary rather than a probability
 interval.
 

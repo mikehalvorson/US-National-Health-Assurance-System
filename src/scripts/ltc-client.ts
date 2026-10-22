@@ -1,9 +1,11 @@
 /* Long-Term Care tab client: renders the OECD spending chart, the
    country-system cards, and the workforce-gap figure. Hand-rolled SVG, no
    dependencies. Runs on astro:page-load; idempotent via dataset.wired. */
-import { el, div, showTip, hideTip, tipRow, niceTicks, barPath, legend } from '../lib/chart-util';
+import {
+  el, div, showTip, hideTip, tipRow, niceTicks, barPath, legend, bindTipFocus, type TipPoint
+} from '../lib/chart-util';
 import { LTC_GDP_2021, COUNTRY_SYSTEMS, WORKFORCE_ASSESS, US_FAILURE_STATS,
-  PLAN_PILLARS, COST_IN_FRAMEWORK, type GdpBar } from '../lib/ltc';
+  PLAN_PILLARS, COST_IN_FRAMEWORK, KIND_STYLE, type GdpKind } from '../lib/ltc';
 
 /* ---- Cost, read from the fiscal model so the figure cannot drift ---- */
 function renderCost(): void {
@@ -60,10 +62,12 @@ function renderPillars(): void {
   });
 }
 
-function kindColor(k: GdpBar['kind']): string {
-  return k === 'us' ? 'var(--series-5)'
-    : k === 'insurance' ? 'var(--series-1)'
-    : 'var(--series-3)';
+/* R288 [§S9d]: was a ternary whose last branch returned the tax-funded colour
+   for every value it did not name, so a new or misspelled kind rendered as
+   tax-funded and said nothing. KIND_STYLE is a Record over the union, so a
+   kind with no styling is a type error instead. */
+function kindColor(k: GdpKind): string {
+  return KIND_STYLE[k].color;
 }
 
 /* ---- Long-term care spending, % of GDP ---- */
@@ -73,13 +77,18 @@ function renderGdpChart(): void {
   host.innerHTML = '';
 
   const rows = LTC_GDP_2021;
-  const W = 860, rowH = 40, M = { l: 200, r: 54, t: 8, b: 30 };
+  /* R285 [§S9d]: room on the right for the per-capita column. */
+  const W = 860, rowH = 40, M = { l: 200, r: 168, t: 8, b: 30 };
   const H = M.t + rows.length * rowH + M.b;
   const hi = Math.max.apply(null, rows.map(function (r) { return r.pct; })) * 1.12;
   const x = function (v: number): number { return M.l + (W - M.l - M.r) * (v / hi); };
 
+  /* R285 [§S9d]: role="group", not role="img". role="img" prunes the whole
+     subtree from the accessibility tree, and the eight row groups below carry
+     tabindex, so every one of them was a keyboard tab stop that announced
+     nothing at all. units-client.ts already had this right. */
   const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg',
-    role: 'img', 'aria-label': 'Long-term care spending as a share of GDP, 2021' }, host);
+    role: 'group', 'aria-label': 'Long-term care spending as a share of GDP, 2021' }, host);
 
   niceTicks(0, hi, 5).forEach(function (tv) {
     el('line', { x1: x(tv), x2: x(tv), y1: M.t, y2: H - M.b, class: 'gridline' }, svg);
@@ -92,33 +101,55 @@ function renderGdpChart(): void {
     const color = kindColor(r.kind);
     const lab = el('text', { x: M.l - 10, y: cy + 4, class: 'row-label', 'text-anchor': 'end' }, svg);
     lab.textContent = r.country;
-    const g = el('g', { class: 'bench-row', tabindex: 0 }, svg);
+    const perCapita = '$' + r.perCapita.toLocaleString('en-US');
+    /* R285 [§S9d]: the accessible name carries BOTH readings, because the
+       per-capita one used to exist nowhere but the tooltip while the page's
+       own note told the reader to look for it there. */
+    const g = el('g', {
+      class: 'bench-row', tabindex: 0, role: 'group',
+      'aria-label': r.country + ': ' + r.pct.toFixed(1) + '% of GDP, ' +
+        perCapita + ' per person. ' + r.note
+    }, svg);
     el('path', {
       d: barPath(x(0), cy - 9, Math.max(2, x(r.pct) - x(0)), 18, 5, 'right'),
       fill: color, 'fill-opacity': r.kind === 'us' ? 0.9 : 0.6
     }, g);
     const val = el('text', { x: x(r.pct) + 7, y: cy + 4, class: 'axis-text', 'text-anchor': 'start' }, svg);
     val.textContent = r.pct.toFixed(1) + '%';
-    function tipIt(evt: { clientX: number; clientY: number }): void {
+    /* R285 [§S9d]: and the series is drawn, not only spoken. Per-person
+       spending for seven of the eight rows existed only inside a tooltip
+       built on chart-util's module-level singleton, so a reader with no
+       pointer had no way to reach a series the page advertises. */
+    const pc = el('text', { x: W - 12, y: cy + 4, class: 'axis-text ltc-percapita',
+      'text-anchor': 'end' }, svg);
+    pc.textContent = perCapita;
+    function tipIt(at: TipPoint): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = r.country;
       tipRow(box, color, 'Share of GDP', r.pct.toFixed(1) + '%', true);
-      tipRow(box, '', 'Per person', '$' + r.perCapita.toLocaleString('en-US') + ' (2021, PPP)', true);
+      tipRow(box, '', 'Per person', perCapita + ' (2021, PPP)', true);
       tipRow(box, '', '', r.note, false);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, at);
     }
     g.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     g.addEventListener('pointerleave', hideTip);
+    /* Focus and blur alongside the pointer pair, the way units-client.ts does
+       it. A tab stop that shows nothing is worse than no tab stop. */
+    bindTipFocus(g, tipIt, hideTip, 'centre');
   });
 
+  /* R288 [§S9d]: derived from the kinds actually present, in the order the
+     bars appear, rather than three entries hand-listed beside a data field
+     that can carry more. Adding a country with a new kind now adds its
+     legend entry; it used to add an unexplained colour. */
   const leg = document.getElementById('ltc-gdp-legend');
   if (leg) {
     leg.innerHTML = '';
-    legend(leg, [
-      { label: 'Social insurance', color: 'var(--series-1)' },
-      { label: 'Tax-funded', color: 'var(--series-3)' },
-      { label: 'United States', color: 'var(--series-5)' }
-    ]);
+    const seen: GdpKind[] = [];
+    rows.forEach(function (r) { if (seen.indexOf(r.kind) < 0) seen.push(r.kind); });
+    legend(leg, seen.map(function (k) {
+      return { label: KIND_STYLE[k].label, color: KIND_STYLE[k].color };
+    }));
   }
 }
 
@@ -160,10 +191,10 @@ function renderWorkforce(): void {
 
   const W = 860, M = { l: 240, r: 60, t: 8, b: 30 }, rowH = 46;
   const rows = [
-    { label: 'Aides employed today (2024)', v: WORKFORCE_ASSESS.directCare2024, color: 'var(--series-1)' },
-    { label: 'Current system needs by 2034', v: WORKFORCE_ASSESS.projected2034, color: 'var(--series-3)' },
-    { label: 'Universal benefit at maturity', v: WORKFORCE_ASSESS.matureFramework, color: 'var(--series-5)' }
-  ];
+    { label: 'Aides employed today (2024)', f: WORKFORCE_ASSESS.directCare2024, color: 'var(--series-1)' },
+    { label: 'Current system needs by 2034', f: WORKFORCE_ASSESS.projected2034, color: 'var(--series-3)' },
+    { label: 'Universal benefit at maturity', f: WORKFORCE_ASSESS.matureFramework, color: 'var(--series-5)' }
+  ].map(function (r) { return { label: r.label, v: r.f.value, color: r.color, f: r.f }; });
   const H = M.t + rows.length * rowH + M.b;
   const hi = Math.max.apply(null, rows.map(function (r) { return r.v; })) * 1.15;
   const x = function (v: number): number { return M.l + (W - M.l - M.r) * (v / hi); };
@@ -184,6 +215,32 @@ function renderWorkforce(): void {
     const val = el('text', { x: x(r.v) + 7, y: cy + 4, class: 'axis-text', 'text-anchor': 'start' }, svg);
     val.textContent = r.v.toFixed(1) + 'M';
   });
+
+  /* R284 [§S9d]: each bar's own grade and the reason for it. The largest bar
+     is a planning estimate and was published beside two measurements under a
+     single object-level `medium`; the methodology has graded it `low` all
+     along. This is the chapter's stat tiles applied to its chart. */
+  const grades = document.getElementById('ltc-workforce-grades');
+  if (grades) {
+    grades.innerHTML = '';
+    rows.forEach(function (r) {
+      const item = div('ltc-workforce-grade', grades);
+      const key = document.createElement('span');
+      key.className = 'tip-key';
+      key.style.background = r.color;
+      item.appendChild(key);
+      const name = document.createElement('b');
+      name.textContent = r.label + ': ' + r.v.toFixed(1) + 'M';
+      item.appendChild(name);
+      const c = document.createElement('span');
+      c.className = 'conf ' + r.f.confidence;
+      c.textContent = r.f.confidence;
+      item.appendChild(c);
+      const why = document.createElement('small');
+      why.textContent = r.f.basis + '.';
+      item.appendChild(why);
+    });
+  }
 }
 
 function initLtc(): void {

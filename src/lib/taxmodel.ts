@@ -18,7 +18,17 @@
  * compute, distribution, solveScenario, and their private helpers (growth,
  * classGrowth, ramp), plus the seven NHA.SELFTESTS tax invariants.
  * ========================================================================= */
-import { GROUPS, ECON, INSTRUMENTS, PROGRAMS, SCENARIOS } from './taxparams';
+import {
+  DATASET_VINTAGES, GROUPS, ECON, INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS,
+  SCORE_PATHS, ratePoints
+} from './taxparams';
+import { SZ_LETTER, SZ_WEALTH_PATH, pathSum } from './score-rebase';
+import { hasKey, lookupOrThrow } from './registry-lookup';
+/* R45 [§S5]: the seam test runs the healthcare model, so the engine reaches
+   for it here. Import only - no module-level call, so nothing runs a Monte
+   Carlo at import time. */
+import { runOverviewMc } from './overview';
+import { DEFLATOR_2023_TO_2024 } from './params';
 import type {
   TaxInstrument,
   TaxProgram,
@@ -40,24 +50,27 @@ export function defaultSettings(): TaxSettings {
   const s: TaxSettings = { instruments: {} };
   INSTRUMENTS.forEach(function (ins) {
     s.instruments[ins.id] = {
-      value: ins.kind === 'toggle' ? (ins.default ? 1 : 0) : (ins.default as number),
+      value: ins.kind === 'toggle' ? (ins.default ? 1 : 0) : scaleDefault(ins),
       phaseStart: ins.phaseStart,
       phaseYears: ins.phaseYears,
-      enabled: ins.kind === 'toggle' ? !!ins.default : (ins.default as number) > 0,
+      enabled: ins.kind === 'toggle' ? !!ins.default : scaleDefault(ins) > 0,
     };
   });
   return s;
 }
 
-function growth(year: number): number {
-  return Math.pow(1 + ECON.realGrowth, year - ECON.baseYear);
-}
 /* Per-class base growth: broad income/GDP 1.9%, wages 1.2%, top capital
  * 4.0% real (see ECON.growthRates). Wealth-side instruments compound
- * faster than the economy because their base does. */
-function classGrowth(cls: string | undefined, year: number): number {
-  let r = ECON.growthRates && ECON.growthRates[cls || 'gdp'];
-  if (r == null) r = ECON.realGrowth;
+ * faster than the economy because their base does.
+ *
+ * R46 [§S0]: the `?? ECON.realGrowth` fallback is gone, and so is realGrowth
+ * itself. It was labelled "legacy... kept for compatibility" and its only live
+ * effect was to let an unknown growth class resolve silently to the GDP rate.
+ * An unknown class is a typo in a controlled field, so it throws. */
+export function classGrowth(cls: string | undefined, year: number): number {
+  const key = cls || 'gdp';
+  const r = ECON.growthRates && ECON.growthRates[key];
+  if (r == null) throw new Error('Unknown growth class: ' + key);
   return Math.pow(1 + r, year - ECON.baseYear);
 }
 function ramp(year: number, start: number | undefined, years: number | undefined): number {
@@ -73,15 +86,114 @@ export function instrumentRevenue(ins: TaxInstrument, st: InstrumentSetting, yea
          classGrowth(ins.growth, year);
 }
 
+/* ---- Instrument overlap at the top of the distribution -----------------
+ * R144 + R42 [§S5]. The model of the overlap - which instruments, and how
+ * much - is declared as OVERLAP in taxparams.ts, with the reasoning and the
+ * grade. This is the part that applies it.
+ *
+ * `topShare` is the share of an instrument's incidence landing on the top
+ * 0.1%. The family is everything above the declared threshold; the family
+ * member raising the most in that year is the anchor and keeps its revenue
+ * whole; the rest are cut by `rate` on the part of their revenue that lands
+ * on the shared base.
+ *
+ * The result is a per-instrument FACTOR rather than a lump deduction, so the
+ * stacked revenue chart, `totalRev` and the distributional table all move
+ * together. A lump would have left the stack overshooting the line it is
+ * drawn against, and `distribution` allocating tax the package never raised.
+ * ---------------------------------------------------------------------- */
+export function topShare(ins: TaxInstrument): number {
+  return OVERLAP.top01Bands.reduce(function (a, k) {
+    return a + (ins.incidence[k] || 0);
+  }, 0);
+}
+
+export function overlapFamily(): TaxInstrument[] {
+  return INSTRUMENTS.filter(function (ins) {
+    return topShare(ins) > OVERLAP.top01Threshold;
+  });
+}
+
+/* Every instrument's revenue multiplier for one year, given the whole
+   package. 1 for anything outside the family and for the anchor. */
+export function overlapFactors(
+  settings: TaxSettings,
+  year: number,
+  rate: number = OVERLAP.rate.mode
+): Record<string, number> {
+  const factors: Record<string, number> = {};
+  INSTRUMENTS.forEach(function (ins) { factors[ins.id] = 1; });
+
+  const active = overlapFamily()
+    .map(function (ins) {
+      return { ins: ins, rev: instrumentRevenue(ins, settings.instruments[ins.id], year) };
+    })
+    .filter(function (x) { return x.rev > 0; });
+  if (active.length < 2) return factors;
+
+  let anchor = active[0];
+  active.forEach(function (x) { if (x.rev > anchor.rev) anchor = x; });
+  active.forEach(function (x) {
+    if (x.ins.id === anchor.ins.id) return;
+    factors[x.ins.id] = 1 - rate * topShare(x.ins);
+  });
+  return factors;
+}
+
+/* Revenue for one instrument in one year, net of its share of the overlap. */
+export function netInstrumentRevenue(
+  ins: TaxInstrument,
+  st: InstrumentSetting,
+  year: number,
+  factors: Record<string, number>
+): number {
+  return instrumentRevenue(ins, st, year) * (factors[ins.id] ?? 1);
+}
+
 /* Full computation over the horizon */
+/* Owner, 2026-10-19: instruments that are alternatives share an
+   exclusiveGroup (taxparams.ts). The groups with more than one member on in
+   these settings, each as its sorted member ids. */
+export function exclusiveConflicts(settings: TaxSettings): string[] {
+  const on: Record<string, string[]> = {};
+  INSTRUMENTS.forEach(function (ins) {
+    if (!ins.exclusiveGroup) return;
+    const st = settings.instruments[ins.id];
+    if (st && st.enabled && st.value > 0) (on[ins.exclusiveGroup] = on[ins.exclusiveGroup] || []).push(ins.id);
+  });
+  return Object.keys(on).filter(function (g) { return (on[g] || []).length > 1; })
+    .map(function (g) { return g + ': ' + (on[g] || []).slice().sort().join(' and '); });
+}
+
 export function compute(settings: TaxSettings, programs: TaxProgram[]): ComputeResult {
+  /* a state with two alternatives on is a broken package or a client that
+     failed to switch one off, not a value to sum (R46's precedent here) */
+  const conflicts = exclusiveConflicts(settings);
+  if (conflicts.length) {
+    throw new Error('Alternatives cannot both be on (' + conflicts.join('; ') + ')');
+  }
   const byInstrument: Record<string, number[]> = {}; // id -> [per year]
   const totalRev = YEARS.map(function () { return 0; });
+  /* R42 [§S5]: the deduction is applied here, before totalRev accumulates,
+     and reported as its own series so the page can state what it removed. */
+  const factorsByYear = YEARS.map(function (yr) { return overlapFactors(settings, yr); });
+  const overlapDeduction = YEARS.map(function () { return 0; });
+  /* R146 [§S18]: the part of the total resting on a superseded baseline,
+     and the part of that this model computed itself (review of the content
+     run: the surtax was being counted as a published score) */
+  const supersededRev = YEARS.map(function () { return 0; });
+  const supersededModelRev = YEARS.map(function () { return 0; });
   INSTRUMENTS.forEach(function (ins) {
     const st = settings.instruments[ins.id];
     byInstrument[ins.id] = YEARS.map(function (yr, i) {
-      const r = instrumentRevenue(ins, st, yr);
+      const gross = instrumentRevenue(ins, st, yr);
+      const r = gross * (factorsByYear[i][ins.id] ?? 1);
+      overlapDeduction[i] += gross - r;
       totalRev[i] += r;
+      if (ins.scoredAgainst === 'pre-obbba') {
+        supersededRev[i] += r;
+        if (ins.estimatedBy === 'model') supersededModelRev[i] += r;
+      }
       return r;
     });
   });
@@ -92,12 +204,24 @@ export function compute(settings: TaxSettings, programs: TaxProgram[]): ComputeR
     return n;
   });
 
+  /* R48 [§S5]: `Infinity` when need is 0 and revenue positive. Not latent:
+     the fallback need path is 0 in 2027 and 2028 while several instruments
+     have already begun phasing in, so the base case produces it today, and
+     disabling every funding program in the UI produces it for all 16 years.
+     `Infinity` reaching a percentage formatter renders "Infinity%"; reaching
+     an axis scale breaks it silently.
+     `null` is the sentinel, so a consumer has to decide what to show rather
+     than formatting a value that has no meaning. The ratio is undefined when
+     there is nothing to cover - that is not the same as covering none of it,
+     which is why 0 would be the wrong answer too. */
   const coverage = YEARS.map(function (_, i) {
-    return need[i] > 0 ? totalRev[i] / need[i] : (totalRev[i] > 0 ? Infinity : 1);
+    if (need[i] > 0) return totalRev[i] / need[i];
+    return totalRev[i] > 0 ? null : 1;
   });
 
   return { years: YEARS, byInstrument: byInstrument, totalRev: totalRev,
-           need: need, coverage: coverage };
+           need: need, coverage: coverage, overlapDeduction: overlapDeduction,
+           supersededRev: supersededRev, supersededModelRev: supersededModelRev };
 }
 
 /* ---- Distribution at one year ----
@@ -105,6 +229,12 @@ export function compute(settings: TaxSettings, programs: TaxProgram[]): ComputeR
  * year ($B, 2024$), from the healthcare model; 0 if not linked.
  * wageGainB: wages passed through from employers' net premium savings
  * ($B, 2024$), allocated to groups by wage share; 0 if not linked.
+ * R125 [§S11b]: this must be NET of any tax feedback the funding side has
+ * already booked as revenue. The health model subtracts
+ * `wageGain * wageTaxFeedbackRate` from `newRevenue`, so passing the gross
+ * here credits households dollars the treasury is simultaneously collecting -
+ * the same double count R42 removed on the revenue side. Pass
+ * `detail.wageGainNet`.
  * Returns rows per group + totals.
  */
 export function distribution(
@@ -114,6 +244,9 @@ export function distribution(
   wageGainB?: number
 ): DistributionRow[] {
   const rows: DistributionRow[] = [];
+  /* R42 [§S5]: the same netting compute() applies. Allocating gross revenue
+     here would show the top bands paying tax the package does not raise. */
+  const factors = overlapFactors(settings, year);
   GROUPS.forEach(function (grp) {
     /* incomes grow with each band's own base class: the top bands'
        incomes compound at the capital rate, everyone else at GDP */
@@ -121,7 +254,7 @@ export function distribution(
     let taxB = 0;
     INSTRUMENTS.forEach(function (ins) {
       const st = settings.instruments[ins.id];
-      const rev = instrumentRevenue(ins, st, year);
+      const rev = netInstrumentRevenue(ins, st, year, factors);
       taxB += rev * (ins.incidence[grp.id] || 0);
     });
     const reliefB = (healthReliefB || 0) * grp.healthRelief;
@@ -152,7 +285,9 @@ export function distribution(
  * revenue reaches 102% of the mature-year (2041) need and 100% of the
  * cumulative 2027-2042 need, whichever requires more. Returns the
  * settings plus a _balanced report {id, value, clamped}.               */
-export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSettings {
+/* A package's settings on top of the defaults, before any balancing: the
+   one reading of a package, for the solver and the exclusivity row. */
+export function scenarioSettings(scn: TaxScenario): TaxSettings {
   const s = defaultSettings();
   Object.keys(scn.settings || {}).forEach(function (id) {
     const o = scn.settings[id], st = s.instruments[id];
@@ -161,7 +296,53 @@ export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSett
     if (o.enabled != null) { st.enabled = o.enabled; if (o.enabled && st.value <= 0) st.value = 1; }
     if (o.phaseStart != null) st.phaseStart = o.phaseStart;
   });
+  return s;
+}
+
+export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSettings {
+  const s = scenarioSettings(scn);
   if (!scn.balancer) return s;
+
+  /* R44 [§S5]: the solver reads `ins.scaleMax`, which exists only on
+     kind:'scale' instruments. On a toggle balancer `v > undefined` is false
+     and `Math.min(v, undefined)` is NaN, so revenue became NaN silently -
+     every downstream chart and tile rendering "NaN" with no error anywhere.
+     Ten of the sixteen instruments have no scaleMax.
+
+     R42 adds a second requirement the solver equally depends on and equally
+     never stated: it solves LINEARLY, taking revenue at balancer 0 and 1 and
+     interpolating. The overlap deduction is a function of which family member
+     is largest, so a balancer inside the overlap family makes revenue
+     non-linear in its own setting and the interpolation is simply wrong.
+     `wealth` is scale-kind with a scaleMax and sits in the family, so this is
+     reachable by naming one plausible instrument.
+
+     Both throw rather than degrade, following R46's precedent in this file:
+     a balancer that cannot be solved is a broken scenario definition, not a
+     value to guess at. */
+  const balIns = INSTRUMENTS.filter(function (i) { return i.id === scn.balancer; })[0];
+  if (!balIns) {
+    throw new Error('Scenario ' + scn.id + ' names unknown balancer ' + scn.balancer);
+  }
+  /* R127 [§S6a]: the ceiling is read out into a const at the guard, so the
+     guard is what narrows it and the two cannot come apart. It used to be read
+     twice at the bottom of the function through `as number`, which is an
+     assertion that the guard above ran - made in a place that cannot see it. */
+  const scaleMax = balIns.scaleMax;
+  if (balIns.kind !== 'scale' || typeof scaleMax !== 'number') {
+    throw new Error(
+      'Scenario ' + scn.id + ' balancer ' + balIns.id + ' is kind "' + balIns.kind +
+      '" with scaleMax ' + String(scaleMax) +
+      '; the linear solver needs a scale instrument with a numeric scaleMax'
+    );
+  }
+  if (overlapFamily().some(function (i) { return i.id === balIns.id; })) {
+    throw new Error(
+      'Scenario ' + scn.id + ' balancer ' + balIns.id + ' is in the overlap family ' +
+      '(top-0.1% incidence ' + topShare(balIns).toFixed(2) + '); revenue is not ' +
+      'linear in its setting, so the linear solve would be wrong'
+    );
+  }
 
   const bal = s.instruments[scn.balancer];
   const baseVal = bal.value;
@@ -180,15 +361,136 @@ export function solveScenario(scn: TaxScenario, programs: TaxProgram[]): TaxSett
   const needCum = (sum(c0.need) - sum(c0.totalRev)) / (uCum || 1);
   const v = Math.max(need41, needCum, baseVal, 0);
 
-  const ins = INSTRUMENTS.filter(function (i) { return i.id === scn.balancer; })[0];
-  const clamped = v > (ins.scaleMax as number);
-  bal.value = Math.min(v, ins.scaleMax as number);
+  const clamped = v > scaleMax;
+  bal.value = Math.min(v, scaleMax);
   s._balanced = { id: scn.balancer, value: bal.value, clamped: clamped };
   return s;
 }
 
+/* ---- R127 [§S6a]: the narrowing these used to assert past ---------------
+ * X4's defect was `Math.min(v, ins.scaleMax as number)` on an optional field:
+ * the assertion suppressed exactly the compile error that would have caught a
+ * toggle balancer, and the port carried it across a migration to a typed
+ * language. The fix the row asks for is not another runtime guard - it is to
+ * let the compiler do it, which means the value has to be narrowed somewhere a
+ * type checker can see.
+ * ------------------------------------------------------------------------ */
+export function scaleDefault(ins: TaxInstrument): number {
+  if (typeof ins.default !== 'number') {
+    throw new Error('Instrument ' + ins.id + ' is kind "' + ins.kind +
+      '" so its default must be a number, not ' + typeof ins.default);
+  }
+  return ins.default;
+}
+
+/* Every id named as a balancer by some scenario. `balancer` is optional, so
+   filtering then asserting `as string` was the same shape again: the filter
+   proves it to a reader and to nobody else. */
+export function balancerIds(): Set<string> {
+  const out = new Set<string>();
+  SCENARIOS.forEach(function (sc) { if (sc.balancer) out.add(sc.balancer); });
+  return out;
+}
+
 /* ---- Self-tests (exported for the shared self-test harness) ---- */
+/* R145 [§S11b]: the rule the section's "Done when" states, as a check.
+ *
+ * "No instrument graded low with no external source is enabled by default."
+ * `rents` was the one violator and is off now, but the rule is what has to
+ * survive, not the fix: the next instrument added at `low` would otherwise
+ * arrive enabled and nothing would say so.
+ *
+ * Graded `low` is the right test rather than `isSourcedGrade`. Three
+ * instruments sit at `low-medium` - wealth, estate, enforce - and all three
+ * cite a real external score (Saez-Zucman, JCT's score of S.994, CBO and
+ * Treasury enforcement estimates). `low` is the grade this list uses for a
+ * number the plan supplies about itself, and `rents` is the only one.
+ *
+ * Both sides can fail: flipping `rents` back on fails it, and so does
+ * downgrading a currently-enabled instrument to `low` without turning it off.
+ */
+export function defaultOnUnsourcedInstruments(): string[] {
+  const out: string[] = [];
+  INSTRUMENTS.forEach(function (ins) {
+    if (ins.confidence !== 'low') return;
+    const onByDefault = ins.kind === 'toggle'
+      ? ins.default === true
+      : Number(ins.default) > 0;
+    if (onByDefault) out.push(ins.id + ' is graded low and is on by default');
+    SCENARIOS.forEach(function (scn) {
+      if (!scn.balancer) return;   /* the custom package is the reader's own */
+      const st = scn.settings[ins.id];
+      if (!st) return;
+      const on = st.enabled === true || (st.enabled !== false && Number(st.value) > 0);
+      if (on) out.push(ins.id + ' is graded low and is enabled in ' + scn.id);
+    });
+  });
+  return out;
+}
+
+/* Owner, 2026-10-12: ECON.wagesB (2024 Medicare-taxable earnings, every
+   dollar of earnings with no cap) and ECON.aboveCapShare (the share of
+   covered earnings above the Social Security cap) were read by nothing. They
+   bound what a payroll score can raise: a tax at rate r on a base cannot
+   yield more than r times the base before any behavioural or offset effect,
+   so each payroll instrument's default score must sit at or under that
+   ceiling. The ceiling is loose on purpose (the Medicare base is wider than
+   the covered base, and the donut taxes only earnings above $250,000, a
+   subset of those above the cap); it catches a score typed ten times too
+   large, not one a few percent off. Two instruments carry `payrollBase`.
+   Review 3 of P24 found the years differed, a tenth of CBO's 2025-2034
+   total against 2024 earnings; since P25 re-based every score to the 2024
+   economy, the score and the base are the same year. */
+export function payrollYieldFaults(
+  instruments: TaxInstrument[] = INSTRUMENTS,
+  econ: { wagesB: number; aboveCapShare: number } = ECON
+): { checked: number; faults: string[] } {
+  const faults: string[] = [];
+  let checked = 0;
+  for (const ins of instruments) {
+    if (!ins.payrollBase) continue;
+    checked += 1;
+    const base = econ.wagesB * (ins.payrollBase.earnings === 'above-cap' ? econ.aboveCapShare : 1);
+    const ceiling = ins.payrollBase.rate * base;
+    if (!(ins.rev1x > 0) || ins.rev1x > ceiling) {
+      faults.push(ins.id + ' scores $' + ins.rev1x + 'B a year at its default rate; ' +
+        String(ratePoints(ins.payrollBase.rate)) + '% of a $' + Math.round(base) + 'B base is at most $' +
+        Math.round(ceiling) + 'B');
+    }
+  }
+  return { checked, faults };
+}
+
 export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
+  {
+    /* Owner, 2026-10-19: the inheritance tax replaces the estate and gift
+       taxes that estate restoration strengthens, so the two are alternatives
+       (WEALTH_TRANSFER_GROUP). Every goal package had both on. This holds the
+       default settings and every package, as the solver applies it, to at
+       most one member of each group, and holds the groups to having members
+       (so an emptied group is not a pass). */
+    name: 'Tax: no package or default turns on two instruments that are alternatives to each other',
+    run: function () {
+      const groups: Record<string, number> = {};
+      INSTRUMENTS.forEach(function (i) { if (i.exclusiveGroup) groups[i.exclusiveGroup] = (groups[i.exclusiveGroup] || 0) + 1; });
+      if (!Object.keys(groups).length || Object.values(groups).some(function (n) { return n < 2; })) return false;
+      if (exclusiveConflicts(defaultSettings()).length) return false;
+      return SCENARIOS.every(function (scn) { return exclusiveConflicts(scenarioSettings(scn)).length === 0; });
+    }
+  },
+  {
+    name: "Tax: no payroll score raises more than its rate on the earnings it taxes",
+    run: function () {
+      const r = payrollYieldFaults();
+      return r.checked > 0 && r.faults.length === 0;
+    }
+  },
+
+  {
+    name: "Tax: no instrument graded low is enabled by default or in a goal scenario",
+    run: function () { return defaultOnUnsourcedInstruments().length === 0; }
+  },
+
   {
     name: "Tax: every instrument's incidence shares sum to 1",
     run: function () {
@@ -214,15 +516,228 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
   },
 
   {
-    name: "Tax: distribution burden reconciles with total revenue",
+    /* R43 [§S0]: REPLACED. The old row here was
+       "Tax: distribution burden reconciles with total revenue", which compared
+       the distributional total against compute()'s totalRev. Both are sums over
+       the SAME instrumentRevenue calls, so the identity collapses to
+       `sum_instruments rev x sum_groups incidence` - and sum_groups incidence
+       is 1 by the incidence self-test above. It could never detect a fault in
+       the sum it was reconciling, and perturbing a sourced literal moved both
+       sides together.
+
+       Test convention this establishes: a reconciliation between two quantities
+       computed the same way cannot detect a fault in the shared computation.
+       The replacement below checks the one thing the identity assumed and never
+       verified - that every incidence key resolves to a real group. The
+       externally-anchored worked example lives in tests/lib/taxmodel.test.ts,
+       against the published rev1x literals at the base year.
+
+       And the fault the old reconciliation could not reach. Incidence is Incidence is
+       read as `ins.incidence[grp.id] || 0`, so a key that names no group is
+       silently dropped from every distributional total - while the
+       shares-sum-to-1 test still passes, because it sums the object's own
+       values. */
+    name: "Tax: every incidence key names a real income group",
     run: function () {
-      const s = defaultSettings();
-      const year = 2040;
-      const rows = distribution(s, year, 0);
-      const sumTax = rows.reduce(function (a, r) { return a + r.taxB; }, 0);
-      const c = compute(s, PROGRAMS);
-      const total = c.totalRev[c.years.indexOf(year)];
-      return Math.abs(sumTax - total) / total < 0.005;
+      const ids = new Set(GROUPS.map(function (g) { return g.id; }));
+      return INSTRUMENTS.every(function (ins) {
+        return Object.keys(ins.incidence).every(function (k) { return ids.has(k); });
+      });
+    }
+  },
+
+  {
+    /* R144 [§S5]: the overlap family is derived from incidence, so the only
+       thing that can go wrong is the threshold landing in a crowd. This holds
+       the gap open. `enforce` at 0.23 and `inherit` at 0.35 are the two
+       nearest neighbours today, both clear of the 0.30 +/- 0.05 band. */
+    name: "Tax: the overlap threshold separates the instruments cleanly",
+    run: function () {
+      const lo = OVERLAP.top01Threshold - OVERLAP.top01Margin;
+      const hi = OVERLAP.top01Threshold + OVERLAP.top01Margin;
+      return INSTRUMENTS.every(function (ins) {
+        const s = topShare(ins);
+        return s <= lo || s >= hi;
+      }) && overlapFamily().length >= 2;
+    }
+  },
+
+  {
+    /* R42 + R36 [§S5]: the assertion both rows ask for. Every shipped
+       scenario that turns on two or more family instruments must raise less
+       than their naive sum - which is what the engine did before, in all
+       three of them. */
+    name: "Tax: no scenario sums a declared-overlapping set naively",
+    run: function () {
+      const yr = 2041;
+      return SCENARIOS.every(function (scn) {
+        /* review 1 of the owner decisions: a package without a balancer is
+           read by scenarioSettings() too, the one reading (this kept its own
+           copy, which skipped phaseStart) */
+        const s = scn.balancer ? solveScenario(scn, PROGRAMS) : scenarioSettings(scn);
+        const fam = overlapFamily().filter(function (ins) {
+          return instrumentRevenue(ins, s.instruments[ins.id], yr) > 0;
+        });
+        if (fam.length < 2) return true;
+        const factors = overlapFactors(s, yr);
+        let gross = 0, net = 0;
+        fam.forEach(function (ins) {
+          const g = instrumentRevenue(ins, s.instruments[ins.id], yr);
+          gross += g;
+          net += g * factors[ins.id];
+        });
+        return net < gross;
+      });
+    }
+  },
+
+  {
+    /* R42 [§S5]: turning an instrument ON must never lower the package total.
+       The deduction reassigns which family member counts in full, so this is
+       the property the anchor rule exists to guarantee, and the one that
+       breaks first if that rule is changed.
+
+       Every subset of the family is tried, not just the shipped package: the
+       first version of this check enabled one instrument at a time from the
+       defaults, and inverting the anchor rule to pick the SMALLEST member
+       still passed it, because the defaults never put the new instrument at
+       the bottom. Over all 64 subsets it fails immediately - {wealth} plus
+       capgains would drop the total from $701B to $442B. */
+    name: "Tax: enabling any instrument never lowers total revenue",
+    run: function () {
+      const yr = 2041;
+      const fam = overlapFamily();
+      function totalOf(onIds: Set<string>): number {
+        const s = defaultSettings();
+        INSTRUMENTS.forEach(function (ins) {
+          const on = onIds.has(ins.id);
+          s.instruments[ins.id].enabled = on;
+          s.instruments[ins.id].value = on ? Math.max(1, s.instruments[ins.id].value) : 0;
+        });
+        const f = overlapFactors(s, yr);
+        let t = 0;
+        INSTRUMENTS.forEach(function (ins) {
+          t += instrumentRevenue(ins, s.instruments[ins.id], yr) * f[ins.id];
+        });
+        return t;
+      }
+      for (let mask = 0; mask < (1 << fam.length); mask++) {
+        const on = new Set<string>();
+        fam.forEach(function (ins, bit) { if (mask & (1 << bit)) on.add(ins.id); });
+        const before = totalOf(on);
+        if (!(before >= 0)) return false;
+        for (let bit = 0; bit < fam.length; bit++) {
+          if (mask & (1 << bit)) continue;
+          const plus = new Set(on);
+          plus.add(fam[bit].id);
+          if (totalOf(plus) < before - 1e-9) return false;
+        }
+      }
+      return true;
+    }
+  },
+
+  {
+    /* R44 [§S5]: every scenario balancer must be solvable by the linear
+       solver - scale-kind with a numeric scaleMax (or NaN revenue), and
+       outside the overlap family (or the interpolation is wrong). */
+    name: "Tax: every scenario balancer is scale-type and outside the overlap family",
+    run: function () {
+      const family = new Set(overlapFamily().map(function (i) { return i.id; }));
+      return SCENARIOS.filter(function (sc) { return sc.balancer; })
+        .every(function (sc) {
+          const ins = INSTRUMENTS.filter(function (i) { return i.id === sc.balancer; })[0];
+          return !!ins && ins.kind === 'scale' &&
+            typeof ins.scaleMax === 'number' && !family.has(ins.id);
+        });
+    }
+  },
+
+  {
+    /* R38 [§S5]: every dataset in the file declares its vintage and whether it
+       participates in computation, and a computing one is denominated in the
+       model's own base year. `WEALTH_DIST` is the reason: 2026:Q1 nominal
+       levels inside a 2024$ model, unlabelled. */
+    name: "Tax: every dataset declares its vintage and whether it computes",
+    run: function () {
+      const declared = new Set(DATASET_VINTAGES.map(function (v) { return v.id; }));
+      const required = ['GROUPS', 'ECON', 'INSTRUMENTS', 'WEALTH_DIST',
+        'TOP_RATE_HISTORY', 'PRESIDENTS'];
+      if (!required.every(function (id) { return declared.has(id); })) return false;
+      return DATASET_VINTAGES.every(function (v) {
+        if (!v.note || v.note.length < 20) return false;
+        return v.computes ? v.dollarYear === ECON.baseYear : true;
+      });
+    }
+  },
+
+  {
+    /* P25 (owner, 2026-10-14): every published score is its scorer's path
+       re-based to the 2024 economy. This replaces R37's check that the wealth
+       base was carried from 2021 at the top-capital rate, which held a
+       figure the letter does not state: the letter's estimate is for 2023,
+       and already net of its avoidance assumption. What the build can hold
+       is that each path is the scorer's own: its years sum, within the
+       rounding of the yearly figures the scorer prints, to the total the
+       scorer prints, and every instrument a publisher scored has one.
+
+       Review 1 of P25: the row read every path that way, and three could not
+       fail it. The IRS and inheritance figures are window totals with no
+       yearly table, so the sum is the total by construction; the letter's
+       path is solved from the total it was held to. Each kind is now held to
+       what can be wrong with it: a table, to the total the scorer prints; a
+       window, to being one figure on one year; the letter's solved path, to
+       the ten-year total the letter prints, which only a wrong solve moves.
+       Review 2 of P25: the kind is declared on each path, and a table that
+       loses its printed total fails the type check, and at import
+       (citedTotal), before this row runs; the letter's first year is not
+       held, since the solve sets it exactly (it could not fail). */
+    name: "Tax: every published score has its scorer's path; each table sums to the scorer's printed total, and the letter's solved path to the letter's ten-year total",
+    run: function () {
+      const published = INSTRUMENTS.filter(function (i) { return i.estimatedBy === 'published'; });
+      if (!published.length) return false;
+      if (!published.every(function (i) { return hasKey(SCORE_PATHS, i.id); })) return false;
+      const ids = Object.keys(SCORE_PATHS.entries);
+      if (!ids.every(function (id) { return INSTRUMENTS.some(function (i) { return i.id === id; }); })) return false;
+      let tables = 0;
+      const held = ids.every(function (id) {
+        const p = lookupOrThrow(SCORE_PATHS, id);
+        if (p.kind === 'solved') {
+          return p === SZ_WEALTH_PATH &&
+            Math.abs(pathSum(p) - SZ_LETTER.tenYearB.total) < 1e-6 * SZ_LETTER.tenYearB.total;
+        }
+        if (p.kind === 'window') {
+          return p.valuesB.filter(function (v) { return v !== 0; }).length === 1;
+        }
+        /* a table: its printed total, which its type requires and which
+           citedTotal() refuses at import if a source file drops it */
+        tables++;
+        return Math.abs(pathSum(p) - p.statedTotalB) <= 0.05 * p.years.length;
+      });
+      return held && tables > 0;
+    }
+  },
+
+  {
+    /* R39 + R208 [§S5]: a balancer absorbs whatever gap the rest of the
+       package leaves, so it carries the package's residual risk. Each one
+       must state its uncertainty - a band where the evidence supports one, or
+       an explicit reason there is none. `surtax` is the case that matters:
+       its score at scale 1 is the largest in the menu, an in-house
+       derivation graded medium, and the balancer in the flagship scenario. */
+    name: "Tax: every balancer states its revenue uncertainty",
+    run: function () {
+      const ids = balancerIds();
+      return Array.from(ids).every(function (id) {
+        const ins = INSTRUMENTS.filter(function (i) { return i.id === id; })[0];
+        if (!ins) return false;
+        const band = ins.revBand;
+        if (band) {
+          return band.low < ins.rev1x && band.high > ins.rev1x &&
+            !!band.basis && band.basis.length > 30;
+        }
+        return !!ins.revBandAbsent && ins.revBandAbsent.length > 30;
+      });
     }
   },
 
@@ -239,7 +754,14 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
   },
 
   {
-    name: "Tax: every goal scenario meets the funding goal (fallback need path)",
+    /* R45 [§S5]: RENAMED. This was "every goal scenario meets the funding goal
+       (fallback need path)", which reads as fiscal feasibility. It is not:
+       `solveScenario` is DEFINED to set the balancer so revenue reaches 102%
+       of mature-year need, so the assertion has exactly one way to fail - the
+       balancer clamping at scaleMax. That is a real and useful check, and it
+       is solver convergence, not feasibility. The name says so now.
+       The seam it does not reach is below. */
+    name: "Tax: every goal scenario's balancer converges without clamping (fallback need path)",
     run: function () {
       return SCENARIOS.filter(function (sc) { return sc.balancer; })
         .every(function (sc) {
@@ -248,6 +770,54 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
           const i41 = c.years.indexOf(2041);
           function sum(a: number[]): number { return a.reduce(function (x, y) { return x + y; }, 0); }
           return c.totalRev[i41] >= c.need[i41] && sum(c.totalRev) >= sum(c.need);
+        });
+    }
+  },
+
+  {
+    /* R45 [§S5]: the integration seam, tested for the first time.
+       The convergence check above runs against `PROGRAMS`, whose `need` is the
+       hardcoded fallback `(year-2028) x 400` capped at 3,400 - not the live
+       healthcare model. So the two engines were never run against each other
+       in either direction, and a change to the healthcare model's financing
+       path could not fail any tax test.
+
+       This runs the same solve against the live path and checks two things
+       the fallback cannot: that the need it is solving against is the
+       healthcare model's own new-revenue requirement, deflated into the tax
+       model's 2024 dollars, and that the solved package still covers it
+       without clamping. The fallback and the live path are close - 3,400
+       against about 3,377 at 2041 - which is why nobody noticed; that
+       closeness is a property of today's parameters, not a guarantee. */
+    name: "Tax: every goal scenario solves against the LIVE healthcare need path",
+    run: function () {
+      const mc = runOverviewMc('SCN-BASE', null);
+      const years = mc.years.slice();
+      const live = mc.modePath.detail.map(function (d) {
+        return d.newRevenue * DEFLATOR_2023_TO_2024;
+      });
+      const programs: TaxProgram[] = [{
+        id: 'nha-live', label: 'National Health Assurance (live model path)',
+        builtin: true, enabled: true,
+        need: function (year: number): number {
+          const i = years.indexOf(year);
+          return i >= 0 ? live[i] : 0;
+        },
+        source: 'Live from the healthcare model, the same wiring the page uses'
+      }];
+      /* the live path must actually be live: a flat or empty path would make
+         the rest of this vacuous */
+      const i41 = years.indexOf(2041);
+      if (!(live[i41] > 1000) || !(live[i41] > live[0])) return false;
+
+      return SCENARIOS.filter(function (sc) { return sc.balancer; })
+        .every(function (sc) {
+          const s = solveScenario(sc, programs);
+          const c = compute(s, programs);
+          const j = c.years.indexOf(2041);
+          return !s._balanced!.clamped &&
+            c.totalRev[j] >= c.need[j] &&
+            isFinite(c.totalRev[j]);
         });
     }
   },
@@ -268,8 +838,7 @@ export const TAX_SELFTESTS: { name: string; run: () => boolean }[] = [
       const st: InstrumentSetting = { value: 1, enabled: true, phaseStart: 2029, phaseYears: 4 };
       const before = instrumentRevenue(ins, st, 2028);
       const mid = instrumentRevenue(ins, st, 2030);
-      const full = instrumentRevenue(ins, st, 2035) /
-                 Math.pow(1 + ECON.realGrowth, 2035 - ECON.baseYear);
+      const full = instrumentRevenue(ins, st, 2035) / classGrowth(ins.growth, 2035);
       return before === 0 && mid > 0 && mid < full * 0.75 &&
              Math.abs(full - ins.rev1x) < 1;
     }

@@ -3,7 +3,7 @@
  * renderFlowDiagram (lines 452-531). Sources on the left, channels on the
  * right, ribbons proportional to their value. No framework; hand-rolled SVG.
  * ========================================================================= */
-import { el, div, tipRow, showTip, hideTip } from './chart-util';
+import { el, div, tipRow, showTip, hideTip, bindTipFocus, type TipPoint } from './chart-util';
 import { money, moneyShort } from './format';
 
 export interface FlowNode {
@@ -57,7 +57,7 @@ export function renderFlowDiagram(container: HTMLElement, spec: FlowSpec): void 
 
   const svg = el('svg', {
     viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg',
-    role: 'img', 'aria-label': spec.aria || 'Money flow diagram'
+    role: 'group', 'aria-label': spec.aria || 'Money flow diagram'
   }, container);
 
   /* ribbons first (under the bars) */
@@ -78,22 +78,21 @@ export function renderFlowDiagram(container: HTMLElement, spec: FlowSpec): void 
       ' C' + mid + ' ' + ty1 + ' ' + mid + ' ' + sy1 + ' ' + x0 + ' ' + sy1 + ' Z';
     const band = el('path', {
       d: d, fill: s.node.color || '', 'fill-opacity': 0.30,
-      class: 'flow-ribbon', tabindex: 0
+      class: 'flow-ribbon', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: see benchmark-chart.ts. */
+      'aria-label': s.node.label + ' to ' + t.node.label + ': ' +
+        money(rb.value) + ' per year' + (rb.note ? ', ' + rb.note : '')
     }, svg);
-    function tipIt(evt: { clientX: number; clientY: number }): void {
+    function tipIt(evt: TipPoint): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = s.node.label + ' → ' + t.node.label;
       tipRow(box, s.node.color || '', '', money(rb.value) + '/yr', true);
       if (rb.note) tipRow(box, '', '', rb.note, false);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
     }
     band.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
-    band.addEventListener('focus', function () {
-      const r = (band as unknown as Element).getBoundingClientRect();
-      tipIt({ clientX: r.right, clientY: r.top });
-    });
     band.addEventListener('pointerleave', hideTip);
-    band.addEventListener('blur', hideTip);
+    bindTipFocus(band, tipIt);
   });
 
   /* node bars + labels */

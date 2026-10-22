@@ -2,7 +2,11 @@
    matrix, unit-ramp + drug-pipeline buildouts, agency/gate/workstream grids.
    Port of docs/js/rollout.js:278-560. Runs on astro:page-load; idempotent
    via the timeline's dataset.wired guard. */
-import { PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS } from '../lib/rollout';
+import {
+  PHASES, DOMAINS, GATES, AGENCIES, WORKSTREAMS, WORKSTREAM_COST_NOTE,
+  gateIsMeasurable, QUALITATIVE_GATE_NOTE, PHASE_BANDS,
+  WORKSTREAM_GATE, WORKSTREAM_OWNER, UNIT_BUILDOUT_STEPS
+} from '../lib/rollout';
 
 function renderTimeline(): void {
   const host = document.getElementById('rollout-timeline');
@@ -14,6 +18,12 @@ function renderTimeline(): void {
     btn.style.gridColumn = String(phase.year);
     btn.setAttribute('aria-pressed', phase.id === 'P0' ? 'true' : 'false');
     btn.setAttribute('aria-label', phase.id + ', Year ' + phase.year + ': ' + phase.title);
+    /* R259 [S14]: selection is carried here, not in the accessibility label.
+       selectPhase used to identify each button by string-matching the prefix
+       of the human-readable aria-label, so any rewording, prefix or in-place
+       text rewrite silently left every button aria-pressed="false" - and
+       acronyms-client.ts is a rewriter of rendered text that already ships. */
+    btn.dataset.phaseId = phase.id;
 
     const dot = document.createElement('span');
     dot.className = 'phase-node-dot';
@@ -40,7 +50,7 @@ function selectPhase(id: string): void {
   const buttons = timeline.querySelectorAll('.phase-node');
   Array.prototype.forEach.call(buttons, function (btn: Element) {
     btn.setAttribute('aria-pressed',
-      (btn.getAttribute('aria-label') || '').indexOf(phase.id + ',') === 0 ? 'true' : 'false');
+      (btn as HTMLElement).dataset.phaseId === phase.id ? 'true' : 'false');
   });
 
   const detail = document.getElementById('rollout-detail');
@@ -89,13 +99,7 @@ function selectPhase(id: string): void {
 function renderDomainMatrix(): void {
   const table = document.getElementById('rollout-domain-matrix') as HTMLTableElement | null;
   if (!table) return;
-  const bands = [
-    ['P0–P1', 'Foundation'],
-    ['P2–P3', 'First operation'],
-    ['P4–P5', 'Pilots and scale'],
-    ['P6–P7', 'National and benefits'],
-    ['P8', 'Maturity']
-  ];
+  const bands = PHASE_BANDS;
   const thead = table.createTHead();
   const row = thead.insertRow();
   const domainHead = document.createElement('th');
@@ -126,29 +130,33 @@ function renderDomainMatrix(): void {
   });
 }
 
-interface UnitStep { value: string; label: string; phase: string; level: string; qual?: boolean }
-
-function renderBuildouts(): void {
+/* R258 [§S2]: a step with `coverage: null` is not on the coverage axis, so it
+   gets no height from data - the stylesheet gives every off-axis step the same
+   nominal height, and a visible break separates them from the plotted ones. */
+function renderUnitRamp(): void {
   const ramp = document.getElementById('unit-ramp');
   if (!ramp) return;
   const chart = document.createElement('div');
   chart.className = 'unit-ramp-chart';
   chart.setAttribute('aria-hidden', 'true');
-  const unitSteps: UnitStep[] = [
-    { value: 'Plan', label: 'standards, siting, workforce, prototypes', phase: 'P0–P3', level: '24%', qual: true },
-    { value: 'Pilot', label: 'all four unit types in representative regions', phase: 'P4', level: '34%', qual: true },
-    { value: '≥65%', label: 'population coverage by phase end', phase: 'P5', level: '65%' },
-    { value: '≥80%', label: 'Gate 2 floor before broad $0 care', phase: 'P6', level: '80%' },
-    { value: '≥95%', label: 'within access-time standard', phase: 'P8', level: '95%' }
-  ];
-  unitSteps.forEach(function (step) {
+  UNIT_BUILDOUT_STEPS.forEach(function (step, i) {
+    const offAxis = step.coverage === null;
+    /* the break sits where the axis starts, between the last off-axis step
+       and the first plotted one */
+    const prev = UNIT_BUILDOUT_STEPS[i - 1];
+    if (!offAxis && prev && prev.coverage === null) {
+      const brk = document.createElement('div');
+      brk.className = 'unit-ramp-break';
+      brk.setAttribute('aria-hidden', 'true');
+      chart.appendChild(brk);
+    }
     const el = document.createElement('div');
-    el.className = 'unit-ramp-step';
+    el.className = 'unit-ramp-step' + (offAxis ? ' off-axis' : '');
     const plot = document.createElement('div');
     plot.className = 'unit-ramp-plot';
     const bar = document.createElement('div');
-    bar.className = 'unit-ramp-bar' + (step.qual ? ' qualitative' : '');
-    bar.style.setProperty('--level', step.level);
+    bar.className = 'unit-ramp-bar' + (offAxis ? ' qualitative' : '');
+    if (!offAxis) bar.style.setProperty('--level', step.coverage + '%');
     const value = document.createElement('div');
     value.className = 'unit-ramp-value';
     value.textContent = step.value;
@@ -165,7 +173,7 @@ function renderBuildouts(): void {
 
   const legend = document.createElement('div');
   legend.className = 'unit-ramp-legend';
-  unitSteps.forEach(function (step) {
+  UNIT_BUILDOUT_STEPS.forEach(function (step) {
     const item = document.createElement('div');
     item.className = 'unit-ramp-legend-item';
     const key = document.createElement('div');
@@ -173,13 +181,20 @@ function renderBuildouts(): void {
     key.textContent = step.phase + ' · ' + step.value;
     const text = document.createElement('div');
     text.className = 'unit-ramp-legend-text';
-    text.textContent = step.label;
+    text.textContent = step.coverage === null
+      ? step.label + ' (a stage of work, not a coverage level: plotted off the scale)'
+      : step.label;
     item.appendChild(key);
     item.appendChild(text);
     legend.appendChild(item);
   });
   ramp.appendChild(legend);
+}
 
+/* R260 [§S2]: its own function and its own guard. These two buildouts shared
+   one, and the `if (!ramp) return;` above sat over both - so a page without
+   #unit-ramp silently lost the medicines pipeline as well. */
+function renderDrugPipeline(): void {
   const pipeline = document.getElementById('drug-pipeline');
   if (!pipeline) return;
   ([
@@ -255,12 +270,23 @@ function renderGates(): void {
     when.textContent = gate.when;
     const floor = document.createElement('p');
     floor.textContent = gate.floor;
+    /* R257 [§S11b]: three of the eight gates carry no measurable floor, in a
+       section that presents all eight as measurements. Which three is read
+       off the floor text, so a gate that gains a threshold stops carrying
+       this note without anyone maintaining a list. */
+    const qualitative = !gateIsMeasurable(gate) ? (function () {
+      const p = document.createElement('p');
+      p.className = 'gate-qualitative';
+      p.textContent = QUALITATIVE_GATE_NOTE;
+      return p;
+    })() : null;
     const fallback = document.createElement('p');
     fallback.className = 'gate-fallback';
     fallback.textContent = 'If not ready: ' + gate.fallback;
     body.appendChild(h3);
     body.appendChild(when);
     body.appendChild(floor);
+    if (qualitative) body.appendChild(qualitative);
     body.appendChild(fallback);
     item.appendChild(number);
     item.appendChild(body);
@@ -271,23 +297,38 @@ function renderGates(): void {
 function renderWorkstreams(): void {
   const host = document.getElementById('rollout-workstreams');
   if (!host) return;
-  WORKSTREAMS.forEach(function (stream) {
+  WORKSTREAMS.forEach(function (stream, index) {
     const item = document.createElement('div');
     item.className = 'workstream-item';
+    /* a number, not the source document's TW- id (the owner's 2026-10-10
+       decision); the coded fields stay in the data */
     const id = document.createElement('div');
     id.className = 'workstream-id';
-    id.textContent = stream[0];
+    id.textContent = String(index + 1);
     const body = document.createElement('div');
     const b = document.createElement('b');
-    b.textContent = stream[1];
+    b.textContent = stream.title;
     const span = document.createElement('span');
-    span.textContent = stream[2];
+    span.textContent = stream.boundary;
     body.appendChild(b);
     body.appendChild(span);
+    /* R253 [§S5]: the page demands a costed work package, deliverable, owner,
+       gate, contingency and transfer of every dollar. Four of those are
+       carried per workstream or per set and are printed here; the fifth, the
+       dollar allocation, is open by the plan's own decision and says so
+       rather than showing a blank. */
+    const meta = document.createElement('span');
+    meta.className = 'workstream-meta';
+    meta.textContent = 'Cost families: ' + stream.families +
+      ' · Owner: ' + WORKSTREAM_OWNER + ' · ' + WORKSTREAM_GATE +
+      ' · Transfers to: ' + stream.transfersTo;
+    body.appendChild(meta);
     item.appendChild(id);
     item.appendChild(body);
     host.appendChild(item);
   });
+  const note = document.getElementById('rollout-workstream-note');
+  if (note) note.textContent = WORKSTREAM_COST_NOTE;
 }
 
 function initRollout(): void {
@@ -297,7 +338,8 @@ function initRollout(): void {
   timeline.dataset.wired = '1';
   renderTimeline();
   renderDomainMatrix();
-  renderBuildouts();
+  renderUnitRamp();
+  renderDrugPipeline();
   renderAgencies();
   renderGates();
   renderWorkstreams();

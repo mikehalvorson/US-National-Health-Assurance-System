@@ -3,7 +3,10 @@
  * renderBridgeChart (lines 244-324). Rows step from the status-quo baseline
  * total to the NHA total; additions and savings between. Hand-rolled SVG.
  * ========================================================================= */
-import { el, niceTicks, barPath, div, tipRow, showTip, hideTip, cssVar, legend } from './chart-util';
+import {
+  el, niceTicks, barPath, div, tipRow, showTip, hideTip, cssVar, legend, bindTipFocus,
+  type TipPoint
+} from './chart-util';
 import { money, moneyShort, axis } from './format';
 
 export interface BridgeStep {
@@ -49,7 +52,7 @@ export function renderBridgeChart(
   const x = function (v: number): number { return M.l + (W - M.l - M.r) * (v * deflate / (xMax * deflate)); };
 
   const svg = el('svg', {
-    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img',
+    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'group',
     'aria-label': 'Cost bridge from status quo baseline to National Health Assurance total at maturity'
   }, container);
 
@@ -70,7 +73,11 @@ export function renderBridgeChart(
     const bx = x(r.x0), bw = Math.max(2, x(r.x1) - x(r.x0));
     const p = el('path', {
       d: barPath(bx, yPos + 3, bw, rowH - 6, 4, 'right'),
-      fill: color, class: 'bar-mark', tabindex: 0
+      fill: color, class: 'bar-mark', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: see benchmark-chart.ts. */
+      'aria-label': r.label + ': ' +
+        (r.kind === 'total' ? 'total ' : r.kind === 'add' ? 'adds ' : 'saves ') +
+        moneyShort(Math.abs(r.val) * deflate)
     }, svg);
 
     /* connector to next row */
@@ -87,23 +94,20 @@ export function renderBridgeChart(
       moneyShort(Math.abs(r.val) * deflate);
     if (r.kind === 'sub') vLab.setAttribute('x', String(x(r.x1) + 6));
 
-    function showBarTip(evt: { clientX: number; clientY: number }): void {
+    function showBarTip(evt: TipPoint): void {
       const box = document.createElement('div');
       const head = div('tip-head', box); head.textContent = r.label;
       const pfx = r.kind === 'add' ? '+' : r.kind === 'sub' ? '−' : '';
       tipRow(box, color.indexOf('var') === 0 ? cssVar(color.slice(4, -1)) : color,
         r.kind === 'total' ? 'Total' : r.kind === 'add' ? 'Adds' : 'Saves',
         pfx + money(Math.abs(r.val) * deflate), true);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
       p.classList.add('hover');
     }
+    const leave = function (): void { hideTip(); p.classList.remove('hover'); };
     p.addEventListener('pointermove', function (e) { showBarTip(e as PointerEvent); });
-    p.addEventListener('focus', function () {
-      const rect = (p as unknown as Element).getBoundingClientRect();
-      showBarTip({ clientX: rect.right, clientY: rect.top });
-    });
-    p.addEventListener('pointerleave', function () { hideTip(); p.classList.remove('hover'); });
-    p.addEventListener('blur', function () { hideTip(); p.classList.remove('hover'); });
+    p.addEventListener('pointerleave', leave);
+    bindTipFocus(p, showBarTip, leave);
   });
 
   legend(container, [

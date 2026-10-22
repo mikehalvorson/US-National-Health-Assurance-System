@@ -7,9 +7,13 @@
  * static render and the client-side recompute script can share one source
  * of truth for the Overview hero/tiles/family-burden note.
  * ========================================================================= */
+import { RESIDUAL_BILLING_CAVEAT } from './care';
 import { runMonteCarlo } from './model';
 import type { MonteCarloResult } from './model-types';
-import { DEFLATOR_2023_TO_2024 } from './params';
+import {
+  DEFLATOR_2023_TO_2024, householdDenominator, MATURE_INDEX, MONTE_CARLO_DRAWS,
+  MONTE_CARLO_SEED, NHE_2024_OBSERVED, SPONSOR_SHARE
+} from './params';
 import { money, moneyShort, pct, perCap } from './format';
 
 export interface OverviewTile {
@@ -33,13 +37,14 @@ function bandTxt(p10: number, p90: number, fmt: (v: number) => string): string {
   return fmt(p10) + " – " + fmt(p90) + " (10th–90th pct)";
 }
 
-/* Run the Overview Monte Carlo once (600 runs, seed 42) so the text render
-   and the path chart can share a single result. */
+/* Run the Overview Monte Carlo once so the text render and the path chart can
+   share a single result. R25 [§S6a]: the draw count and the seed are declared
+   in params.ts with the measurement that chose them. */
 export function runOverviewMc(
   scenario: string,
   sliders: Record<string, number> | null
 ): MonteCarloResult {
-  return runMonteCarlo(scenario, sliders, 600, 42);
+  return runMonteCarlo(scenario, sliders, MONTE_CARLO_DRAWS, MONTE_CARLO_SEED);
 }
 
 /* computeOverview split so callers holding an mc (e.g. the client, which also
@@ -61,7 +66,7 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
 
   /* 2041 pair: NHA steady state next to the same-year status quo */
   const ss = mc.steady.total;
-  const baseMature = mc.baseline[mc.years.length - 2] * DEF; // 2041
+  const baseMature = mc.baseline[MATURE_INDEX] * DEF;
   const delta = ss.p50 * DEF - baseMature;
   const nha2041 = money(ss.p50 * DEF) + "/yr";
   const hero2041Range =
@@ -72,27 +77,60 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
   const base2041 = money(baseMature) + "/yr";
 
   /* Family burden: where the status quo's growth actually lands.
-     Households sponsor 27% of NHE (CMS); ~141M households by 2041. */
-  const famNow = 0.27 * 5300, fam2041 = 0.27 * baseMature;
-  const hhNow = 132.2, hh2041 = 141;
-  const d41 = mc.modePath.detail[mc.years.length - 2];
+     Households sponsor 27% of NHE (CMS).
+
+     R172 [§S8]: both counts used to be typed here. `132.2` was a second copy of
+     the Census denominator R84 declared, and `141` was a 2041 projection with
+     no owner anywhere. Both are read from HOUSEHOLD_DENOMINATORS now, which is
+     also what makes the pairing visible: the "today" figure divides by today's
+     households and the 2041 figure by 2041's, and those are different numbers
+     for a reason. */
+  /* R241 [§S11b]: was `0.27 * 5300` and `0.27 * baseMature`. The audit filed
+     this as a magic number to register, and §BC5 counted it in three modules;
+     measured, the other two are a comment deriving this same share and an
+     unrelated distributional bracket rate that happens to equal 0.27.
+     Registering it would have been the wrong fix anyway: params.ts already
+     DERIVES the household sponsor share from the money-flow map, as
+     SPONSOR_SHARE.household, and R21 derived the other four sponsor shares
+     for exactly this reason. So it is read, not registered. It is 0.27009,
+     which is what the percentage in the sentence below rounds to - and that
+     percentage is now rounded FROM it rather than typed beside it. Review 5
+     caught the half-fix: the dollars moved with the share and the sentence
+     did not, so a change to MONEYFLOW would have printed a percentage that
+     disagreed with the figures next to it. */
+  const familyShare = SPONSOR_SHARE.household;
+  /* R183 [§S12]: `5300` was a bare literal here, beside a fam2041 that is
+     model-derived. It is the observed 2024 total, which the benchmark chart
+     already published with a band, a basis and a source; both read the same
+     registered constant now. Both sides of the sentence are real 2024
+     dollars - baseMature carries the deflator - so the comparison is on one
+     basis, which is what the row questioned. */
+  const famNow = familyShare * NHE_2024_OBSERVED.mid;
+  const fam2041 = familyShare * baseMature;
+  const hhNow = householdDenominator('census').households;
+  const hh2041 = householdDenominator('census-2041').households;
+  const d41 = mc.modePath.detail[MATURE_INDEX];
   const kppPerHH = 0.05 * d41.newRevenue * DEF * 1e9 / (hh2041 * 1e6);
   const familyNote =
-    "Where that growth lands on families: households sponsor about 27% of " +
+    "Where that growth lands on families: households sponsor about " +
+    Math.round(familyShare * 100) + "% of " +
     "American health spending through premiums, payroll deductions, and " +
     "bills. Doing nothing means that family share grows from roughly " +
     money(famNow) + " today to " + money(fam2041) + " by 2041, " +
     "from about $" + Math.round(famNow * 1e9 / (hhNow * 1e6)).toLocaleString("en-US") +
     " to $" + Math.round(fam2041 * 1e9 / (hh2041 * 1e6)).toLocaleString("en-US") +
-    " per household per year, with no new coverage to show for it. Under NHA " +
-    "in the same year, covered care costs $0 at the point of use and the " +
-    "the plan caps ordinary households at 5% of the new financing " +
+    " per household per year, with no new coverage to show for it. " +
+    /* Review [§S8]: the caveat used to be spliced mid-sentence and
+       lower-cased at the call site. It is a sentence; it starts one. */
+    RESIDUAL_BILLING_CAVEAT +
+    " Under NHA in the same year the plan caps ordinary households at " +
+    "5% of the new financing " +
     "(about $" + Math.round(kppPerHH).toLocaleString("en-US") + " per household); " +
     "the rest shifts to the tax side, weighted toward the top. Who pays what " +
     "is the Taxes & Financing tab.";
 
   /* ---- renderTiles (app.js:183-210) ---- */
-  const lastIdx = mc.years.length - 2; // 2041
+  const lastIdx = MATURE_INDEX;
   const tBaseMature = mc.baseline[lastIdx] * DEF;
   const deltaVsBase = mc.steady.total.p50 * DEF - tBaseMature;
   const tiles: OverviewTile[] = [

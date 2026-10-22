@@ -3,7 +3,7 @@
  * renderFinancingChart (lines 329-385). A stacked bar of funding segments
  * plus a wealth-tax-vs-gap comparison. Hand-rolled SVG; no framework.
  * ========================================================================= */
-import { el, barPath, tipRow, showTip, hideTip, legend } from './chart-util';
+import { el, barPath, tipRow, showTip, hideTip, legend, bindTipFocus, type TipPoint } from './chart-util';
 import { money, moneyShort, pct } from './format';
 
 export interface FinancingSegment {
@@ -27,7 +27,7 @@ export function renderFinancingChart(
   const W = 860, H = 190, M = { l: 8, r: 8, t: 24, b: 8 };
   const total = fin.segments.reduce(function (s, seg) { return s + seg.value; }, 0);
   const svg = el('svg', {
-    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img',
+    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'group',
     'aria-label': 'How the mature National Health Assurance public cost is financed'
   }, container);
 
@@ -42,7 +42,10 @@ export function renderFinancingChart(
     const p = el('path', {
       d: isLast ? barPath(xCur, barY, Math.max(0, w - 0), barH, 4, 'right')
         : 'M' + xCur + ',' + barY + ' h' + Math.max(0, w - 2) + ' v' + barH + ' h-' + Math.max(0, w - 2) + 'Z',
-      fill: seg.color, class: 'bar-mark', tabindex: 0
+      fill: seg.color, class: 'bar-mark', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: see benchmark-chart.ts. */
+      'aria-label': seg.label + ': ' + money(seg.value * deflate) + ', ' +
+        pct(100 * seg.value / total, 0) + ' of public cost'
     }, svg);
     /* inline label only if it comfortably fits */
     const labelText = seg.label + '  ' + moneyShort(seg.value * deflate);
@@ -50,14 +53,17 @@ export function renderFinancingChart(
       const t = el('text', { x: xCur + 8, y: barY + barH / 2 + 4, class: 'inbar-label' }, svg);
       t.textContent = labelText;
     }
-    function tipIt(evt: { clientX: number; clientY: number }): void {
+    function tipIt(evt: TipPoint): void {
       const box = document.createElement('div');
       tipRow(box, seg.color, seg.label, money(seg.value * deflate), true);
       tipRow(box, '', 'share of public cost', pct(100 * seg.value / total, 0), false);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
     }
     p.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     p.addEventListener('pointerleave', hideTip);
+    /* R166 [S14]: same pairing as bridge-chart.ts. The segment is focusable,
+       so the share of public cost has to be reachable without a pointer. */
+    bindTipFocus(p, tipIt);
     xCur += w;
   });
 

@@ -1,12 +1,32 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   on a route the registry does not carry, rather than rendering nothing. */
+/* R217 [§S5]: the distributional section quoted 13,200 households for the top
+   0.01% - the WEALTH_DIST figure, which drives the INEQUALITY chart - while
+   describing the chart that runs on GROUPS.t10000, 12,000. A 10% divergence
+   inside one module, published against the wrong series. Both counts are
+   right about their own series; the prose was pointing at the other one.
+   Rendered from the series it describes, so it cannot drift again. */
+import { currentLawRateNote, GROUPS, WEALTH_DIST } from '../lib/taxparams';
+
+const topBand = GROUPS.filter((g) => g.id === 't10000')[0];
+const wealthBand = WEALTH_DIST.groups.filter((g) => g.id === 'top001')[0];
+const DIST_TOP_HH = Math.round(topBand.hhM * 1e6).toLocaleString('en-US');
+const WEALTH_TOP_HH = Math.round(wealthBand.hhM * 1e6).toLocaleString('en-US');
 ---
-<BaseLayout title="National Health Assurance: Taxes & Financing">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Taxes & Financing"
+  description="How much new revenue National Health Assurance needs, which taxes raise it, who pays more, and who comes out ahead after health savings."
+>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 2 · Paying for it</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('tax'))} · Paying for it</span>
     <h2>The same care, financed differently</h2>
     <p class="desc">The healthcare chapter showed the system costs about
       what the country already spends. This chapter answers the harder
@@ -29,7 +49,11 @@ import ChapterNav from '../components/ChapterNav.astro';
       them.</p>
     <div class="tiles" id="inequality-tiles"></div>
     <div id="wealth-chart"></div>
-    <p class="note">Sources: Federal Reserve Distributional Financial
+    <p class="note">The wealth bands on this chart count {WEALTH_TOP_HH}
+      households in the top 0.01%, against {DIST_TOP_HH} in the burden charts
+      further down: the two run on different sources, Federal Reserve wealth
+      bands here and CBO income bands there, and neither is a restatement of
+      the other. Sources: Federal Reserve Distributional Financial
       Accounts (2026:Q1, $174.0T total household wealth) for the published
       bands; the splits inside the top 1% are derived from Saez–Zucman
       capitalization estimates and Forbes-list aggregates, constrained to
@@ -47,17 +71,31 @@ import ChapterNav from '../components/ChapterNav.astro';
       <li><b>Valuation and liquidity.</b> Private businesses, art, and
         carried interests are hard to appraise annually, and taxing them
         can force sales; every wealth-tax design fights this.</li>
-      <li><b>A planning industry.</b> Grantor trusts, dynasty trusts,
-        valuation discounts, and pass-through games exist to move wealth
-        around any single-instrument tax; the estate tax raises a fifth of
-        what a static calculation says it should.</li>
+      <li><b>A single instrument is easy to unwind.</b> Grantor trusts,
+        dynasty trusts, valuation discounts, and pass-through games all exist
+        to move wealth around the estate tax, and the estate tax now collects
+        a fraction of what it once would: run the 2000 tax code against 2019
+        estates and it would have raised about nine times the liability it
+        actually did. But the Penn Wharton Budget Model's decomposition of
+        that gap puts most of it on statutory changes, the raised exemption
+        and cut rates, rather than on the planning industry. That is the
+        harder lesson for a financing plan. Avoidance is real and it is the
+        smaller half; the larger half is that one instrument, standing alone,
+        can be legislated away.
+        <a href="https://budgetmodel.wharton.upenn.edu/p/2022-07-28-decomposing-the-decline-in-estate-tax-liability-since-2000/"
+          target="_blank" rel="noopener">Penn Wharton Budget Model, 2022</a>.</li>
       <li><b>Legal uncertainty.</b> A federal wealth tax faces the
         Constitution's direct-tax apportionment clause, and taxing
         unrealized gains tests the 16th Amendment's meaning of income
         (Moore v. United States left the question open, not answered).</li>
-      <li><b>Enforcement asymmetry.</b> Audit rates on the largest returns
-        collapsed for a decade; the IRS was outgunned by the taxpayers with
-        the most complex returns and the most to gain from opacity.</li>
+      <li><b>Enforcement asymmetry.</b> Audit rates fell across every income
+        level from tax year 2010 to 2019, from 0.9% to 0.25% overall, and fell
+        furthest for returns reporting $200,000 or more. The GAO attributes it
+        to staffing: a complex high-income audit costs more examiner time than
+        the agency had. The taxpayers with the most to gain from opacity were
+        the ones least likely to be looked at.
+        <a href="https://www.gao.gov/products/gao-22-104960"
+          target="_blank" rel="noopener">GAO-22-104960</a>.</li>
     </ul>
     <h2 style="font-size:15px;margin-top:18px">How it can realistically be done</h2>
     <ul class="lever-list">
@@ -94,6 +132,9 @@ import ChapterNav from '../components/ChapterNav.astro';
       Eisenhower administration and did not fall below 70 percent until
       1982. It is 37 percent today.</p>
     <div id="toprate-chart"></div>
+    <details class="tableview"><summary>View as table</summary>
+      <div class="tbl-scroll"><table class="data" id="toprate-table"></table></div>
+    </details>
     <p class="note">Source: IRS Statistics of Income historical tables.
       Effective rates paid were lower than statutory rates in every era
       (deductions, exclusions, capital gains); the line shows what the law
@@ -137,6 +178,7 @@ import ChapterNav from '../components/ChapterNav.astro';
     </div>
     <p class="scenario-desc" id="tax-scenario-desc"></p>
     <div class="tax-controls" id="tax-instruments"></div>
+    <p class="note" id="tax-overlap-note"></p>
     <p class="note">None of the goal scenarios uses the consumption tax:
       a VAT is regressive (the bottom quintile consumes about twice its
       income), so it stays out of every preset. It remains available above
@@ -151,6 +193,9 @@ import ChapterNav from '../components/ChapterNav.astro';
       with the economy. The dark line is the total funding need of every
       enabled program; the stack has to reach it.</p>
     <div id="tax-path-chart"></div>
+    <details class="tableview"><summary>View as table</summary>
+      <div class="tbl-scroll"><table class="data" id="tax-path-table"></table></div>
+    </details>
     <div class="tiles" id="tax-tiles"></div>
   </section>
 
@@ -183,11 +228,15 @@ import ChapterNav from '../components/ChapterNav.astro';
     <p class="desc">The question that matters for lower-income Americans:
       new taxes <em>minus</em> the health costs this system eliminates
       (premiums, deductibles, copays), by income group. The top 1% is
-      broken into five bands, down to the 13,200 households of the top
+      broken into five bands, down to the {DIST_TOP_HH} households of the top
       0.01%, because that is where the wealth actually sits; the
-      millionaire surtax, billionaire minimum tax, wealth tax, estate
-      restoration, and capital-gains reform in the package above land
-      almost entirely on those bands. Bars left of zero
+      millionaire surtax, billionaire minimum tax, wealth tax, the transfer
+      tax (estate restoration or the inheritance tax, alternatives a package
+      chooses between), and capital-gains reform in the package above land
+      almost entirely on those bands, which is also why their
+      revenues are not added together: they reach one base, so the model
+      nets them and reports the deduction on the revenue tiles above.
+      Bars left of zero
       mean a group's total annual costs go <em>down</em>. View in
       <label style="display:inline">
         year <select id="dist-year" aria-label="Distribution year"></select>
@@ -200,7 +249,7 @@ import ChapterNav from '../components/ChapterNav.astro';
     <div id="tax-impact-chart"></div>
     <h2 style="font-size:14.5px;margin-top:20px">Average federal tax rate, current law → with this package</h2>
     <p class="desc">Pure tax-side view (health savings excluded), comparable
-      to CBO's effective-rate tables.</p>
+      to CBO's effective-rate tables. {currentLawRateNote()}</p>
     <div id="tax-rate-chart"></div>
     <details class="tableview"><summary>View distribution as table</summary>
       <div class="tbl-scroll" id="tax-dist-table"></div>
@@ -245,7 +294,6 @@ import ChapterNav from '../components/ChapterNav.astro';
   </section>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

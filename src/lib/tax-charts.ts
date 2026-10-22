@@ -2,10 +2,13 @@
    the Overview charts (chart-util helpers). Fidelity-critical geometry.
    Six renderers: revenue-vs-need stacked area, net household impact, effective
    rate dumbbell, top-rate history, wealth distribution, save-vs-pay. */
-import { el, div, niceTicks, showTip, hideTip, tipRow, barPath } from './chart-util';
-import { money, axis } from './format';
+import {
+  el, div, niceTicks, showTip, hideTip, tipRow, barPath, bindTipFocus, type TipPoint
+} from './chart-util';
+import { money, axis, dollarsKMB, dollarsMagnitude, householdsMillions } from './format';
 import { INSTRUMENTS, TOP_RATE_HISTORY, PRESIDENTS, WEALTH_DIST } from './taxparams';
 import type { ComputeResult, DistributionRow } from './tax-types';
+import type { TableData } from './overview-tables';
 
 /* Instrument -> categorical slot. >8 series folds smallest into "Other". */
 const STACK_ORDER = ['payroll', 'surtax', 'wealth', 'vat', 'sscap', 'corp', 'ftt', '_other'];
@@ -23,18 +26,61 @@ function labelFor(id: string): string {
   return ins ? ins.label : id;
 }
 
+/* Each instrument's revenue by year, folded into the chart's eight slots. The
+   stacked chart and its table both read this, so they cannot disagree about
+   which levy a dollar belongs to. */
+function stackSeries(comp: ComputeResult): Record<string, number[]> {
+  const series: Record<string, number[]> = {};
+  STACK_ORDER.forEach(function (id) { series[id] = comp.years.map(function () { return 0; }); });
+  Object.keys(comp.byInstrument).forEach(function (id) {
+    const target = OTHER_IDS.indexOf(id) >= 0 ? '_other' : id;
+    comp.byInstrument[id].forEach(function (v, i) { series[target][i] += v; });
+  });
+  return series;
+}
+
+/* Revenue as a share of need in one year, as the tooltip and the table state
+   it. Review 9: the tooltip used to divide for itself, and disagreed with the
+   model's own `coverage` in one case - nothing needed and nothing raised,
+   which the model counts as covered and the tooltip called "n/a". The model
+   is the source; `null` is its sentinel for a ratio with no meaning. */
+function coverageText(comp: ComputeResult, i: number): string {
+  const c = comp.coverage[i];
+  return c === null ? 'n/a' : Math.round(100 * c) + '%';
+}
+
+/**
+ * The revenue-vs-need chart as a table.
+ *
+ * Review 9 of P20: this chart's per-year figures were reachable only by moving
+ * a pointer across it - the overlay is not a tab stop and the svg keeps the
+ * image role - which left P20's exit condition, "no data series is reachable
+ * only by hover", unmet. A table reaches every figure by keyboard and screen
+ * reader, which a scrubbable crosshair could not do without becoming a
+ * widget. The columns are exactly the tooltip's rows.
+ */
+export function revenueNeedTableData(comp: ComputeResult): TableData {
+  const series = stackSeries(comp);
+  const shown = STACK_ORDER.filter(function (id) {
+    return series[id].some(function (v) { return v >= 0.5; });
+  });
+  return {
+    head: ['Year', 'Funding need', 'Total revenue', 'Coverage'].concat(
+      shown.map(function (id) { return id === '_other' ? 'Other levies' : labelFor(id); })),
+    rows: comp.years.map(function (yr, i) {
+      return [String(yr), money(comp.need[i]), money(comp.totalRev[i]), coverageText(comp, i)].concat(
+        shown.map(function (id) { return money(series[id][i]); }));
+    })
+  };
+}
+
 /* ---- 1. Revenue vs need, stacked area over years ---- */
 export function renderRevenueNeedChart(container: HTMLElement, comp: ComputeResult): void {
   container.innerHTML = '';
   const W = 860, H = 340, M = { l: 64, t: 16, r: 24, b: 40 };
   const years = comp.years;
 
-  const series: Record<string, number[]> = {};
-  STACK_ORDER.forEach(function (id) { series[id] = years.map(function () { return 0; }); });
-  Object.keys(comp.byInstrument).forEach(function (id) {
-    const target = OTHER_IDS.indexOf(id) >= 0 ? '_other' : id;
-    comp.byInstrument[id].forEach(function (v, i) { series[target][i] += v; });
-  });
+  const series = stackSeries(comp);
 
   let maxY = 0;
   years.forEach(function (_, i) {
@@ -100,12 +146,11 @@ export function renderRevenueNeedChart(container: HTMLElement, comp: ComputeResu
     div('tip-head', box).textContent = String(years[i]);
     tipRow(box, '', 'Funding need', money(comp.need[i]), true);
     tipRow(box, '', 'Total revenue', money(comp.totalRev[i]), true);
-    const cov = comp.need[i] > 0 ? Math.round(100 * comp.totalRev[i] / comp.need[i]) + '%' : 'n/a';
-    tipRow(box, '', 'Coverage', cov, false);
+    tipRow(box, '', 'Coverage', coverageText(comp, i), false);
     STACK_ORDER.slice().reverse().forEach(function (id) {
       if (series[id][i] > 0.5) tipRow(box, SLOT[id], labelFor(id), money(series[id][i]), false);
     });
-    showTip(box, evt.clientX, evt.clientY);
+    showTip(box, evt);
   }) as EventListener);
   overlay.addEventListener('pointerleave', function () {
     hair.setAttribute('visibility', 'hidden'); hideTip();
@@ -142,7 +187,7 @@ export function renderNetImpactChart(container: HTMLElement, rows: DistributionR
   lo -= pad; hi += pad;
   const x = function (v: number) { return M.l + (W - M.l - M.r) * ((v - lo) / (hi - lo)); };
 
-  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img',
+  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'group',
     'aria-label': 'Net annual household impact by income group: new taxes minus health-cost savings' }, container);
 
   niceTicks(lo, hi, 6).forEach(function (tv) {
@@ -162,7 +207,15 @@ export function renderNetImpactChart(container: HTMLElement, rows: DistributionR
     const isCost = v > 0;
     const color = isCost ? 'var(--div-warm)' : 'var(--div-cool)';
     const x0 = x(Math.min(0, v)), x1 = x(Math.max(0, v));
-    const g = el('g', { class: 'bench-row', tabindex: 0 }, svg);
+    const g = el('g', {
+      class: 'bench-row', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: a tab stop whose only output is a tooltip
+         serves a sighted keyboard user and nobody else. */
+      'aria-label': r.group.label + ': ' + (mode === 'pct'
+        ? (v > 0 ? 'pays ' : 'ahead ') + Math.abs(v).toFixed(1) + '% of income'
+        : (v > 0 ? 'pays $' : 'ahead $') +
+          Math.round(Math.abs(v)).toLocaleString('en-US'))
+    }, svg);
     el('path', { d: barPath(x0, cy - 11, Math.max(2, x1 - x0), 22, 4, isCost ? 'right' : 'left'),
       fill: color, 'fill-opacity': 0.85 }, g);
 
@@ -175,7 +228,7 @@ export function renderNetImpactChart(container: HTMLElement, rows: DistributionR
     }, svg);
     vt.textContent = valTxt;
 
-    function tipIt(evt: PointerEvent): void {
+    function tipIt(evt: TipPoint): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = r.group.label +
         ' (avg income $' + Math.round(r.avgIncomeNow).toLocaleString('en-US') + ')';
@@ -190,10 +243,12 @@ export function renderNetImpactChart(container: HTMLElement, rows: DistributionR
       tipRow(box, '', 'Net', (r.netPerHH > 0 ? '+$' : '−$') +
         Math.round(Math.abs(r.netPerHH)).toLocaleString('en-US') + '/hh/yr (' +
         (r.netPctIncome > 0 ? '+' : '') + (r.netPctIncome * 100).toFixed(1) + '% of income)', true);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
     }
-    g.addEventListener('pointermove', tipIt as EventListener);
+    g.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     g.addEventListener('pointerleave', hideTip);
+    /* R166 [S14]: the row is a tab stop; the focus pair makes it say something. */
+    bindTipFocus(g, tipIt);
   });
 
   const leg = div('legend', container);
@@ -215,7 +270,7 @@ export function renderRateCurve(container: HTMLElement, rows: DistributionRow[])
   const hi = Math.max.apply(null, rows.map(function (r) { return r.newRate; })) * 100 * 1.15;
   const x = function (v: number) { return M.l + (W - M.l - M.r) * (v / hi); };
 
-  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img',
+  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'group',
     'aria-label': 'Average federal tax rate by income group, current law versus proposed package' }, container);
 
   niceTicks(0, hi, 6).forEach(function (tv) {
@@ -229,7 +284,13 @@ export function renderRateCurve(container: HTMLElement, rows: DistributionRow[])
     const lab = el('text', { x: M.l - 10, y: cy + 4, class: 'row-label', 'text-anchor': 'end' }, svg);
     lab.textContent = r.group.label;
     const c = r.curRate * 100, n = r.newRate * 100;
-    const g = el('g', { class: 'bench-row', tabindex: 0 }, svg);
+    const g = el('g', {
+      class: 'bench-row', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: a tab stop whose only output is a tooltip
+         serves a sighted keyboard user and nobody else. */
+      'aria-label': r.group.label + ': current law ' + c.toFixed(1) +
+        '%, with package ' + n.toFixed(1) + '%'
+    }, svg);
     el('line', { x1: x(c), x2: x(n), y1: cy, y2: cy, stroke: 'var(--gridline-strong)',
       'stroke-width': 2 }, g);
     el('circle', { cx: x(c), cy: cy, r: 5, fill: 'var(--baseline-series)', class: 'marker' }, g);
@@ -237,16 +298,18 @@ export function renderRateCurve(container: HTMLElement, rows: DistributionRow[])
     const vt = el('text', { x: x(Math.max(c, n)) + 10, y: cy + 4, class: 'direct-label' }, svg);
     vt.textContent = c.toFixed(1) + '% → ' + n.toFixed(1) + '%';
 
-    function tipIt(evt: PointerEvent): void {
+    function tipIt(evt: TipPoint): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = r.group.label;
       tipRow(box, 'var(--baseline-series)', 'Current law', c.toFixed(1) + '%', false);
       tipRow(box, 'var(--series-1)', 'With package', n.toFixed(1) + '%', true);
       tipRow(box, '', 'Note', 'new-tax dollars ÷ group income; excludes health savings', false);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
     }
-    g.addEventListener('pointermove', tipIt as EventListener);
+    g.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     g.addEventListener('pointerleave', hideTip);
+    /* R166 [S14]: the row is a tab stop; the focus pair makes it say something. */
+    bindTipFocus(g, tipIt);
   });
 
   const leg = div('legend', container);
@@ -258,6 +321,43 @@ export function renderRateCurve(container: HTMLElement, rows: DistributionRow[])
     item.appendChild(sw);
     item.appendChild(document.createTextNode(p[1]));
   });
+}
+
+/* Both series on the top-rate chart are step functions: a rate holds until the
+   next change, a president until the next inauguration. */
+function topRateIn(yr: number): number {
+  let r = TOP_RATE_HISTORY[0].r;
+  TOP_RATE_HISTORY.forEach(function (h) { if (h.y <= yr) r = h.r; });
+  return r;
+}
+
+function presidentIn(yr: number): string {
+  let name = PRESIDENTS[0].name;
+  PRESIDENTS.forEach(function (p) { if (p.y <= yr) name = p.name; });
+  return name;
+}
+
+/**
+ * The top-rate history as a table: one row for every year either series
+ * changes, which is every value the chart can show and nothing it cannot.
+ *
+ * Review 9 of P20: like the revenue chart, this one's readout was reachable
+ * only by pointer. One row per year would be 113 rows of mostly repetition; a
+ * row per change is lossless because both series are steps.
+ */
+export function topRateTableData(): TableData {
+  const years: number[] = [];
+  TOP_RATE_HISTORY.forEach(function (h) { years.push(h.y); });
+  PRESIDENTS.forEach(function (p) { years.push(p.y); });
+  const changes = years
+    .filter(function (y, i) { return years.indexOf(y) === i && y >= 1913 && y <= 2025; })
+    .sort(function (a, b) { return a - b; });
+  return {
+    head: ['President', 'From', 'Top marginal rate'],
+    rows: changes.map(function (y) {
+      return [presidentIn(y), String(y), topRateIn(y) + '%'];
+    })
+  };
 }
 
 /* ---- 4. Top marginal income tax rate, 1913-2025, with presidency labels ---- */
@@ -311,16 +411,6 @@ export function renderTopRateChart(container: HTMLElement): void {
   const hair = el('line', { y1: M.t, y2: H - M.b, class: 'crosshair', visibility: 'hidden' }, svg);
   const overlay = el('rect', { x: M.l, y: M.t, width: W - M.l - M.r, height: H - M.t - M.b,
     fill: 'transparent' }, svg);
-  function rateAt(yr: number): number {
-    let r = H0[0].r;
-    H0.forEach(function (h) { if (h.y <= yr) r = h.r; });
-    return r;
-  }
-  function presAt(yr: number): string {
-    let name = P[0].name;
-    P.forEach(function (p) { if (p.y <= yr) name = p.name; });
-    return name;
-  }
   overlay.addEventListener('pointermove', (function (evt: PointerEvent) {
     const rct = svg.getBoundingClientRect();
     const px = (evt.clientX - rct.left) * (W / rct.width);
@@ -329,9 +419,9 @@ export function renderTopRateChart(container: HTMLElement): void {
     hair.setAttribute('x1', String(x(yr))); hair.setAttribute('x2', String(x(yr)));
     hair.setAttribute('visibility', 'visible');
     const box = document.createElement('div');
-    div('tip-head', box).textContent = yr + ' (' + presAt(yr) + ')';
-    tipRow(box, 'var(--series-1)', 'Top marginal rate', rateAt(yr) + '%', true);
-    showTip(box, evt.clientX, evt.clientY);
+    div('tip-head', box).textContent = yr + ' (' + presidentIn(yr) + ')';
+    tipRow(box, 'var(--series-1)', 'Top marginal rate', topRateIn(yr) + '%', true);
+    showTip(box, evt);
   }) as EventListener);
   overlay.addEventListener('pointerleave', function () {
     hair.setAttribute('visibility', 'hidden'); hideTip();
@@ -353,40 +443,43 @@ export function renderWealthChart(container: HTMLElement): void {
   const maxAvg = Math.max.apply(null, rows.map(function (r) { return r.avg; }));
   const x = function (v: number) { return M.l + (W - M.l - M.r) * (v / maxAvg); };
 
-  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img',
+  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'group',
     'aria-label': 'Average net worth per household by wealth group, linear scale' }, container);
 
   rows.forEach(function (r, i) {
     const cy = M.t + i * rowH + rowH / 2;
-    function fmtW(v: number): string {
-      if (v >= 1e9) return '$' + (v / 1e9).toFixed(1) + 'B';
-      if (v >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'M';
-      return '$' + Math.round(v / 1000) + 'k';
-    }
     const lab = el('text', { x: nameX, y: cy + 4, class: 'row-label', 'text-anchor': 'end' }, svg);
     lab.textContent = r.label;
     const mult = r.avg / Wd.medianHH;
     const vt = el('text', { x: valX, y: cy + 4, class: 'direct-label', 'text-anchor': 'start' }, svg);
-    vt.textContent = fmtW(r.avg) + ' (' +
+    vt.textContent = dollarsKMB(r.avg) + ' (' +
       (mult >= 10 ? Math.round(mult).toLocaleString('en-US') : mult.toFixed(1)) + '× median)';
 
     const w = Math.max(1.5, x(r.avg) - M.l);
-    const g = el('g', { class: 'bench-row', tabindex: 0 }, svg);
+    const g = el('g', {
+      class: 'bench-row', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: a tab stop whose only output is a tooltip
+         serves a sighted keyboard user and nobody else. */
+      'aria-label': r.label + ': average net worth ' + dollarsKMB(r.avg) +
+        ' per household, ' + r.share.toFixed(1) +
+        '% of all U.S. household wealth'
+    }, svg);
     el('path', { d: barPath(M.l, cy - 11, w, 22, 4, 'right'),
       fill: 'var(--series-1)', 'fill-opacity': 0.85 }, g);
 
-    function tipIt(evt: PointerEvent): void {
+    function tipIt(evt: TipPoint): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = r.label;
-      tipRow(box, 'var(--series-1)', 'Average net worth', fmtW(r.avg) + ' per household', true);
-      tipRow(box, '', 'Households', (r.hhM >= 1 ? r.hhM.toFixed(1) + 'M' :
-        Math.round(r.hhM * 1000) + 'k'), false);
+      tipRow(box, 'var(--series-1)', 'Average net worth', dollarsKMB(r.avg) + ' per household', true);
+      tipRow(box, '', 'Households', householdsMillions(r.hhM), false);
       tipRow(box, '', 'Total held', '$' + r.wealthT.toFixed(1) + 'T (' +
         r.share.toFixed(1) + '% of all U.S. household wealth)', false);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
     }
-    g.addEventListener('pointermove', tipIt as EventListener);
+    g.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     g.addEventListener('pointerleave', hideTip);
+    /* R166 [S14]: the row is a tab stop; the focus pair makes it say something. */
+    bindTipFocus(g, tipIt);
   });
 
   const note = el('text', { x: nameX - 12, y: H - 8, class: 'axis-text' }, svg);
@@ -394,13 +487,6 @@ export function renderWealthChart(container: HTMLElement): void {
 }
 
 /* ---- 6. Save-vs-pay comparison per bracket (% of income) ---- */
-function fmtC(v: number): string {
-  const a = Math.abs(v);
-  if (a >= 1e6) return '$' + (a / 1e6).toFixed(1) + 'M';
-  if (a >= 1e4) return '$' + Math.round(a / 1000) + 'k';
-  if (a >= 1e3) return '$' + (a / 1000).toFixed(1) + 'k';
-  return '$' + Math.round(a);
-}
 
 export function renderSaveVsPayChart(container: HTMLElement, rows: DistributionRow[]): void {
   container.innerHTML = '';
@@ -420,7 +506,7 @@ export function renderSaveVsPayChart(container: HTMLElement, rows: DistributionR
   const xL = function (p: number) { return cx - half * (p / maxPct); };
   const xR = function (p: number) { return cx + half * (p / maxPct); };
 
-  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'img',
+  const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg', role: 'group',
     'aria-label': 'Healthcare savings versus new taxes by income group, as share of income' }, container);
 
   el('line', { x1: cx, x2: cx, y1: M.t - 4, y2: H - M.b, class: 'baseline-axis' }, svg);
@@ -439,7 +525,14 @@ export function renderSaveVsPayChart(container: HTMLElement, rows: DistributionR
     const lab = el('text', { x: M.l - 10, y: cy + 4, class: 'row-label', 'text-anchor': 'end' }, svg);
     lab.textContent = r.group.label;
 
-    const g = el('g', { class: 'bench-row', tabindex: 0 }, svg);
+    const g = el('g', {
+      class: 'bench-row', tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: a tab stop whose only output is a tooltip
+         serves a sighted keyboard user and nobody else. */
+      'aria-label': r.group.label + ': saves ' + dollarsMagnitude(savePH) + ', pays ' +
+        dollarsMagnitude(r.taxPerHH) + ', ' + (net <= 0 ? 'ahead ' : 'pays ') +
+        dollarsMagnitude(net) + ' net'
+    }, svg);
     const wS = Math.max(1.5, cx - xL(save));
     el('path', { d: barPath(xL(save), cy - 10, wS, 20, 4, 'left'),
       fill: 'var(--div-cool)', 'fill-opacity': 0.85 }, g);
@@ -449,30 +542,32 @@ export function renderSaveVsPayChart(container: HTMLElement, rows: DistributionR
 
     const sLab = el('text', { x: xL(save) - 7, y: cy + 4, class: 'direct-label',
       'text-anchor': 'end' }, svg);
-    sLab.textContent = fmtC(savePH);
-    const netTxt = (net <= 0 ? 'ahead ' : 'pays ') + fmtC(net) + ' net';
+    sLab.textContent = dollarsMagnitude(savePH);
+    const netTxt = (net <= 0 ? 'ahead ' : 'pays ') + dollarsMagnitude(net) + ' net';
     const pLab = el('text', { x: xR(pay) + 7, y: cy + 4, class: 'direct-label' }, svg);
-    pLab.textContent = fmtC(r.taxPerHH) + ' · ' + netTxt;
+    pLab.textContent = dollarsMagnitude(r.taxPerHH) + ' · ' + netTxt;
 
-    function tipIt(evt: PointerEvent): void {
+    function tipIt(evt: TipPoint): void {
       const box = document.createElement('div');
       div('tip-head', box).textContent = r.group.label +
-        ' (avg income ' + fmtC(r.avgIncomeNow) + ')';
+        ' (avg income ' + dollarsMagnitude(r.avgIncomeNow) + ')';
       tipRow(box, 'var(--div-cool)', 'Premiums & bills eliminated',
-        fmtC(r.reliefPerHH) + '/yr (' + (100 * r.reliefPerHH / r.avgIncomeNow).toFixed(1) + '% of income)', false);
+        dollarsMagnitude(r.reliefPerHH) + '/yr (' + (100 * r.reliefPerHH / r.avgIncomeNow).toFixed(1) + '% of income)', false);
       if (r.wagePerHH > 0.5) {
         tipRow(box, 'var(--div-cool)', 'Wage gains from employer pass-through',
-          fmtC(r.wagePerHH) + '/yr', false);
+          dollarsMagnitude(r.wagePerHH) + '/yr', false);
       }
       tipRow(box, 'var(--div-warm)', 'New taxes under this scenario',
-        fmtC(r.taxPerHH) + '/yr (' + (100 * pay).toFixed(1) + '% of income)', false);
+        dollarsMagnitude(r.taxPerHH) + '/yr (' + (100 * pay).toFixed(1) + '% of income)', false);
       tipRow(box, '', 'Net change',
-        (net <= 0 ? '−' : '+') + fmtC(net) + '/yr (' +
+        (net <= 0 ? '−' : '+') + dollarsMagnitude(net) + '/yr (' +
         (r.netPctIncome > 0 ? '+' : '') + (100 * r.netPctIncome).toFixed(1) + '% of income)', true);
-      showTip(box, evt.clientX, evt.clientY);
+      showTip(box, evt);
     }
-    g.addEventListener('pointermove', tipIt as EventListener);
+    g.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     g.addEventListener('pointerleave', hideTip);
+    /* R166 [S14]: the row is a tab stop; the focus pair makes it say something. */
+    bindTipFocus(g, tipIt);
   });
 
   const leg = div('legend', container);

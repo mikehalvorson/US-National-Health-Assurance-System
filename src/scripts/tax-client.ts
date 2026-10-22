@@ -8,18 +8,27 @@
    instrument host's dataset.wired guard. */
 import { runOverviewMc } from '../lib/overview';
 import { DEFLATOR_2023_TO_2024 } from '../lib/params';
-import { defaultSettings, instrumentRevenue, compute, distribution, solveScenario } from '../lib/taxmodel';
-import { INSTRUMENTS, PROGRAMS, SCENARIOS, WEALTH_DIST, makeCustomProgram } from '../lib/taxparams';
+import {
+  balancerIds, defaultSettings, instrumentRevenue, compute, distribution, overlapFactors,
+  overlapFamily, solveScenario, topShare
+} from '../lib/taxmodel';
+import { INSTRUMENTS, OVERLAP, PROGRAMS, SCENARIOS, WEALTH_DIST, makeCustomProgram } from '../lib/taxparams';
 import { money } from '../lib/format';
 import {
   renderRevenueNeedChart, renderNetImpactChart, renderRateCurve,
-  renderTopRateChart, renderWealthChart, renderSaveVsPayChart
+  renderTopRateChart, renderWealthChart, renderSaveVsPayChart,
+  revenueNeedTableData, topRateTableData
 } from '../lib/tax-charts';
 import type { TaxSettings, TaxProgram, DistributionRow } from '../lib/tax-types';
+import { renderDataTable } from '../lib/overview-tables';
 
 function $(id: string): HTMLElement | null { return document.getElementById(id); }
 
-interface HealthPath { years: number[]; newRevenue: number[]; relief: number[]; wageGain: number[] }
+/* R125 [§S11b]: `wageGainNet`, not `wageGain`. The health model's tax
+   feedback is already subtracted from newRevenue, so crediting households
+   the gross pass-through here relieved them twice for the taxed share. The
+   field is named for which of the two it carries. */
+interface HealthPath { years: number[]; newRevenue: number[]; relief: number[]; wageGainNet: number[] }
 
 /* ---- state ---- */
 let settings: TaxSettings = defaultSettings();
@@ -31,14 +40,14 @@ let nhaEnabled = true;
 let healthPath: HealthPath | null = null;
 
 /* ---- health link (computed once from the model's default path) ---- */
-function buildHealthPath(): void {
+function buildHealthPath(): HealthPath {
   const mc = runOverviewMc('SCN-BASE', null);
   const DEF = DEFLATOR_2023_TO_2024;
-  healthPath = {
+  return {
     years: mc.years.slice(),
     newRevenue: mc.modePath.detail.map(function (d) { return d.newRevenue * DEF; }),
     relief: mc.modePath.detail.map(function (d) { return d.householdRelief * DEF; }),
-    wageGain: mc.modePath.detail.map(function (d) { return (d.wageGain || 0) * DEF; })
+    wageGainNet: mc.modePath.detail.map(function (d) { return (d.wageGainNet || 0) * DEF; })
   };
 }
 function healthNeed(year: number): number {
@@ -55,9 +64,9 @@ function healthRelief(year: number): number {
 }
 function healthWage(year: number): number {
   const hp = healthPath;
-  if (!hp || !hp.wageGain) return 0;
+  if (!hp || !hp.wageGainNet) return 0;
   const i = hp.years.indexOf(year);
-  return i >= 0 ? hp.wageGain[i] : 0;
+  return i >= 0 ? hp.wageGainNet[i] : 0;
 }
 
 function activePrograms(): TaxProgram[] {
@@ -76,6 +85,10 @@ function buildInstrumentControls(): void {
   const host = $('tax-instruments');
   if (!host) return;
   host.innerHTML = '';
+  /* owner, 2026-10-19: each card's checkbox, so turning on one of two
+     alternatives (the same exclusiveGroup) can turn the other off. Built per
+     call, so nothing outlives the page (src/scripts/README.md). */
+  const checkboxes: Record<string, HTMLInputElement> = {};
   INSTRUMENTS.forEach(function (ins) {
     const st = settings.instruments[ins.id];
     const card = document.createElement('div') as CardWithUpdate;
@@ -120,16 +133,52 @@ function buildInstrumentControls(): void {
     row.appendChild(phaseLab); row.appendChild(phase);
     card.appendChild(row);
 
+    /* R39 + R208 [§S5]: the balancer's uncertainty, on the instrument card
+       rather than in a parameter file nobody opens. `surtax` is the largest
+       instrument in the menu, the only major one with no official score, and
+       the balancer in the flagship scenario, so it absorbs the package's
+       residual gap - which is precisely what a reader needs told. */
+    if (balancerIds().has(ins.id)) {
+      const band = document.createElement('span');
+      band.className = 'instrument-band';
+      band.textContent = ins.revBand
+        ? 'Auto-balances the package. Revenue band ' + money(ins.revBand.low) +
+          ' to ' + money(ins.revBand.high) + '/yr at scale 1: ' + ins.revBand.basis
+        : 'Auto-balances the package. ' + (ins.revBandAbsent || '');
+      card.appendChild(band);
+    }
+
     function updateRev(): void {
-      const r = instrumentRevenue(ins, st, distYear);
-      rev.textContent = st.enabled && st.value > 0 ? money(r) + '/yr' : 'off';
+      /* R42 [§S5]: the per-instrument figure is net of the overlap deduction,
+         because the total tile below it is. Showing gross here would leave the
+         sixteen cards adding up to more than the package raises, which is the
+         reading error the deduction exists to stop. */
+      const factors = overlapFactors(settings, distYear);
+      const gross = instrumentRevenue(ins, st, distYear);
+      const f = factors[ins.id] ?? 1;
+      if (!st.enabled || st.value <= 0) { rev.textContent = 'off'; return; }
+      rev.textContent = f < 1
+        ? money(gross * f) + '/yr (net of overlap)'
+        : money(gross) + '/yr';
     }
     card._updateRev = updateRev;
     updateRev();
 
+    checkboxes[ins.id] = cb;
     cb.addEventListener('change', function () {
       st.enabled = cb.checked;
       if (ins.kind === 'toggle') st.value = cb.checked ? 1 : 0;
+      if (cb.checked && ins.exclusiveGroup) {
+        INSTRUMENTS.forEach(function (other) {
+          if (other.id === ins.id || other.exclusiveGroup !== ins.exclusiveGroup) return;
+          const ost = settings.instruments[other.id];
+          if (!ost) return;
+          ost.enabled = false;
+          if (other.kind === 'toggle') ost.value = 0;
+          const ocb = checkboxes[other.id];
+          if (ocb) ocb.checked = false;
+        });
+      }
       refresh();
     });
     if (slider) slider.addEventListener('input', function () {
@@ -205,6 +254,8 @@ function refresh(): void {
   const comp = compute(settings, progs);
   const pathChart = $('tax-path-chart');
   if (pathChart) renderRevenueNeedChart(pathChart, comp);
+  const pathTable = $('tax-path-table') as HTMLTableElement | null;
+  if (pathTable) renderDataTable(pathTable, revenueNeedTableData(comp));
 
   const i = comp.years.indexOf(distYear);
   const tiles = $('tax-tiles');
@@ -213,6 +264,23 @@ function refresh(): void {
     [
       { label: 'Revenue in ' + distYear, value: money(comp.totalRev[i]) + '/yr',
         range: 'all instruments, phased as scheduled' },
+      /* R42 + R36 + BL1 [§S5]: the overlap adjustment, stated where the
+         instruments are summed. It used to live only inside one instrument's
+         description while the engine summed them anyway. */
+      { label: 'Top-0.1% overlap deduction', value: '-' + money(comp.overlapDeduction[i]) + '/yr',
+        range: comp.overlapDeduction[i] > 0
+          ? overlapFamily().length + ' instruments land on the same base'
+          : 'fewer than two overlapping instruments active' },
+      /* R146 [§S18]: how much of the total rests on estimates computed
+         against law the July 2025 reconciliation act has since changed; and
+         (review of the content run) how much of that is this model's own
+         calculation, which the tile used to call a score */
+      { label: 'Estimated against superseded law', value: money(comp.supersededRev[i]) + '/yr',
+        range: (comp.totalRev[i] > 0 ? Math.round(100 * comp.supersededRev[i] / comp.totalRev[i]) : 0) +
+          '% of revenue rests on estimates made before the July 2025 tax law' +
+          (comp.supersededModelRev[i] > 0
+            ? '; ' + money(comp.supersededModelRev[i]) + '/yr of it is this model\'s own calculation, not a published score'
+            : '') },
       { label: 'Funding need in ' + distYear, value: money(comp.need[i]) + '/yr',
         range: progs.filter(function (p) { return p.enabled; }).length + ' program(s)' },
       { label: 'Coverage in ' + distYear,
@@ -230,6 +298,26 @@ function refresh(): void {
       tl.appendChild(l); tl.appendChild(v); tl.appendChild(r);
       tiles.appendChild(tl);
     });
+  }
+
+  /* R36 + R144 [§S5]: the overlap stated in the instrument panel itself, with
+     the derived family and the graded band, rather than only in one
+     instrument's description field. */
+  const overlapNote = $('tax-overlap-note');
+  if (overlapNote) {
+    const fam = overlapFamily();
+    overlapNote.textContent =
+      'Overlapping instruments: ' + fam.length + ' of the ' + INSTRUMENTS.length +
+      ' instruments send more than ' + Math.round(100 * OVERLAP.top01Threshold) +
+      '% of their incidence to the top 0.1% (' +
+      fam.map(function (ins) {
+        return ins.label + ' ' + Math.round(100 * topShare(ins)) + '%';
+      }).join(', ') + '). ' + OVERLAP.note +
+      ' The share treated as overlapping is ' + Math.round(100 * OVERLAP.rate.mode) +
+      '%, a judgment of this model graded ' + OVERLAP.confidence + ', with ' +
+      Math.round(100 * OVERLAP.rate.low) + '% to ' + Math.round(100 * OVERLAP.rate.high) +
+      '% as the plausible range; in ' + distYear + ' that removes ' +
+      money(comp.overlapDeduction[i]) + '/yr from the package total.';
   }
 
   const reliefB = nhaEnabled ? healthRelief(distYear) : 0;
@@ -365,6 +453,8 @@ function wireScenarioPicker(): void {
 function renderInequality(): void {
   const toprate = $('toprate-chart');
   if (toprate) renderTopRateChart(toprate);
+  const toprateTable = $('toprate-table') as HTMLTableElement | null;
+  if (toprateTable) renderDataTable(toprateTable, topRateTableData());
   const wealth = $('wealth-chart');
   if (wealth) renderWealthChart(wealth);
 
@@ -416,8 +506,10 @@ function initTax(): void {
   distMode = 'dollars';
   activeScenario = 'goal-top';
   nhaEnabled = true;
+  /* R223 [§S15]: assigned here rather than inside the helper, so the reset
+     is a statement of this function that the state gate can read. */
+  healthPath = buildHealthPath();
 
-  buildHealthPath();
   wireProgramAdd();
   wireViewControls();
   wireScenarioPicker();

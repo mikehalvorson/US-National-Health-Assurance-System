@@ -1,0 +1,8 @@
+---
+/* R76 + R97 [§S17]: the one rendering of the removal-law ruling. The words
+   are REMOVAL_RULING's, in legislation.ts; this adds only the italics the
+   two case names take. Inline, so a page puts it inside its own sentence
+   flow and follows it with the consequence it draws. */
+import { REMOVAL_RULING as R } from '../lib/legislation';
+---
+<span class="removal-ruling">In <i>{R.caseName}</i>, decided {R.decided}, the Supreme Court {R.held} <i>{R.overruled}</i> {R.after}</span>

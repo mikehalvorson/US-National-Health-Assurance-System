@@ -1,9 +1,63 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { methodologyUrl } from '../lib/data-phases';
+import { PLANES } from '../lib/data-view';
+import { qualityRecord } from '../lib/quality';
+import { requiredBound } from '../lib/source-package';
+
+/* R290 [§S12]: three of the four cyber tiles below shipped their number as a
+   static string while the catalog carries it as a controlled maturity target.
+   They are read by id now, and the comparator and value come from the record
+   rather than being retyped with a different sign character (the tiles wrote
+   the U+2265 form, the catalog writes ">=").
+ *
+ * The fourth tile is the finding. "Sensitive-access audits: at least 99% of
+ * required cases completed and reviewable" has no record in the catalog -
+ * searching all 440 for the subject, for "audit" and for "reviewable" returns
+ * the AI override capture measure, two cost parameters and nothing else. So
+ * the page was publishing a performance number that the plan's controlled
+ * dictionary does not contain, next to three that it does.
+ *
+ * R169 [§S18]: that search covered the metric catalog and not the plan's
+ * requirements, and the requirement is there. SR-DATA-010, in both upstream
+ * documents: "The system shall complete sensitive data access audits for at
+ * least 99% of required cases by Phase 8." So the tile said "a duty the plan
+ * states without a numeric target" about a duty the plan states with one,
+ * and P18's open item (source a controlled value so this tile can publish a
+ * number again) closes on the plan's own words. The value is read from the
+ * Source Package, as the three beside it are read from the catalog; the id
+ * stays here, where no reader sees it. */
+const AUDIT_REQUIREMENT = 'SR-DATA-010';
+const auditTile = (() => {
+  const bound = requiredBound(AUDIT_REQUIREMENT, 'a percentage bound with a comparator',
+    (b) => b.unit === '%' && !!b.cmp);
+  /* the accept test above refused a bound with no comparator */
+  return { label: 'Sensitive-access audits', value: bound.cmp! + bound.num + '%',
+    range: 'of required cases with a completed sensitive-data access audit; every access to a sensitive record is logged and visible to the patient' };
+})();
+const cyberTarget = (id: string) => qualityRecord(id);
+const CYBER_TILES = [
+  { id: 'TPP-11.1', label: 'Critical-system uptime',
+    range: 'with unsafe or stale service classified as degraded' },
+  { id: 'TPP-11.2', label: 'Downtime continuity',
+    range: 'of essential-care and payment drills passed' },
+  { id: 'TPP-11.3', label: 'Critical remediation',
+    range: 'of critical vulnerabilities fixed within 15 days' }
+].map((t) => ({ ...t, value: cyberTarget(t.id).target }));
+
+/* Written the way the tiles read, from the record's own comparator. */
+const showTarget = (raw: string) => {
+  const m = /^(>=|<=)\s*([\d.]+%)/.exec(raw);
+  return m ? (m[1] === '>=' ? '\u2265' : '\u2264') + m[2] : raw;
+};
+
+const planeCount = PLANES.length;
 ---
-<BaseLayout title="National Health Assurance: Data">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Data"
+  description="The national health information mesh: what it stores, how records move and are corrected, and the cybersecurity and continuity duties it carries."
+>
 
   <section class="card">
     <h2>Why the current health-data system fails</h2>
@@ -18,7 +72,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       <span>leads to</span>
       <span>How the system fixes it</span>
     </div>
-    <div id="data-fixes" class="data-fix-grid"
+    <div role="group" id="data-fixes" class="data-fix-grid"
       aria-label="Current health-data failures and the system controls that correct them"></div>
     <p class="note">This is treated as a safety and continuity
       problem, not merely an IT inconvenience. The status-quo comparison records
@@ -48,7 +102,7 @@ import ChapterNav from '../components/ChapterNav.astro';
         <strong>Source custody stays distributed and attributable</strong>
       </div>
     </div>
-    <div class="data-lifecycle" aria-label="How a record moves through the information mesh">
+    <div role="group" class="data-lifecycle" aria-label="How a record moves through the information mesh">
       <div class="data-life-step">
         <span>1</span><b>Resolve</b>
         <small>Match the patient, provider, facility, and acting role.</small>
@@ -80,8 +134,8 @@ import ChapterNav from '../components/ChapterNav.astro';
       consent or purpose, correction chain, quality flags, and retention
       state. That makes a clinical fact, payment, appeal, or published metric
       reproducible instead of silently overwritable.</p>
-    <div id="data-planes" class="data-plane-grid"
-      aria-label="Six logical data planes in the national information mesh"></div>
+    <div id="data-planes" class="data-plane-grid" role="list"
+      aria-label={planeCount + " logical data planes in the national information mesh"}></div>
     <div class="tbl-scroll data-store-wrap">
       <table class="data data-store-table" id="data-store-table">
         <caption class="sr-only">Major information-mesh datasets and examples</caption>
@@ -97,18 +151,18 @@ import ChapterNav from '../components/ChapterNav.astro';
       marked <b>Specified</b> are controlled milestones or source targets;
       values marked <b>Derived</b> are proposed interim thresholds with a
       documented rationale.</p>
-    <div class="data-target-legend" aria-label="Phase target status legend">
+    <div role="group" class="data-target-legend" aria-label="Phase target status legend">
       <span><i class="data-basis framework">Specified</i> controlled value</span>
       <span><i class="data-basis derived">Derived</i> proposed interim value</span>
     </div>
-    <div id="data-phase-timeline" class="rollout-timeline data-phase-timeline"
+    <div role="group" id="data-phase-timeline" class="rollout-timeline data-phase-timeline"
       aria-label="Interactive data-system rollout timeline"></div>
     <div id="data-phase-detail" class="rollout-detail data-phase-detail"
-      aria-live="polite"></div>
+      role="region" aria-label="Selected data-system phase detail"></div>
     <p class="note">Early-phase derived targets apply to the stated test,
       pilot, participating-provider, or Wave I cohort. They are not national
       claims. <a id="data-methodology-link"
-        href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md#p0"
+        href={methodologyUrl("p0")}
         target="_blank" rel="noopener">See every derivation and justification</a>.</p>
   </section>
 
@@ -120,7 +174,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       workstation connects through the national gateway. The shared layer
       supplies the current permitted view and receives the new care event,
       while the creating source remains attributable.</p>
-    <div class="provider-flow" aria-label="Provider workflow with the national information mesh">
+    <div role="group" class="provider-flow" aria-label="Provider workflow with the national information mesh">
       <div class="provider-step">
         <span>01</span><b>Authenticate</b>
         <p>Verify clinician identity, credentials, facility, role, and declared purpose.</p>
@@ -170,12 +224,12 @@ import ChapterNav from '../components/ChapterNav.astro';
       Public operating, rights, payment, oversight, and research institutions
       on the right exchange only the fields their lawful function requires.
       Each connection is attributable, purpose-bound, and auditable.</p>
-    <div class="data-map-legend" aria-label="Data transfer legend">
+    <div role="group" class="data-map-legend" aria-label="Data transfer legend">
       <span><i class="legend-line bidir" aria-hidden="true">↔</i> governed read and write</span>
       <span><i class="legend-line source" aria-hidden="true"></i> authoritative source remains identified</span>
       <span><i class="legend-line segment" aria-hidden="true"></i> segmented or aggregate-only where required</span>
     </div>
-    <div id="data-transfer-map" class="data-transfer-map"
+    <div role="group" id="data-transfer-map" class="data-transfer-map"
       aria-label="Map of data exchange between the national information mesh and interacting facilities and institutions"></div>
   </section>
 
@@ -186,39 +240,41 @@ import ChapterNav from '../components/ChapterNav.astro';
       availability, safe degraded operation, and accountable recovery are all
       clinical requirements. A system that is online but serving stale,
       incomplete, or corrupted data is treated as degraded.</p>
-    <div id="cyber-controls" class="cyber-control-grid"
+    <div role="group" id="cyber-controls" class="cyber-control-grid"
       aria-label="Required cybersecurity and continuity controls"></div>
-    <div class="tiles cyber-targets" aria-label="Cybersecurity performance targets">
-      <div class="tile">
-        <div class="label">Critical-system uptime</div>
-        <div class="value">≥99.97%</div>
-        <div class="range">with unsafe or stale service classified as degraded</div>
-      </div>
-      <div class="tile">
-        <div class="label">Downtime continuity</div>
-        <div class="value">≥98%</div>
-        <div class="range">of essential-care and payment drills passed</div>
-      </div>
-      <div class="tile">
-        <div class="label">Critical remediation</div>
-        <div class="value">≥99%</div>
-        <div class="range">of critical vulnerabilities fixed within 15 days</div>
-      </div>
-      <div class="tile">
-        <div class="label">Sensitive-access audits</div>
-        <div class="value">≥99%</div>
-        <div class="range">of required cases completed and reviewable</div>
+    <div class="tiles cyber-targets" role="list"
+      aria-label="Cybersecurity performance targets">
+      {CYBER_TILES.map((t) => (
+        <div class="tile" role="listitem">
+          <div class="label">{t.label}</div>
+          <div class="value">{showTarget(t.value)}</div>
+          <div class="range">{t.range}</div>
+          {/* R290 [§S12], review: the row's complaint is that these tiles
+              "carry no provenance marker at all", in the chapter whose own
+              roadmap distinguishes Specified from Derived so a reader knows
+              which numbers are controlled. Deriving the value closed half of
+              it; this is the other half, in the same vocabulary the phase
+              register uses. */}
+          <span class="cyber-target-basis">Specified</span>
+        </div>
+      ))}
+      {/* R169 [§S18]: a controlled value like its neighbours, read from the
+          plan's requirement rather than its metric catalog. */}
+      <div class="tile" role="listitem">
+        <div class="label">{auditTile.label}</div>
+        <div class="value">{showTarget(auditTile.value)}</div>
+        <div class="range">{auditTile.range}</div>
+        <span class="cyber-target-basis">Specified</span>
       </div>
     </div>
   </section>
 
   <p class="rollout-source">Derived phase targets and their assumptions are
     documented in the
-    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/data_phase_target_methodology.md"
+    <a href={methodologyUrl()}
       target="_blank" rel="noopener">data phase-target methodology</a>.</p>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

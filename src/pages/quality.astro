@@ -1,35 +1,90 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R227 [§S3]: the interior of every trajectory rests on one fitted scalar, and
+   until now the page published the results without saying so. Every figure in
+   the note below is read from the model, never typed. */
+import {
+  KAPPA_MATURE_PCT, KAPPA_SOURCE_FLOOR_PCT, KAPPA_SOURCE_GATE, KAPPA_VALUE, TODAY_LEVELS
+} from '../lib/equations';
+import { numberWord } from '../lib/format';
+import { kappaBand } from '../lib/kappa-check';
+import { derivationCounts } from '../lib/rollout-kind-check';
+import { CATALOG_ID_NOTE, QUALITY_DATA } from '../lib/quality';
+/* R244 [S14]: the legend chips and the diagram's accessible names read the
+   same map, so a chip cannot say one thing while a node says another. */
+import { NODE_TYPE_LABELS } from '../lib/equation-diagram';
+
+const EQ_LEGEND_TYPES = ['param', 'ramp', 'model', 'index', 'TPP', 'KPP'] as const;
+
+const kppTppCount = QUALITY_DATA.parameters.filter((p) => p.type !== 'CP').length;
+const kappaMetricsMoved = Math.max(...kappaBand().map((r) => r.metricsMoved));
+/* the branch review against main: the paragraph below said one number sets
+   every interim shortfall; the metrics that start at today's measured level
+   (owner, 2026-10-19) are outside its reach */
+const todayLevelCount = numberWord(Object.keys(TODAY_LEVELS.entries).length);
+
+/* R221 [§S3]: the page claimed "Targets here are calculated, not asserted".
+   True of most published rows and false of the rest, so it states the split
+   instead, counted from the catalog rather than typed. */
+const derivations = derivationCounts();
+const publishedRows = derivations.reduce((n, d) => n + d.rows, 0);
+const eqRows = derivations
+  .filter((d) => d.kinds.includes('equation-derived target'))
+  .reduce((n, d) => n + d.rows, 0);
+const assertedRows = publishedRows - eqRows;
+
+/* R115 [§S11b]: the catalog has two sources and the page said so nowhere.
+   The sentence is read from the catalog, not typed here, because R220 in
+   §S12 and §S16 have to land on the same words and copying prose between
+   three places is how three places end up saying three things. */
+const provenance = QUALITY_DATA.provenance;
+
+/* R220 [§S12]: the three tiles below typed 45, 85 and 310 while the catalog
+   shipped a counts object carrying all three, and the closing line typed
+   "310-record" a fourth time. All four were correct, which is the reason to
+   derive them rather than a reason to leave them: they are correct until the
+   day the catalog moves, and nothing would have said so.
+   The family count is read the same way, from the records rather than from
+   the cpFamilies list, so it counts what the tile beside it describes. */
+const counts = QUALITY_DATA.counts;
+const cpFamilyCount = new Set(
+  QUALITY_DATA.parameters.filter((p) => p.type === 'CP').map((p) => p.family)
+).size;
 ---
-<BaseLayout title="National Health Assurance: Quality">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Quality"
+  description="The complete parameter catalog and the equations behind every phase target, with the rollout milestone each parameter must meet."
+>
 
   <section class="card">
-    <h2>The complete controlled parameter catalog</h2>
+    <h2>The complete parameter catalog</h2>
     <p class="desc">The plan controls three different kinds of
       parameters. Key performance parameters define system outcomes,
       technical performance parameters define operating performance, and
       cost parameters define the quantities required to cost, calibrate, and
-      stress-test the system. This view lists all 440 records in the
-      controlled dictionaries and groups them by where they matter.</p>
-    <div class="quality-counts" aria-label="Controlled parameter counts">
+      stress-test the system. This view lists all {provenance.framework + provenance.planDefined}
+      records in the plan's dictionaries and groups them by where they
+      matter.</p>
+    <p class="desc">{provenance.note}</p>
+    <p class="desc">{CATALOG_ID_NOTE}</p>
+    <div class="quality-counts" role="group" aria-label="Parameter counts by kind">
       <div class="quality-count">
         <span class="quality-kicker">System outcomes</span>
-        <strong>45</strong>
+        <strong>{counts.KPP}</strong>
         <b>KPP records</b>
         <small>Coverage, access, quality, equity, fiscal, transition, workforce, and legitimacy outcomes</small>
       </div>
       <div class="quality-count">
         <span class="quality-kicker">Operating performance</span>
-        <strong>85</strong>
+        <strong>{counts.TPP}</strong>
         <b>TPP records</b>
         <small>Eligibility, payment, medicines, facilities, workforce, benefits, data, cyber, rights, and innovation</small>
       </div>
       <div class="quality-count">
         <span class="quality-kicker">Cost and model control</span>
-        <strong>310</strong>
-        <b>CP records in 20 families</b>
+        <strong>{counts.CP}</strong>
+        <b>CP records in {cpFamilyCount} families</b>
         <small>Inputs, states, ledgers, derived outputs, offsets, units, owners, and calibration status</small>
       </div>
     </div>
@@ -43,15 +98,17 @@ import ChapterNav from '../components/ChapterNav.astro';
   <section class="card">
     <h2>Targets across the twelve-year rollout</h2>
     <p class="desc">Every KPP and TPP carries a target at every phase
-      where it is measurable, built from three sources in priority order:
-      the plan's own gate floors and milestones (authoritative, shown
-      below), the Data tab's hand-derived information-mesh plan (reused
-      verbatim so the two tabs always agree), and a calculated value from
-      that parameter's own equation for everything else. The panel and
-      table here show only the plan's explicit floors; each parameter's
-      full phase-by-phase strip, including the equation-derived targets,
-      lives in the explorer.</p>
-    <div id="quality-phase-overview" class="quality-phase-overview"
+      where it is measurable. {publishedRows} targets, from four sources in
+      priority order, and this is how they divide:
+      {derivations.map((d, i) => (
+        <>{i > 0 ? '; ' : ''}<b>{d.rows}</b> from {d.derivation}</>
+      ))}. The plan's own commitments are authoritative and are shown below;
+      the Data tab's entries are reused verbatim so the two tabs always agree;
+      the equation supplies the rest. The panel and table here show only the
+      plan's explicit floors. Each parameter's full phase-by-phase strip,
+      including the equation-derived targets and the number the equation gave
+      wherever a committed floor replaced it, lives in the explorer.</p>
+    <div id="quality-phase-overview" class="quality-phase-overview" role="group"
       aria-label="Numeric parameter milestones and gate floors across rollout phases"></div>
     <div id="quality-floor-table" class="tbl-scroll quality-floor-wrap"></div>
     <p class="note"><b>How equation-derived targets are built.</b>
@@ -67,13 +124,15 @@ import ChapterNav from '../components/ChapterNav.astro';
 
   <section class="card">
     <h2>The equation behind every target</h2>
-    <p class="desc">Targets here are calculated, not asserted. Pick a
-      stress scenario from the healthcare model and every equation
-      recomputes: the same inputs that move total system cost also move
-      what each phase can credibly demand. Pick a diagram to see how
-      equations feed each other, reading left to right from model inputs
-      through operating parameters (TPP) to system outcomes (KPP). Select
-      any node for its formula, inputs, and phase-by-phase values.</p>
+    <p class="desc">{eqRows} of the {publishedRows} published phase targets are
+      calculated from that parameter's own equation; the other {assertedRows}
+      are the plan's own commitments, carried as written. Pick a stress
+      scenario from the healthcare model and every equation recomputes: the
+      same inputs that move total system cost also move what each phase can
+      credibly demand. Pick a diagram to see how equations feed each other,
+      reading left to right from model inputs through operating parameters
+      (TPP) to system outcomes (KPP). Select any node for its formula, inputs,
+      and phase-by-phase values.</p>
     <div class="quality-controls" role="group" aria-label="Equation explorer controls">
       <label class="quality-control">
         <span>Stress scenario</span>
@@ -99,17 +158,28 @@ import ChapterNav from '../components/ChapterNav.astro';
       </label>
     </div>
     <p id="quality-eq-groupdesc" class="note quality-eq-groupdesc"></p>
+    <p class="note">For most metrics, how far short of maturity a target
+      sits at each interior phase is set by one number, the immaturity stress
+      multiplier (kappa = {KAPPA_VALUE}). It is fitted to a single controlled
+      observation: Gate {KAPPA_SOURCE_GATE} requires high-stakes AI review and
+      audit capture of {KAPPA_SOURCE_FLOOR_PCT}% at P5 against
+      {KAPPA_MATURE_PCT}% at maturity. Maturity targets do not depend on it;
+      every interim target on {kappaMetricsMoved} of the {kppTppCount} metrics
+      does. The rest follow the model itself, a share of the build, or, for
+      {todayLevelCount}, a start at today's measured level; for every metric
+      the target stays beyond today's system, and today's level only sets
+      where the path begins. At half and double that multiplier the typical interim target
+      moves a few percent and the widest moves a great deal more, which is
+      published as a sensitivity band in the methodology. Nothing else in the
+      plan tests the choice.</p>
     <div class="quality-eq-legend" aria-hidden="true">
-      <span class="quality-eq-chip chip-param">cost model input</span>
-      <span class="quality-eq-chip chip-ramp">rollout build state</span>
-      <span class="quality-eq-chip chip-model">fiscal engine value</span>
-      <span class="quality-eq-chip chip-index">derived index</span>
-      <span class="quality-eq-chip chip-tpp">TPP</span>
-      <span class="quality-eq-chip chip-kpp">KPP</span>
+      {EQ_LEGEND_TYPES.map((t) => (
+        <span class={"quality-eq-chip chip-" + t.toLowerCase()}>{NODE_TYPE_LABELS[t]}</span>
+      ))}
     </div>
-    <div id="quality-eq-diagram" class="quality-eq-diagram tbl-scroll"
-      aria-label="Traversable equation flow diagram"></div>
-    <div id="quality-eq-detail" class="quality-eq-detail" aria-live="polite"></div>
+    <div id="quality-eq-diagram" class="quality-eq-diagram tbl-scroll"></div>
+    <div id="quality-eq-detail" class="quality-eq-detail" tabindex="-1"
+      role="region" aria-label="Selected equation detail"></div>
     <p class="note"><b>Reading the diagrams.</b> KPPs sit at the far right
       unless they feed another equation. Values shown for inputs use the
       selected phase and scenario. Committed floors, milestones, and the
@@ -120,8 +190,8 @@ import ChapterNav from '../components/ChapterNav.astro';
   </section>
 
   <section class="card">
-    <h2>Explore all 440 parameters</h2>
-    <p class="desc">Search the controlled identifier or text, narrow the
+    <h2>Explore all {provenance.framework + provenance.planDefined} parameters</h2>
+    <p class="desc">Search by identifier or text, narrow the
       catalog by parameter type or concept, and choose a rollout phase. Select
       any row for its calculation, owner, datasets, status, its target
       equation, and the complete phase-by-phase target strip. With a stress
@@ -170,22 +240,21 @@ import ChapterNav from '../components/ChapterNav.astro';
     </div>
 
     <div id="quality-selected" class="quality-selected"
-      aria-live="polite" aria-label="Selected parameter details"></div>
+      role="region" aria-label="Selected parameter details"></div>
 
     <div class="tbl-scroll quality-table-wrap">
       <table class="data quality-table" id="quality-table">
-        <caption class="sr-only">Complete controlled quality and cost parameter catalog</caption>
+        <caption class="sr-only">Complete quality and cost parameter catalog</caption>
       </table>
     </div>
   </section>
 
   <p class="rollout-source">The catalog covers the complete key-performance
-    and technical-performance dictionaries, the 310-record cost-parameter
-    registry, and the controlled phase and gate tables.
-    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources and methodology</a>.</p>
+    and technical-performance dictionaries, the {counts.CP}-record
+    cost-parameter registry, and the phase and gate tables.
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/quality-equation-methodology.md" target="_blank" rel="noopener">Sources and methodology</a>.</p>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

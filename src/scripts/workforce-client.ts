@@ -3,9 +3,9 @@
    Port of docs/js/workforce.js:190-528. Runs on astro:page-load; idempotent
    via the legacy list's dataset.wired guard. */
 import {
-  SCENARIOS, LEGACY, CREATED, ACRONYMS,
-  ROLLOUT_YEARS, TOTAL_US_EMPLOYMENT_2024, ANNUAL_TRAINING_TARGET,
-  LTC_WORKFORCE, ltcWageFloorCost,
+  SCENARIOS, LEGACY, CREATED,
+  LTC_WORKFORCE, ltcWageFloorCost, WORKER_SUPPORT_RATE_BASIS,
+  workforceLedgerFigures, createdScopeStatement, TOTAL_US_EMPLOYMENT_SERIES,
   type ScenarioId
 } from '../lib/workforce';
 
@@ -27,57 +27,28 @@ function setText(id: string, text: string): void {
   if (e) e.textContent = text;
 }
 
-function addAcronymHovers(root: HTMLElement | null): void {
-  if (!root) return;
-  const keys = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
-  const escaped = keys.map(function (key) { return key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
-  const pattern = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes: Text[] = [];
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    const parent = node.parentElement;
-    if (!parent || parent.closest('abbr, script, style')) continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(node.nodeValue || '')) textNodes.push(node);
-  }
-  textNodes.forEach(function (node) {
-    const text = node.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    pattern.lastIndex = 0;
-    text.replace(pattern, function (match: string, acronym: string, offset: number) {
-      if (offset > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
-      const abbr = document.createElement('abbr');
-      abbr.className = 'workforce-acronym';
-      abbr.title = ACRONYMS[acronym];
-      abbr.setAttribute('aria-label', acronym + ': ' + ACRONYMS[acronym]);
-      abbr.textContent = acronym;
-      fragment.appendChild(abbr);
-      lastIndex = offset + match.length;
-      return match;
-    });
-    if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    node.parentNode!.replaceChild(fragment, node);
-  });
-}
-
 function setBar(id: string, value: number, denominator: number): void {
   const bar = document.getElementById(id);
   if (!bar) return;
   bar.style.width = Math.max(2, Math.min(100, value / denominator * 100)) + '%';
 }
 
+/* R64 [§S9a]: the ledger arithmetic used to live here and be typed a second
+   time into the page's static HTML and a third time into its prose. It is one
+   derivation now, in workforce.ts, and workforceProseDrift() holds the typed
+   copies to it. Landing Type E moves all of these at once; the build says so
+   rather than the page inheriting the old figures. */
 function renderFlow(): void {
   const scenario = SCENARIOS[activeScenario];
-  const external = scenario.supported - scenario.inside;
-  const gap = scenario.eliminated - scenario.supported;
-  const entrants = scenario.created - scenario.inside;
-  const annualEntrants = Math.round(entrants * 1000 / ROLLOUT_YEARS);
-  const scopedDifference = scenario.eliminated - scenario.created;
-  const employmentShare = entrants * 1000 / TOTAL_US_EMPLOYMENT_2024 * 100;
-  const transitionShare = scenario.inside / scenario.created * 100;
-  const trainingRatio = ANNUAL_TRAINING_TARGET / annualEntrants;
+  const f = workforceLedgerFigures(activeScenario);
+  const external = f.externalPlacement;
+  const gap = f.unresolvedGap;
+  const entrants = f.entrants;
+  const annualEntrants = f.annualEntrants;
+  const scopedDifference = f.scopedDifference;
+  const employmentShare = f.employmentSharePct;
+  const transitionShare = f.transitionSharePct;
+  const trainingRatio = f.trainingRatio;
 
   setText('wf-eliminated', fmtThousands(scenario.eliminated));
   setText('wf-inside', fmtThousands(scenario.inside));
@@ -152,9 +123,11 @@ function renderLegacyDetail(id: string): void {
   host.appendChild(reason);
   host.appendChild(field('Likely destinations', item.destinations));
   host.appendChild(field('Counting boundary', item.boundary));
-  host.appendChild(field('Evidence and confidence', item.evidence));
+  /* R68 [§S11b]: the grade is a field now, so the sentence is composed from
+     it rather than typed into the prose beside it. */
+  host.appendChild(field('Evidence and confidence',
+    item.evidence + ' Confidence: ' + item.confidence + '. ' + item.confidenceReason));
   host.appendChild(field('Work that continues', item.continues));
-  addAcronymHovers(host);
 }
 
 function renderLegacyList(): void {
@@ -197,7 +170,6 @@ function renderLegacyList(): void {
     });
     host.appendChild(button);
   });
-  addAcronymHovers(host);
   renderLegacyDetail(selectedLegacy);
 }
 
@@ -268,7 +240,6 @@ function renderCreatedChart(): void {
     '<span><i class="transitioned"></i> fillable by displaced workers</span>' +
     '<span><i class="entrants"></i> clinicians, technicians, graduates, or other entrants</span>';
   host.appendChild(legend);
-  addAcronymHovers(host);
 }
 
 /* LTC direct-care workforce: the one figure that must match the fiscal model
@@ -311,8 +282,17 @@ function initWorkforce(): void {
     });
   });
   setScenario('plan');
+  /* R177 [§S9a]: the placement floor's basis, from the module rather than
+     retyped into the page, so the rate and the sentence explaining it cannot
+     drift apart. */
+  setText('wf-support-basis', WORKER_SUPPORT_RATE_BASIS);
+  /* R67 [§S9a]: what the floor leaves out, written from the declared
+     exclusion list rather than typed beside the floor. */
+  setText('wf-scope-exclusions', createdScopeStatement());
+  /* R69 [§S9a]: the denominator names its BLS series where a reader can
+     see it. OEWS is a different measure of the same year, ~9% smaller. */
+  setText('wf-labor-series', TOTAL_US_EMPLOYMENT_SERIES);
   renderLtcWorkforce();
-  addAcronymHovers(document.querySelector('main'));
 }
 
 /* Also init on first load without waiting for astro:page-load: if this module

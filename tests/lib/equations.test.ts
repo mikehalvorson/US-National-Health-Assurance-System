@@ -2,10 +2,11 @@ import { describe, expect, test } from 'vitest';
 import { QUALITY_DATA } from '../../src/lib/quality';
 import { parseNum } from '../../src/lib/phase-targets';
 import {
-  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, evaluateAtPhase, equationSelfTests,
-  computeTargets, collectDeps
+  EQUATIONS, EQ_PHASES, DIAGRAM_GROUPS, anchorMatchTarget, clampCounts, committedAnchors,
+  evaluateAtPhase, equationSelfTests, computeTargets, collectDeps, modelValueAt
 } from '../../src/lib/equations';
-import { SCENARIOS } from '../../src/lib/scenarios';
+import { runPath, sampleParams } from '../../src/lib/model';
+import { effectiveParams, SCENARIOS, scenarioStructural } from '../../src/lib/scenarios';
 import { buildDiagram } from '../../src/lib/equation-diagram';
 
 const KPP_TPP = QUALITY_DATA.parameters.filter(p => p.type !== 'CP');
@@ -16,8 +17,8 @@ describe('equation engine', () => {
     expect(r.ok, r.messages.join('\n')).toBe(true);
   });
 
-  test('every one of the 130 KPP/TPP records has an equation', () => {
-    expect(KPP_TPP).toHaveLength(130);
+  test('every one of the 131 KPP/TPP records has an equation', () => {
+    expect(KPP_TPP).toHaveLength(131);
     for (const p of KPP_TPP) {
       expect(EQUATIONS[p.id], p.id).toBeDefined();
     }
@@ -66,9 +67,9 @@ describe('equation engine', () => {
       .toBeGreaterThan(evaluateAtPhase('KPP-B1', 'SCN-BASE', 'P4'));
   });
 
-  test('computeTargets returns text for all 130 parameters at all phases, em-dash free', () => {
+  test('computeTargets returns text for all 131 parameters at all phases, em-dash free', () => {
     const t = computeTargets(QUALITY_DATA, 'SCN-PESS');
-    expect(Object.keys(t)).toHaveLength(130);
+    expect(Object.keys(t)).toHaveLength(131);
     for (const id of Object.keys(t)) {
       for (const ph of EQ_PHASES) {
         expect(t[id][ph].text.includes('—'), id + ' ' + ph).toBe(false);
@@ -147,4 +148,296 @@ describe('equation flow diagrams', () => {
       }
     }
   });
+});
+
+/* R226 [§S2] — the row's third acceptance clause, which the section landed
+   without: "a fixture asserting costRatio at P0 equals the 2027 row, not 2028".
+   The ramps and the fiscal engine's year rows are two different halves of the
+   off-by-one, and only the ramp half was pinned. `costRatio` reads
+   path.detail[t] directly, so it is the one that catches a detail-row shift. */
+
+test('R226: costRatio at P0 is the 2027 row, not 2028', () => {
+  const detail = runPath(
+    sampleParams(effectiveParams('SCN-BASE', null), null),
+    scenarioStructural('SCN-BASE')
+  ).detail;
+  const y2027 = detail[0];
+  const y2028 = detail[1];
+  expect(y2027.year).toBe(2027);
+  expect(y2028.year).toBe(2028);
+
+  const atP0 = modelValueAt('SCN-BASE', 'costRatio', 'P0');
+  expect(atP0).toBeCloseTo(y2027.nheNha / y2027.nheBase, 12);
+  // The failing state R226 describes: P0 reporting 2028's flow under a 2027 label.
+  expect(atP0).not.toBeCloseTo(y2028.nheNha / y2028.nheBase, 12);
+});
+
+test('R226: the same holds for the other detail-row leaves', () => {
+  const detail = runPath(
+    sampleParams(effectiveParams('SCN-BASE', null), null),
+    scenarioStructural('SCN-BASE')
+  ).detail;
+  expect(modelValueAt('SCN-BASE', 'pubCost', 'P0')).toBeCloseTo(detail[0].pubCost, 9);
+  expect(modelValueAt('SCN-BASE', 'newRev', 'P0')).toBeCloseTo(detail[0].newRevenue, 9);
+  // P3 is Year 4 = 2030, index 3 - the phase R226 says used to read Year 5.
+  expect(modelValueAt('SCN-BASE', 'pubCost', 'P3')).toBeCloseTo(detail[3].pubCost, 9);
+  expect(detail[3].year).toBe(2030);
+});
+
+/* R233 [§S3] - the anchor unit guard.
+ *
+ * `!matMeta` used to mean both "no unit to match" and "match anything", so a
+ * metric whose maturity target does not parse admitted every anchor in every
+ * unit: a "within 12 months" milestone could clamp a percentage target. It now
+ * means "take no anchors", and a templated target is treated the same way,
+ * because a template says the catalog string has no numeric scaffold. */
+describe('R233: anchors are unit-matched or refused', () => {
+  const TEMPLATE_IDS = Object.keys(EQUATIONS).filter(id => EQUATIONS[id].template);
+
+  test('the templated metrics are the eight the audit named', () => {
+    expect(TEMPLATE_IDS.sort()).toEqual([
+      'KPP-C2', 'KPP-D1', 'KPP-D2', 'KPP-D3', 'KPP-D4', 'KPP-D5', 'KPP-D6', 'KPP-D7'
+    ]);
+  });
+
+  test('every templated metric admits zero anchors', () => {
+    for (const id of TEMPLATE_IDS) {
+      const p = QUALITY_DATA.parameters.find(x => x.id === id)!;
+      expect(anchorMatchTarget(EQUATIONS[id], p.target), id).toBeNull();
+      expect(Object.keys(committedAnchors(EQUATIONS[id], p)), id).toEqual([]);
+    }
+  });
+
+  test('KPP-C2 no longer admits its own maturity row as a money anchor', () => {
+    /* The row parses to 4.75 - $4.75T of national system cost - against a
+       metric the equation publishes at about $14,000 per person. */
+    const p = QUALITY_DATA.parameters.find(x => x.id === 'KPP-C2')!;
+    const maturity = p.rollout.find(e => e.kind === 'maturity target')!;
+    expect(parseNum(maturity.value)!.num).toBe(4.75);
+    expect(committedAnchors(EQUATIONS['KPP-C2'], p)).toEqual({});
+  });
+
+  test('every admitted anchor matches its metric maturity unit', () => {
+    for (const p of KPP_TPP) {
+      const d = EQUATIONS[p.id];
+      const unit = anchorMatchTarget(d, p.target);
+      const anchors = committedAnchors(d, p);
+      if (!unit) { expect(anchors, p.id).toEqual({}); continue; }
+      for (const phase of Object.keys(anchors)) {
+        const src = p.rollout.filter(e => e.phase === phase)
+          .map(e => parseNum(e.value)).filter(Boolean);
+        expect(src.some(m => m!.unit === unit.unit), p.id + ' ' + phase).toBe(true);
+      }
+    }
+  });
+
+  test('a milestone in the wrong unit cannot anchor a target', () => {
+    /* The failure the row describes, constructed: a percentage metric with a
+       months milestone. Under the old guard an unparseable target made this
+       12 an admitted anchor. */
+    const monthsMilestone = {
+      id: 'TPP-6.1', target: 'reduction to be calibrated',
+      rollout: [{ phase: 'P5', kind: 'phase milestone', value: 'within 12 months' }]
+    } as unknown as (typeof QUALITY_DATA.parameters)[number];
+    const templated = { ...EQUATIONS['TPP-6.1'], template: '>={X}% of units certified' };
+    expect(committedAnchors(templated, monthsMilestone)).toEqual({});
+
+    /* And with a parseable percentage target, the months value is still
+       refused while a percentage one is taken. */
+    const pctTarget = {
+      id: 'TPP-6.1', target: '>=95%',
+      rollout: [
+        { phase: 'P5', kind: 'phase milestone', value: 'within 12 months' },
+        { phase: 'P6', kind: 'progression floor', value: '>=60%' }
+      ]
+    } as unknown as (typeof QUALITY_DATA.parameters)[number];
+    expect(committedAnchors(EQUATIONS['TPP-6.1'], pctTarget)).toEqual({ P6: 60 });
+  });
+});
+
+/* R232 [§S3] - the clamp, disclosed.
+ *
+ * The row was filed as a missing feature. The feature existed twice and was
+ * disconnected both times: applyEquationTargets composed an explanation into
+ * `entry.interpretation` that no client read, and buildEquationPanel rendered a
+ * raw-value strip gated on `!compact`, which is false at the only call site
+ * where the published value is also on screen. */
+describe('R232: the raw value survives the clamp', () => {
+  test('every bounded entry carries the equation number it replaced', () => {
+    let bounded = 0;
+    for (const p of KPP_TPP) {
+      for (const e of p.rollout) {
+        if (!e.bounded) continue;
+        bounded += 1;
+        expect(e.raw, p.id + '@' + e.phase).toBeTruthy();
+        expect(e.raw, p.id + '@' + e.phase).not.toBe(e.value);
+      }
+    }
+    expect(bounded).toBeGreaterThan(0);
+  });
+
+  test('an unbounded entry carries no raw value to contradict its own', () => {
+    for (const p of KPP_TPP) {
+      for (const e of p.rollout) {
+        if (e.kind !== 'equation-derived target' || e.bounded) continue;
+        expect(e.raw, p.id + '@' + e.phase).toBeUndefined();
+      }
+    }
+  });
+
+  test('the interpretation names both numbers, not just that an adjustment happened', () => {
+    /* BQ8 criticised the old string for disclosing that an adjustment
+       happened but not from what to what. BR2 found it was never rendered at
+       all. Both halves: it now says both numbers, and quality-client renders
+       it. */
+    const clamped = KPP_TPP.flatMap(p => p.rollout.filter(e => e.bounded));
+    expect(clamped.length).toBeGreaterThan(0);
+    for (const e of clamped) {
+      expect(e.interpretation).toContain(e.raw!);
+      expect(e.interpretation).toContain(e.value);
+    }
+  });
+
+  test('clamp counts are per metric and ranked', () => {
+    const counts = clampCounts(QUALITY_DATA);
+    const bounded = counts.filter(c => c.bounded > 0);
+    expect(bounded.length).toBeGreaterThan(0);
+    for (let i = 1; i < bounded.length; i++) {
+      expect(bounded[i - 1].bounded).toBeGreaterThanOrEqual(bounded[i].bounded);
+    }
+    for (const c of counts) {
+      expect(c.phases.length, c.id).toBe(c.bounded);
+      expect(c.bounded, c.id).toBeLessThanOrEqual(c.rows);
+    }
+  });
+
+  test('the metrics whose equation does no published work are visible', () => {
+    /* The row's own example: a metric bounded at most of its phases is one
+       whose equation is not doing the work. KPP-C5 is bounded at every phase
+       it publishes. */
+    const c5 = clampCounts(QUALITY_DATA).find(c => c.id === 'KPP-C5')!;
+    expect(c5.bounded).toBe(c5.rows);
+    expect(c5.rows).toBeGreaterThan(1);
+  });
+});
+
+/* Review 3 of P24: the methodology says KPP-E6's equipment term sets its
+   path in every scenario at every published phase. Held, so a change that
+   lets another term bind sends someone to that paragraph. */
+test('review 3 of P24: KPP-E6\'s equipment term binds wherever the metric is published', async () => {
+  const { rampValueAt, evaluateAtPhase, EQ_PHASES } = await import('../../src/lib/equations');
+  const { qualityRecord } = await import('../../src/lib/quality');
+  const { RAMPS } = await import('../../src/lib/params');
+  /* review 4 of P24: the phases the metric is published in are the
+     record's, not typed here, and no count is compared with its own loop */
+  const start = qualityRecord('KPP-E6')._phaseStart!;
+  const phases = EQ_PHASES.slice(EQ_PHASES.indexOf(start));
+  const maturity = phases[phases.length - 1]!;
+  const mu = RAMPS.units.slice(-1)[0]!, mh = RAMPS.hospitals.slice(-1)[0]!;
+  /* qn() divides by the base case at P8 (b8), and the base case's KPP-E6
+     at P8 is its target with every term at 1 */
+  const top = evaluateAtPhase('KPP-E6', 'SCN-BASE', 'P8');
+  const e5top = evaluateAtPhase('KPP-E5', 'SCN-BASE', 'P8');
+  const eps = 1e-9;
+  let strictBeforeMaturity = 0;
+  for (const s of SCENARIOS) {
+    for (const ph of phases) {
+      const at = s.id + ' ' + ph;
+      const equip = (rampValueAt(s.id, 'unit', ph) / mu + rampValueAt(s.id, 'hosp', ph) / mh) / 2;
+      const inf = rampValueAt(s.id, 'inf', ph);
+      const lang = Math.min(1, evaluateAtPhase('KPP-E5', s.id, ph) / e5top);
+      /* the equipment term is the lowest */
+      expect(equip, at).toBeLessThanOrEqual(Math.min(inf, lang) + eps);
+      /* language access never falls below the infrastructure build, so
+         infrastructure's second path never binds */
+      expect(lang, at).toBeGreaterThanOrEqual(inf - eps);
+      if (ph !== maturity) {
+        /* before maturity it is the only lowest term */
+        expect(equip, at).toBeLessThan(Math.min(inf, lang) - eps);
+        strictBeforeMaturity++;
+      } else if (equip > Math.min(inf, lang) - eps) {
+        /* at maturity, a tie is all three at 1 */
+        for (const v of [equip, inf, lang]) expect(v, at).toBeCloseTo(1, 9);
+      }
+      /* and the engine's own value is that term: a change to the expression
+         that this test's restatement misses fails here */
+      expect(evaluateAtPhase('KPP-E6', s.id, ph) / top, at).toBeCloseTo(equip, 9);
+    }
+  }
+  /* reach: the before-maturity statement was tested somewhere */
+  expect(strictBeforeMaturity).toBeGreaterThan(0);
+});
+
+/* Review 4 of P24: the methodology said the ceiling form starts a metric
+   (100 - M)(1 + kappa) points below its target, "18 points for this 98%
+   target, so 82%": 98 - 18 is 80. ceil2 is 100 - (100 - M)(1 + kappa(1 - S)),
+   so at zero build it sits (100 - M)(1 + kappa) below 100 and
+   (100 - M) x kappa below the target. The statement and the worked example
+   are held to ceil2 itself. */
+test('review 4 of P24: the methodology states where the ceiling form starts as ceil2 computes it', async () => {
+  const { ceilingFormValue, KAPPA_VALUE, catalogTargetMeta } = await import('../../src/lib/equations');
+  const { readFileSync } = await import('node:fs');
+  for (const M of [90, 95, 98, 99, 99.5]) {
+    const floor = ceilingFormValue(M, 0);
+    expect(M - floor, 'M ' + M).toBeCloseTo((100 - M) * KAPPA_VALUE, 9);
+    expect(floor, 'M ' + M).toBeCloseTo(100 - (100 - M) * (1 + KAPPA_VALUE), 9);
+    /* "however little is built": no build puts it lower, and a full build is the target */
+    for (const S of [0.25, 0.5, 0.75]) expect(ceilingFormValue(M, S)).toBeGreaterThan(floor);
+    expect(ceilingFormValue(M, 1)).toBeCloseTo(M, 9);
+  }
+  const text = readFileSync(new URL('../../research/quality-equation-methodology.md', import.meta.url), 'utf8')
+    .replace(/\s+/g, ' ');
+  /* both statements of it say what the engine does */
+  expect(text.split('keeps a metric within (100 - M) x kappa points of its target').length - 1).toBe(2);
+  /* and the worked example's numbers agree with ceil2 */
+  const ex = /at zero build it reads (\d+(?:\.\d+)?)% for this (\d+(?:\.\d+)?)% target, (\d+(?:\.\d+)?) points below it/.exec(text);
+  expect(ex, 'the worked example').not.toBeNull();
+  const [reads, target, below] = [Number(ex![1]), Number(ex![2]), Number(ex![3])];
+  /* review 5 of P24: "this 98% target" is the record's whose section it sits
+     in. Review 6 of P24: read from the section heading, since several
+     records target 98 and a typed id would pass an example moved to any of
+     them */
+  const raw = readFileSync(new URL('../../research/quality-equation-methodology.md', import.meta.url), 'utf8');
+  const at = /at\s+zero\s+build\s+it\s+reads\s+\d+(?:\.\d+)?%\s+for\s+this/.exec(raw)!.index;
+  const heading = raw.slice(0, at).split('\n').filter((l) => /^## /.test(l)).pop() || '';
+  const id = /\(((?:KPP|TPP)-[^)]+)\)\s*$/.exec(heading);
+  expect(id, 'the section the example sits in names its record: ' + heading).not.toBeNull();
+  expect(target).toBe(catalogTargetMeta(id![1]!).num);
+  expect(reads).toBeCloseTo(ceilingFormValue(target, 0), 9);
+  expect(below).toBeCloseTo(target - ceilingFormValue(target, 0), 9);
+});
+
+/* Owner, 2026-10-19 (decision 1): the baseline-start form for the five
+   metrics the ceiling-form proposal named. Each starts at its declared
+   today's level and reaches its catalog target at maturity; the form is
+   B + (M - B) x S, so the value is affine in the build state between them;
+   and the methodology states each B with its grade. */
+test('owner 2026-10-19: the baseline-start metrics start at today\'s level and end at their target', async () => {
+  const { TODAY_LEVELS, EQUATIONS: EQ, evaluateAtPhase: at, catalogTargetMeta } = await import('../../src/lib/equations');
+  const { readFileSync } = await import('node:fs');
+  const ids = Object.keys(TODAY_LEVELS.entries);
+  expect(ids.sort()).toEqual(['KPP-E5', 'TPP-1.1', 'TPP-10.1', 'TPP-10.4', 'TPP-6.3']);
+  const method = readFileSync('research/quality-equation-methodology.md', 'utf8');
+  for (const id of ids) {
+    const t = TODAY_LEVELS.entries[id]!;
+    const target = catalogTargetMeta(id).num;
+    /* the target stays beyond today's system */
+    expect(t.pct, id).toBeLessThan(target);
+    /* at maturity the metric meets its target */
+    expect(Math.abs(at(id, 'SCN-BASE', 'P8') - target), id).toBeLessThan(0.1);
+    /* and every interim value lies between today's level and the target */
+    for (const ph of ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7']) {
+      const v = at(id, 'SCN-BASE', ph);
+      expect(v, id + '@' + ph).toBeGreaterThanOrEqual(t.pct - 1e-9);
+      expect(v, id + '@' + ph).toBeLessThanOrEqual(target + 1e-9);
+    }
+    /* the equation is the form, not a ceiling form left beside it */
+    expect(JSON.stringify(EQ[id]!.expr)).toContain('"from":"today:' + id + '"');
+    expect(JSON.stringify(EQ[id]!.expr)).not.toContain('immaturity stress multiplier');
+    /* the methodology's table states B and the grade */
+    const row = method.split('\n').find((l) => l.startsWith('| ' + id + ' '));
+    expect(row, id).toBeDefined();
+    expect(row!).toContain('| ' + String(t.pct) + ' |');
+    expect(row!).toContain('| ' + t.grade + ' ');
+  }
 });

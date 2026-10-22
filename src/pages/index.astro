@@ -1,17 +1,110 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
-import { PROBLEM_STATS } from '../lib/params';
+import { RESIDUAL_BILLING_CAVEAT } from '../lib/care';
+import {
+  BASE2023_TEXT, PARAMS_BY_ID, PROBLEM_STATS, US_PEER_DRUG_PRICE_RATIO, iraCutRange, moneyFlowChannel
+} from '../lib/params';
 import { sponsorTableData } from '../lib/overview-tables';
+import { CHAPTERS, chapterMarker } from '../lib/tabs';
+import { ROLLOUT_YEARS } from '../lib/rollout';
+import { NHA_QUALITY_DATA } from '../lib/quality-data';
+
+const drugCut = PARAMS_BY_ID.drugPriceCut!;
+
+/* R292 [S12]: the rollout arc's label spelled its span as a word. */
+const rolloutYears = ROLLOUT_YEARS;
 
 const sponsor = sponsorTableData();
 const base = import.meta.env.BASE_URL; // ends with '/'
+
+/* R163 [S12]: the chapter grid was a hand-maintained list of eleven cards
+   with its own typed numbering, and it had gone stale against the route
+   registry. It predated Long-Term Care and Risk, so it omitted both chapters
+   and numbered every card from Medications onward one or two low. Seven of
+   the eleven numbers disagreed with the page the card linked to, on the front
+   door of the site.
+
+   Only the words are held here now, keyed by route. The order, the numbering
+   and the membership come from TABS, so a chapter added to the registry
+   appears here or the build fails: building chapterCards throws on a route
+   with no copy, and page-check's frontDoorChapterCoverage() reports the
+   same gap as a self-test rather than leaving a reader to notice.
+   Review of P18: this named uncardedChapters(), which does not exist, and
+   called chapterCards a function. Both corrected. */
+const CHAPTER_COPY: Record<string, { kicker: string; blurb: string }> = {
+  health: {
+    kicker: 'The need and the promise',
+    blurb: 'What is broken today, what people would receive, what care costs, and the full system-cost model.'
+  },
+  tax: {
+    kicker: 'Paying for it',
+    blurb: 'How much revenue is needed, who pays, and who comes out ahead.'
+  },
+  legislation: {
+    kicker: 'Legal foundation',
+    blurb: 'What Congress must enact, which laws change, and how authority activates.'
+  },
+  units: {
+    kicker: 'Physical care',
+    blurb: 'How hospitals are governed, funded, regionalized, and connected to the four-unit network.'
+  },
+  ltc: {
+    kicker: 'Care over a lifetime',
+    blurb: 'How long-term services and supports are funded and delivered, and what families carry now.'
+  },
+  medications: {
+    kicker: 'Medicines',
+    blurb: 'How purchasing, public production, and shortage protection lower costs and secure supply.'
+  },
+  data: {
+    kicker: 'Information',
+    blurb: 'How the national mesh stores, moves, protects, and corrects records.'
+  },
+  workforce: {
+    kicker: 'People',
+    blurb: 'How clinical capacity, rural staffing, training, and job transition work.'
+  },
+  gov: {
+    kicker: 'Authority',
+    blurb: 'Which institutions decide, operate, audit, and enforce the system.'
+  },
+  hardening: {
+    kicker: 'Durability',
+    blurb: 'How distributed authority and continuity duties resist sabotage.'
+  },
+  risk: {
+    kicker: 'What could go wrong',
+    blurb: 'Which failure modes carry the most risk, how each is detected, and what reduces it.'
+  },
+  rollout: {
+    kicker: 'Sequence',
+    blurb: 'What is built in each year and what evidence allows the next wave.'
+  },
+  quality: {
+    kicker: 'Proof',
+    blurb: 'Which parameters define success and what each phase must achieve.'
+  }
+};
+
+const chapterCards = CHAPTERS.map((tab, index) => {
+  const copy = CHAPTER_COPY[tab.path];
+  if (!copy) {
+    throw new Error('index.astro has no chapter card for the route "' + tab.path +
+      '", which TABS lists as a chapter');
+  }
+  return {
+    path: tab.path, label: tab.label, n: index + 1,
+    kicker: copy.kicker, blurb: copy.blurb
+  };
+});
 ---
 <BaseLayout
   title="National Health Assurance: Story & System Dashboard"
-  description="A guided, evidence-linked dashboard explaining the proposed U.S. National Health Assurance system, its twelve-year rollout, operating architecture, safeguards, and interactive cost and financing models."
+  description={"A guided, evidence-linked dashboard explaining the proposed U.S." +
+    " National Health Assurance system, its " + rolloutYears + "-year rollout," +
+    " operating architecture, safeguards, and interactive cost and financing models."}
 >
-  <main>
     <section class="card">
       <h2>The system today</h2>
       <p class="desc">American healthcare is not one system. It is four
@@ -25,11 +118,11 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         cover ~72
         million lower-income people, funded jointly by Washington and the
         states. Everyone also pays directly at the point of care:
-        deductibles, copays, and uncovered bills totaled $506B in 2023. And
-        ~26 million people have no coverage at all. Here is where the $4.87T
+        deductibles, copays, and uncovered bills totaled ${moneyFlowChannel('oop')}B in 2023. And
+        ~26 million people have no coverage at all. Here is where the {BASE2023_TEXT.total}
         came from and where it went. Hover any ribbon for the details.</p>
       <div class="flow-panel" style="max-width:560px;margin:14px auto 0">
-        <div class="flow-title">Actual 2023 spending: $4.87T
+        <div class="flow-title">Actual 2023 spending: {BASE2023_TEXT.total}
           (<abbr class="overview-acronym" title="Centers for Medicare &amp; Medicaid Services">CMS</abbr>)</div>
         <div id="flow-today-solo"></div>
       </div>
@@ -75,11 +168,12 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         <li><b>Drug-price negotiation and public manufacturing.</b> The
           <abbr class="overview-acronym" title="Inflation Reduction Act">IRA</abbr>
           already proved government negotiation works
-          (<abbr class="overview-acronym" title="Congressional Budget Office">CBO</abbr>-scored, 38–79%
-          price cuts on the first ten drugs). Applied system-wide against
-          prices 2.78× the international average, plus a public manufacturer
+          ({iraCutRange()} off list prices on the first ten drugs, by
+          <abbr class="overview-acronym" title="Centers for Medicare &amp; Medicaid Services">CMS</abbr>'s
+          count). Applied system-wide against
+          prices {US_PEER_DRUG_PRICE_RATIO}× the international average, plus a public manufacturer
           for essential generics, modeled on Civica Rx's real $30-a-vial
-          insulin. The model tests net price cuts of 25 to 55%.</li>
+          insulin. The model tests net price cuts of {drugCut.low} to {drugCut.high}%.</li>
         <li><b>Hospital payment reform.</b> Global budgets replace per-claim
           billing, ending facility-fee markups, related-party extraction, and
           a slice of the $76–101B/yr in scored low-value care, while
@@ -108,8 +202,7 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         <li><b>Automatic, continuous coverage</b> for every resident: no
           enrollment cliffs, no churn, no linkage to your job.</li>
         <li><b>$0 at the point of care</b> for covered medically necessary
-          care; medical debt for covered care is prohibited (patient billing
-          capped at 0.5% of encounters).</li>
+          care. {RESIDUAL_BILLING_CAVEAT}</li>
         <li><b>National drug purchasing</b> through a real-time public
           pharmacy claims utility (replacing
           <abbr class="overview-acronym" title="Pharmacy Benefit Managers">PBMs</abbr>),
@@ -143,7 +236,7 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         operable; measurable quality and independent governance keep every layer
         accountable. Select a chapter to inspect the detailed model.</p>
 
-      <div class="overview-system-map"
+      <div role="group" class="overview-system-map"
         aria-label="Layered map of the National Health Assurance operating system">
         <div class="overview-promise-band">
           <span>Public promise</span>
@@ -209,7 +302,7 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         <div class="overview-assurance-band">
           <span>Independent assurance across every layer</span>
           <div>
-            <a href={base + 'quality'}>440 controlled parameters</a>
+            <a href={base + 'quality'}>{NHA_QUALITY_DATA.counts.total} quality parameters</a>
             <a href={base + 'gov'}>Distributed governance</a>
             <a href={base + 'hardening'}>Executive hardening</a>
           </div>
@@ -223,7 +316,7 @@ const base = import.meta.env.BASE_URL; // ends with '/'
       <p class="desc">The system moves expertise and information toward the
         patient first. It moves the patient only when hands-on specialty or
         hospital care is necessary.</p>
-      <div class="overview-care-path" aria-label="Patient care pathway">
+      <div role="group" class="overview-care-path" aria-label="Patient care pathway">
         <article>
           <span>1</span>
           <h3>Covered automatically</h3>
@@ -268,7 +361,7 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         It replaces premiums, deductibles, point-of-care bills, and payer-specific
         administration with a publicly financed system that pays providers
         through a common claims rail and hospital global budgets.</p>
-      <div class="overview-money-shift" aria-label="High-level money-flow change">
+      <div role="group" class="overview-money-shift" aria-label="High-level money-flow change">
         <div class="overview-money-world today">
           <span>Today</span>
           <strong>Households + employers + governments</strong>
@@ -303,37 +396,38 @@ const base = import.meta.env.BASE_URL; // ends with '/'
         readiness gates can hold, resize, or roll back a wave when claims,
         capacity, workforce, fiscal, artificial-intelligence, cyber, legitimacy,
         or continuity evidence is inadequate.</p>
-      <div class="overview-rollout-arc" aria-label="Twelve-year high-level rollout">
-        <article>
+      <div class="overview-rollout-arc" role="list"
+        aria-label={rolloutYears + "-year high-level rollout"}>
+        <div role="listitem">
           <span>Years 1–2 · P0–P1</span>
           <strong>Found</strong>
           <p>Pass the statute; stand up accountable bodies, rights, identity,
             registries, cyber baselines, and transition protection.</p>
-        </article>
-        <article>
+        </div>
+        <div role="listitem">
           <span>Years 3–4 · P2–P3</span>
           <strong>Operate first rails</strong>
           <p>Launch pharmacy purchasing and production, then begin the first
             public coverage wave and claims operation.</p>
-        </article>
-        <article>
+        </div>
+        <div role="listitem">
           <span>Years 5–7 · P4–P5</span>
           <strong>Pilot and scale delivery</strong>
           <p>Test hospital budgets and all four unit types; expand workforce,
             specialist routing, and the care network.</p>
-        </article>
-        <article>
+        </div>
+        <div role="listitem">
           <span>Years 8–9 · P6</span>
           <strong>Make coverage the default</strong>
           <p>Scale public coverage, payment, rights, regional operations, and
             major cost-sharing elimination nationally.</p>
-        </article>
-        <article>
+        </div>
+        <div role="listitem">
           <span>Years 10–12 · P7–P8</span>
           <strong>Expand and certify</strong>
           <p>Add long-term care and other benefits only after capacity gates,
             then test the mature system against every performance floor.</p>
-        </article>
+        </div>
       </div>
       <div class="overview-gate-line">
         <strong>Eight stop-the-clock gates</strong>
@@ -353,55 +447,16 @@ const base = import.meta.env.BASE_URL; // ends with '/'
       <p class="desc">Read in sequence for a guided tour, or jump directly to
         the operating question you want to test.</p>
       <div class="overview-chapter-grid">
-        <a href={base + 'health'}>
-          <span>01 · The need and the promise</span><strong>Healthcare</strong>
-          <small>What is broken today, what people would receive, what care costs, and the full system-cost model.</small>
-        </a>
-        <a href={base + 'tax'}>
-          <span>02 · Paying for it</span><strong>Taxes &amp; Financing</strong>
-          <small>How much revenue is needed, who pays, and who comes out ahead.</small>
-        </a>
-        <a href={base + 'legislation'}>
-          <span>03 · Legal foundation</span><strong>Legislation</strong>
-          <small>What Congress must enact, which laws change, and how authority activates.</small>
-        </a>
-        <a href={base + 'units'}>
-          <span>04 · Physical care</span><strong>Physical Care</strong>
-          <small>How hospitals are governed, funded, regionalized, and connected to the four-unit network.</small>
-        </a>
-        <a href={base + 'medications'}>
-          <span>05 · Medicines</span><strong>Medications</strong>
-          <small>How purchasing, public production, and shortage protection lower costs and secure supply.</small>
-        </a>
-        <a href={base + 'data'}>
-          <span>06 · Information</span><strong>Data</strong>
-          <small>How the national mesh stores, moves, protects, and corrects records.</small>
-        </a>
-        <a href={base + 'workforce'}>
-          <span>07 · People</span><strong>Workforce</strong>
-          <small>How clinical capacity, rural staffing, training, and job transition work.</small>
-        </a>
-        <a href={base + 'gov'}>
-          <span>08 · Authority</span><strong>Governance</strong>
-          <small>Which institutions decide, operate, audit, and enforce the system.</small>
-        </a>
-        <a href={base + 'hardening'}>
-          <span>09 · Durability</span><strong>Executive Hardening</strong>
-          <small>How distributed authority and continuity duties resist sabotage.</small>
-        </a>
-        <a href={base + 'rollout'}>
-          <span>10 · Sequence</span><strong>Phased Rollout</strong>
-          <small>What is built in each year and what evidence allows the next wave.</small>
-        </a>
-        <a href={base + 'quality'}>
-          <span>11 · Proof</span><strong>Quality</strong>
-          <small>Which parameters define success and what each phase must achieve.</small>
-        </a>
+        {chapterCards.map((c) => (
+          <a href={base + c.path}>
+            <span>{chapterMarker(c.n)} &middot; {c.kicker}</span><strong>{c.label}</strong>
+            <small>{c.blurb}</small>
+          </a>
+        ))}
       </div>
     </section>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

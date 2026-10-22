@@ -5,11 +5,28 @@
  * selected node id. KPPs sit in the rightmost layer unless they feed
  * another equation in the same diagram. No chart library.
  * ========================================================================= */
-import { EQUATIONS, collectDeps, RAMP_META, MODEL_META } from './equations';
-import type { RampId, ModelId } from './equations';
-import { PARAMS_BY_ID } from './params';
+import { EQUATIONS, collectDeps, MODEL_REGISTRY, RAMP_REGISTRY } from './equations';
+import { PARAM_REGISTRY } from './params';
+import { lookupOrThrow } from './registry-lookup';
+import type { NamedRegistry } from './registry-lookup';
 
 export type DiagNodeType = 'param' | 'ramp' | 'model' | 'const' | 'index' | 'TPP' | 'KPP' | 'ext';
+
+/* Review 3 of P22: the leaf kinds and their registries, in one
+   table, where the diagram and the Quality client each switched on the
+   kind. */
+export type LeafKind = 'param' | 'ramp' | 'model';
+export const LEAF_REGISTRIES: Record<LeafKind, NamedRegistry<string, { label: string }>> = {
+  param: PARAM_REGISTRY, ramp: RAMP_REGISTRY, model: MODEL_REGISTRY
+};
+
+export function isLeafKind(kind: string): kind is LeafKind {
+  return Object.prototype.hasOwnProperty.call(LEAF_REGISTRIES, kind);
+}
+
+export function leafLabel(kind: LeafKind, refId: string): string {
+  return lookupOrThrow(LEAF_REGISTRIES[kind], refId).label;
+}
 
 export interface DiagNode {
   id: string;          /* unique node id, e.g. 'KPP-A1', 'param:drugPriceCut' */
@@ -49,18 +66,14 @@ export function buildDiagram(members: string[]): Diagram {
     if (!d) return;
     addNode(id, id, d.kind === 'index' ? 'index' : d.kind, d.name);
     const deps = collectDeps(d.expr);
-    deps.params.forEach(function (pid) {
-      const def = PARAMS_BY_ID[pid];
-      addNode('param:' + pid, pid, 'param', (def && def.label) || pid);
-      addEdge('param:' + pid, id);
-    });
-    deps.ramps.forEach(function (rid) {
-      addNode('ramp:' + rid, rid, 'ramp', RAMP_META[rid as RampId].label);
-      addEdge('ramp:' + rid, id);
-    });
-    deps.models.forEach(function (mid) {
-      addNode('model:' + mid, mid, 'model', MODEL_META[mid as ModelId].label);
-      addEdge('model:' + mid, id);
+    const leaves: Array<[LeafKind, readonly string[]]> = [
+      ['param', deps.params], ['ramp', deps.ramps], ['model', deps.models]
+    ];
+    leaves.forEach(function ([kind, ids]) {
+      ids.forEach(function (leafId) {
+        addNode(kind + ':' + leafId, leafId, kind, leafLabel(kind, leafId));
+        addEdge(kind + ':' + leafId, id);
+      });
     });
     deps.refs.forEach(function (rid) {
       if (!nodes[rid]) {
@@ -123,6 +136,22 @@ export function buildDiagram(members: string[]): Diagram {
 }
 
 /* ---- SVG rendering ------------------------------------------------------ */
+
+/* R244 [S14]: the reader-facing words for each node type, exported so that
+   quality.astro's legend renders from this map rather than repeating it. A
+   chip whose text disagreed with the accessible name would be worse than no
+   chip at all. */
+export const NODE_TYPE_LABELS: Record<DiagNodeType, string> = {
+  param: 'cost model input',
+  ramp: 'rollout build state',
+  model: 'fiscal engine value',
+  const: 'constant',
+  index: 'derived index',
+  TPP: 'TPP',
+  KPP: 'KPP',
+  ext: 'value from another diagram'
+};
+
 const NODE_W = 138, NODE_H = 42, GAP_X = 54, GAP_Y = 12, PAD = 14;
 
 function nodeXY(n: DiagNode): { x: number; y: number } {
@@ -182,7 +211,13 @@ export function renderDiagram(
     g.setAttribute('tabindex', '0');
     g.setAttribute('role', 'button');
     g.setAttribute('data-node-id', n.id);
-    g.setAttribute('aria-label', n.refId + ': ' + n.label);
+    /* R244 [S14]: type was encoded as a class and nothing else, and the
+       six-chip key that decodes the colours is aria-hidden on quality.astro -
+       so the sole decoder of the sole encoding was outside the accessibility
+       tree, and a sourced cost-model input read identically to a system
+       outcome. The type goes in the accessible name and in the <title>, so
+       neither the tree nor a native SVG tooltip depends on colour. */
+    g.setAttribute('aria-label', NODE_TYPE_LABELS[n.type] + ': ' + n.refId + ': ' + n.label);
     g.setAttribute('aria-pressed', n.id === selectedId ? 'true' : 'false');
 
     const rect = svgEl('rect');
@@ -221,7 +256,7 @@ export function renderDiagram(
     g.appendChild(t2);
 
     const title = svgEl('title');
-    title.textContent = n.refId + ': ' + n.label;
+    title.textContent = NODE_TYPE_LABELS[n.type] + ': ' + n.refId + ': ' + n.label;
     g.appendChild(title);
 
     g.addEventListener('click', function () { onSelect(n.id); });

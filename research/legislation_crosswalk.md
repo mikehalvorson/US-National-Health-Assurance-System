@@ -1,5 +1,7 @@
 # Legislation tab: legal crosswalk and drafting methodology
 
+Compiled 2026-07-18. Last revised 2026-10-10.
+
 ## Purpose and limits
 
 The Legislation tab translates the legal architecture in the **National
@@ -11,8 +13,11 @@ The framework itself draws the same boundary. Sections 9.2 and 9.3 specify
 the method and major legal domains; Appendix L supplies a 19-title enabling
 act architecture; OI-061 through OI-070 leave exact bill text,
 jurisdiction-specific conforming amendments, constitutional validation, and
-litigation analysis open. The tab therefore says “complete major-law-family
-map,” not “every affected section has been validated.”
+litigation analysis open. Every item in that range is listed, with what it
+blocks and what has to change to close it, in the
+[open-item register](open_items_register.md). The tab therefore says
+“complete major-law-family map,” not “every affected section has been
+validated.”
 
 ## Controlling framework method
 
@@ -106,10 +111,31 @@ Article III, standing, and remedial limits.
 
 ### Current removal-law constraint
 
-On June 29, 2026, the Supreme Court decided **Trump v. Slaughter**, No.
-25-332. The Court held the FTC’s for-cause removal provision unconstitutional
-and stated that officers within the President’s general administrative control
-must be removable at will. The tab treats that decision as current law.
+In *Trump v. Slaughter*, decided June 29, 2026, the Supreme Court held the
+FTC’s for-cause removal protection unconstitutional and overruled *Humphrey’s
+Executor v. United States* (1935), the precedent on which removal protection
+for multimember independent agencies had rested. The opinion (No. 25-332)
+also states that those within the President’s general administrative control
+must be removable at will. The tab treats the decision as current law, and
+the Legislation, Governance and Executive Hardening chapters state it in the
+same words.
+
+The Court decided only the FTC’s protection. On the same day, in *Trump v.
+Cook* (No. 25A312), it denied the President’s application to remove a
+Federal Reserve governor while her challenge proceeds, on the narrow ground
+that he had not given her the notice and opportunity to respond that the
+statute’s for-cause protection requires. The government did not contest that
+protection, and the majority, answering a dissent that called it
+unconstitutional, described its ruling as upholding the Federal Reserve as
+currently structured
+([slip opinion](https://www.supremecourt.gov/opinions/25pdf/25a312_5468.pdf);
+see also
+[CRS Legal Sidebar LSB11448](https://www.congress.gov/crs-product/LSB11448)
+on both rulings).
+So the dashboard does not read the ruling as settling every multimember body.
+It reads it as removing the ground the plan’s own executive regulators would
+have stood on: a body that executes federal law cannot be designed around
+for-cause tenure.
 
 Accordingly, the framework’s executive hardening cannot rest on for-cause
 tenure for officials who execute federal law. Drafting should instead rely on
@@ -134,12 +160,34 @@ signature is not part of the Article V proposal process.
 
 ## Federalism and transition drafting rules
 
-- Do not require state officers to administer federal law.
-- Make any state participation voluntary, clearly conditioned in advance,
-  prospectively funded, auditable, curable, and noncoercive.
-- Always provide a workable direct federal administration path.
+The rules below are of two kinds, and they bind differently. The first are
+limits the Constitution sets: Congress cannot draft around them. The second
+are choices this plan makes inside Congress's power: Congress could validly
+choose otherwise, and the plan makes them to reduce legal risk, protect state
+and tribal authority, or keep the system operable.
+
+**Constitutional limits (binding law):**
+
+- Do not require state officers or legislatures to administer or enact
+  federal law (anti-commandeering: *New York v. United States*, 1992;
+  *Printz v. United States*, 1997).
+- Make any state participation voluntary. Conditions on federal funds must
+  be stated clearly in advance, related to the federal interest in the
+  program, and not so coercive that a state has no real choice, as the
+  threat to withhold a state's existing Medicaid funds was held to be
+  (Spending Clause rules: clear notice, *Pennhurst State School and Hospital
+  v. Halderman*, 1981; relatedness, *South Dakota v. Dole*, 1987; coercion,
+  *NFIB v. Sebelius*, 2012).
+
+**Design choices (the plan's own restraint):**
+
+- Always provide a workable direct federal administration path. The limits
+  above make a state's participation optional; this is the choice that keeps
+  coverage running where a state declines.
+- Fund state participation prospectively and make it auditable and curable.
 - Use express preemption only for material interference with the national
-  guarantee, payment rail, or required interoperability.
+  guarantee, payment rail, or required interoperability. Congress could
+  preempt more broadly within its enumerated powers; the plan does not.
 - Preserve state health and safety, licensure, discipline, public health,
   supplemental coverage, more-protective privacy and consumer rules, labor
   rights, and remedies unless a specific conflict requires otherwise.
@@ -157,6 +205,16 @@ extraneous provisions, including provisions whose budget effects are merely
 incidental to nonbudgetary policy. The nonbudgetary operating architecture
 therefore needs a regular legislative vehicle even if budget provisions move
 through reconciliation.
+
+In vote terms, that is the difference between 51 and 60 Senate votes. A
+reconciliation bill passes the Senate by a simple majority (51 votes, or 50
+with the Vice President breaking a tie), because debate on it is limited
+and it cannot be filibustered; waiving the Byrd Rule for a provision that
+fails it takes 60 votes. A regular bill needs 60 votes to end debate
+(cloture) before the simple-majority vote on passage. So the revenue and
+spending title can move with 51 votes, and the rights, institutions,
+remedies and continuity duties need either 60 votes or a change to the
+Senate's cloture rule.
 
 ## Primary authorities used
 

@@ -21,10 +21,30 @@ export interface TaxGroup {
 export interface TaxEcon {
   wagesB: number;
   aboveCapShare: number;
-  realGrowth: number;
   baseYear: number;
   growthRates: Record<string, number>;
 }
+
+/* R146 [§S18]: the law an instrument's revenue estimate was computed
+   against, with what each word means. `post-obbba` is the value a re-based
+   instrument takes, which is the row's first remedy; none has one yet. */
+export const SCORED_AGAINST = {
+  'pre-obbba': 'computed against federal law before the July 4, 2025 reconciliation act changed it',
+  'post-obbba': 'computed against federal law as the July 4, 2025 reconciliation act left it',
+  unscored: 'no estimate outside the plan, so no law it was computed against'
+} as const;
+export type ScoredAgainst = keyof typeof SCORED_AGAINST;
+
+/* Review of the content run: who made the estimate. The progressive surtax
+   was counted among "fifteen externally scored instruments", and the Tax
+   tile called its revenue a score; it is this model's own calculation, which
+   a published score only cross-checks. */
+export const ESTIMATED_BY = {
+  published: 'a published score or estimate (CBO, JCT, Treasury, TPC or a cited study), used as published or scaled per unit',
+  model: 'this model\'s own calculation; a published score only cross-checks it',
+  plan: 'the plan\'s own figure'
+} as const;
+export type EstimatedBy = keyof typeof ESTIMATED_BY;
 
 /* ---- Params: one tax instrument (NHA.TAX.INSTRUMENTS entry) ---------------
  * incidence sums to 1.0 across GROUPS ids. kind 'scale' (slider, linear) or
@@ -44,6 +64,32 @@ export interface TaxInstrument {
   phaseYears: number;
   source: string;
   confidence: string;
+  /* R146 [§S18]: the law the estimate was computed against. Every estimate
+     in the menu but the plan's own rent levy predates the July 4, 2025
+     reconciliation act, which changed the estate exemption, expensing, the
+     international regime and the individual rates many were computed
+     against. `scoreBasis` names the publication the declaration rests on
+     and ends with its date in parentheses, "(Month YYYY)" or "(YYYY)",
+     which a test holds the declaration to. */
+  scoredAgainst: ScoredAgainst;
+  scoreBasis: string;
+  estimatedBy: EstimatedBy;
+  /* R39 + R208 [§S5]: a balancer absorbs the package's residual gap, so it
+     carries the package's residual risk and has to say how much. `revBand`
+     where the evidence supports one, `revBandAbsent` where it does not - a
+     declared reason rather than a silent blank, the §S4 pattern. */
+  revBand?: { low: number; high: number; basis: string };
+  revBandAbsent?: string;
+  /* Owner, 2026-10-19: instruments that are alternatives to each other (one
+     replaces the tax the other strengthens) share a group, and at most one
+     of a group may be on. compute() refuses a settings state with two. */
+  exclusiveGroup?: string;
+  /* Owner, 2026-10-12: a payroll instrument's rate at its default setting
+     and the earnings it taxes, so its score can be held to what that rate
+     could raise on ECON's earnings base (`payrollYieldFaults()` in
+     taxmodel.ts). 'all' is every dollar of earnings; 'above-cap' is the
+     share of covered earnings above the Social Security cap. */
+  payrollBase?: { rate: number; earnings: 'all' | 'above-cap' };
 }
 
 /* ---- Params: a funding program (NHA.TAX.PROGRAMS entry) ------------------- */
@@ -150,5 +196,17 @@ export interface ComputeResult {
   byInstrument: Record<string, number[]>;
   totalRev: number[];
   need: number[];
-  coverage: number[];
+  /* R48 [§S5]: null where there is nothing to cover - need is 0 and revenue
+     is positive, so the ratio is undefined rather than infinite. */
+  coverage: (number | null)[];
+  /* R42 [§S5]: revenue removed by the top-0.1% overlap deduction, per year.
+     byInstrument is already net of it; this is what was taken out, so the
+     page can state the adjustment where the instruments are summed. */
+  overlapDeduction: number[];
+  /* R146 [§S18]: revenue, net of the overlap, from instruments whose
+     estimates were computed against federal law the July 4, 2025
+     reconciliation act has since changed; and the part of it this model
+     computed itself rather than took from a published score */
+  supersededRev: number[];
+  supersededModelRev: number[];
 }

@@ -49,7 +49,7 @@ export function nhaFlowSpec(mc: MonteCarloResult, DEF: number): FlowSpec {
       { from: 'state', to: 'pub', value: state, note: 'state maintenance-of-effort (today\'s Medicaid share)' },
       { from: 'emp', to: 'pub', value: emp, note: 'payroll contribution replacing today\'s premium payments' },
       { from: 'wealth', to: 'pub', value: progTax, note: '95% of new revenue from wealth, high-income, capital, and health-rent taxes, as designed; test achievability on the Taxes & Financing tab' },
-      { from: 'hh', to: 'pub', value: hhTax, note: 'ordinary households capped at 5% of new financing (KPP-C8)' },
+      { from: 'hh', to: 'pub', value: hhTax, note: 'ordinary households capped at 5% of new financing under the plan’s household-protection cap' },
       { from: 'hh', to: 'res', value: residual, note: 'supplemental coverage and non-covered extras that stay private' }
     ],
     aria: 'How the mature NHA system would be funded: redirected federal and ' +

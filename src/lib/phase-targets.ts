@@ -5,19 +5,34 @@
    parameters in place; run once. Fidelity-critical: do not re-derive. */
 import type { QualityData, QualityParameter } from './quality-data';
 import type { DataPhase } from './data-phases';
+import { PHASE_YEAR } from './rollout';
+import { declaredVsLive } from './declared-sets';
 
 const PHASES = ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'];
 function pIdx(p: string): number { return PHASES.indexOf(p); }
 
 /* ---- Framework floors carried only as prose in the source ------------- */
-const EXTRA_ANCHORS: Record<string, Record<string, { value: string; why: string }>> = {
-  'KPP-C5': { P7: { value: '>=98% of certified obligations',
-    why: 'PR-SCH-014: maturity certification may not proceed below 98% revenue sufficiency' } },
-  'KPP-C6': { P7: { value: '>=6 months of volatile revenue exposure',
-    why: 'PR-SCH-014: at least six months of reserves before maturity certification' } },
-  'TPP-11.5': { P5: { value: '>=97% of high-stakes AI decisions',
-    why: 'PR-SCH-015: national AI-assisted routing may not deploy below 97% human-review capture' } }
+/* P22 [§S16] new finding: these three are the only progression floors with
+   no gate, and the Quality tab's floor table printed "P5 delivery-scale exit
+   milestone" as what each controls, including the two at P7. Each floor now
+   names the decision it holds once, in `holds`, and both its explanation and
+   the floor table's label are built from it (the review of P22 found the
+   first version typed the decision twice, once in each). */
+interface ProseFloor { value: string; requirement: string; holds: string; condition: string; }
+const EXTRA_ANCHORS: Record<string, Record<string, ProseFloor>> = {
+  'KPP-C5': { P7: { value: '>=98% of certified obligations', requirement: 'PR-SCH-014',
+    holds: 'maturity certification', condition: 'may not proceed below 98% revenue sufficiency' } },
+  'KPP-C6': { P7: { value: '>=6 months of volatile revenue exposure', requirement: 'PR-SCH-014',
+    holds: 'maturity certification', condition: 'may not proceed with less than six months of reserves' } },
+  'TPP-11.5': { P5: { value: '>=97% of high-stakes AI decisions', requirement: 'PR-SCH-015',
+    holds: 'national AI-assisted routing', condition: 'may not deploy below 97% human-review capture' } }
 };
+/* the requirement's id stays in the data; the Quality tab draws the rule in
+   words (the owner's 2026-10-10 decision keeps PR- ids off every page) */
+function proseFloorWhy(f: ProseFloor): string {
+  return f.holds[0].toUpperCase() + f.holds.slice(1) + ' ' + f.condition + '.';
+}
+function proseFloorControls(f: ProseFloor): string { return 'Before ' + f.holds; }
 
 /* ---- First phase each family is measurable, with the reason ----------- */
 const REL: [RegExp, string, string][] = [
@@ -59,11 +74,67 @@ const REL: [RegExp, string, string][] = [
   [/^TPP-REG/, 'P5', 'regional waivers begin at delivery scale'],
   [/^TPP-TRIB/, 'P1', 'tribal compacts are foundation-phase work']
 ];
+/* R150 [§S3]: the table above ends in a fallback, and a fallback that nobody
+ * enumerates is a silent identifier - the eleventh instance of that class in
+ * this codebase, and the best behaved, because it at least declares itself in
+ * a `why` string that reaches the reader.
+ *
+ * What it does not declare is WHO is on it. `_phaseStart` decides the first
+ * phase a metric carries a target at, so an id that quietly lands here gets a
+ * whole trajectory that starts where nobody chose. Eleven ids do, and all
+ * eleven are named below rather than left to be discovered.
+ *
+ * They stay at P4. There is no sourced start phase for the workforce
+ * sufficiency, shortage-staffing, merit-immigration or formula-registry
+ * families - the rollout does not place the health-talent channel in a phase -
+ * and inventing a reason per family would be the same defect in prose. What
+ * changes is that the list is now declared, so a NEW metric arriving without a
+ * rule fails the build instead of inheriting P4 in silence. */
+export const REL_FALLBACK_PHASE = 'P4';
+export const REL_FALLBACK_WHY = 'conservatively tied to the delivery-pilot phase';
+export const REL_FALLBACK_IDS = [
+  /* Workforce & care delivery: sufficiency, distribution and the merit
+     health-talent channel. KPP-W1 has its own rule; W2 to W5 do not. */
+  'KPP-W2', 'KPP-W3', 'KPP-W4', 'KPP-W5', 'TPP-W1', 'TPP-W2',
+  'TPP-IMM1', 'TPP-IMM2', 'TPP-IMM3', 'TPP-IMM4',
+  /* Governance: the only non-workforce id on the list. It is a data-plan
+     metric, so the plan's own first phase overrides this fallback before it
+     reaches a reader - it is declared because it reaches relevance(), not
+     because P4 is what it ends up with. */
+  'TPP-FORM1'
+];
+
+export function hasRelRule(id: string): boolean {
+  return REL.some(function (rule) { return rule[0].test(id); });
+}
+
 function relevance(id: string): { phase: string; why: string } {
   for (let i = 0; i < REL.length; i++) {
     if (REL[i][0].test(id)) return { phase: REL[i][1], why: REL[i][2] };
   }
-  return { phase: 'P4', why: 'conservatively tied to the delivery-pilot phase' };
+  return { phase: REL_FALLBACK_PHASE, why: REL_FALLBACK_WHY };
+}
+
+/* The ids that actually reach the fallback: in the catalog, and matched by no
+   rule. Both checks below are one comparison against this set, which is why
+   "gained a rule" and "left the catalog" collapse into the same answer. */
+function idsOnFallback(Q: QualityData): string[] {
+  return Q.parameters
+    .filter(function (p) { return p.type !== 'CP'; })
+    .map(function (p) { return p.id; })
+    .filter(function (id) { return !hasRelRule(id); });
+}
+
+/* An id with no family rule that nobody has declared. This is the one that
+   fires when a metric is added to the catalog and the REL table is not. */
+export function undeclaredRelevanceFallbacks(Q: QualityData): string[] {
+  return declaredVsLive(REL_FALLBACK_IDS, idsOnFallback(Q)).undeclared;
+}
+
+/* The reverse: a declared id that has since gained a rule, or left the
+   catalog. Keeps the list from outliving what it describes. */
+export function staleRelevanceFallbacks(Q: QualityData): string[] {
+  return declaredVsLive(REL_FALLBACK_IDS, idsOnFallback(Q)).stale;
 }
 
 /* ---- Numeric parsing + formatting ------------------------------------- */
@@ -72,10 +143,37 @@ function stripTemporal(s: string): string {
           .replace(/\s{2,}/g, ' ').trim();
 }
 export interface NumMeta { num: number; cmp: '>=' | '<=' | null; unit: string; decimals: number; comma: boolean; }
+
+/* R277 [§S3]: a parenthetical is an aside, never the target.
+ *
+ * The parser takes the FIRST numeric token in the string, and the worked
+ * example the row supplies is a scale note: '<=${X} per person per year (2024
+ * dollars, 2023 scale)' parses as 2024 in unit money, a calendar year read as
+ * the target value. Parenthetical spans are removed before matching, so an
+ * aside can no longer supply the number.
+ *
+ * Measured before landing: of 1,207 live strings - every maturity target,
+ * every rollout value and every carried raw value - three contain a
+ * parenthesis and **zero** parses change. This closes a shape rather than
+ * moving a number.
+ *
+ * The unit sniff runs on the ORIGINAL string, because a unit written only in
+ * an aside is still the unit: '<=30 (median hours)' is hours either way.
+ *
+ * What this does NOT fix, and the tests say so: the first number anywhere in
+ * the surviving text still wins, so '>={X}% reduction in 30-day readmissions'
+ * parses 30. That case is covered by the template mechanism instead, and
+ * KPP-C2's '$4.75T total system cost' has no parenthesis at all - it is
+ * declared in DECLARED_TARGET_MISPARSES and kept out of the anchor set by
+ * R233. */
+export function withoutAsides(str: string): string {
+  return str.replace(/\([^)]*\)/g, ' ');
+}
+
 /* returns {num, cmp:'>='|'<=', unit, decimals} or null */
 export function parseNum(str: string | undefined): NumMeta | null {
   if (!str) return null;
-  const m = str.match(/(median\s*)?(>=|<=|≥|≤)?\s*\$?([\d][\d,]*(?:\.\d+)?)/);
+  const m = withoutAsides(str).match(/(median\s*)?(>=|<=|≥|≤)?\s*\$?([\d][\d,]*(?:\.\d+)?)/);
   if (!m) return null;
   const raw = m[3], num = parseFloat(raw.replace(/,/g, ''));
   if (!isFinite(num)) return null;
@@ -103,7 +201,29 @@ export function withNum(template: string, num: number, meta: NumMeta): string {
   return t.replace(/([\d][\d,]*(?:\.\d+)?)/, txt);
 }
 
-/* entry-floor magnitude for a maturity value with no interior anchor */
+/* Entry-floor magnitude for a maturity value with no interior anchor.
+ *
+ * R147 [§S3] filed these thirteen constants as unsourced numbers setting the
+ * starting floor of ~94 public metric trajectories. Measured, they set none of
+ * them. Every row this function contributes to is tagged 'derived interim
+ * target', and equations.ts replaces every row carrying that kind with an
+ * equation value - all 538 of them, survivor count 0 (R228, R248).
+ *
+ * Proven rather than argued: replacing this whole function with `meta.num *
+ * 0.137` changes 0 of the 727 published rows. The constants are a SCAFFOLD -
+ * they give each phase a plausible row to exist at, and the row's value is
+ * overwritten before a reader sees it.
+ *
+ * They are kept rather than deleted because the scaffold is load-bearing: the
+ * entry anchor is what lets the interpolation below bracket the phases between
+ * the start phase and the first committed anchor. Without it those rows are
+ * never created, and the published count drops from 727. What a registry entry
+ * would document here is the shape of a placeholder, not the source of a
+ * number - so R147 closes as a measurement, not as thirteen citations.
+ *
+ * The inertness is pinned in tests/lib/phase-targets.test.ts. If an equation
+ * is ever lost or evaluates non-finite at a published phase, one of these
+ * numbers becomes visible, and that test is what says so. */
 function entryNum(meta: NumMeta): number {
   const M = meta.num, isMax = meta.cmp !== '<=';
   if (isMax) {
@@ -129,7 +249,21 @@ const QUAL_LADDER = [
   'calibrated target certified at maturity'
 ];
 
-interface Anchor { num: number; source: string; value: string; why?: string; }
+interface Anchor { num: number; source: string; value: string; why?: string; controls?: string; }
+
+/* R299 [§S16]: where the Data register says a metric's population changes,
+   the Quality tab's phase strip shows the same note on that phase's row,
+   because the strip is where a reader sees the numbers side by side. */
+function carryScopeChanges(p: QualityParameter, plan?: Record<string, { scopeChange?: string; denominator: string }>): void {
+  if (!plan) return;
+  p.rollout.forEach(function (e) {
+    const row = plan[e.phase];
+    if (!row) return;
+    if (row.scopeChange) e.scopeChange = row.scopeChange;
+    /* review 3 of P22: rule 4's denominator, on every entry the register publishes */
+    e.denominator = row.denominator;
+  });
+}
 
 function finalize(p: QualityParameter, relPhase: string, relWhy: string): void {
   p.rollout.sort(function (a, b) { return pIdx(a.phase) - pIdx(b.phase); });
@@ -147,12 +281,13 @@ export function applyPhaseTargets(Q: QualityData, D: DataPhase[]): void {
   (Q as { __enriched?: boolean }).__enriched = true;
 
   /* ---- Data-plan overrides: id -> phase -> {value, basis, justification} */
-  const dp: Record<string, Record<string, { value: string; basis: string; justification: string }>> = {};
+  const dp: Record<string, Record<string, { value: string; basis: string; justification: string; scopeChange?: string; denominator: string }>> = {};
   if (D) D.forEach(function (ph) {
     (ph.groups || []).forEach(function (g) {
       (g.metrics || []).forEach(function (m) {
         (dp[m.id] = dp[m.id] || {})[ph.id] = {
-          value: m.phaseTarget, basis: m.basis, justification: m.justification
+          value: m.phaseTarget, basis: m.basis, justification: m.justification,
+          scopeChange: m.scopeChange, denominator: ph.denominator
         };
       });
     });
@@ -188,11 +323,12 @@ export function applyPhaseTargets(Q: QualityData, D: DataPhase[]): void {
         if (have[ph]) continue;
         p.rollout.push({ phase: ph, gate: '', kind: 'derived interim target',
           value: QUAL_LADDER[Math.min(q, QUAL_LADDER.length - 1)],
-          interpretation: 'The framework deliberately left this target to be ' +
+          interpretation: 'The plan deliberately left this target to be ' +
             'calibrated from operating data; the interim obligation is ' +
             'measurement and demonstrated direction, not an invented number.' });
         q++;
       }
+      carryScopeChanges(p, dp[p.id]);
       finalize(p, relPhase, relWhy);
       return;
     }
@@ -217,7 +353,10 @@ export function applyPhaseTargets(Q: QualityData, D: DataPhase[]): void {
     Object.keys(extra).forEach(function (ph) {
       if (anchors[ph]) return;
       const pn = parseNum(extra[ph].value);
-      if (pn) anchors[ph] = { num: pn.num, source: 'extra', value: extra[ph].value, why: extra[ph].why };
+      if (pn) {
+        anchors[ph] = { num: pn.num, source: 'extra', value: extra[ph].value,
+          why: proseFloorWhy(extra[ph]), controls: proseFloorControls(extra[ph]) };
+      }
     });
     /* maturity anchor */
     if (!anchors.P8) anchors.P8 = { num: mat.num, source: 'maturity', value: p.target };
@@ -253,7 +392,8 @@ export function applyPhaseTargets(Q: QualityData, D: DataPhase[]): void {
       }
       if (anchors[phase] && anchors[phase].source === 'extra') {
         p.rollout.push({ phase: phase, gate: '', kind: 'progression floor',
-          value: anchors[phase].value, interpretation: anchors[phase].why });
+          value: anchors[phase].value, interpretation: anchors[phase].why,
+          controls: anchors[phase].controls });
         continue;
       }
       if (phase === 'P8') continue;      /* maturity row already exists */
@@ -273,7 +413,13 @@ export function applyPhaseTargets(Q: QualityData, D: DataPhase[]): void {
       });
       if (lo === null || hi === null || lo === hi) continue;
       const loK: string = lo, hiK: string = hi;
-      const f = (i - pIdx(loK)) / (pIdx(hiK) - pIdx(loK));
+      /* R148 [§S3]: interpolate on the calendar, not on the phase's position in
+         the list. The phases are unevenly spaced - P3 is Year 4, P4 is Year 6,
+         P7 is Year 10, P8 is Year 12 - so dividing by the index gives every
+         phase step the same increment and silently halves the implied annual
+         rate of improvement across P3-P4, P6-P7 and P7-P8. PHASE_YEAR is the
+         one map (R251), imported rather than re-derived. */
+      const f = (PHASE_YEAR[phase] - PHASE_YEAR[loK]) / (PHASE_YEAR[hiK] - PHASE_YEAR[loK]);
       const num = anchors[loK].num + (anchors[hiK].num - anchors[loK].num) * f;
       p.rollout.push({ phase: phase, gate: '', kind: 'derived interim target',
         value: withNum(p.target, num, mat),
@@ -281,6 +427,7 @@ export function applyPhaseTargets(Q: QualityData, D: DataPhase[]): void {
           loK + ' and ' + hiK + ' anchors toward the maturity target.' });
     }
 
+    carryScopeChanges(p, dp[p.id]);
     finalize(p, relPhase, relWhy);
   });
 }

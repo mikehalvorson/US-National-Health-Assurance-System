@@ -1,20 +1,53 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   on a route the registry does not carry, rather than rendering nothing. */
 import { computeOverview } from '../lib/overview';
-import { OUTCOME_STATS, PARAM_DEFS } from '../lib/params';
-import { CARE_SCENARIOS, moneyRange } from '../lib/care';
+import { BASE2023_TEXT, OUTCOME_STATS, PARAM_DEFS, CALENDAR_ANCHOR_NOTE, NHE_2024_OBSERVED } from '../lib/params';
+import { money } from '../lib/format';
+import { paramBandNote, sliderSpreadNote } from '../lib/scenarios';
+import {
+  CARE_SCENARIOS, careMoney, moneyRange,
+  careChipText, careEarlyText, carePhasingText, careRequirementText,
+  RESIDUAL_BILLING_CAVEAT
+} from '../lib/care';
 import { selfTestSummary } from '../lib/selftests';
+import { claimPerPersonText } from '../lib/benchmarks';
+import { perCapitaCeiling } from '../lib/source-package';
+import { modelPerCapitaAtMaturity } from '../lib/equations';
 
 const v = computeOverview('SCN-BASE', null);
+/* review 1 of the owner decisions: CMS's final 2024 total, read where it
+   was typed as the preliminary "~$5.3T" */
+const observed2024 = money(NHE_2024_OBSERVED.mid);
 const gapsList = ' ' + PARAM_DEFS.filter((p) => p.confidence === 'low').map((p) => p.label).join(' · ');
 const selftests = selfTestSummary();
+/* Owner, 2026-10-12: the plan's per-person ceiling is read from its own
+   requirement, not typed, and set beside its total per person. */
+const claimPerPersonLine = claimPerPersonText(perCapitaCeiling(), modelPerCapitaAtMaturity());
+/* R81 [§S8]: the card years are read off the ramps that deliver them, at build
+   time for the base scenario. R85: health-client.ts re-renders these same four
+   sentences from the same functions when a stress scenario shifts the ramps,
+   so the page and the client cannot phrase the fact differently. */
+const careLines = CARE_SCENARIOS.map((s) => ({
+  chip: careChipText(s),
+  phasing: carePhasingText(s),
+  early: careEarlyText(s),
+  requirement: careRequirementText(s)
+}));
 ---
-<BaseLayout title="National Health Assurance: Healthcare">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Healthcare"
+  description="What American healthcare costs today, what people would pay under National Health Assurance, and the full system-cost model behind both figures."
+>
 
     <section class="card chapter-intro">
-      <span class="chapter-intro-eyebrow">Chapter 1 · The need and the promise</span>
+      <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('health'))} · The need and the promise</span>
       <h2>What people would receive, what care costs, and what the whole system costs</h2>
       <p class="desc">This chapter is the working core of the plan. It starts
         with the household: what real care episodes cost today versus under
@@ -31,10 +64,13 @@ const selftests = selfTestSummary();
       <h2>What you'd pay for care</h2>
       <p class="desc">Here is what that design means for real care episodes:
         today's typical cost with employer insurance, without insurance, and
-        under NHA, with the year each benefit arrives, assuming enactment in
-        2027.</p>
+        under NHA. Each card's year is the year the ramp that delivers that
+        benefit finishes delivering it, not the year the phase containing it
+        opens. Pick a stress scenario further down the page and these years
+        move with the ramps it delays, so the cards and the model cannot say
+        different things about the same benefit.</p>
       <div class="care-grid" id="care-cards">
-        {CARE_SCENARIOS.map((s) => (
+        {CARE_SCENARIOS.map((s, i) => (
           <div class="care-card">
             <div class="care-title">{s.title}</div>
             <div class="care-rows">
@@ -52,15 +88,23 @@ const selftests = selfTestSummary();
             <div class="care-nha">
               <div class="care-nha-line">
                 <div class="care-nha-label">Under NHA</div>
-                <div class="care-nha-val">$0</div>
-                <div class="care-year-chip" title="Assuming enactment in 2027; see the phase roadmap.">from ~{s.nha.fromYear}</div>
+                <div class="care-nha-val" aria-describedby="care-residual-note">{careMoney(s.nha.amount)}</div>
+                <div class="care-year-chip" data-care-chip={s.id} title={CALENDAR_ANCHOR_NOTE}>{careLines[i].chip}</div>
               </div>
+              <div class="care-nha-phasing" data-care-phasing={s.id} hidden={careLines[i].phasing === null}>{careLines[i].phasing}</div>
+              {careLines[i].early !== null && (
+                <div class="care-nha-phasing" data-care-early={s.id}>{careLines[i].early}</div>
+              )}
               <div class="care-nha-note">{s.nha.note}</div>
+              {careLines[i].requirement !== null && (
+                <div class="care-nha-req" data-care-req={s.id}>{careLines[i].requirement}</div>
+              )}
             </div>
             <div class="care-src">Source: {s.source} <span class={"conf " + s.confidence}>{s.confidence}</span></div>
           </div>
         ))}
       </div>
+      <p class="note" id="care-residual-note">{RESIDUAL_BILLING_CAVEAT}</p>
     </section>
 
     <section class="card">
@@ -98,7 +142,7 @@ const selftests = selfTestSummary();
       <h2>The system-level price tag</h2>
       <p class="desc">This model's own projection, computed bottom-up from
         sourced parameters: what the fully-mature system would cost at today's
-        (2024) scale, directly comparable with the ~$5.3T the U.S. actually
+        (2024) scale, directly comparable with the {observed2024} the U.S. actually
         spends now. The savings levers (drug negotiation, administrative
         consolidation, payment reform) largely pay for the benefit expansions
         (universal coverage, $0 care, long-term care, dental/vision/hearing,
@@ -112,8 +156,8 @@ const selftests = selfTestSummary();
         </div>
         <div class="hero-block">
           <div class="label">What the U.S. actually spends, 2024</div>
-          <div class="hero-num" style="color:var(--text-secondary)">$5.3T/yr</div>
-          <div class="range">CMS preliminary</div>
+          <div class="hero-num" style="color:var(--text-secondary)">{observed2024}/yr</div>
+          <div class="range">CMS, final</div>
         </div>
       </div>
       <div class="hero-pair-label">In 2041, at 2041's size (still measured in 2024 dollars)</div>
@@ -143,7 +187,7 @@ const selftests = selfTestSummary();
         like. The first row asks what the mature system would cost if it
         existed today; the second asks what the annual bill looks like in
         2041, when the country is bigger and older under either system.
-        Never compare across rows: the jump from ~$5.3T to ~$9T happens with
+        Never compare across rows: the jump from {observed2024} to {v.base2041.replace('/yr', '')} (the status quo's 2041 total) happens with
         or without reform, and it is more people, older people, and more
         care per person, not inflation. Every dollar on this page is in 2024
         purchasing power.</p>
@@ -158,6 +202,8 @@ const selftests = selfTestSummary();
         <span class="conf low">low</span> = analyst assumption with no direct source.</p>
       <div class="controls" id="controls"></div>
       <p class="scenario-desc" id="scenario-desc"></p>
+      <div id="scenario-basis"></div>
+      <p class="note">{sliderSpreadNote()}</p>
       <div class="controls-foot">
         <button class="btn" id="reset-btn">Reset assumptions</button>
         <span class="runs-note" id="runs-note"></span>
@@ -189,7 +235,7 @@ const selftests = selfTestSummary();
         financing instead. Hover any ribbon for what it contains.</p>
       <div class="flow-grid">
         <div class="flow-panel">
-          <div class="flow-title">Today: actual 2023 spending ($4.87T, CMS)</div>
+          <div class="flow-title">Today: actual 2023 spending ({BASE2023_TEXT.total}, CMS)</div>
           <div id="flow-today"></div>
         </div>
         <div class="flow-panel">
@@ -221,6 +267,7 @@ const selftests = selfTestSummary();
         mechanism appears exactly once: the model computes both worlds directly
         and derives these differences, so nothing can be double-counted.</p>
       <div id="bridge-chart"></div>
+      <p class="note" id="bridge-note"></p>
       <details class="tableview"><summary>View as table</summary>
         <div class="tbl-scroll"><table class="data" id="bridge-table"></table></div>
       </details>
@@ -268,7 +315,7 @@ const selftests = selfTestSummary();
               in 2024. Both figures include all payers.</p>
           </div>
         </div>
-        <div class="benchmark-key" aria-label="Chart key">
+        <div role="group" class="benchmark-key" aria-label="Chart key">
           <span><i class="benchmark-key-model"></i>Dashboard model range and median</span>
           <span><i class="benchmark-key-outside"></i>Observed or outside estimate</span>
         </div>
@@ -277,6 +324,11 @@ const selftests = selfTestSummary();
           <strong>Readout:</strong>
           <span id="benchmark-nhe-result"></span>
         </p>
+        <p class="benchmark-readout">
+          <strong>The plan&apos;s own stated figure:</strong>
+          <span id="benchmark-claim-result"></span>
+        </p>
+        <p class="benchmark-readout" id="benchmark-claim-per-person">{claimPerPersonLine}</p>
       </article>
 
       <article class="benchmark-panel">
@@ -352,12 +404,12 @@ const selftests = selfTestSummary();
         feeds back into financing. Steady state is the 2040–2042 average.
       </div>
       <div class="note">
-        <b>On the original headline figure:</b> earlier drafts
-        asserted a mature cost of $4.75T/yr (2024 dollars) without a derivation.
-        That figure is superseded by this model's computed projections; under
-        central assumptions the model lands somewhat above it, and reaches it
-        only under the optimistic scenario. The full comparison lives in the
-        parameter table and scenario presets, not in the headline.
+        <b>On the original headline figure:</b> the plan states a mature total
+        system cost without deriving one. What that figure counts is settled by
+        the plan's own cost catalog rather than by this dashboard, and the
+        comparison against it is computed and shown with the other credibility
+        checks above, on that same accounting basis. It is a comparison line,
+        never a target: no parameter here is tuned to reproduce it.
       </div>
       <div class="note">
         <b>What it still is not:</b> specialty-level queues and wait-time
@@ -381,6 +433,7 @@ const selftests = selfTestSummary();
         <span id="gaps-list">{gapsList}</span>
       </div>
       <details class="tableview"><summary>Full parameter table with sources (the entire evidence base)</summary>
+        <p class="note"><b>What the low and high columns mean.</b> {paramBandNote()}</p>
         <div class="tbl-scroll">
           <table class="data" id="param-table">
             <thead><tr>
@@ -396,7 +449,14 @@ const selftests = selfTestSummary();
                   <td class="num">{(+p.high.toFixed(2)).toLocaleString('en-US')}</td>
                   <td>{p.unit}</td>
                   <td><span class={"conf " + p.confidence}>{p.confidence}</span></td>
-                  <td>{p.source} {p.url && (<a href={p.url} target="_blank" rel="noopener">[link]</a>)}</td>
+                  <td>{p.source} {p.url && (<a href={p.url} target="_blank" rel="noopener">[link]</a>)}
+                    {p.divergence && (
+                      <div class="divergence">
+                        <b>Diverges from the research recommendation ({p.divergence.leans}).</b>
+                        {' '}Recommended: {p.divergence.recommended}. {p.divergence.note}
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -418,7 +478,6 @@ const selftests = selfTestSummary();
     </section>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

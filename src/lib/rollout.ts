@@ -2,6 +2,8 @@
    (PHASES 12-103, DOMAINS 105-184, GATES 186-227, AGENCIES 229-260,
    WORKSTREAMS 262-276). Fidelity-critical: do not re-derive. */
 
+import { START_YEAR } from './params';
+
 export interface Phase {
   id: string;
   year: number;
@@ -18,6 +20,37 @@ export interface Gate {
   floor: string;
   fallback: string;
 }
+
+/* R257 [§S11b]: five of the eight gates state a number and three do not.
+ *
+ * G1 requires >=75%, G2 >=80% and <=5 per 10,000, G3 >=85%, G4 >=98% and six
+ * months, G5 >=97%. G6, G7 and G8 read as lists of things that must "work",
+ * "transfer safely" or be "usable" - real requirements, and not measurements.
+ *
+ * The section they are published in is framed as measurement: gateFloorChecks
+ * lifts the quantities out of each floor and holds catalog rows to them, and
+ * the page presents all eight the same way. So three gates sat in a
+ * measurement frame carrying nothing to measure, and a reader had no way to
+ * tell which kind they were looking at.
+ *
+ * Derived rather than declared. A hand-kept list of "the three" is a list
+ * that goes stale the moment a floor is rewritten with a number in it, which
+ * is exactly what should happen to G6, G7 and G8. The page reads this. */
+export function gateFloorQuantities(gate: Gate): number[] {
+  /* Phase and gate references are addresses, not quantities - the same
+     exclusion gate-floors.ts makes, for the same reason. */
+  return (gate.floor.replace(/\b[PG][0-9]+\b/g, ' ').match(/[0-9]+(?:\.[0-9]+)?/g) || [])
+    .map(Number);
+}
+
+export function gateIsMeasurable(gate: Gate): boolean {
+  return gateFloorQuantities(gate).length > 0;
+}
+
+export const QUALITATIVE_GATE_NOTE =
+  'This gate states conditions rather than a threshold. Readiness is a ' +
+  'judgement by the named body against the listed capabilities, not a number ' +
+  'the model can score.';
 
 export interface AgencyGroup {
   title: string;
@@ -117,6 +150,164 @@ export const PHASES: Phase[] = [
     ],
     evidence: "All maturity targets are assessed; Gate 4 and cross-domain certification pass; unresolved defects remain owned in a public repair plan."
   }
+];
+
+/* The phase ids a piece of text names ("by P8", "PH-P3 to PH-P4"), in order.
+   One pattern for every check that reads a phase out of prose (P22). */
+export function phasesNamedIn(text: string): string[] {
+  return text.match(/\bP[0-8]\b/g) || [];
+}
+
+/* ---- The phase -> year map ----------------------------------------------
+ * The single definition. Every module that needs a phase's anchor year
+ * imports this one; nothing re-derives it. Derived from PHASES above so a
+ * phase and its year cannot be edited apart.
+ *
+ * These are YEAR NUMBERS, 1-based: P0 is Year 1. Two conversions exist and
+ * they answer different questions. A consumer that wants to INDEX a year-keyed
+ * array uses phaseIndex() in equations.ts, the only place that conversion
+ * happens. A consumer that wants a calendar DATE uses calendarYear() below.
+ * Neither is open-coded anywhere.
+ * ------------------------------------------------------------------------ */
+export const PHASE_YEAR: Record<string, number> = {};
+PHASES.forEach(function (p) { PHASE_YEAR[p.id] = p.year; });
+
+/* Year number -> calendar year, in one place, for the readers that want a date
+ * rather than an array index.
+ *
+ * R262 [§S2] wrote `START_YEAR + phase.year - 1` inline on a PAGE and again in
+ * a check module, which is the same duplication R251 and R293 exist to prevent,
+ * reintroduced in the same section by the row that needed a date. A page should
+ * not be doing calendar arithmetic at all.
+ *
+ * This is deliberately NOT the converter `calendarYearOf` in phase-map-check.ts
+ * uses. That one goes the long way round, through the equation layer's own
+ * phaseIndex(), because its job is to catch the equation layer disagreeing with
+ * this map - a check that resolved through this function would be comparing
+ * rollout.ts against itself. A self-test holds the two to each other. */
+export function calendarYear(yearNumber: number): number {
+  return START_YEAR + yearNumber - 1;
+}
+
+export function calendarYearOfPhase(phaseId: string): number {
+  const year = PHASE_YEAR[phaseId];
+  return year === undefined ? NaN : calendarYear(year);
+}
+
+/* ---- Headline milestones -------------------------------------------------
+ * R255 [§S2]: the rollout page's four stat tiles used to type their year
+ * beside the roadmap rather than take it from the roadmap, and one of them
+ * disagreed with two other chapters about the same milestone - "Year 10"
+ * here, "Years 10-12" on the overview and the health chapter.
+ *
+ * The years now come from PHASE_YEAR, and each tile that depends on a policy
+ * ramp names the ramp and the share it claims to have reached, so a
+ * self-test can hold the published milestone to what the model delivers.
+ * The page imports these; it does not restate them.
+ * ------------------------------------------------------------------------ */
+export interface RolloutHeadline {
+  label: string;
+  value: string;
+  range: string;
+  /* the ramp that delivers it, and the share reached at startPhase */
+  ramp: 'coverage' | 'expansions' | null;
+  atLeast: number;
+  startPhase: string;
+  /* set when the milestone spans phases; the ramp must be complete by it */
+  endPhase: string | null;
+}
+
+export function yearSpan(startPhase: string, endPhase: string | null): string {
+  const a = PHASE_YEAR[startPhase];
+  const b = endPhase === null ? a : PHASE_YEAR[endPhase];
+  return a === b ? 'Year ' + a : 'Years ' + a + '–' + b;
+}
+
+function headline(
+  label: string, startPhase: string, endPhase: string | null,
+  ramp: RolloutHeadline['ramp'], atLeast: number, range: string
+): RolloutHeadline {
+  return { label, value: yearSpan(startPhase, endPhase), range, ramp, atLeast, startPhase, endPhase };
+}
+
+export const ROLLOUT_HEADLINES: RolloutHeadline[] = [
+  {
+    label: 'Controlled roadmap', value: PHASES[0].id + '–' + PHASES[PHASES.length - 1].id,
+    range: 'foundation plus eight delivery phases',
+    ramp: null, atLeast: 0, startPhase: PHASES[0].id, endPhase: null
+  },
+  headline('Public default coverage', 'P6', null, 'coverage', 0.85,
+    'after claims, capacity, rights, and continuity checks'),
+  headline('Expanded benefits', 'P7', 'P8', 'expansions', 0.60,
+    'LTC, behavioral health, dental, vision, hearing, EMS: substantially built at the start of the span, complete at its end'),
+  headline('Maturity certification', 'P8', null, null, 0,
+    'full integration, manufacturing, records, and payment')
+];
+
+/* The span every chapter must use when it describes the benefit expansion.
+   Three of them stated it independently and one of the three disagreed. */
+export const EXPANSION_SPAN = yearSpan('P7', 'P8');
+
+/* ---- Benefit start years, derived --------------------------------------
+ * R262 [§S2]: the LTC chapter stated that the long-term-care benefit "begins
+ * in 2026" - before the model's Year 1 and ten years before the roadmap
+ * places it - and used that date to justify its workforce horizon. A page
+ * should not be able to type a benefit's start year at all, so the phase
+ * that carries the benefit is looked up here and the calendar year comes
+ * from the anchor.
+ *
+ * `startYearOfWork` finds the phase whose work list mentions the benefit, so
+ * the answer moves if the roadmap moves.
+ * ------------------------------------------------------------------------ */
+export function phaseCarryingWork(fragment: string): Phase | null {
+  const needle = fragment.toLowerCase();
+  for (const p of PHASES) {
+    if (p.work.some((w) => w.toLowerCase().includes(needle))) return p;
+  }
+  return null;
+}
+
+/* The long-term-care benefit's phase, by the roadmap's own words. */
+export const LTC_BENEFIT_PHASE = phaseCarryingWork('long-term care');
+
+/* ---- Unit-network buildout steps ----------------------------------------
+ * R258 [§S2]: the buildout chart used to carry its five steps inline in
+ * rollout-client.ts, each with a `level` string that set the bar's height.
+ * Three were the readiness floors the page states in prose - 65%, 80%, 95%
+ * population coverage. The other two were "24%" and "34%", which appear
+ * nowhere else: not in the floors, not in the ramps, not in a comment. A
+ * `qual: true` flag restyled their fill, but height is the quantity channel
+ * on a bar chart, so a reader saw a bar at roughly a quarter scale on an
+ * axis where every other bar means population coverage.
+ *
+ * `coverage` is null for those two now. They are plotted off the axis at a
+ * fixed nominal height the stylesheet owns, behind a visible break, so
+ * nothing about them encodes a number. The three real steps keep their
+ * floors, and a self-test holds each to the floor the page states.
+ * ------------------------------------------------------------------------ */
+export interface UnitBuildoutStep {
+  value: string;
+  label: string;
+  phase: string;
+  /* population-coverage floor this step represents, or null when the step is
+     qualitative and belongs off the axis */
+  coverage: number | null;
+}
+
+/* A note for anyone comparing these to RAMPS.units: they are not the same
+   quantity and must not be made to agree. These levels are POPULATION within
+   the unit network - the framework's own P5 milestone (KPP-B7, ">=65% by phase
+   end") and its Gate 2 floor (">=80%"). RAMPS.units is the share of the MATURE
+   BUILD delivered, which is 0.55 at the P5 anchor. A build that is 55% complete
+   serving 65% of the population is not a contradiction; population concentrates
+   where units are built first. R255 checks each plotted step against the floor
+   the page states, which is the comparison that means something. */
+export const UNIT_BUILDOUT_STEPS: UnitBuildoutStep[] = [
+  { value: 'Plan', label: 'standards, siting, workforce, prototypes', phase: 'P0–P3', coverage: null },
+  { value: 'Pilot', label: 'all four unit types in representative regions', phase: 'P4', coverage: null },
+  { value: '≥65%', label: 'population coverage by phase end', phase: 'P5', coverage: 65 },
+  { value: '≥80%', label: 'Gate 2 floor before broad $0 care', phase: 'P6', coverage: 80 },
+  { value: '≥95%', label: 'within access-time standard', phase: 'P8', coverage: 95 }
 ];
 
 export const DOMAINS: string[][] = [
@@ -276,18 +467,181 @@ export const AGENCIES: AgencyGroup[] = [
   }
 ];
 
-export const WORKSTREAMS: [string, string, string][] = [
-  ["TW-01", "Unit network buildout", "Sites, design, construction, equipment, startup, training, mobile and rural readiness"],
-  ["TW-02", "Information mesh", "Identity, registries, claims and records, cyber, interfaces, cleaning, and migration"],
-  ["TW-03", "Public manufacturing", "Facilities, equipment, validation, suppliers, inventory, and launch"],
-  ["TW-04", "Hospital stabilization", "Conversion corridors, service-line and workforce continuity, reconciliation"],
-  ["TW-05", "Provider liquidity", "Reserve authority, provisional payments, complaints, recovery, and reconciliation"],
-  ["TW-06", "Workforce transition", "Income bridges, assessment, training, placement, retention, and appeals"],
-  ["TW-07", "Education expansion", "Faculty, sites, slots, scholarships, residencies, fellowships, and hubs"],
-  ["TW-08", "State compacts", "Planning, systems, staffing, data, grants, reconciliation, and federal fallback"],
-  ["TW-09", "Tribal and rural transition", "Direct compacts, data governance, facilities, workforce, transport, and continuity"],
-  ["TW-10", "Pharmacy continuity", "Medication bridges, emergency fills, onboarding, payment, formulary, and supply conversion"],
-  ["TW-11", "Legacy payer wind-down", "Runout, authorizations, appeals, liabilities, records, contracts, and closure"],
-  ["TW-12", "Legitimacy and safety startup", "Rights, ombudsman, appeals, injury learning, accessibility, trust, and remediation"],
-  ["TW-13", "Adaptation startup", "Scorekeeping, Formula Registry, gate evidence, legal contingency, red team, and repair"]
+/* ---- Transition workstreams ---------------------------------------------
+ * R253 [§S5]. `rollout.astro` requires of every dollar a "costed work
+ * package, deliverable, owner, gate, contingency, and transfer into mature
+ * operations" - and these records were thirteen [id, title, description]
+ * triples carrying none of them.
+ *
+ * Two of the five were simply dropped in the port. Framework Table D6B-15
+ * ("Costed transition and implementation workstreams") is a five-column
+ * table: ID, Workstream, CP allocation, Included transition boundary,
+ * Exit/transfer. The port kept the first two and the boundary (as
+ * `description`) and dropped `CP allocation` and `Exit/transfer`. Both are
+ * restored verbatim below - the CP allocation IS the costed-work-package
+ * pointer, and the exit IS the transfer into mature operations.
+ *
+ * Owner and gate are assigned to the whole set, not per workstream, and the
+ * framework says so: conclusion 64-C06 reads "NHTCA; TW-01-13; Gate 8". They
+ * are stated once as WORKSTREAM_OWNER / WORKSTREAM_GATE rather than copied
+ * thirteen times.
+ *
+ * The per-workstream DOLLAR allocation does not exist, and that is the
+ * framework's own position rather than a gap in this port: Table D6B-14's
+ * last row reads "Phase/domain allocation | Open | Cost-loaded integrated
+ * schedule required under OI-052". So `cost` is a declared state - the §S4
+ * pattern, a field that says why a number is absent instead of leaving a
+ * silent blank - and the page prints the reason where it prints the
+ * requirement.
+ * ------------------------------------------------------------------------ */
+export type WorkstreamCostState = 'allocation-open';
+
+export interface Workstream {
+  id: string;
+  title: string;
+  /* Table D6B-15 "Included transition boundary": what the package delivers. */
+  boundary: string;
+  /* Table D6B-15 "CP allocation": the cost families the package draws on. */
+  cpAllocation: string;
+  /* Table D6B-15 "Exit/transfer": where the capability goes when service-ready. */
+  exit: string;
+  /* The owner's 2026-10-10 decision keeps the source document's codes off
+     this page, so `cpAllocation`, `exit` and `id` are data, not drawn
+     (`boundary` is drawn: it carries no code).
+     These two say the same in plain words, written from the catalog's
+     names for the codes; tests/lib/rollout.test.ts holds them to it. */
+  families: string;
+  transfersTo: string;
+  cost: WorkstreamCostState;
+}
+
+/* Framework conclusion 64-C06: "NHTCA; TW-01-13; Gate 8". */
+export const WORKSTREAM_OWNER = 'NHTCA';
+export const WORKSTREAM_GATE = 'Gate 8';
+/* P23 [§S17], found by R77's sweep of open-item citations: this sentence is
+   rendered on the Rollout page, and it said "the framework fixes ... and
+   requires" and carried the open item's code in brackets, both of which
+   golden rule 2 keeps off every page. The item stays cited in the comment
+   above, which is where the register's check reads it. */
+export const WORKSTREAM_COST_NOTE =
+  'Per-workstream dollar allocation is open by design, not missing: the ' +
+  'plan fixes the cumulative envelope and requires a cost-loaded integrated ' +
+  'schedule before phase and domain shares are set. Each package names the ' +
+  'cost families it draws on instead.';
+
+export const WORKSTREAMS: Workstream[] = [
+  { id: "TW-01", title: "Unit network buildout",
+    boundary: "Sites, design, construction, equipment, startup, training, mobile and rural readiness",
+    cpAllocation: "CP-UNIT capital/startup; CP-TRN where uniquely transitional",
+    exit: "MC-03 after service-ready transfer",
+    families: "diagnostic-treatment units (capital and startup); transition costs, where uniquely transitional",
+    transfersTo: "four-unit diagnostic-treatment network operations, after service-ready transfer",
+    cost: 'allocation-open' },
+  { id: "TW-02", title: "Information mesh",
+    boundary: "Identity, registries, claims and records, cyber, interfaces, cleaning, and migration",
+    cpAllocation: "CP-IT; CP-TRN-010 for legacy migration",
+    exit: "MC-11 recurring operation",
+    families: "information, cyber and AI; legacy payer data migration cost",
+    transfersTo: "records, information, cybersecurity, and AI operations (recurring)",
+    cost: 'allocation-open' },
+  { id: "TW-03", title: "Public manufacturing",
+    boundary: "Facilities, equipment, validation, suppliers, inventory, and launch",
+    cpAllocation: "CP-RX/CP-DX capital/startup",
+    exit: "MC-05/06 mature production",
+    families: "drugs/pharmacy and devices, labs and diagnostics (capital and startup)",
+    transfersTo: "drugs, pharmacy, and public manufacturing, and devices, labs, and diagnostics (mature production)",
+    cost: 'allocation-open' },
+  { id: "TW-04", title: "Hospital stabilization",
+    boundary: "Conversion corridors, service-line and workforce continuity, reconciliation",
+    cpAllocation: "CP-TRN-007",
+    exit: "Close after certified global-budget/public-service operation",
+    families: "hospital stabilization corridor cost",
+    transfersTo: "close after certified global-budget/public-service operation",
+    cost: 'allocation-open' },
+  { id: "TW-05", title: "Provider liquidity",
+    boundary: "Reserve authority, provisional payments, complaints, recovery, and reconciliation",
+    cpAllocation: "CP-TRN-005/006",
+    exit: "Authority/balance/outlay tracked separately",
+    families: "provider liquidity reserve authority; net provider liquidity outlay",
+    transfersTo: "authority/balance/outlay tracked separately",
+    cost: 'allocation-open' },
+  { id: "TW-06", title: "Workforce transition",
+    boundary: "Income bridges, assessment, training, placement, retention, and appeals",
+    cpAllocation: "CP-TRN-016/017; CP-EDU",
+    exit: "Enduring education to MC-14; placement support sunsets",
+    families: "worker income bridge cost; worker placement cost; education and workforce",
+    transfersTo: "enduring education to professional education and workforce capacity; placement support sunsets",
+    cost: 'allocation-open' },
+  { id: "TW-07", title: "Education expansion",
+    boundary: "Faculty, sites, slots, scholarships, residencies, fellowships, and hubs",
+    cpAllocation: "CP-EDU capital/startup",
+    exit: "MC-14 recurring pipeline after capacity established",
+    families: "education and workforce (capital and startup)",
+    transfersTo: "professional education and workforce capacity, a recurring pipeline after capacity is established",
+    cost: 'allocation-open' },
+  { id: "TW-08", title: "State compacts",
+    boundary: "Planning, systems, staffing, data, grants, reconciliation, and federal fallback",
+    cpAllocation: "CP-TRN-011",
+    exit: "Enduring regional administration to operating categories",
+    families: "state compact grant cost",
+    transfersTo: "enduring regional administration to operating categories",
+    cost: 'allocation-open' },
+  { id: "TW-09", title: "Tribal and rural transition",
+    boundary: "Direct compacts, data governance, facilities, workforce, transport, and continuity",
+    cpAllocation: "CP-TRN-012/013",
+    exit: "Enduring services transfer with sovereignty/federal duties preserved",
+    families: "tribal compact transition cost; rural transition protection cost",
+    transfersTo: "enduring services transfer with sovereignty/federal duties preserved",
+    cost: 'allocation-open' },
+  { id: "TW-10", title: "Pharmacy continuity",
+    boundary: "Medication bridges, emergency fills, onboarding, payment, formulary, and supply conversion",
+    cpAllocation: "CP-TRN-004/008",
+    exit: "MC-05 after continuity certification",
+    families: "critical medication continuity cost; pharmacy continuity bridge cost",
+    transfersTo: "drugs, pharmacy, and public manufacturing, after continuity certification",
+    cost: 'allocation-open' },
+  { id: "TW-11", title: "Legacy payer wind-down",
+    boundary: "Runout, authorizations, appeals, liabilities, records, contracts, and closure",
+    cpAllocation: "CP-TRN-009/010",
+    exit: "Named durable custodian for retained duties",
+    families: "legacy payer wind-down cost; legacy payer data migration cost",
+    transfersTo: "named durable custodian for retained duties",
+    cost: 'allocation-open' },
+  { id: "TW-12", title: "Legitimacy and safety startup",
+    boundary: "Rights, ombudsman, appeals, injury learning, accessibility, trust, and remediation",
+    cpAllocation: "CP-GOV/IT; CP-TRN-018/020",
+    exit: "Tagged subset of MC-12 after P6",
+    families: "governance and oversight; information, cyber and AI; transition ombudsman cost; transition complaint remediation cost",
+    transfersTo: "a tagged subset of governance, claims, appeals, safety, and adaptation, after P6",
+    cost: 'allocation-open' },
+  { id: "TW-13", title: "Adaptation startup",
+    boundary: "Scorekeeping, Formula Registry, gate evidence, legal contingency, red team, and repair",
+    cpAllocation: "CP-GOV/IT",
+    exit: "MC-12 mature operation",
+    families: "governance and oversight; information, cyber and AI",
+    transfersTo: "governance, claims, appeals, safety, and adaptation (mature operation)",
+    cost: 'allocation-open' }
+];
+
+/* R292 [§S12]: how many years the rollout spans, from the phase map.
+ *
+ * Two pages spelled this "twelve" inside an aria-label on a role-less div,
+ * where neither a screen reader nor a sighted reader could contradict it.
+ * P8 is the last phase and its year is the span, so the figure moves when the
+ * map moves. Annotated `: number` so a guard comparing it against anything
+ * else is not dead at compile time. */
+export const ROLLOUT_YEARS: number = Math.max(...PHASES.map((p) => p.year));
+
+/* V11 [§S12]: the phase bands the domain matrix is columned by.
+ *
+ * This was a local array inside rollout-client.ts, while the sr-only caption
+ * stating how many bands there are is rendered server-side from the page. The
+ * two could not see each other, so the caption was a count of something in
+ * another module. Both read this now. */
+export const PHASE_BANDS: Array<[string, string]> = [
+  ['P0\u2013P1', 'Foundation'],
+  ['P2\u2013P3', 'First operation'],
+  ['P4\u2013P5', 'Pilots and scale'],
+  ['P6\u2013P7', 'National and benefits'],
+  ['P8', 'Maturity']
 ];

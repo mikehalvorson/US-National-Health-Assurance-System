@@ -40,11 +40,14 @@ benchmarks (below) - and report the gap if there is one.
 4. **`C_offsets(t)` needs one non-overlapping definition.** The research
    surfaced multiple non-comparable "administrative savings" estimates for
    the same underlying phenomenon - e.g. CMS's narrow accounting figure
-   ($360.3B, CP-TOT-005) vs. the broader Himmelstein/Woolhandler academic
-   estimate ($1.1T, CP-OFF-001) vs. the CBO-scored IRA drug-negotiation
-   savings ($98.5B/10yr, CP-OFF-003, the most authoritative single figure
-   because it's the only one based on actual enacted-policy results rather
-   than a modeled estimate). Pick one explicit, itemized, non-overlapping
+   ($360.3B, seed row `BL-0010`) vs. the broader Himmelstein/Woolhandler academic
+   estimate ($1.1T, `BL-0029`) vs. the CBO-scored IRA drug-negotiation
+   savings ($98.5B/10yr, `BL-0031`, the most authoritative single figure
+   *as originally scored*, because it's the only one based on actual
+   enacted-policy results rather than a modeled estimate; R34: CBO re-scoring
+   in 2025 revised the projected deficit reduction downward, so this is a
+   policy precedent and not the IRA's current standing). Pick one explicit,
+   itemized, non-overlapping
    list of what's inside `C_offsets(t)` before coding it - don't blend
    figures from studies with different scopes into one number.
 
@@ -75,9 +78,9 @@ Build a **national-aggregate annual time series model** first:
   presets on top of the base model
 - Validates its output against three independent real-world benchmarks
   already sourced in `research/01_macro_financing_population_offsets.md`:
-  CBO's own single-payer costing methodology (CP-FIN-015, the most
+  CBO's own single-payer costing methodology (research/01 `RB-01-FIN-015`, the most
   authoritative direct comparator), and the Urban Institute / Mercatus
-  10-year federal cost estimates (CP-FIN-016), which converge around
+  10-year federal cost estimates (`RB-01-FIN-016`), which converge around
   $32-34T/10yr federal despite opposite institutional leanings
 
 Region, population-group, and specialty-level granularity (the full
@@ -111,21 +114,37 @@ projected cost/access/outcome effects directly, rather than reading a
 
 ## Known open gaps (don't silently patch these - flag them in the UI/output)
 
-From the research files' own "gaps for follow-up" sections:
+From the research files' own "gaps for follow-up" sections. This list is the
+brief as written; each gap now carries its status, as last checked, so a
+closed gap does not read as open.
 - Several CBO and CMS source PDFs returned HTTP 403 to automated fetch;
   current figures were reconstructed from secondary sources (KFF, Health
   Affairs, Brookings commentary) that are reliable but not a substitute for
-  the primary table
+  the primary table.
+  Status (2026-08-26): partly closed. cms.gov now serves the pages that
+  refused; the CMS category splits the model uses sit in `nhe-tables.zip`,
+  which has not been opened. CBO's direct PDF links still return 403 (the
+  publication pages serve). See `research/03_drugs_pharmacy_diagnostics_devices.md`.
 - BLS occupational headcount data (insurance claims processors, medical
   billing clerks - needed to size the displaced-worker transition cohort)
-  blocked automated fetch and needs the BLS API directly
+  blocked automated fetch and needs the BLS API directly.
+  Status (2026-08-24): closed. The headcounts are in the repository and
+  anchor the Workforce tab (`research/workforce_transition_methodology.md`,
+  "Official employment anchors"); `research/05_it_governance_rd_transition.md`
+  records the entry as closed. A plain fetch of the occupation pages is still
+  refused; the BLS public API or a browser serves them.
 - No clean single citation yet for: age-based per-capita spending
   multiplier (65+ vs. under-65 - needed to connect population aging to cost
   growth), a topline adult diabetes prevalence %, CHIP-only spending
   isolated from Medicaid, national aggregate employer health spending (only
   a derived proxy exists), and a broader RAND-style international drug price
   ratio to scale IRA-style negotiation savings up to a full reference-pricing
-  scenario
+  scenario.
+  Status (2026-10-12): partly closed. The international drug price ratio is
+  sourced in `research/03_drugs_pharmacy_diagnostics_devices.md` (RAND, 2022
+  data: 2.78x overall, 4.22x for brand-name drugs). The other four are still
+  open, as `research/01_macro_financing_population_offsets.md` lists them
+  under "Summary of Highest-Priority Gaps" (items 2 to 5).
 
 These are documented per-file in `research/`. Treat them as inputs to build
 with visible confidence levels (the seed CSV already has a `confidence`

@@ -11,6 +11,8 @@ The National Health Assurance Framework defines mature KPP/TPP targets and a sma
 
 Early-phase derived targets apply to the controlled test, pilot, participating-provider, or Wave I denominator stated in the target. They do not imply national performance before national deployment.
 
+The register holds **26** metrics and **79** phase targets across **9** phases: **32** copied from a controlled source target, milestone or gate floor, and **47** derived.
+
 ## Derivation rules
 
 1. **Anchor before interpolation.** Exact phase milestones and gate floors override any derived path. P3/P4 claims, P5/P6 unit coverage, P6 under-referral, and P7 LTC assessment use the framework values.
@@ -18,7 +20,23 @@ Early-phase derived targets apply to the controlled test, pilot, participating-p
 3. **Tighten before dependency expands.** Identity, medication continuity, abnormal-result closure, uptime, and vulnerability targets receive stricter early floors because a defect can directly interrupt care.
 4. **Use bounded denominators.** P0-P2 values apply to test or participating cohorts; P3 to Wave I; P4 to representative pilots; P5 to the scaled network; P6-P7 to national or expanded-benefit operation; P8 to the mature national system.
 5. **Avoid false precision.** Most derived rates use whole percentage points. Uptime uses hundredths because each step corresponds to a materially different annual downtime budget.
-6. **Recalibrate with evidence.** Independent baseline evidence may justify changing a derived value. The change should be versioned here, retain the mature target, and explain why safety and progression remain protected.
+6. **Recalibrate with evidence.** Independent baseline evidence may justify changing a derived value. The change is recorded in the change log below, retains the mature target, and explains why safety and progression remain protected. This document is regenerated in full on every run, so the log is maintained in `tools/build_data_phase_targets.py` and rendered here; a note written into this file directly would not survive.
+
+## Change log
+
+Every change to a derived value or to the derivation rules, in order. Framework values are not listed: they move when the controlled catalog moves.
+
+| Date | Change | Why |
+|---|---|---|
+| 2026-08-16 | First generated register: 26 metrics, 64 phase targets across 9 phases. | Replaced a hand-ported file that no generator maintained. |
+| 2026-08-16 | Declared the coverage gaps: every metric that stops being published and starts again carries the phases and the reason. | A gap read as an omission and could not be told apart from one. |
+| 2026-08-19 | Added P8 certification rows for KPP-T2 and TPP-6.3, taking the register to 66 phase targets. | Derivation rule 3 names five categories that can directly interrupt care; these two were never certified at maturity. |
+| 2026-09-03 | Rule 6's versioning obligation moved here from the generated document. | The document names itself as the place to record a change and is overwritten on every run, so the rule could not be obeyed where it was written. |
+| 2026-10-08 | Added P8 certification rows for the 13 register metrics that had none, each at its controlled maturity target, taking the register to 79 phase targets; declared the 11 coverage gaps this opens. | P8 said it assessed the complete mesh and certified half of it, and two controlled targets named P8 with no P8 row. |
+| 2026-10-08 | Marked every phase where a metric's ladder changes the population it measures, beside the row and in the Quality tab's phase strip. | Ladders read as one improving series while the population under the number moved. |
+| 2026-10-09 | Each target string where the population changes now names the new population, and the rows after it keep those words; TPP-6.2 at P8 is declared a change of population; TPP-10.2 carries the controlled "covered persons". | A change of population was stated only in the note beside the row, and one maturity row dropped the population its controlled target names. |
+| 2026-10-09 | TPP-10.3 and TPP-10.4 name the scaled network at P5 and national operation from P6, declared at P6, instead of carrying P5's network wording to maturity. | Derivation rule 4 puts P6 and P7 at national operation; the earlier wording kept the P5 population through P8 with no marker. |
+| 2026-10-09 | Every phase states the denominator rule 4 gives it, here, on the Data tab's phase panel and on each register cell of the Quality tab's phase strip; rule 4 is written from the same table. | A ladder that crossed from one rule-4 band to the next changed denominator with no marker wherever its wording stayed the same. |
 
 ## Phase target register
 
@@ -26,6 +44,8 @@ Early-phase derived targets apply to the controlled test, pilot, participating-p
 ### P0 - Year 1: Data law, contracts, and test controls
 
 Define who may create, read, correct, audit, and publish each data object before live reliance begins.
+
+Applies to test or participating cohorts.
 
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
@@ -40,27 +60,31 @@ Define who may create, read, correct, audit, and publish each data object before
 
 Demonstrate the authoritative identity and registry layer and the controls needed to rely on it safely.
 
+Applies to test or participating cohorts.
+
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
 | Identity and registries | `TPP-1.1` - Master person index match accuracy | ≥99.0% match accuracy in the controlled identity cohort | >=99.8% | Derived | A 99.0% pilot floor sharply limits duplicate or merged identity defects while leaving the last 0.8 percentage points for broader edge cases and maturity. |
 | Identity and registries | `TPP-10.1` - Provider/facility registry completeness | ≥95% of active pilot provider/facility records verified | >=99.5% active records verified | Derived | Ninety-five percent supports representative pilots and makes the remaining verification backlog explicit before transactional use. |
 | Exchange, rights, and correction | `TPP-10.6` - API conformance rate | ≥90% conformance across reference endpoints | >=98% | Derived | The reference suite should certify nine of ten cases before live traffic; later phases add vendor diversity and adverse conditions. |
-| Exchange, rights, and correction | `TPP-10.5` - Record correction closure | ≥90% correction closure within the statutory timeframe | >=97% within statutory timeframe | Derived | Moving from the P0 prototype floor to 90% verifies staffing, notice, escalation, and closure in the authoritative registry environment. |
+| Exchange, rights, and correction | `TPP-10.5` - Record correction closure | ≥90% correction closure within the statutory timeframe | >=97% within statutory timeframe | Derived | Moving from the P0 prototype floor to 90% verifies staffing, notice, escalation, and closure in the authoritative registry environment. Measures every correction case against the statutory timeframe, rather than prototype cases against a draft one. |
 | Cyber and continuity | `TPP-11.1` - Critical system uptime | ≥99.90% production-like uptime | >=99.97% | Derived | This permits about 8 hours 46 minutes of annualized downtime in the foundation environment, then tightens as care reliance expands. |
-| Cyber and continuity | `TPP-11.2` - Downtime continuity success | ≥90% of downtime exercises passed | >=98% drills passed | Derived | Nine of ten successful exercises is the next step from tabletop readiness and precedes pharmacy and coverage reliance. |
+| Cyber and continuity | `TPP-11.2` - Downtime continuity success | ≥90% of downtime exercises passed | >=98% drills passed | Derived | Nine of ten successful exercises is the next step from tabletop readiness and precedes pharmacy and coverage reliance. Measures downtime exercises only, without tabletop exercises. |
 
 <a id="p2"></a>
 ### P2 - Year 3: Pharmacy data first operation
 
 Use the pharmacy rail as the first national, high-volume test of identity, medication continuity, payment, and recovery.
 
+Applies to test or participating cohorts.
+
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
 | Medication and pharmacy exchange | `TPP-3.1` - Pharmacy claims real-time adjudication | ≥97% real-time pharmacy adjudication | >=99.5% | Derived | A national first-operation rail should handle nearly all routine transactions in real time, with explicit fallback for the remaining cases before the mature 99.5% target. |
 | Medication and pharmacy exchange | `TPP-10.2` - Medication record completeness | ≥85% medication-record completeness for participating people | >=95% covered persons | Derived | The first longitudinal medication view is limited to participating coverage; 85% makes source onboarding gaps visible without claiming national completeness. |
 | Medication and pharmacy exchange | `KPP-T2` - Critical medication interruption rate | ≤1.0% critical-medication interruption | <=0.2% | Derived | A one-percent ceiling is five times the mature ceiling but low enough that continuity failures cannot be dismissed as startup noise. |
-| Exchange conformance | `TPP-10.6` - API conformance rate | ≥94% conformance across pharmacy and medication endpoints | >=98% | Derived | The P1 reference suite tightens by four points when real vendors and transaction recovery are added. |
-| Cyber and continuity | `TPP-11.1` - Critical system uptime | ≥99.93% critical-rail uptime | >=99.97% | Derived | This limits annualized downtime to about 6 hours 8 minutes while retaining bounded emergency-fill and offline paths. |
+| Exchange conformance | `TPP-10.6` - API conformance rate | ≥94% conformance across pharmacy and medication endpoints | >=98% | Derived | The P1 reference suite tightens by four points when real vendors and transaction recovery are added. Measures pharmacy and medication endpoints rather than reference endpoints. |
+| Cyber and continuity | `TPP-11.1` - Critical system uptime | ≥99.93% critical-rail uptime | >=99.97% | Derived | This limits annualized downtime to about 6 hours 8 minutes while retaining bounded emergency-fill and offline paths. Measures the live pharmacy rail rather than a production-like environment. |
 | Cyber and continuity | `TPP-11.3` - Critical vulnerability remediation | ≥95% of critical vulnerabilities remediated within 15 days | >=99% within 15 days | Derived | The first live rail should close nineteen of twenty critical findings on time; repeated misses block wider coverage reliance. |
 
 <a id="p3"></a>
@@ -68,20 +92,24 @@ Use the pharmacy rail as the first national, high-volume test of identity, medic
 
 Connect identity, eligibility, claims, records, appeals, and transfer evidence for the first covered populations.
 
+Applies to Wave I.
+
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
-| Identity and eligibility | `TPP-1.1` - Master person index match accuracy | ≥99.5% match accuracy in Wave I | >=99.8% | Derived | Wave I closes most of the remaining identity gap before national default coverage while preserving independent review of rare edge cases. |
+| Identity and eligibility | `TPP-1.1` - Master person index match accuracy | ≥99.5% match accuracy in Wave I | >=99.8% | Derived | Wave I closes most of the remaining identity gap before national default coverage while preserving independent review of rare edge cases. Measures Wave I rather than the controlled identity cohort. |
 | Identity and eligibility | `TPP-1.2` - Eligibility determination latency | ≥95% real-time eligibility confirmation | >=99% real-time confirmation | Derived | Ninety-five percent supports routine point-of-service use while the remaining cases retain provisional and manual confirmation. |
-| Claims and transfer | `TPP-2.1` - Clean claim auto-adjudication rate | ≥75% clean-claim auto-adjudication for Wave I | >=95% by P8 | Framework | This is the framework's explicit Gate 1 floor for moving from P3 to P4. |
+| Claims and transfer | `TPP-2.1` - Clean claim auto-adjudication rate | ≥75% clean-claim auto-adjudication for Wave I | >=95% by P8 | Framework | This is the plan's explicit Gate 1 floor for moving from P3 to P4. |
 | Claims and transfer | `KPP-T1` - Active treatment transfer success | ≥97% active-treatment transfer success | >=99% | Derived | A three-percent repair corridor is appropriate for the first controlled migration, but every failed transfer remains an owned continuity case on the path to 99%. |
-| Claims and transfer | `TPP-10.2` - Medication record completeness | ≥90% medication-record completeness in Wave I | >=95% covered persons | Derived | The participating medication view tightens five points because coverage conversion expands the sources and the consequences of missing data. |
+| Claims and transfer | `TPP-10.2` - Medication record completeness | ≥90% medication-record completeness in Wave I | >=95% covered persons | Derived | The participating medication view tightens five points because coverage conversion expands the sources and the consequences of missing data. Measures Wave I rather than participating people. |
 | Rights and continuity | `TPP-12.6` - Appeals resolution timeliness | ≥90% of appeals resolved within urgency class | >=97% by urgency class | Derived | Nine of ten timely decisions is a minimum usable Wave I remedy; unresolved delay patterns must be repaired before larger conversion. |
-| Rights and continuity | `TPP-11.1` - Critical system uptime | ≥99.94% critical-system uptime | >=99.97% | Derived | This limits annualized downtime to about 5 hours 15 minutes as coverage and claims become operationally dependent on the rail. |
+| Rights and continuity | `TPP-11.1` - Critical system uptime | ≥99.94% critical-system uptime | >=99.97% | Derived | This limits annualized downtime to about 5 hours 15 minutes as coverage and claims become operationally dependent on the rail. Measures every critical system rather than the pharmacy rail. |
 
 <a id="p4"></a>
 ### P4 - Year 6: Clinical, hospital, and unit data pilots
 
 Test whether the shared record closes real diagnostic, discharge, referral, and downtime loops in representative delivery settings.
+
+Applies to representative pilots.
 
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
@@ -89,39 +117,43 @@ Test whether the shared record closes real diagnostic, discharge, referral, and 
 | Clinical records and exchange | `TPP-10.4` - Discharge summary availability | ≥90% of pilot discharge summaries structured within 24 hours | >=98% structured within 24 hours | Derived | A matched 90% threshold tests hospital workflow and receiving-provider availability without claiming mature national performance. |
 | Provider workflow and closure | `TPP-6.2` - Unit diagnostic completeness | ≥90% diagnostic completeness in pilot unit encounters | >=98% applicable encounters | Derived | The pilot should complete nine of ten applicable diagnostic records, with missing elements independently reviewed for safety. |
 | Provider workflow and closure | `TPP-7.1` - Referral packet completeness | ≥90% referral-packet completeness | >=98% | Derived | Using the same pilot floor aligns unit and specialist handoffs and reveals which fields or workflows fail together. |
-| Payment and continuity | `TPP-2.1` - Clean claim auto-adjudication rate | ≥75% clean-claim auto-adjudication for Wave I | >=95% by P8 | Framework | The framework requires the Gate 1 floor before P4; the pilot keeps it visible as an entry condition rather than relabeling it mature performance. |
-| Payment and continuity | `TPP-11.2` - Downtime continuity success | ≥94% of delivery-setting downtime exercises passed | >=98% drills passed | Derived | Adding hospital, laboratory, unit, and referral scenarios raises the P2 readiness expectation while retaining time to repair cross-setting failures. |
+| Payment and continuity | `TPP-2.1` - Clean claim auto-adjudication rate | ≥75% clean-claim auto-adjudication for Wave I | >=95% by P8 | Framework | The plan requires the Gate 1 floor before P4; the pilot keeps it visible as an entry condition rather than relabeling it mature performance. |
+| Payment and continuity | `TPP-11.2` - Downtime continuity success | ≥94% of delivery-setting downtime exercises passed | >=98% drills passed | Derived | Adding hospital, laboratory, unit, and referral scenarios raises the P2 readiness expectation while retaining time to repair cross-setting failures. Measures delivery-setting exercises rather than registry downtime exercises. |
 
 <a id="p5"></a>
 ### P5 - Year 7: Clinical data and routing scale
 
 Scale the unit and specialty information loops while measuring completeness, follow-up, and unsafe non-escalation.
 
+Applies to the scaled network.
+
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
-| Network reach and safety | `KPP-B7` - Diagnostic-treatment unit coverage | ≥65% population within the unit-network coverage milestone | >=95% population within access standard by P8 | Framework | This is the framework's explicit P5 phase-end milestone. |
+| Network reach and safety | `KPP-B7` - Diagnostic-treatment unit coverage | ≥65% population within the unit-network coverage milestone | >=95% population within access standard by P8 | Framework | This is the plan's explicit P5 phase-end milestone. |
 | Network reach and safety | `KPP-B9` - Unsafe under-referral rate | ≤8 unsafe under-referrals per 10,000 non-escalated encounters | <=3 per 10,000 non-escalated encounters | Derived | An eight-per-10,000 scale threshold creates a monotone safety path to the Gate 2 ceiling of five and mature ceiling of three. |
-| Provider workflow and closure | `TPP-6.2` - Unit diagnostic completeness | ≥94% diagnostic completeness | >=98% applicable encounters | Derived | A four-point increase from the pilot floor is a practical scale target on the path to 98% maturity. |
+| Provider workflow and closure | `TPP-6.2` - Unit diagnostic completeness | ≥94% diagnostic completeness in scaled-network encounters | >=98% applicable encounters | Derived | A four-point increase from the pilot floor is a practical scale target on the path to 98% maturity. Measures scaled-network encounters rather than pilot encounters. |
 | Provider workflow and closure | `TPP-6.3` - Unit follow-up closure | ≥95% abnormal-result follow-up closure | >=99% abnormal results | Derived | At scale, no more than one in twenty eligible abnormal results should lack timely closure; the maturity obligation remains 99%. |
 | Provider workflow and closure | `TPP-7.1` - Referral packet completeness | ≥94% referral-packet completeness | >=98% | Derived | The referral packet follows the same pilot-to-scale tightening as diagnostic completeness so specialist queues are not fed incomplete cases. |
-| Clinical exchange | `TPP-10.3` - Lab result interoperability | ≥94% lab-result interoperability within target | >=98% within target | Derived | The lab exchange target rises four points from the representative-pilot floor before national reliance. |
-| Clinical exchange | `TPP-10.4` - Discharge summary availability | ≥94% structured discharge summaries within 24 hours | >=98% structured within 24 hours | Derived | Matching the lab ramp keeps the two highest-value cross-setting handoffs on a common scale path. |
+| Clinical exchange | `TPP-10.3` - Lab result interoperability | ≥94% lab-result interoperability within target across the scaled network | >=98% within target | Derived | The lab exchange target rises four points from the representative-pilot floor before national reliance. Measures the scaled network rather than pilot sites. |
+| Clinical exchange | `TPP-10.4` - Discharge summary availability | ≥94% structured discharge summaries within 24 hours across the scaled network | >=98% structured within 24 hours | Derived | Matching the lab ramp keeps the two highest-value cross-setting handoffs on a common scale path. Measures the scaled network rather than pilot sites. |
 
 <a id="p6"></a>
 ### P6 - Year 8: National data reliance
 
 Make the public information rail nationally dependable before broad cost-sharing elimination and full legacy-payer sunset.
 
+Applies to national or expanded-benefit operation.
+
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
 | Coverage, reach, and routing safety | `KPP-A1` - National continuous coverage rate | ≥99.0% continuous coverage | >=99.5% | Derived | National default coverage should be within 0.5 percentage points of the mature 99.5% outcome while residual continuity defects remain actively repaired. |
-| Coverage, reach, and routing safety | `KPP-B7` - Diagnostic-treatment unit coverage | ≥80% population within the unit access standard | >=95% population within access standard by P8 | Framework | This is the framework's explicit Gate 2 floor before broad cost-sharing elimination. |
-| Coverage, reach, and routing safety | `KPP-B9` - Unsafe under-referral rate | ≤5 unsafe under-referrals per 10,000 non-escalated encounters | <=3 per 10,000 non-escalated encounters | Framework | This is the framework's explicit Gate 2 safety ceiling. |
-| National records and exchange | `TPP-10.1` - Provider/facility registry completeness | ≥99.0% active provider/facility records verified | >=99.5% active records verified | Derived | A national registry may carry no more than a one-percent verification gap before the last half-point is closed for maturity. |
-| National records and exchange | `TPP-10.2` - Medication record completeness | ≥93% medication-record completeness | >=95% covered persons | Derived | The medication record tightens to within two points of maturity as coverage becomes the national default. |
-| National records and exchange | `TPP-10.3` - Lab result interoperability | ≥96% lab-result interoperability within target | >=98% within target | Derived | National exchange moves halfway from the P5 scale value of 94% to the mature 98% target. |
-| National records and exchange | `TPP-10.4` - Discharge summary availability | ≥96% structured discharge summaries within 24 hours | >=98% structured within 24 hours | Derived | The discharge path uses the same national ramp as laboratory exchange to support cross-setting continuity. |
-| National records and exchange | `TPP-10.6` - API conformance rate | ≥97% API conformance | >=98% | Derived | Only three in one hundred endpoints may fail the national conformance suite before the final point is closed at maturity. |
+| Coverage, reach, and routing safety | `KPP-B7` - Diagnostic-treatment unit coverage | ≥80% population within the unit access standard | >=95% population within access standard by P8 | Framework | This is the plan's explicit Gate 2 floor before broad cost-sharing elimination. Measures population within the unit access standard, rather than within the P5 coverage milestone. |
+| Coverage, reach, and routing safety | `KPP-B9` - Unsafe under-referral rate | ≤5 unsafe under-referrals per 10,000 non-escalated encounters | <=3 per 10,000 non-escalated encounters | Framework | This is the plan's explicit Gate 2 safety ceiling. |
+| National records and exchange | `TPP-10.1` - Provider/facility registry completeness | ≥99.0% active provider/facility records verified nationally | >=99.5% active records verified | Derived | A national registry may carry no more than a one-percent verification gap before the last half-point is closed for maturity. Measures the national registry rather than the pilot provider set. |
+| National records and exchange | `TPP-10.2` - Medication record completeness | ≥93% medication-record completeness for covered persons | >=95% covered persons | Derived | The medication record tightens to within two points of maturity as coverage becomes the national default. Measures covered persons in national operation rather than Wave I. |
+| National records and exchange | `TPP-10.3` - Lab result interoperability | ≥96% lab-result interoperability within target nationally | >=98% within target | Derived | National exchange moves halfway from the P5 scale value of 94% to the mature 98% target. Measures national operation rather than the scaled network. |
+| National records and exchange | `TPP-10.4` - Discharge summary availability | ≥96% structured discharge summaries within 24 hours nationally | >=98% structured within 24 hours | Derived | The discharge path uses the same national ramp as laboratory exchange to support cross-setting continuity. Measures national operation rather than the scaled network. |
+| National records and exchange | `TPP-10.6` - API conformance rate | ≥97% API conformance on the national suite | >=98% | Derived | Only three in one hundred endpoints may fail the national conformance suite before the final point is closed at maturity. Measures the national conformance suite rather than pharmacy and medication endpoints. |
 | Cyber and continuity | `TPP-11.1` - Critical system uptime | ≥99.95% critical-system uptime | >=99.97% | Derived | This limits annualized downtime to about 4 hours 23 minutes while the mature architecture, drills, and vendor escape controls continue to improve. |
 
 <a id="p7"></a>
@@ -129,37 +161,90 @@ Make the public information rail nationally dependable before broad cost-sharing
 
 Extend the national record and rights model to long-term care, behavioral health, dental, vision, hearing, EMS, and public health.
 
+Applies to national or expanded-benefit operation.
+
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
-| Expanded-benefit readiness | `TPP-9.1` - LTC functional assessment timeliness | ≥85% LTC functional assessments completed on time | >=95% | Framework | This is the framework's explicit Gate 3 floor before full expanded-benefit rollout. |
-| Expanded-benefit readiness | `TPP-10.2` - Medication record completeness | ≥94% medication-record completeness | >=95% covered persons | Derived | Expanded benefits add new prescribers and settings; the target tightens to within one point of maturity while measuring the added integration load. |
-| Records, exchange, and correction | `TPP-10.3` - Lab result interoperability | ≥97% lab-result interoperability within target | >=98% within target | Derived | The final pre-maturity band closes one of the remaining two national percentage points. |
-| Records, exchange, and correction | `TPP-10.4` - Discharge summary availability | ≥97% structured discharge summaries within 24 hours | >=98% structured within 24 hours | Derived | Discharge exchange follows the same one-point pre-maturity step as lab results. |
+| Expanded-benefit readiness | `TPP-9.1` - LTC functional assessment timeliness | ≥85% LTC functional assessments completed on time | >=95% | Framework | This is the plan's explicit Gate 3 floor before full expanded-benefit rollout. |
+| Expanded-benefit readiness | `TPP-10.2` - Medication record completeness | ≥94% medication-record completeness for covered persons | >=95% covered persons | Derived | Expanded benefits add new prescribers and settings; the target tightens to within one point of maturity while measuring the added integration load. |
+| Records, exchange, and correction | `TPP-10.3` - Lab result interoperability | ≥97% lab-result interoperability within target nationally | >=98% within target | Derived | The final pre-maturity band closes one of the remaining two national percentage points. |
+| Records, exchange, and correction | `TPP-10.4` - Discharge summary availability | ≥97% structured discharge summaries within 24 hours nationally | >=98% structured within 24 hours | Derived | Discharge exchange follows the same one-point pre-maturity step as lab results. |
 | Records, exchange, and correction | `TPP-10.5` - Record correction closure | ≥95% correction closure within the statutory timeframe | >=97% within statutory timeframe | Derived | The expanded setting mix should be within two points of the mature correction target before certification. |
 | Continuity and transparency | `TPP-11.1` - Critical system uptime | ≥99.96% critical-system uptime | >=99.97% | Derived | This limits annualized downtime to about 3 hours 30 minutes before the final maturity step to 99.97%. |
-| Continuity and transparency | `TPP-12.4` - Required public data publication timeliness | ≥98% of required public data published on time | >=99% | Derived | The final pre-maturity reporting target leaves only one percentage point to close while keeping expansion performance publicly reviewable. |
+| Continuity and transparency | `TPP-12.4` - Required public data publication timeliness | ≥98% of required public data published on time | >=99% | Derived | The final pre-maturity reporting target leaves only one percentage point to close while keeping expansion performance publicly reviewable. Measures all required public data rather than the foundation report set. |
 
 <a id="p8"></a>
 ### P8 - Year 12: Mature information-mesh certification
 
 Assess the complete mesh against the controlled maturity targets and keep unresolved defects in a public repair plan.
 
+Applies to the mature national system.
+
 | Data-tab section | Parameter | Phase target | Mature source target | Basis | Justification |
 |---|---|---|---|---|---|
-| Identity and coverage outcome | `TPP-1.1` - Master person index match accuracy | ≥99.8% match accuracy | >=99.8% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Identity and coverage outcome | `TPP-1.1` - Master person index match accuracy | ≥99.8% match accuracy nationally | >=99.8% | Framework | Controlled maturity target from the complete TPP dictionary. Measures the mature national system rather than Wave I. |
 | Identity and coverage outcome | `KPP-A1` - National continuous coverage rate | ≥99.5% continuous coverage | >=99.5% | Framework | Controlled maturity target from the complete KPP dictionary. |
-| Mature records and exchange | `TPP-10.1` - Provider/facility registry completeness | ≥99.5% active records verified | >=99.5% active records verified | Framework | Controlled maturity target from the complete TPP dictionary. |
-| Mature records and exchange | `TPP-10.2` - Medication record completeness | ≥95% medication-record completeness | >=95% covered persons | Framework | Controlled maturity target from the complete TPP dictionary. |
-| Mature records and exchange | `TPP-10.3` - Lab result interoperability | ≥98% lab-result interoperability within target | >=98% within target | Framework | Controlled maturity target from the complete TPP dictionary. |
-| Mature records and exchange | `TPP-10.4` - Discharge summary availability | ≥98% structured discharge summaries within 24 hours | >=98% structured within 24 hours | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature records and exchange | `TPP-10.1` - Provider/facility registry completeness | ≥99.5% active provider/facility records verified nationally | >=99.5% active records verified | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature records and exchange | `TPP-10.2` - Medication record completeness | ≥95% medication-record completeness for covered persons | >=95% covered persons | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature records and exchange | `TPP-10.3` - Lab result interoperability | ≥98% lab-result interoperability within target nationally | >=98% within target | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature records and exchange | `TPP-10.4` - Discharge summary availability | ≥98% structured discharge summaries within 24 hours nationally | >=98% structured within 24 hours | Framework | Controlled maturity target from the complete TPP dictionary. |
 | Mature records and exchange | `TPP-10.5` - Record correction closure | ≥97% correction closure within the statutory timeframe | >=97% within statutory timeframe | Framework | Controlled maturity target from the complete TPP dictionary. |
-| Mature records and exchange | `TPP-10.6` - API conformance rate | ≥98% API conformance | >=98% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature records and exchange | `TPP-10.6` - API conformance rate | ≥98% API conformance on the national suite | >=98% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature care-interruption certification | `KPP-T2` - Critical medication interruption rate | ≤0.2% critical-medication interruption | <=0.2% | Framework | Controlled maturity target from the complete KPP dictionary. P2 published a 1.0% ceiling, five times this one, and nothing between P3 and P7 republished it; certifying at maturity is what closes the obligation rule 3 opens. |
+| Mature care-interruption certification | `TPP-6.3` - Unit follow-up closure | ≥99% abnormal-result follow-up closure | >=99% abnormal results | Framework | Controlled maturity target from the complete TPP dictionary. P5 published a 95% floor against this 99% obligation and no later phase restated it. |
 | Mature cyber and continuity | `TPP-11.1` - Critical system uptime | ≥99.97% critical-system uptime | >=99.97% | Framework | Controlled maturity target from the complete TPP dictionary. |
-| Mature cyber and continuity | `TPP-11.2` - Downtime continuity success | ≥98% of downtime-continuity drills passed | >=98% drills passed | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature cyber and continuity | `TPP-11.2` - Downtime continuity success | ≥98% of downtime-continuity drills passed | >=98% drills passed | Framework | Controlled maturity target from the complete TPP dictionary. Measures the mature drill programme rather than delivery-setting exercises. |
 | Mature cyber and continuity | `TPP-11.3` - Critical vulnerability remediation | ≥99% of critical vulnerabilities remediated within 15 days | >=99% within 15 days | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature eligibility, claims and transfer | `TPP-1.2` - Eligibility determination latency | ≥99% real-time eligibility confirmation | >=99% real-time confirmation | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature eligibility, claims and transfer | `TPP-2.1` - Clean claim auto-adjudication rate | ≥95% clean-claim auto-adjudication nationally | >=95% by P8 | Framework | Controlled maturity target from the complete TPP dictionary, which sets it for P8. Measures claims in the mature national system rather than Wave I claims. |
+| Mature eligibility, claims and transfer | `TPP-3.1` - Pharmacy claims real-time adjudication | ≥99.5% real-time pharmacy adjudication | >=99.5% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature eligibility, claims and transfer | `KPP-T1` - Active treatment transfer success | ≥99% active-treatment transfer success | >=99% | Framework | Controlled maturity target from the complete KPP dictionary. |
+| Mature delivery, access and routing safety | `TPP-6.2` - Unit diagnostic completeness | ≥98% diagnostic completeness in applicable encounters | >=98% applicable encounters | Framework | Controlled maturity target from the complete TPP dictionary. Measures applicable encounters in the mature national system rather than scaled-network encounters. |
+| Mature delivery, access and routing safety | `TPP-7.1` - Referral packet completeness | ≥98% referral-packet completeness | >=98% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature delivery, access and routing safety | `KPP-B7` - Diagnostic-treatment unit coverage | ≥95% population within the unit access standard | >=95% population within access standard by P8 | Framework | Controlled maturity target from the complete KPP dictionary, which sets it for P8. |
+| Mature delivery, access and routing safety | `KPP-B9` - Unsafe under-referral rate | ≤3 unsafe under-referrals per 10,000 non-escalated encounters | <=3 per 10,000 non-escalated encounters | Framework | Controlled maturity target from the complete KPP dictionary. |
+| Mature delivery, access and routing safety | `TPP-9.1` - LTC functional assessment timeliness | ≥95% LTC functional assessments completed on time | >=95% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature rights, reporting and governance | `TPP-FORM1` - Formula registry completeness | ≥99% formula registry completeness | >=99% | Framework | Controlled maturity target from the complete TPP dictionary. Measures the whole formula registry rather than the priority formulas. |
+| Mature rights, reporting and governance | `TPP-USE1` - Patient rights notice comprehension | ≥90% comprehension of patient rights notices nationally | >=90% | Framework | Controlled maturity target from the complete TPP dictionary. Measures the mature national system rather than representative prototype tests. |
+| Mature rights, reporting and governance | `TPP-12.4` - Required public data publication timeliness | ≥99% of required public data published on time | >=99% | Framework | Controlled maturity target from the complete TPP dictionary. |
+| Mature rights, reporting and governance | `TPP-12.6` - Appeals resolution timeliness | ≥97% of appeals resolved within urgency class | >=97% by urgency class | Framework | Controlled maturity target from the complete TPP dictionary. |
+
+## Declared coverage gaps
+
+The register does not measure every metric in every phase. A metric appears in the phases where it is the evidence that phase turns on, so a metric can be published, absent for a phase or more, and published again.
+
+Absence is not relief from the target. Derivation rule 2 forbids a later phase relaxing an earlier one, so the last published floor remains the operative floor across the phases that do not restate it.
+
+Every metric whose coverage is interrupted is listed here with the reason. The generator refuses to write this document if a metric skips a phase that is not on this list.
+
+| Parameter | Phases not published | Reason |
+|---|---|---|
+| `KPP-A1` | P7 | P7 extends benefits to the population P6 already converted, so its own evidence is assessment timeliness and the expanded-benefit record measures rather than a restated coverage rate. |
+| `KPP-B7` | P7 | Unit coverage is published at the P5 milestone and the P6 Gate 2 floor, and certified at P8, the phase its controlled target names. P7 extends benefits without restating coverage, so the Gate 2 floor stays operative across the gap under derivation rule 2. |
+| `KPP-B9` | P7 | Unsafe under-referral is published at scale (P5) and as the Gate 2 ceiling (P6), and certified at maturity. P7 publishes no routing-safety measure, so the Gate 2 ceiling stays operative across the gap under derivation rule 2. |
+| `KPP-T1` | P4 P5 P6 P7 | Active-treatment transfer success is published at P3, the first controlled migration, and certified at maturity against the controlled 99%. P6 converts the rest of the population and publishes no transfer measure, so the P3 floor stays operative across the gap under derivation rule 2. |
+| `KPP-T2` | P3 P4 P5 P6 P7 | Measured once at P2, where the pharmacy rail first carries medication continuity, and certified once at P8 against the controlled 0.2% ceiling. Nothing between them changes what the measure measures, so no phase republishes it and the P2 ceiling stays operative across the gap under derivation rule 2. The gap is wide and it is declared rather than defended: rule 3 calls this one of the five categories where a defect can directly interrupt care, and five phases without a published floor is the weakest coverage any rule-3 category has. |
+| `TPP-1.1` | P2 P4 P5 P6 P7 | Match accuracy is published where the matched population changes: the controlled foundation cohort at P1 and Wave I conversion at P3. P6 converts the rest of the population and publishes no identity measure, which is a gap in the register rather than a decision about identity. |
+| `TPP-1.2` | P4 P5 P6 P7 | Real-time eligibility confirmation is published at P3, for Wave I, and certified at maturity. P6 converts the rest of the population and publishes no eligibility measure, so the P3 floor stays operative across the gap under derivation rule 2. |
+| `TPP-10.1` | P2 P3 P4 P5 P7 | Registry verification is published when the registry's scope changes: the active pilot provider set at P1 and the national registry at P6. No phase between them republishes it. |
+| `TPP-10.2` | P4 P5 | P4 and P5 are the delivery pilots and their scale-up, and their record evidence is lab interoperability, discharge structuring and encounter completeness rather than the medication view. |
+| `TPP-10.5` | P2 P3 P4 P5 P6 | Correction closure is published at the prototype (P0), in the authoritative registry environment (P1), and again when expanded benefits add settings (P7). The pharmacy, coverage and delivery phases publish no correction measure. |
+| `TPP-10.6` | P3 P4 P5 P7 | Conformance is published where the endpoint population changes: reference endpoints at P1, pharmacy and medication endpoints at P2, and national conformance at P6. Wave I, the delivery pilots and the expanded-benefit phase add endpoints without republishing the figure. |
+| `TPP-11.1` | P4 P5 | The delivery pilots (P4) and delivery scale (P5) are the phases when hospitals, laboratories and units first depend on the rail, and neither publishes an uptime figure. P4's continuity evidence is the delivery-setting downtime exercise instead; P5 publishes no continuity measure at all. Filling the gap would mean proposing two availability numbers with no framework anchor behind them, and the controlled rollout carries a single entry for this parameter, at P8. |
+| `TPP-11.2` | P2 P3 P5 P6 P7 | Exercises are published where a new class of operation is first exercised: tabletop at P0, production-like registries at P1, delivery settings at P4, and the mature drill programme at P8. |
+| `TPP-11.3` | P3 P4 P5 P6 P7 | Remediation timeliness is published at the first live rail (P2) and at maturity (P8), two points a decade apart, with no phase between them republishing it. This is the sparsest trajectory in the register. |
+| `TPP-12.4` | P1 P2 P3 P4 P5 P6 | Public reporting is published for the foundation report set (P0) and again when expanded benefits widen what must be reported (P7). The phases between them publish appeals, correction and availability evidence instead. |
+| `TPP-12.6` | P4 P5 P6 P7 | Appeal timeliness is published at P3, as the Wave I remedy, and certified at maturity. No phase between them republishes it, so the P3 floor stays operative across the gap under derivation rule 2. |
+| `TPP-2.1` | P5 P6 P7 | Clean-claim auto-adjudication is published as the Gate 1 floor at P3 and P4 and certified at maturity against the controlled 95%. No phase between them republishes it, so the climb from 75% to 95% has no published waypoint in this register; the Gate 1 floor stays operative across the gap under derivation rule 2. The Quality chapter's equation layer computes a path between them. |
+| `TPP-3.1` | P3 P4 P5 P6 P7 | Real-time pharmacy adjudication is published at P2, where the pharmacy rail first operates, and certified at maturity. No phase between them republishes it, so the P2 floor stays operative across the gap under derivation rule 2. |
+| `TPP-6.2` | P6 P7 | Diagnostic completeness is published at the unit pilots (P4) and at scale (P5), and certified at maturity. P6 and P7 publish no completeness measure, so the P5 floor stays operative across the gap under derivation rule 2. |
+| `TPP-6.3` | P6 P7 | Published at P5, where scaled care first makes abnormal-result ownership explicit, and certified at P8 against the controlled 99% obligation. P6 converts the remaining population and P7 extends benefits; neither changes what closure measures, so the P5 floor stays operative across the gap. |
+| `TPP-7.1` | P6 P7 | Referral-packet completeness is published at the pilots (P4) and at scale (P5), and certified at maturity. P6 and P7 publish no referral measure, so the P5 floor stays operative across the gap under derivation rule 2. |
+| `TPP-FORM1` | P1 P2 P3 P4 P5 P6 P7 | Formula registration is published at P0, where priority formulas must be registered before operating data is trusted, and certified at maturity. No phase between them republishes it, so the P0 floor stays operative across the gap under derivation rule 2. |
+| `TPP-USE1` | P1 P2 P3 P4 P5 P6 P7 | Notice comprehension is published at P0, in representative prototype tests, and certified at maturity. No phase between them republishes it, so the P0 floor stays operative across the gap under derivation rule 2. |
 
 ## Controlled sources
 
 - `National_Health_Assurance_Framework_v2.0.0_FINAL.pdf` - complete KPP and TPP dictionaries; controlled phase and gate tables.
-- `docs/js/qualitydata.js` - reproducible dashboard extraction of the controlled dictionaries.
+- `src/lib/quality-data.ts` - reproducible dashboard extraction of the controlled dictionaries, generated by the script below.
 - `tools/extract_quality_catalog.py` - extraction and count validation for the KPP, TPP, and CP catalogs.

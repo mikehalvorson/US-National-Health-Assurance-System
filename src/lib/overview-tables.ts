@@ -6,7 +6,7 @@
  * ========================================================================= */
 import { money, moneyShort } from './format';
 import { bridgeSteps } from './bridge';
-import { MONEYFLOW } from './params';
+import { MATURE_INDEX, MONEYFLOW } from './params';
 import type { MonteCarloResult } from './model-types';
 
 export interface TableData {
@@ -23,7 +23,10 @@ export function renderDataTable(tableEl: HTMLTableElement, data: TableData): voi
     if (i) th.className = 'num';
     thead.appendChild(th);
   });
-  const tb = tableEl.createTBody();
+  /* Built off-document and attached once. Review 9 of P20 measured 3,144
+     county rows at 520 to 572 ms inserted into the live table and 345 to
+     417 ms built detached; the other tables are small enough not to notice. */
+  const tb = document.createElement('tbody');
   data.rows.forEach(function (r) {
     const row = tb.insertRow();
     r.forEach(function (cellText, i) {
@@ -32,6 +35,7 @@ export function renderDataTable(tableEl: HTMLTableElement, data: TableData): voi
       c.textContent = cellText;
     });
   });
+  tableEl.appendChild(tb);
 }
 
 /* app.js:213-232 */
@@ -65,7 +69,7 @@ export function bridgeTableData(mc: MonteCarloResult, DEF: number): TableData {
 
 /* app.js:344-363 */
 export function financingTableData(mc: MonteCarloResult, DEF: number): TableData {
-  const t = mc.years.length - 2; // 2041
+  const t = MATURE_INDEX;
   const d = mc.modePath.detail[t];
   const need = d.pubCost;
   const fedUse = Math.min(d.fedRedirect, need);

@@ -102,7 +102,7 @@ export function renderPathChart(container: HTMLElement, mc: MonteCarloResult, de
     tipRow(box, cssVar('--baseline-series') || '#898781', 'Status quo', money(base[i]), true);
     var dlt = p50[i] - base[i];
     tipRow(box, '', 'NHA vs status quo', (dlt >= 0 ? '+' : '−') + moneyShort(Math.abs(dlt)), false);
-    showTip(box, evt.clientX, evt.clientY);
+    showTip(box, evt);
   }
   hit.addEventListener('pointermove', onMove);
   hit.addEventListener('pointerleave', function () {

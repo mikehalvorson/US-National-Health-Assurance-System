@@ -1,12 +1,68 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import { chapterMarker, chapterNumber } from '../lib/tabs';
+/* R270 [S12]: the eyebrow used to type this page's chapter number by hand,
+   in a format ChapterNav did not use, next to a nav computing the same number
+   from the registry. The number now comes from TABS and the format from
+   chapterMarker, so reordering the registry moves both. chapterNumber throws
+   on a route the registry does not carry, rather than rendering nothing. */
+/* R186 [§S9b]: the assumptions behind the unit count, rendered from the same
+   data the allocation runs on. Every figure in the method note below used to
+   be typed prose beside literals in units-client.ts, and a reader had no way
+   to tell a measured input from a chosen one. src/lib/units.ts carries the
+   grade and the owner; this page shows both. Static HTML, so it is what a
+   crawler indexes and what a reader with no script sees. */
+import {
+  ALLOCATION_THRESHOLDS, allocateUnits, NATIONAL_OFFICE_VISITS, NETWORK_ABSORPTION,
+  pct, UNIT_TYPE_KEYS, UNIT_TYPES, VISIT_SPLITS
+} from '../lib/units';
+import { countyDemand, countyMeta } from '../lib/counties';
+import { gradedUnitRows } from '../lib/manifest-check';
+/* R87 R211 R212 R88 R213 [§S9c]: every figure the regional model section
+   states about its own result, computed here from the shipped model file.
+   Each one used to be prose, and the two that were numbers were the two the
+   audit could check. */
+import { regionModel } from '../lib/region-data';
+import {
+  fragmentationAnchor, outsizedComparator, regionGeometry, selectionMargin,
+  weightIntervals, FRAGILE_WITHIN, WEIGHT_LABELS
+} from '../lib/hospital-regions';
+const THROUGHPUTS = UNIT_TYPE_KEYS.map((k) => UNIT_TYPES[k].throughput / 1000 + 'k').join(' / ');
+const NATIONAL_BILLIONS = Math.round(NATIONAL_OFFICE_VISITS.visits / 1e8) / 10;
+
+const REGIONS = regionModel();
+const MODEL = REGIONS.model;
+const GEO = regionGeometry(REGIONS.regions);
+const MARGIN = selectionMargin(MODEL.tested_region_counts, MODEL.selected_region_count);
+const ANCHOR = fragmentationAnchor(MODEL.tested_region_counts);
+const INTERVALS = weightIntervals(
+  MODEL.tested_region_counts, MODEL.weights, MODEL.selected_region_count);
+const FRAGILE = INTERVALS.filter((i) => i.fragile);
+/* The two regions furthest below target, which the page named neither of. */
+const SMALLEST = GEO.below.slice(0, 2);
+const LARGEST = GEO.above.slice(0, 2);
+/* Code review [§S9c]: computed, not `LARGEST[0]`. See outsizedComparator. */
+const OUTSIZED = outsizedComparator(GEO);
+const M = (n: number, unit = 'M') => (n / 1e6).toFixed(1) + unit;
+
+/* Both ends of the absorption control, run over the same county file the
+   client fetches. Typed prose here would be a figure nothing could check --
+   the defect this whole section exists to close. */
+const COUNTIES = countyDemand();
+const ABSORPTION_LOW = allocateUnits(COUNTIES, NETWORK_ABSORPTION.min).total;
+const ABSORPTION_HIGH = allocateUnits(COUNTIES, NETWORK_ABSORPTION.max).total;
+const ABSORPTION_SPAN = ABSORPTION_HIGH - ABSORPTION_LOW;
+/* the six model inputs plus the national comparator, one list, checked */
+const GRADED = gradedUnitRows();
 ---
-<BaseLayout title="National Health Assurance: Physical Care">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Physical Care"
+  description="How hospitals are chartered, funded and regionalized, and how the diagnostic-treatment unit network is sized against county-level demand."
+>
 
   <section class="card chapter-intro">
-    <span class="chapter-intro-eyebrow">Chapter 4 &middot; Physical care</span>
+    <span class="chapter-intro-eyebrow">{chapterMarker(chapterNumber('units'))} &middot; Physical care</span>
     <h2>Hospitals become public-service infrastructure, then care moves closer to home</h2>
     <p class="desc">The change is larger than building community clinics. It
       starts by removing hospitals from the logic of payer contracts,
@@ -106,7 +162,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       nationalize every clinician's employer or ask a distant national office
       to schedule local beds. It removes investor control and payer bargaining
       from the hospital operating model.</p>
-    <div class="hospital-admin-flow" aria-label="Hospital administrative structure">
+    <div role="group" class="hospital-admin-flow" aria-label="Hospital administrative structure">
       <article>
         <span>National steward</span>
         <h3><abbr class="physical-acronym" title="National Hospital Stewardship Authority">NHSA</abbr></h3>
@@ -165,7 +221,7 @@ import ChapterNav from '../components/ChapterNav.astro';
           capacity, workforce, equity, and transfer safety.</p>
       </article>
     </div>
-    <div class="hospital-budget-line" aria-label="Components of a hospital global budget">
+    <div role="group" class="hospital-budget-line" aria-label="Components of a hospital global budget">
       <span>Operations</span><span>Readiness</span><span>Essential services</span>
       <span>Safe staffing</span><span>Capital</span><span>Teaching &amp; research</span>
       <span>High-cost cases</span><span>Transition reserve</span>
@@ -185,29 +241,126 @@ import ChapterNav from '../components/ChapterNav.astro';
   <section class="card hospital-region-section">
     <span class="physical-kicker">A reproducible regional model</span>
     <h2>Thirteen nonprofit operating regions balance scale with local accountability</h2>
-    <p class="desc">A planning model aggregated all 3,144 counties to states,
-      then compared 10 through 16 contiguous regional partitions. It weighted
-      population scale 45%, geographic compactness 25%, rural workload 15%,
-      and the administrative cost of too many regions 15%. Every state and the
-      District of Columbia is assigned once; state boundaries stay intact.
-      The model selected 13 regions. California and Texas remain above the
-      26.2 million target because state integrity is a hard constraint, so
-      each would use internal operating districts.</p>
+    <p class="desc">A planning model aggregated all {countyMeta().records.toLocaleString('en-US')} counties to states,
+      then compared {MODEL.tested_region_counts[0].regions} through
+      {MODEL.tested_region_counts[MODEL.tested_region_counts.length - 1].regions}
+      contiguous regional partitions. It weighted population scale
+      {Math.round(MODEL.weights.population_scale * 100)}%, geographic
+      compactness {Math.round(MODEL.weights.geographic_compactness * 100)}%,
+      rural workload {Math.round(MODEL.weights.rural_workload * 100)}%, and the
+      administrative cost of too many regions
+      {Math.round(MODEL.weights.administrative_fragmentation * 100)}%. Every
+      state and the District of Columbia is assigned once; state boundaries
+      stay intact. The model scored {MODEL.selected_region_count} regions best.
+      {LARGEST[0].region.name} and {LARGEST[1].region.name} remain above the
+      {M(GEO.target, ' million')} target because state integrity is a hard
+      constraint, so each would use internal operating districts.</p>
     <div class="tiles hospital-model-tiles">
-      <div class="tile"><div class="label">Selected operating regions</div><div class="value">13</div><div class="range">lowest composite score: 0.059</div></div>
-      <div class="tile"><div class="label">Population assigned</div><div class="value">340.1M</div><div class="range">2024 county estimates</div></div>
-      <div class="tile"><div class="label">Population target per region</div><div class="value">26.2M</div><div class="range">state integrity overrides the target</div></div>
+      {/* R212: the tile used to show the winning score with no runner-up and
+          no spread, so a reader saw a clear optimum where the methodology
+          published a near-tie. Both numbers were already in the file. */}
+      <div class="tile"><div class="label">Selected operating regions</div><div class="value">{MARGIN.selected}</div><div class="range">composite {MARGIN.selectedTotal.toFixed(3)}, ahead of {MARGIN.runnerUp} regions at {MARGIN.runnerUpTotal.toFixed(3)} by {MARGIN.marginPct.toFixed(1)}%</div></div>
+      <div class="tile"><div class="label">Population assigned</div><div class="value">{M(GEO.total)}</div><div class="range">2024 county estimates</div></div>
+      <div class="tile"><div class="label">Population target per region</div><div class="value">{M(GEO.target)}</div><div class="range">achieved spread {GEO.spread.toFixed(2)}x, {GEO.smallest.id} to {GEO.largest.id}</div></div>
     </div>
     <div id="hospital-region-map"></div>
+    {/* R71/R190: what the map actually drew, written by the client after it
+        draws it. Static fallback text so a reader with no script is not told
+        anything the page has not checked. */}
+    <p class="note" id="hospital-region-integrity">Map integrity is checked when the map draws.</p>
     <div class="hospital-region-control">
       <label for="hospital-region-select">Inspect a region</label>
       <select id="hospital-region-select" aria-label="Select a nonprofit hospital administration region"></select>
-      <div id="hospital-region-detail" aria-live="polite"></div>
+      <div id="hospital-region-detail"
+      role="region" aria-label="Selected hospital administration region detail"></div>
     </div>
     <div class="hospital-score-wrap">
       <span class="physical-section-label">Candidate model score (lower is better)</span>
-      <div id="hospital-region-scores" aria-label="Scores for candidate region counts"></div>
+      <div role="group" id="hospital-region-scores" aria-label="Scores for candidate region counts"></div>
     </div>
+    {/* R211: the three facts the methodology states separately and never puts
+        together. The third one is arithmetic, so it is computed rather than
+        asserted: if the fragmentation penalty ever stops being a parabola
+        centred on the selected count, this paragraph stops claiming it is. */}
+    <div class="warnbox">
+      <p><b>How much of this result is the scoring.</b> Every candidate map is
+        a version of the {MODEL.selected_region_count}-region one. The
+        {MODEL.selected_region_count}-region map was drawn by hand from state
+        contiguity, population, and recognizable operating geography; the
+        lower counts merge its regions and the higher counts split them. So
+        the comparison is between one hand-drawn map and
+        {MODEL.tested_region_counts.length - 1} deformations of it, not
+        between independent attempts at the problem.</p>
+      {ANCHOR && (
+        <p>And {Math.round(MODEL.weights.administrative_fragmentation * 100)}% of
+          the score is defined relative to the answer. The administrative
+          fragmentation term is exactly
+          {ANCHOR.coefficient.toFixed(2)} times the squared distance from
+          {ANCHOR.anchor} regions, so it is zero for the
+          {ANCHOR.zeroAt}-region map and a penalty for every other candidate.
+          A term that scores distance from an option cannot also be evidence
+          for it.</p>
+      )}
+      <p>The {MARGIN.marginPct.toFixed(1)}% margin over {MARGIN.runnerUp}
+        regions should be read that way: {MODEL.selected_region_count} regions
+        is a planning judgement that the scoring supports, not the output of a
+        search over possible partitions. The model does not claim otherwise;
+        this page previously did, by omission.</p>
+    </div>
+    {/* R87: the sweep the audit asked for, run here rather than published as
+        a static table, so it cannot go stale against the weights above. */}
+    <div class="tbl-scroll">
+      <table class="data">
+        <caption class="physical-section-label">Does {MODEL.selected_region_count} regions survive a different weighting? Each row moves one weight and rescales the other three.</caption>
+        <thead>
+          <tr><th>Objective term</th><th>Weight</th><th>{MODEL.selected_region_count} regions wins while the weight is</th><th>Verdict</th></tr>
+        </thead>
+        <tbody>
+          {INTERVALS.map((i) => (
+            <tr>
+              <th scope="row">{WEIGHT_LABELS[i.weight]}</th>
+              <td>{Math.round(i.authored * 100)}%</td>
+              <td>{Number.isNaN(i.low)
+                ? 'never'
+                : Math.round(i.low * 100) + '% to ' + Math.round(i.high * 100) + '%'}</td>
+              <td>{i.fragile ? 'flips within ' + Math.round(FRAGILE_WITHIN * 100) + ' points' : 'robust'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Read the third column against the second. Population scale
+      and compactness can be weighted almost anywhere and
+      {MODEL.selected_region_count} regions still scores best, so the two
+      largest terms are not what decides this.
+      {FRAGILE.length > 0 && (
+        <Fragment> The {FRAGILE.length === 1 ? 'term that does decide it is' : 'terms that decide it are'} {FRAGILE.map((i) => WEIGHT_LABELS[i.weight].toLowerCase()).join(' and ')}, {FRAGILE.length === 1 ? 'which sits' : 'which sit'} within {Math.round(FRAGILE_WITHIN * 100)} points of a weighting that selects a different number of regions.</Fragment>
+      )}
+      That is the honest summary of a {MARGIN.marginPct.toFixed(1)}% margin,
+      and it is a reason to treat the count as a decision to be made in public
+      rather than a number the model handed over.</p>
+    {/* R88: the page explained the two regions above target and said nothing
+        about the two equally far below it. R213: and the balance term. */}
+    <p class="note"><b>What the selected map achieved.</b> State integrity
+      explains the large regions: {LARGEST.map((r) => r.region.name + ' at ' +
+      r.ratio.toFixed(2) + 'x target').join(' and ')}. It does not explain the
+      small ones. {SMALLEST.map((r) => r.region.name + ' is ' +
+      r.ratio.toFixed(2) + 'x').join(' and ')}{OUTSIZED && (
+        <Fragment>, and {SMALLEST[0].region.name} is further from target than
+        {' ' + OUTSIZED.region.name} is</Fragment>
+      )}. Those are optimizer outcomes, not
+      constraint outcomes: the small regions could have been merged with a
+      neighbor and were not. Smallest to largest, the spread is
+      {GEO.spread.toFixed(2)}x. On rural workload, which carries
+      {Math.round(MODEL.weights.rural_workload * 100)}% of the objective
+      precisely to avoid concentrating sparse-area obligations, the achieved
+      range runs from {(GEO.ruralLow.rural_share * 100).toFixed(1)}% rural in
+      {GEO.ruralLow.name} to {(GEO.ruralHigh.rural_share * 100).toFixed(1)}% in
+      {GEO.ruralHigh.name}, a {GEO.ruralSpread.toFixed(1)}x spread. Rural
+      population is geographically clustered and states cannot be split, so
+      some concentration is unavoidable under the hard constraints. The term
+      reduces the spread; it does not remove it, and the page should not imply
+      that it does.</p>
     <p class="note">These are administrative regions, not walls around
       patients. Specialty referrals, disaster response, border communities,
       and tribal or federal systems can cross them. Alaska-Washington and
@@ -275,15 +428,16 @@ import ChapterNav from '../components/ChapterNav.astro';
       emergency, operating-room, intensive, inpatient, or complex specialty
       capability. Discharge returns the patient to a named local team instead
       of ending at the hospital door.</p>
-    <div class="hospital-care-flow" aria-label="Flow between public-service hospitals and the four diagnostic-treatment unit types">
+    <div role="group" class="hospital-care-flow"
+      aria-label={"Flow between public-service hospitals and the " + UNIT_TYPE_KEYS.length + " diagnostic-treatment unit types"}>
       <article class="hospital-layer">
         <span>Regional public-service hospitals</span>
-        <strong><abbr class="physical-acronym" title="Emergency department">ED</abbr> &middot; surgery &middot; inpatient &middot; <abbr class="physical-acronym" title="Intensive care unit">ICU</abbr> &middot; complex specialty</strong>
+        <strong><abbr class="physical-acronym" title="Emergency Department">ED</abbr> &middot; surgery &middot; inpatient &middot; <abbr class="physical-acronym" title="Intensive Care Unit">ICU</abbr> &middot; complex specialty</strong>
         <small>Receive escalations; publish real-time capacity; discharge to a named follow-up team</small>
       </article>
       <div class="hospital-flow-spine">
         <span>Escalation &uarr;</span>
-        <strong><abbr class="physical-acronym" title="Regional Health Administrators">RHA</abbr> capacity ledger + shared record + <abbr class="physical-acronym" title="Emergency medical services">EMS</abbr></strong>
+        <strong><abbr class="physical-acronym" title="Regional Health Administrators">RHA</abbr> capacity ledger + shared record + <abbr class="physical-acronym" title="Emergency Medical Services">EMS</abbr></strong>
         <span>&darr; discharge and specialist support</span>
       </div>
       <div class="hospital-unit-layer">
@@ -300,28 +454,85 @@ import ChapterNav from '../components/ChapterNav.astro';
     <h2>The community front door, sized from need</h2>
     <p class="desc">The unit count is derived from the capacity needed to
       give urban and rural communities a practical front door to care. For
-      every U.S. county, this page estimates demand from population and rural
-      share (Census 2024 estimates, 2020 rural classifications), then converts
-      the network's expected share of the nation's ~1.1 billion annual
-      ambulatory encounters into units using realistic per-unit throughput.
-      Move the absorption slider to see how the count responds.</p>
+      every U.S. county, this page estimates demand as population times an
+      absorption rate (Census 2024 estimates, 2020 rural classifications),
+      splits it across the four unit types, and divides by per-unit
+      throughput. Move the absorption slider to see how the count responds.
+      For scale, the <a href={NATIONAL_OFFICE_VISITS.url} target="_blank"
+      rel="noopener">{NATIONAL_OFFICE_VISITS.source}</a> counted about
+      {NATIONAL_BILLIONS} billion {NATIONAL_OFFICE_VISITS.label} in
+      {NATIONAL_OFFICE_VISITS.year}; emergency and hospital outpatient visits
+      are on top of that, and the survey that counted those ended in 2022.</p>
     <div class="control" style="max-width:420px">
       <label>Network absorption at maturity
         <span class="val" id="units-vpc-val"></span></label>
-      <input type="range" id="units-vpc" min="1.2" max="1.8" step="0.05" value="1.5"
+      <input type="range" id="units-vpc"
+        min={NETWORK_ABSORPTION.min} max={NETWORK_ABSORPTION.max}
+        step={NETWORK_ABSORPTION.step} value={NETWORK_ABSORPTION.default}
         aria-label="Network visits per person per year">
     </div>
     <div class="tiles" id="unit-verdict"></div>
-    <p class="note">Assumptions: urban visits split 28% micro-units, 57%
-      neighborhood units, 15% urban public-health units (folded into
-      Type B where a county has under 200,000 urban residents); rural
-      visits split 30% neighborhood, 70% rural enhanced; throughputs of
-      15k / 30k / 12k / 40k visits per year per unit for Types A–D;
-      majority-rural and small counties keep at least one Type C, and
-      every county gets at least one unit. Cost benchmarks come from
+    <p class="note">Assumptions: urban visits split {pct(VISIT_SPLITS.urban.a)} micro-units,
+      {pct(VISIT_SPLITS.urban.b)} neighborhood units, {pct(VISIT_SPLITS.urban.d)} urban
+      public-health units (folded into Type B where a county has under
+      {ALLOCATION_THRESHOLDS.urbanPopForTypeD.toLocaleString('en-US')} urban residents);
+      rural visits split {pct(VISIT_SPLITS.rural.b)} neighborhood,
+      {pct(VISIT_SPLITS.rural.c)} rural enhanced; throughputs of {THROUGHPUTS} visits
+      per year per unit for Types A–D; counties at or above
+      {pct(ALLOCATION_THRESHOLDS.ruralFloorShare)} rural, or under
+      {ALLOCATION_THRESHOLDS.ruralFloorPop.toLocaleString('en-US')} people, keep at least
+      one Type C, and every county gets at least one unit. Cost benchmarks come from
       urgent-care, retail-clinic, and FQHC economics in
       <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/02_hospital_clinical_workforce_education.md"
         target="_blank" rel="noopener">research file 02</a>.</p>
+  </section>
+
+  <!-- What the count rests on -->
+  <section class="card">
+    <h2>What the count rests on, and how much to trust it</h2>
+    <p class="desc">The numbers above are not all the same kind of thing. Some
+      are measured, some are policy choices, and most were chosen because a
+      capacity plan needs a number and no published one existed. Saying which
+      is which is more useful than presenting them all with equal weight, so
+      each input carries a confidence grade and the specific work that would
+      raise it. The network cost, the unit count, and the unit-team headcount
+      on the workforce chapter all descend from these rows. <strong>Not one of
+      the model's own inputs is graded above low.</strong> The last row is the
+      exception and is not an input: it is a published figure, stated so the
+      network can be sized against something real.</p>
+    <div class="tbl-scroll">
+      <table class="data">
+        <thead>
+          <tr><th>Input</th><th>Value</th><th>Confidence</th><th>What it rests on</th><th>What would settle it</th></tr>
+        </thead>
+        <tbody>
+          {GRADED.map((a) => (
+            <tr>
+              <th scope="row">{a.label}</th>
+              <td>{a.value}</td>
+              <td>{a.confidence}</td>
+              <td>{a.url
+                ? <Fragment>{a.basis} <a href={a.url} target="_blank" rel="noopener">Comparator source</a>.</Fragment>
+                : a.basis}</td>
+              <td>{a.owner}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">The absorption rate is the one to watch: it multiplies
+      every other input. Moving it from {NETWORK_ABSORPTION.min.toFixed(2)} to
+      {NETWORK_ABSORPTION.max.toFixed(2)} on the control changes the network by
+      {ABSORPTION_SPAN.toLocaleString('en-US')} units, which is
+      {Math.round(100 * ABSORPTION_SPAN / ABSORPTION_LOW)}% of the smaller
+      network.</p>
+    <p class="note">The control moves this chapter's count and this chapter's
+      cost. It does <strong>not</strong> move the healthcare model's unit
+      spending, which is a separate sampled input with its own range and is
+      scoped to the certified network rather than to need. The two are
+      deliberately independent: this page is a capacity plan, and the model
+      prices a commitment. Comparing them means comparing the same number of
+      units on both sides, which is what the verdict tiles above do.</p>
   </section>
 
   <!-- The four types -->
@@ -347,6 +558,11 @@ import ChapterNav from '../components/ChapterNav.astro';
       <button data-type="d">Type D</button>
     </span>
     <div id="units-map" style="margin-top:12px"></div>
+    <details class="tableview"><summary>View as table</summary>
+      {/* data-no-acronyms: the county column ends in a USPS state code, and
+          VA is also Veterans Affairs in the glossary. */}
+      <div class="tbl-scroll"><table class="data" id="units-county-table" data-no-acronyms></table></div>
+    </details>
     <p class="note" id="units-integrity"></p>
     <details class="tableview"><summary>View allocation by state</summary>
       <div class="tbl-scroll"><table class="data" id="units-state-table"></table></div>
@@ -362,7 +578,6 @@ import ChapterNav from '../components/ChapterNav.astro';
   </section>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

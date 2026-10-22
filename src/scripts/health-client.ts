@@ -16,14 +16,26 @@ import type { HouseholdModelNumbers } from '../lib/household';
 import { renderFinancingChart } from '../lib/financing-chart';
 import { financingSpec, financingNote } from '../lib/financing';
 import { renderBridgeChart } from '../lib/bridge-chart';
-import { bridgeSteps } from '../lib/bridge';
+import { bridgeSteps, BRIDGE_EXCLUSION_NOTE, BRIDGE_IDENTITY_NOTE } from '../lib/bridge';
 import { renderBenchmarkChart } from '../lib/benchmark-chart';
 import { benchmarkChartRows, benchmarkText } from '../lib/benchmarks';
 import { renderDataTable, pathTableData, bridgeTableData, financingTableData } from '../lib/overview-tables';
 import type { TableData } from '../lib/overview-tables';
 import { growthDecompNote } from '../lib/growth-decomp';
-import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams } from '../lib/scenarios';
-import { PARAM_DEFS, DEFLATOR_2023_TO_2024 as DEF } from '../lib/params';
+import {
+  CARE_SCENARIOS, careChipText, careEarlyText, carePhasingText, careRequirementText
+} from '../lib/care';
+import { buildRamps } from '../lib/model';
+import { SCENARIOS, SCENARIOS_BY_ID, effectiveParams, scenarioStructural } from '../lib/scenarios';
+import type { Scenario } from '../lib/scenarios';
+import {
+  MATURE_INDEX, PARAM_DEFS, PARAMS_BY_ID, DEFLATOR_2023_TO_2024 as DEF
+} from '../lib/params';
+import { money } from '../lib/format';
+import { boundToPage } from '../lib/timing';
+
+/* How many positions a parameter slider offers between its declared bounds. */
+const SLIDER_STEPS = 200;
 
 interface State {
   scenario: string;
@@ -35,6 +47,9 @@ function initHealth(): void {
   if (!controls) return; // not on the health page
   if (controls.dataset.wired === '1') return; // idempotent guard
   controls.dataset.wired = '1';
+  /* the element this page instance owns: when it leaves the document, so
+     has the page */
+  const pageHost: HTMLElement = controls;
 
   const state: State = { scenario: 'SCN-BASE', sliders: {} };
   let pending: number | undefined;
@@ -99,7 +114,17 @@ function initHealth(): void {
     const finNote = $('financing-note');
     if (finNote) finNote.textContent = financingNote(mc, DEF);
     const bridgeHost = $('bridge-chart');
-    if (bridgeHost) renderBridgeChart(bridgeHost, bridgeSteps(mc).steps, DEF);
+    const bridge = bridgeSteps(mc);
+    if (bridgeHost) renderBridgeChart(bridgeHost, bridge.steps, DEF);
+    /* R156 + R239 [§S5]: what the bridge leaves out and what its exact close
+       does and does not prove, both stated on the chart rather than left for
+       a reader to infer from a step that is not there. */
+    const bridgeNote = $('bridge-note');
+    if (bridgeNote) {
+      bridgeNote.textContent = BRIDGE_EXCLUSION_NOTE + ' On the central run that ' +
+        'excluded quantity is ' + money(bridge.excludedOneTime * DEF) +
+        ' in total across 2027 to 2042. ' + BRIDGE_IDENTITY_NOTE;
+    }
     const benchHost = $('benchmark-nhe');
     if (benchHost) {
       renderBenchmarkChart(benchHost, benchmarkChartRows(mc, DEF), {
@@ -108,6 +133,7 @@ function initHealth(): void {
     }
     const bt = benchmarkText(mc, DEF);
     set('benchmark-nhe-result', bt.nheResult);
+    set('benchmark-claim-result', bt.frameworkClaimResult);
     set('benchmark-fed-model', bt.fedModel);
     set('benchmark-fed-model-range', bt.fedModelRange);
     set('benchmark-fed-result', bt.fedResult);
@@ -127,18 +153,48 @@ function initHealth(): void {
 
     const hh = $('household-calc');
     if (hh) {
-      householdNumbers = { newRevenueB: mc.modePath.detail[mc.years.length - 2].newRevenue * DEF };
+      householdNumbers = {
+        newRevenueB: mc.modePath.detail[MATURE_INDEX].newRevenue * DEF
+      };
       if (!householdRerender) {
         householdRerender = renderHouseholdCalc(hh, () => householdNumbers);
       } else {
         householdRerender();
       }
     }
+
+    renderCareYears();
   }
 
+  /* R85 [§S8]: the care cards' years, re-derived for the selected scenario.
+     SCN-TRUST-COLLAPSE, SCN-STATE-RESIST and SCN-LEGAL each delay coverage by
+     a year and SCN-UNIT-UNDER delays cost-sharing elimination by two, so the
+     model showed a delay while the cards showed unchanged promises. The
+     sentences come from care.ts, the same functions health.astro renders at
+     build time, so a scenario change rewrites the text rather than a second
+     copy of the wording. */
+  function renderCareYears(): void {
+    const ramps = buildRamps(scenarioStructural(state.scenario)) as unknown as Record<string, number[]>;
+    for (const card of CARE_SCENARIOS) {
+      const put = (attr: string, text: string | null) => {
+        const el = document.querySelector('[data-care-' + attr + '="' + card.id + '"]');
+        if (!(el instanceof HTMLElement)) return;
+        el.hidden = text === null;
+        el.textContent = text === null ? '' : text;
+      };
+      put('chip', careChipText(card, ramps));
+      put('phasing', carePhasingText(card, ramps));
+      put('early', careEarlyText(card, ramps));
+      put('req', careRequirementText(card, ramps));
+    }
+  }
+
+  /* P21 [§S15]: bound to this page. A render still pending when the reader
+     left ran on the next page - measured on the Overview in 4 of 4 trials,
+     where it redrew #flow-today-solo and ran a Monte Carlo pass on arrival. */
   function scheduleRender(): void {
     if (pending) clearTimeout(pending);
-    pending = window.setTimeout(render, 160);
+    pending = window.setTimeout(boundToPage(pageHost, render), 160);
   }
 
   function buildControls(): void {
@@ -152,7 +208,8 @@ function initHealth(): void {
     for (const s of SCENARIOS) {
       const o = document.createElement('option');
       o.value = s.id;
-      o.textContent = s.id.replace('SCN-', '') + ': ' + s.name;
+      /* the scenario's name, not its source-document id */
+      o.textContent = s.name;
       sel.appendChild(o);
     }
     sel.value = state.scenario;
@@ -182,9 +239,16 @@ function initHealth(): void {
       label.appendChild(valSpan);
       const input = document.createElement('input');
       input.type = 'range';
-      input.min = String(p.sliderMin);
-      input.max = String(p.sliderMax);
-      input.step = String(((p.sliderMax as number) - (p.sliderMin as number)) / 200);
+      /* R127 [§S6a]: both bounds are optional on the type, and the step was
+         computed through two assertions. An adjustable parameter that declared
+         neither produced min="undefined" and step="NaN" on a live control,
+         with nothing anywhere reporting it. A self-test requires both, and
+         this reads them once so the compiler agrees they are numbers. */
+      const lo = p.sliderMin, hi = p.sliderMax;
+      if (typeof lo !== 'number' || typeof hi !== 'number') continue;
+      input.min = String(lo);
+      input.max = String(hi);
+      input.step = String((hi - lo) / SLIDER_STEPS);
       const seeded = state.sliders[p.id] != null ? state.sliders[p.id] : eff[p.id].mode;
       input.value = String(seeded);
       valSpan.textContent = fmtSimple(seeded, p.unit ?? '');
@@ -198,7 +262,70 @@ function initHealth(): void {
     }
     const scn = SCENARIOS_BY_ID[state.scenario];
     const desc = $('scenario-desc');
-    if (desc) desc.textContent = scn ? scn.id + ': ' + scn.desc : '';
+    if (desc) desc.textContent = scn ? scn.desc : '';
+    renderScenarioBasis(scn);
+  }
+
+  /* R141 [§S6b]: what the scenario's numbers rest on, next to the scenario.
+     Fifty-two magnitudes shipped with no source and no grade, which is the
+     omission this repository files against every other module. Declaring the
+     provenance in scenarios.ts and showing none of it would move the silence
+     rather than end it, so each adjustment is listed with its grade and its
+     reason, collapsed by default because most readers want the scenario and
+     not the audit. */
+  function renderScenarioBasis(scn: Scenario | undefined): void {
+    const host = $('scenario-basis');
+    if (!host) return;
+    host.innerHTML = '';
+    if (!scn) return;
+
+    const head = document.createElement('p');
+    head.className = 'note';
+    head.appendChild(document.createTextNode(
+      scn.basis === 'sourced'
+        ? 'Magnitudes: the researched parameter base, unaltered. '
+        : 'Magnitudes: analyst estimates chosen to stress the model. '));
+    const keys = Object.keys(scn.overrides);
+    if (keys.length) {
+      head.appendChild(document.createTextNode(
+        keys.length === 1
+          ? 'The single adjustment below carries its own reason and evidence grade.'
+          : 'Each of the ' + keys.length + ' adjustments below carries its own ' +
+            'reason and evidence grade.'));
+    }
+    host.appendChild(head);
+    if (!keys.length && !scn.structural) return;
+
+    const box = document.createElement('details');
+    box.className = 'tableview';
+    const sum = document.createElement('summary');
+    sum.textContent = 'What this scenario changes, and why';
+    box.appendChild(sum);
+
+    const list = document.createElement('ul');
+    list.className = 'basis-list';
+    for (const key of keys) {
+      const ov = scn.overrides[key];
+      if (!ov) continue;
+      const p = PARAMS_BY_ID[key];
+      const li = document.createElement('li');
+      const name = document.createElement('b');
+      name.textContent = (p && p.label ? p.label : key) + ' ';
+      const grade = document.createElement('span');
+      grade.className = 'conf ' + ov.confidence;
+      grade.textContent = ov.confidence;
+      li.append(name, grade, document.createTextNode(' ' + ov.why));
+      list.appendChild(li);
+    }
+    if (scn.structural) {
+      const li = document.createElement('li');
+      const name = document.createElement('b');
+      name.textContent = 'Timing and one-off spending ';
+      li.append(name, document.createTextNode(scn.structural.why));
+      list.appendChild(li);
+    }
+    box.appendChild(list);
+    host.appendChild(box);
   }
 
   const resetBtn = $('reset-btn');

@@ -4,9 +4,36 @@
    and a filterable explorer with a per-record detail panel. Site-wide acronym
    hovers are attached by scripts/acronyms-client.ts, so this file does not
    decorate acronyms itself. Runs on astro:page-load; idempotent via the
-   matrix host's dataset.wired guard. */
-import { FMEA_DATA as F, cellBand, BAND_META, type FmeaRecord } from '../lib/fmea';
+   matrix host's dataset.wired guard.
 
+   ---- Listener lifetime (R280 [§S15]) ------------------------------------
+
+   The dataset.wired guard lives on #fmea-matrix, an element <ClientRouter />
+   REPLACES on every navigation. So the guard is new each visit and initFmea
+   runs in full each visit. That is correct for everything bound to an element
+   inside <main>: those listeners die with the host they were attached to.
+
+   It is wrong for anything bound to `document` or `window`, which outlive the
+   swap. The record-selection handler was registered on `document` inside
+   initFmea, so a return visit added a second one, and none was ever removed.
+   Measured: one extra listener per return visit, linear. After three return
+   visits one click ran selectRecord four times - four filter resets, four
+   passes over 1,037 records, four smooth-scroll calls, 581ms for one click.
+   Unbounded, and invisible until the page feels slow.
+
+   The rule, which is acronyms-client.ts's (§CB3) and is the reason that file
+   is the one to copy: A LISTENER ON A TARGET THE GUARD DOES NOT COVER MUST BE
+   REGISTERED AT MODULE SCOPE, ONCE, AT MODULE EVALUATION. Not inside the init
+   the guard protects. Module evaluation happens once per document, which is
+   exactly the lifetime `document` has. */
+import {
+  FMEA_DATA as F, cellBand, BAND_META, PROBABILITY_CEILING, PROBABILITY_FLOOR,
+  PROBABILITY_SCALE, PROBABILITY_SOURCE_NOTE, SCORE_PUBLISHING_SOURCES, type FmeaRecord
+} from '../lib/fmea';
+import { withoutSourceCodes } from '../lib/quality';
+
+/* The bands the risk grid produces, in worst-first order. 'unscored' is not
+   here on purpose: it is not a risk level, it is the absence of one (R276). */
 const BANDS = ['extreme', 'high', 'moderate', 'low'] as const;
 type Band = typeof BANDS[number];
 
@@ -16,12 +43,14 @@ let selectedCell: { c: number; p: number } | null = null;
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
   if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
+  /* the catalog's ids stay; the source document's other codes do not */
+  if (text !== undefined) node.textContent = withoutSourceCodes(text);
   return node;
 }
 function byId(id: string): HTMLElement | null { return document.getElementById(id); }
-function natural(a: string, b: string): number {
-  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+/* R274: both charts size their column track from the reachable score range. */
+function setMatrixColumns(grid: HTMLElement): void {
+  grid.style.setProperty('--fmea-cols', String(PROBABILITY_CEILING - PROBABILITY_FLOOR + 1));
 }
 
 /* ---- Intro counts ----------------------------------------------------- */
@@ -34,6 +63,50 @@ function renderCounts(): void {
   set('fmea-n-cp', F.counts.cp);
 }
 
+/* ---- Deferred targets (R279) ------------------------------------------
+   The page used to state the count as the word "Seven" in prose beside a
+   description that did not say what a deferred target is, or that these
+   records are off the risk chart because of it. Both come from the data. */
+function renderDeferredNote(): void {
+  const host = byId('fmea-deferred-note');
+  if (!host) return;
+  host.innerHTML = '';
+  host.appendChild(el('b', '', 'How many, and what that means. '));
+  host.appendChild(document.createTextNode(
+    F.gaps.deferredParamIds.length.toLocaleString('en-US') + ' of the ' +
+    F.counts.kpptpp.toLocaleString('en-US') + ' phase-target failure modes are ' +
+    'deferred, across ' + F.gaps.deferredParamIds.length.toLocaleString('en-US') +
+    ' outcome parameters. ' + F.gaps.deferredDefinition));
+}
+
+/* ---- Probability scale (R274) -----------------------------------------
+   The page used to list five scores including a "1 Rare" the model cannot
+   produce. The list is built from the reachable range instead, and the reason
+   the range starts where it does is stated rather than reported as a finding
+   about the programme. */
+function renderProbabilityScale(): void {
+  const list = byId('fmea-prob-scale');
+  if (list) {
+    list.innerHTML = '';
+    for (let p = PROBABILITY_CEILING; p >= PROBABILITY_FLOOR; p--) {
+      const li = el('li');
+      li.appendChild(el('b', '', String(p)));
+      li.appendChild(document.createTextNode(' ' + PROBABILITY_SCALE[p]));
+      list.appendChild(li);
+    }
+  }
+  const floorNote = byId('fmea-prob-floor');
+  if (floorNote) {
+    floorNote.textContent =
+      'The scale runs ' + PROBABILITY_FLOOR + ' to ' + PROBABILITY_CEILING +
+      ', not 1 to ' + PROBABILITY_CEILING + '. Every score starts from one shared ' +
+      'baseline and only rises from there, so ' + PROBABILITY_FLOOR + ' is the floor ' +
+      'of the model rather than a reading of any particular target. A score of 1 ' +
+      'would mean a settled target on a system already running at the level ' +
+      'required, and nothing in a rollout plan is that.';
+  }
+}
+
 /* ---- Five-by-five risk chart ------------------------------------------ */
 function renderMatrix(): void {
   const host = byId('fmea-matrix');
@@ -41,14 +114,18 @@ function renderMatrix(): void {
   host.innerHTML = '';
 
   const grid = el('div', 'fmea-matrix');
+  /* R274: the columns are the reachable occurrence scores, not a hardcoded
+     1..5, so a band the model cannot produce is never drawn. */
+  setMatrixColumns(grid);
   /* top-left corner label */
   grid.appendChild(el('div', 'fmea-matrix-corner', 'Consequence ↓ / Probability →'));
-  /* probability column headers 1..5 */
-  for (let p = 1; p <= 5; p++) grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
+    grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  }
 
   for (let c = 5; c >= 1; c--) {
     grid.appendChild(el('div', 'fmea-matrix-rowhead', String(c)));
-    for (let p = 1; p <= 5; p++) {
+    for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
       const band = cellBand(c, p);
       const count = F.matrix[c][p];
       const cell = el('button', 'fmea-cell fmea-cell-' + band) as HTMLButtonElement;
@@ -77,10 +154,17 @@ function renderMatrix(): void {
   });
   host.appendChild(legend);
 
+  /* R274: the old note read "No failure mode scores probability 1: every
+     controlled target sits on an unproven or ambitious trajectory", which
+     presented a property of the scoring baseline as a result of the analysis.
+     What the columns are is stated instead, floor included and derived. */
   const axisNote = el('p', 'fmea-axis-note',
-    'Columns are probability, 1 rare to 5 almost certain. Rows are consequence, ' +
-    '1 negligible to 5 catastrophic. No failure mode scores probability 1: every ' +
-    'controlled target sits on an unproven or ambitious trajectory.');
+    'Columns are probability, ' + PROBABILITY_FLOOR + ' unlikely to ' +
+    PROBABILITY_CEILING + ' almost certain. Rows are consequence, 1 negligible ' +
+    'to 5 catastrophic. The scale starts at ' + PROBABILITY_FLOOR +
+    ' because every score begins from a shared baseline and only rises: nothing ' +
+    'here is a routine target on a settled system, so the model does not offer a ' +
+    '"rare" score for one.');
   host.appendChild(axisNote);
 }
 
@@ -123,6 +207,13 @@ const TIER_ORDER: { band: Band; tier: string }[] = [
   { band: 'moderate', tier: 'Moderate' },
   { band: 'low', tier: 'Minor' }
 ];
+/* R276: the table lists every record, so it needs a group for the ones that
+   carry no risk band at all. The criticality tiers above deliberately do not:
+   an unscored record has no tier to sit in, and inventing one for it is the
+   defect this row exists to remove. */
+const TABLE_GROUPS: { band: Band | 'unscored'; tier: string }[] =
+  (TIER_ORDER as { band: Band | 'unscored'; tier: string }[])
+    .concat([{ band: 'unscored', tier: BAND_META.unscored.tier }]);
 function renderTiers(): void {
   const host = byId('fmea-tiers');
   if (!host) return;
@@ -172,16 +263,34 @@ function renderTiers(): void {
     }
     host.appendChild(card);
   });
+
+  /* R272: the ranking compares two populations, and which one a row belongs to
+     decides whether a correction inside the equation layer moves it. Say so
+     where the ranking is read, with counts derived from the records. */
+  const kinds = F.committedKinds.map(function (k) { return k.rows + ' ' + k.kind; });
+  const note = el('p', 'fmea-axis-note',
+    'Two populations are ranked against each other here. ' +
+    F.counts.equationDerived.toLocaleString('en-US') + ' of these failure modes score a ' +
+    'target the equation layer recomputes from the model, and ' +
+    F.counts.committed.toLocaleString('en-US') + ' score a value the plan committed to and ' +
+    'the equation layer is required to leave alone (' + kinds.join(', ') + '). ' +
+    'A correction inside the equation layer therefore moves part of this ranking ' +
+    'and leaves the rest exactly where it was, which changes the order without ' +
+    'any of the committed targets having changed.');
+  host.appendChild(note);
 }
 
 /* ---- Cost-parameter calibration risk (separate chart) ----------------- */
 function miniMatrix(matrix: number[][], labelPrefix: string): HTMLElement {
   const grid = el('div', 'fmea-matrix fmea-matrix-cp');
+  setMatrixColumns(grid);
   grid.appendChild(el('div', 'fmea-matrix-corner', 'Consequence ↓ / Probability →'));
-  for (let p = 1; p <= 5; p++) grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
+    grid.appendChild(el('div', 'fmea-matrix-colhead', String(p)));
+  }
   for (let c = 5; c >= 1; c--) {
     grid.appendChild(el('div', 'fmea-matrix-rowhead', String(c)));
-    for (let p = 1; p <= 5; p++) {
+    for (let p = PROBABILITY_FLOOR; p <= PROBABILITY_CEILING; p++) {
       const band = cellBand(c, p);
       const count = matrix[c][p];
       const cell = el('button', 'fmea-cell fmea-cell-' + band) as HTMLButtonElement;
@@ -207,20 +316,29 @@ function renderCpChart(): void {
 
   const left = el('div', 'fmea-cp-left');
   left.appendChild(miniMatrix(F.cpMatrix, 'cost-parameter calibration failures'));
+  const unscored = F.counts.cpUnscored;
   const note = el('p', 'fmea-axis-note',
     'Occurrence here is borrowed: cost parameters have no controlled likelihood ' +
-    'attribute, so probability is imported from the confidence grade of the modeled ' +
-    'quantity each family calibrates (low maps to 4, medium 3, high 2). Consequence ' +
-    'is scored from the ledger\'s domain and its model role. Select a cell to filter ' +
-    'the explorer.');
+    'attribute, so probability is read from the weakest confidence grade among the ' +
+    'simulation parameters that calibrate each family (low maps to 4, medium 3, ' +
+    'high 2). Consequence is scored from the ledger\'s domain and its model role. ' +
+    (unscored
+      ? unscored.toLocaleString('en-US') + ' of the ' + F.counts.cp.toLocaleString('en-US') +
+        ' records are not on this chart at all: their family has no sampled parameter ' +
+        'in the simulation either, so there is nothing to borrow. They are listed as ' +
+        'unscored in the table below and in the parameter gaps. '
+      : '') +
+    'Select a cell to filter the explorer.');
   left.appendChild(note);
   const legend = el('div', 'fmea-matrix-legend');
-  BANDS.forEach(function (b) {
+  const cpLegend: (Band | 'unscored')[] = (BANDS as readonly (Band | 'unscored')[])
+    .concat(['unscored']);
+  cpLegend.forEach(function (b) {
     const item = el('span', 'fmea-legend-item');
     item.appendChild(el('i', 'fmea-swatch fmea-cell-' + b));
     const cntKey = ('cp' + b.charAt(0).toUpperCase() + b.slice(1)) as keyof typeof F.counts;
     item.appendChild(document.createTextNode(BAND_META[b].label + ': ' +
-      (F.counts[cntKey] as number).toLocaleString('en-US')));
+      F.counts[cntKey].toLocaleString('en-US')));
     legend.appendChild(item);
   });
   left.appendChild(legend);
@@ -287,8 +405,7 @@ function renderGaps(): void {
     ' outcome parameters were deliberately left as a number to be calibrated ' +
     'later, so their probability cannot be scored against a real value. The ' +
     'missing parameter is the calibrated target itself, adopted by the ' +
-    'scorekeeping board. Consequence is still assessed; probability is shown ' +
-    'as unscored on their records.'));
+    'scorekeeping board. ' + F.gaps.deferredDefinition));
   const list = el('ul', 'fmea-gap-ids');
   F.gaps.deferredParamIds.forEach(function (id) {
     const rec = F.gaps.deferredTargets.filter(function (r) { return r.paramId === id; })[0];
@@ -342,6 +459,13 @@ function scorePill(label: string, value: number, cls: string): HTMLElement {
   pill.appendChild(document.createTextNode(' ' + label));
   return pill;
 }
+/* R276: the disclosure that belongs beside a score of this provenance. A
+   borrowed score is a real score taken from another layer and says so; only a
+   record with no score at all is called unscored. */
+function basisWithSource(r: FmeaRecord): string {
+  const note = PROBABILITY_SOURCE_NOTE[r.probabilitySource];
+  return note ? r.probabilityBasis + ' (' + note + ')' : r.probabilityBasis;
+}
 function detailField(label: string, value: string, wide?: boolean): HTMLElement {
   const f = el('div', 'fmea-detail-field' + (wide ? ' fmea-detail-wide' : ''));
   f.appendChild(el('span', 'fmea-kicker', label));
@@ -368,10 +492,18 @@ function renderSelected(r: FmeaRecord | undefined): void {
   const scoreWrap = el('div', 'fmea-selected-scores');
   scoreWrap.appendChild(el('span', 'fmea-band-chip fmea-cell-' + r.band, BAND_META[r.band].label + ' · ' + r.tier));
   const pills = el('div', 'fmea-pills');
-  pills.appendChild(scorePill('probability', r.probability, 'fmea-pill-p'));
-  pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
-  pills.appendChild(scorePill('risk', r.risk, 'fmea-pill-r'));
-  pills.appendChild(scorePill('RPN', r.rpn, 'fmea-pill-d'));
+  /* R276: a record with no probability has no risk and no RPN either, so the
+     pills that would multiply through it are not drawn. Consequence is still
+     assessed and is still shown, which is what the page says happens. */
+  if (SCORE_PUBLISHING_SOURCES.indexOf(r.probabilitySource) < 0) {
+    pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
+    pills.appendChild(el('span', 'fmea-pill fmea-pill-p', 'probability not published'));
+  } else {
+    pills.appendChild(scorePill('probability', r.probability, 'fmea-pill-p'));
+    pills.appendChild(scorePill('consequence', r.consequence, 'fmea-pill-c'));
+    pills.appendChild(scorePill('risk', r.risk, 'fmea-pill-r'));
+    pills.appendChild(scorePill('RPN', r.rpn, 'fmea-pill-d'));
+  }
   scoreWrap.appendChild(pills);
   head.appendChild(scoreWrap);
   host.appendChild(head);
@@ -384,8 +516,7 @@ function renderSelected(r: FmeaRecord | undefined): void {
   host.appendChild(modeBox);
 
   const grid = el('div', 'fmea-detail-grid');
-  grid.appendChild(detailField('Probability basis',
-    r.probabilityAssessed ? r.probabilityBasis : r.probabilityBasis + ' (unscored: see parameter gaps)', true));
+  grid.appendChild(detailField('Probability basis', basisWithSource(r), true));
   grid.appendChild(detailField('Consequence basis', r.consequenceBasis, true));
   grid.appendChild(detailField('Detectability basis', r.detectBasis, true));
   if (r.needsNewParam) grid.appendChild(detailField('Parameter gap', r.newParamNote, true));
@@ -409,8 +540,8 @@ function renderTable(records: FmeaRecord[]): void {
     return;
   }
 
-  /* group by band so the table reads worst-first */
-  TIER_ORDER.forEach(function (t) {
+  /* group by band so the table reads worst-first, unscored last */
+  TABLE_GROUPS.forEach(function (t) {
     const group = records.filter(function (r) { return r.band === t.band; });
     if (!group.length) return;
     const tb = el('tbody', 'fmea-group');
@@ -418,7 +549,9 @@ function renderTable(records: FmeaRecord[]): void {
     const gc = el('th');
     (gc as HTMLTableCellElement).colSpan = 8;
     gc.appendChild(el('span', 'fmea-group-dot fmea-cell-' + t.band));
-    gc.appendChild(el('span', '', t.tier + ' · ' + BAND_META[t.band].label + ' risk'));
+    gc.appendChild(el('span', '', t.band === 'unscored'
+      ? t.tier + ' · no probability could be derived'
+      : t.tier + ' · ' + BAND_META[t.band].label + ' risk'));
     gc.appendChild(el('small', '', group.length + ' failure modes'));
     grow.appendChild(gc); tb.appendChild(grow);
 
@@ -499,6 +632,8 @@ function initFmea(): void {
   selectedCell = null;
 
   renderCounts();
+  renderDeferredNote();
+  renderProbabilityScale();
   renderMatrix();
   renderHeadlines();
   renderTiers();
@@ -554,12 +689,9 @@ function initFmea(): void {
     if (table) table.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
-  /* any button carrying data-fmea-id selects that record */
-  document.addEventListener('click', function (e) {
-    const btn = (e.target as Element).closest('button[data-fmea-id]') as HTMLElement | null;
-    if (!btn) return;
-    selectRecord(btn.dataset.fmeaId || '');
-  });
+  /* The record-selection handler is NOT registered here. It is bound to
+     `document`, which survives the navigation this guard does not, so it lives
+     at module scope below (R280). */
 
   ['fmea-search', 'fmea-type', 'fmea-concept', 'fmea-phase', 'fmea-band'].forEach(function (id) {
     const node = byId(id);
@@ -578,6 +710,19 @@ function initFmea(): void {
     refresh();
   });
 }
+
+/* R280 [§S15]: bound to `document`, so registered here, at module scope, once.
+   It needs no re-registration across navigations because it is fully delegated
+   - it resolves the button from the event target rather than holding a
+   reference to one - and `document` is not swapped. The page guard is on the
+   handler instead of on the registration: on any chapter without the matrix
+   host there is nothing to select and it returns. */
+document.addEventListener('click', function (e) {
+  if (!byId('fmea-matrix')) return;
+  const btn = (e.target as Element).closest('button[data-fmea-id]') as HTMLElement | null;
+  if (!btn) return;
+  selectRecord(btn.dataset.fmeaId || '');
+});
 
 /* Also init on first load without waiting for astro:page-load: if this module
    finishes evaluating after ClientRouter fired that event, the listener alone

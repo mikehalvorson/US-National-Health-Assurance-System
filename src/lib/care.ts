@@ -1,10 +1,102 @@
-/* Point-of-care cost comparison data, ported verbatim from docs/js/care.js
+/* Point-of-care cost comparison data, ported from docs/js/care.js
    (CARE_SCENARIOS 20-111, moneyRange 162-165). "Today" figures are national
-   averages/typical ranges; NHA is $0 at the point of care with the phase-in
-   year noted. Fidelity-critical: do not re-derive any value. */
+   averages/typical ranges and remain fidelity-critical: do not re-derive one.
+
+   The NHA side is no longer a typed year. R81 [§S8]: all ten cards carried a
+   hand-written `fromYear`, and six of them named 2034 - the year Phase 6
+   BEGINS - while promising the outcome Phase 6 ends with. In 2034 the model
+   has eliminated a tenth of cost sharing. Each card now declares the ramp
+   conditions its promise actually depends on and the year is read off them,
+   so a card and the model cannot say different things about the same benefit. */
+
+import { catalogCode, HEARING_AID_PAIR_USD, RAMPS, START_YEAR, householdDenominator } from './params';
+import { calendarYearOfPhase } from './rollout';
 
 export interface CareAmount { lo: number; hi: number; note: string }
-export interface CareNha { amount: number; fromYear: number; note: string }
+
+/* The policy ramps a card's promise can depend on. `units`, `hospitals` and
+   `infra` build capacity rather than deliver a benefit to a household, so no
+   card gates on them. */
+export type CareRamp = 'coverage' | 'costShareElim' | 'expansions' | 'drugs';
+
+/* A ramp set: the base RAMPS, or one scenario's shifted ramps from
+   model.ts's buildRamps(). Passing the second is what makes a card year
+   scenario-aware; nothing here knows about scenarios. */
+export type RampSet = Record<string, number[]>;
+
+/* One condition that has to hold before a card's promise is true, and why
+   that ramp is the one that governs it. */
+export interface CareGate { ramp: CareRamp; atLeast: number; why: string }
+
+/* What kind of promise the card makes. `point-of-care` is the class §AY3 is
+   about: a bill a patient would otherwise be handed at the counter. `premium`
+   is a payment made before any care happens, and cost-sharing elimination has
+   nothing to do with it. Declared rather than inferred, so the rule that every
+   point-of-care card gates on costShareElim has two sides that can disagree. */
+export type CarePromise = 'point-of-care' | 'premium';
+
+/* R170 [§S8]: a framework requirement a card is quoting, and the phase the
+   requirement names as its DEADLINE. The insulin card quoted SR-DRUG-001's
+   98%-of-fills threshold, which is a Phase 8 requirement, to describe a Phase 2
+   state, and promised it nine years early. Carrying the id, the words and the
+   phase as data is what lets the build check the card against the framework
+   instead of against the sentence beside it. */
+export interface CareFrameworkRequirement {
+  id: string;
+  /* verbatim, for the check against the source extract. NEVER rendered:
+     golden rule 2 keeps the source document's codes and its "the system
+     shall" register off every chapter outside Quality and Risk (the owner's
+     2026-10-10 decision). */
+  quote: string;
+  /* the same obligation as a reader meets it, which is what the card shows */
+  plain: string;
+  byPhase: string;
+}
+
+/* What genuinely does arrive before the card's year, so that "arrives early"
+   can be said about the thing that is early rather than about the $0. */
+export interface CareEarlyBenefit { ramp: CareRamp; what: string }
+
+export interface CareNha {
+  amount: number;
+  promise: CarePromise;
+  /* every condition, not just the binding one: the card's year is the latest
+     of them, and which one binds is then a measurement rather than a claim */
+  gates: CareGate[];
+  framework?: CareFrameworkRequirement;
+  early?: CareEarlyBenefit;
+  note: string;
+}
+/* R82/R83 [§S8]: the figures a card publishes, and the file in this repository
+   that contains them. §AG2's finding was that the therapy card named a federal
+   source that does not hold the numbers it was cited for; §AG3's was that the
+   insulin card cited a source that undercuts its own floor. Both are the same
+   defect, and both are checkable once a card says WHERE its figures live and
+   exactly WHICH strings to look for. `find` is matched verbatim against the
+   file with whitespace collapsed, so a figure that moves without its source
+   moving fails the build. */
+export type CareAmountKey = 'todayInsured' | 'todayUninsured';
+
+/* One bound of one range, and the exact sentence in the file that carries it.
+   Per bound rather than per card, because a range's two ends can come from two
+   different records and the insulin card's do: the floor is a nonprofit
+   manufacturer's list price and the ceiling is ordinary retail.
+
+   Bound by bound is also the only version that works. A first draft asked
+   whether each bound appeared anywhere among the cited strings, and moving the
+   therapy card's insured ceiling from $60 to $75 did not fail it, because 75
+   appears in a different quotation on the same card. The break refusing to
+   fail is what found that; the pairing is what fixes it. */
+export interface CareCitation { amount: CareAmountKey; end: 'lo' | 'hi'; find: string }
+
+export interface CareEvidence {
+  file: string;
+  cites: CareCitation[];
+  /* strings that must be in the file and back no figure: a corroborating
+     anchor a reader is told about, checked so it cannot rot silently. */
+  also?: string[];
+}
+
 export interface CareScenario {
   id: string;
   title: string;
@@ -12,12 +104,115 @@ export interface CareScenario {
   todayUninsured: CareAmount;
   nha: CareNha;
   source: string;
+  evidence?: CareEvidence;
   confidence: string;
 }
 
+/* R219 [§S12]: one rendering for every dollar figure on a care card.
+   The template used to type `$0` for the NHA amount while the two rows above
+   it formatted theirs through moneyRange, so a card with a non-zero amount
+   would still have rendered $0 - on the most consequential number on the
+   page. Exported so the card reads its own field through the same rule as
+   its neighbours. */
+export function careMoney(v: number): string {
+  return '$' + Math.round(v).toLocaleString('en-US');
+}
+
 export function moneyRange(lo: number, hi: number): string {
-  const m = (v: number) => '$' + Math.round(v).toLocaleString('en-US');
-  return lo === hi ? m(lo) : m(lo) + ' – ' + m(hi);
+  return lo === hi ? careMoney(lo) : careMoney(lo) + ' – ' + careMoney(hi);
+}
+
+/* ---- Deriving a card's year ---------------------------------------------
+ * Index 0 is Year 1 is START_YEAR, the convention `V1` confirms four ways.
+ * ------------------------------------------------------------------------ */
+function firstIndexAtLeast(arr: number[], atLeast: number): number {
+  for (let i = 0; i < arr.length; i++) if (arr[i] >= atLeast - 1e-9) return i;
+  return -1;
+}
+
+/* The gate that decides the year: the last one to be satisfied. */
+export function careBindingGate(card: CareScenario, ramps: RampSet = RAMPS): CareGate {
+  let binding = card.nha.gates[0];
+  let latest = -1;
+  for (const g of card.nha.gates) {
+    const i = firstIndexAtLeast(ramps[g.ramp], g.atLeast);
+    if (i < 0) {
+      throw new Error(
+        'care card ' + card.id + ' gates on ' + g.ramp + ' >= ' + g.atLeast +
+        ', which that ramp never reaches. careGateProblems() reports this as a ' +
+        'self-test; if you are reading it as a stack trace the registry lost the row.'
+      );
+    }
+    if (i > latest) { latest = i; binding = g; }
+  }
+  return binding;
+}
+
+/* The year every one of the card's gates is met - the year the promise on the
+   card becomes true for the population, not the year the phase that delivers
+   it opens. */
+export function careFromYear(card: CareScenario, ramps: RampSet = RAMPS): number {
+  const g = careBindingGate(card, ramps);
+  return START_YEAR + firstIndexAtLeast(ramps[g.ramp], g.atLeast);
+}
+
+/* The first year any of the card's gates starts moving at all: the open end of
+   the span the benefit arrives over, which is the "phased 2034-2037" half of
+   R81's suggested wording. Returns null when nothing arrives before the year
+   on the chip, so the page has nothing to add.
+
+   `firstIndexAtLeast` is deliberately NOT reused here. Its tolerance is
+   `>= atLeast - 1e-9`, so asking it for "the first index above zero" answers
+   index 0 for every ramp, and every card reported phasing in from the
+   enactment year. Caught by rendering it, not by a check, so there is now a
+   check: see reliefYearProblems below. */
+function firstNonZeroIndex(arr: number[]): number {
+  for (let i = 0; i < arr.length; i++) if (arr[i] > 0) return i;
+  return -1;
+}
+
+/* R170 [§S8]: the year the card's early benefit starts, which is a real
+   arrival and not the one the `$0` describes. */
+export function careEarlyYear(card: CareScenario, ramps: RampSet = RAMPS): number | null {
+  const e = card.nha.early;
+  if (!e) return null;
+  const i = firstNonZeroIndex(ramps[e.ramp]);
+  return i < 0 ? null : START_YEAR + i;
+}
+
+export function careReliefYear(card: CareScenario, ramps: RampSet = RAMPS): number | null {
+  const full = careFromYear(card, ramps);
+  let earliest = -1;
+  for (const g of card.nha.gates) {
+    const i = firstNonZeroIndex(ramps[g.ramp]);
+    if (i >= 0 && (earliest < 0 || i < earliest)) earliest = i;
+  }
+  return earliest < 0 || START_YEAR + earliest >= full ? null : START_YEAR + earliest;
+}
+
+/* The one mechanism that makes a bill at the counter go away, written once
+   because eight cards cite it. Returned fresh rather than shared, so no card
+   can reach another card's gate. */
+function costSharingGate(): CareGate {
+  return {
+    ramp: 'costShareElim', atLeast: 1,
+    why: '$0 at the point of care is delivered by cost-sharing elimination and by ' +
+      'nothing else. Drug pricing, coverage migration and the unit build all change ' +
+      'what care costs the system; only this ramp changes what the patient is handed.'
+  };
+}
+
+/* LTC, behavioral health, dental/vision/hearing and EMS are the four benefits
+   the expansions ramp builds. A card for one of them needs the benefit to
+   exist before cost sharing on it can be zero, so it carries both gates and
+   the later one wins. */
+function expansionGate(benefit: string): CareGate {
+  return {
+    ramp: 'expansions', atLeast: 1,
+    why: benefit + ' is one of the four expanded benefits the expansions ramp ' +
+      'builds (long-term care, behavioral health, dental/vision/hearing, EMS), so ' +
+      'the benefit has to be fully built before it can be free.'
+  };
 }
 
 export const CARE_SCENARIOS: CareScenario[] = [
@@ -26,7 +221,19 @@ export const CARE_SCENARIOS: CareScenario[] = [
     title: 'Health insurance premiums (family, per year)',
     todayInsured: { lo: 6850, hi: 6850, note: "worker's share of a $26,993 employer family premium" },
     todayUninsured: { lo: 0, hi: 0, note: 'no premium, and no coverage' },
-    nha: { amount: 0, fromYear: 2031, note: 'no premiums once your coverage wave migrates (Years 4–8); employers pay a payroll contribution instead' },
+    nha: {
+      amount: 0, promise: 'premium',
+      gates: [{
+        ramp: 'coverage', atLeast: 0.99,
+        why: 'a household stops paying premiums when its own wave migrates, and the ' +
+          'ramp does not finish migrating waves until it reaches its mature share of ' +
+          '0.99. The card used to name the year the FIRST wave opens, which is true ' +
+          'for a fifth of the country and false for the rest.'
+      }],
+      note: 'no premiums once your coverage wave migrates; waves open from the ' +
+        'phase-in year shown and the last one closes in the year on the chip. ' +
+        'Employers pay a payroll contribution instead.'
+    },
     source: 'KFF Employer Health Benefits Survey 2025',
     confidence: 'high'
   },
@@ -35,7 +242,10 @@ export const CARE_SCENARIOS: CareScenario[] = [
     title: 'Emergency room visit',
     todayInsured: { lo: 150, hi: 1500, note: 'copay + deductible/coinsurance, plan-dependent' },
     todayUninsured: { lo: 1500, hi: 4000, note: 'billed charges; average total cost ≈ $2,453' },
-    nha: { amount: 0, fromYear: 2034, note: 'covered in full; existing cost-sharing continues until Phase 6 elimination' },
+    nha: {
+      amount: 0, promise: 'point-of-care', gates: [costSharingGate()],
+      note: 'covered in full; existing cost-sharing keeps applying, at a falling rate, until elimination completes'
+    },
     source: 'CDC NHAMCS (average ED visit cost); insured range is plan-dependent',
     confidence: 'medium'
   },
@@ -44,7 +254,10 @@ export const CARE_SCENARIOS: CareScenario[] = [
     title: 'Having a baby (full episode: pregnancy, delivery, postpartum)',
     todayInsured: { lo: 2000, hi: 4000, note: 'average insured out-of-pocket ≈ $2,854' },
     todayUninsured: { lo: 15000, hi: 30000, note: 'average total episode cost ≈ $18,865' },
-    nha: { amount: 0, fromYear: 2034, note: 'covered in full, including prenatal and postpartum care' },
+    nha: {
+      amount: 0, promise: 'point-of-care', gates: [costSharingGate()],
+      note: 'covered in full, including prenatal and postpartum care'
+    },
     source: 'Peterson–KFF Health System Tracker (2022 analysis of large-employer claims)',
     confidence: 'medium'
   },
@@ -52,9 +265,40 @@ export const CARE_SCENARIOS: CareScenario[] = [
     id: 'insulin',
     title: 'Insulin, one month (diabetes)',
     todayInsured: { lo: 35, hi: 100, note: '$35/mo caps now apply in Medicare & many plans' },
-    todayUninsured: { lo: 70, hi: 300, note: 'cash price after 2023–24 list-price cuts; production cost is $2–6/vial' },
-    nha: { amount: 0, fromYear: 2029, note: '$0 for at least 98% of essential formulary fills; arrives early, with the Phase 2 pharmacy utility' },
+    todayUninsured: {
+      lo: 30, hi: 300,
+      note: 'the floor is Civica Rx, a nonprofit manufacturer selling at $30 a vial ' +
+        'to anyone regardless of insurance; ordinary retail cash prices reach the ' +
+        'ceiling, and a patient using several vials a month pays a multiple of ' +
+        'either. Production cost is $2 to $6 a vial.'
+    },
+    nha: {
+      amount: 0, promise: 'point-of-care', gates: [costSharingGate()],
+      framework: {
+        id: 'SR-DRUG-001',
+        quote: 'The system shall provide $0 patient charge for at least 98% of ' +
+          'essential formulary fills by Phase 8.',
+        plain: 'The plan requires no patient charge on at least 98% of essential ' +
+          'prescription fills',
+        byPhase: 'P8'
+      },
+      early: {
+        ramp: 'drugs',
+        what: 'the public pharmacy utility starts cutting what insulin costs'
+      },
+      note: '$0 for at least 98% of essential formulary fills, delivered by ' +
+        'cost-sharing elimination. The pharmacy utility opens years earlier and cuts ' +
+        'the price, which is a different thing from a $0 charge at the counter.'
+    },
     source: 'Yale/BMJ Global Health production-cost study; Civica Rx $30/vial nonprofit price; ADA/manufacturer cap programs',
+    evidence: {
+      file: 'research/03_drugs_pharmacy_diagnostics_devices.md',
+      cites: [
+        { amount: 'todayUninsured', end: 'lo', find: '$30/vial or $55 for a 5-pack of pens' },
+        { amount: 'todayUninsured', end: 'hi', find: '$250-$300+' }
+      ],
+      also: ['$2.28–$3.42']
+    },
     confidence: 'medium'
   },
   {
@@ -62,7 +306,10 @@ export const CARE_SCENARIOS: CareScenario[] = [
     title: 'MRI scan',
     todayInsured: { lo: 300, hi: 1100, note: 'typically hits the deductible; commercial average price ≈ $1,959' },
     todayUninsured: { lo: 1000, hi: 3000, note: 'billed charges vary several-fold by site' },
-    nha: { amount: 0, fromYear: 2034, note: 'covered when clinically indicated; diagnostic-first pathways' },
+    nha: {
+      amount: 0, promise: 'point-of-care', gates: [costSharingGate()],
+      note: 'covered when clinically indicated; diagnostic-first pathways'
+    },
     source: 'Health Care Cost Institute (commercial price data)',
     confidence: 'medium'
   },
@@ -71,7 +318,11 @@ export const CARE_SCENARIOS: CareScenario[] = [
     title: 'Ground ambulance ride',
     todayInsured: { lo: 450, hi: 1300, note: 'ground ambulance is not protected by the No Surprises Act, so balance billing is common' },
     todayUninsured: { lo: 1300, hi: 3000, note: 'mean cost per transport ≈ $2,673' },
-    nha: { amount: 0, fromYear: 2034, note: 'EMS becomes a readiness-funded public service' },
+    nha: {
+      amount: 0, promise: 'point-of-care',
+      gates: [costSharingGate(), expansionGate('Emergency medical services')],
+      note: 'EMS becomes a readiness-funded public service, which is one of the expanded benefits'
+    },
     source: 'Federal Ground Ambulance Data Collection System (GADCS)',
     confidence: 'high'
   },
@@ -80,25 +331,53 @@ export const CARE_SCENARIOS: CareScenario[] = [
     title: 'Routine blood work (metabolic panel + CBC)',
     todayInsured: { lo: 0, hi: 60, note: 'often free preventive; billed if diagnostic' },
     todayUninsured: { lo: 37, hi: 100, note: 'billed charges run 5–6× the Medicare rate ($8–10)' },
-    nha: { amount: 0, fromYear: 2034, note: 'included in unit-network and primary-care visits' },
+    nha: {
+      amount: 0, promise: 'point-of-care', gates: [costSharingGate()],
+      note: 'included in unit-network and primary-care visits'
+    },
     source: 'CMS Clinical Lab Fee Schedule vs. billed-charge studies',
     confidence: 'medium'
   },
   {
     id: 'therapy',
     title: 'Therapy session (mental health)',
-    todayInsured: { lo: 20, hi: 75, note: 'in-network copay, when an in-network therapist can be found' },
-    todayUninsured: { lo: 100, hi: 200, note: 'typical cash price per session' },
-    nha: { amount: 0, fromYear: 2034, note: 'covered; behavioral-health expansion (48-hour first-contact standard) completes Years 10–12' },
-    source: 'SAMHSA spending data; typical market rates (plan- and market-dependent)',
-    confidence: 'low'
+    todayInsured: { lo: 20, hi: 60, note: 'in-network copay, when an in-network therapist can be found' },
+    todayUninsured: { lo: 100, hi: 300, note: 'typical cash price per 45 to 60 minute session' },
+    nha: {
+      amount: 0, promise: 'point-of-care',
+      gates: [costSharingGate(), expansionGate('Behavioral health')],
+      note: 'covered; the behavioral-health expansion carries the 48-hour first-contact standard'
+    },
+    source: 'Consumer-pricing surveys compiled in this project’s behavioral-health ' +
+      'research file; no federal average session price exists. Medicare’s physician ' +
+      'fee schedule allows $75 to $150 for a 45-minute session, which brackets the ' +
+      'cash range from the other side.',
+    evidence: {
+      file: 'research/04_ltc_behavioral_dvh_ems_publichealth.md',
+      cites: [
+        { amount: 'todayInsured', end: 'lo', find: '$20-$60/session' },
+        { amount: 'todayInsured', end: 'hi', find: '$20-$60/session' },
+        { amount: 'todayUninsured', end: 'lo', find: '$100–$300 typical range' },
+        { amount: 'todayUninsured', end: 'hi', find: '$100–$300 typical range' }
+      ],
+      also: ['$75-$150 per 45-min CPT 90834 session']
+    },
+    confidence: 'medium'
   },
   {
     id: 'hearing',
     title: 'Hearing aids (pair)',
-    todayInsured: { lo: 2000, hi: 8000, note: 'rarely covered today; most people pay full price, averaging about $4,672' },
+    /* review 2 of P25: the average is HearingTracker's, read from params.ts,
+       with its year; it was typed here as though it were today's */
+    todayInsured: { lo: 2000, hi: 8000, note: 'rarely covered today; most people pay full price: $' +
+      HEARING_AID_PAIR_USD.survey2018.toLocaleString('en-US') + ' a pair on average in a 2018 reader survey, $' +
+      HEARING_AID_PAIR_USD.survey2025.toLocaleString('en-US') + ' in 2025 across all channels including over-the-counter (HearingTracker)' },
     todayUninsured: { lo: 2000, hi: 8000, note: 'the same; this is an uncovered market for nearly everyone' },
-    nha: { amount: 0, fromYear: 2036, note: 'standard devices covered under the dental/vision/hearing expansion (Phase 7)' },
+    nha: {
+      amount: 0, promise: 'point-of-care',
+      gates: [costSharingGate(), expansionGate('Dental, vision and hearing')],
+      note: 'standard devices covered under the dental/vision/hearing expansion'
+    },
     source: 'Hearing Industries Association pricing data',
     confidence: 'high'
   },
@@ -106,52 +385,542 @@ export const CARE_SCENARIOS: CareScenario[] = [
     id: 'nursing',
     title: 'Nursing home care (one year)',
     todayInsured: { lo: 111000, hi: 128000, note: "Medicare doesn't cover it; Medicaid only after spending down your assets" },
-    todayUninsured: { lo: 111000, hi: 128000, note: 'private-pay national average' },
-    nha: { amount: 0, fromYear: 2036, note: 'covered under the universal long-term-care benefit (home-first; institutional when needed), Phase 7–8' },
+    todayUninsured: {
+      lo: 111000, hi: 128000,
+      note: 'the private-pay national average, which is what an insured household ' +
+        'pays too, because this is not a benefit insurance buys'
+    },
+    nha: {
+      amount: 0, promise: 'point-of-care',
+      gates: [costSharingGate(), expansionGate('Long-term care')],
+      note: 'covered under the universal long-term-care benefit (home-first; institutional when needed)'
+    },
     source: 'Genworth/CareScout Cost of Care Survey 2024–25',
     confidence: 'high'
   }
 ];
 
+/* ---- The residual the plan actually promises -----------------------------
+ * R171 [§S8]. Two requirements govern point-of-care cost, and neither of them
+ * promises an absolute zero: covered-care patient billing is limited to no
+ * more than 0.5% of covered encounters at maturity, and household
+ * point-of-care spending falls by at least 90% from baseline. Roughly one
+ * covered visit in two hundred can still generate a bill.
+ *
+ * The Overview said so. The ten cards a reader actually consults for their own
+ * situation did not, and neither did the household calculator's `$0` line or
+ * the family-burden sentence under the hero. Three sites stated an absolute
+ * `$0` and one stated the residual, all four typed separately.
+ *
+ * One owner. The ceiling is a number the model computes - it is the mature
+ * value of the covered-care patient-billing rate - and a self-test holds this
+ * declaration to it, so the sentence cannot drift away from the model that
+ * produces it.
+ * ------------------------------------------------------------------------ */
+export const RESIDUAL_BILLING_CEILING_PCT = 0.5;
+
+export const RESIDUAL_BILLING_CAVEAT =
+  'Covered care is free at the point of use. At maturity the plan still allows ' +
+  'up to ' + RESIDUAL_BILLING_CEILING_PCT + '% of covered visits to be billed, ' +
+  'for claims that do not settle cleanly, and care outside the covered benefit ' +
+  'stays private. Medical debt for covered care is prohibited either way.';
+
+/* ---- The four sentences a card prints about its year ---------------------
+ * R85 [§S8]: written once and used twice. health.astro renders them at build
+ * time under SCN-BASE; health-client.ts re-renders them from the same
+ * functions when a stress scenario shifts the ramps. A page and a client that
+ * each phrase the same fact are how two chapters end up disagreeing, so
+ * neither of them phrases it.
+ * ------------------------------------------------------------------------ */
+export function careChipText(card: CareScenario, ramps: RampSet = RAMPS): string {
+  return 'from ~' + careFromYear(card, ramps);
+}
+
+export function carePhasingText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
+  const y = careReliefYear(card, ramps);
+  return y === null ? null
+    : 'Phasing in from ~' + y + '; the figure above is what you pay once it completes.';
+}
+
+export function careEarlyText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
+  const y = careEarlyYear(card, ramps);
+  return y === null || !card.nha.early ? null
+    : 'Arriving sooner: ' + card.nha.early.what + ', from ~' + y + '.';
+}
+
+export function careRequirementText(card: CareScenario, ramps: RampSet = RAMPS): string | null {
+  const f = card.nha.framework;
+  if (!f) return null;
+  const due = calendarYearOfPhase(f.byPhase);
+  const lands = careFromYear(card, ramps);
+  const late = lands - due;
+  /* R85: a stress scenario can push the card past the requirement it quotes.
+     That is a real result and the point of running one, so the card says which
+     way it came out rather than leaving a reader to compare two years. */
+  const verdict = late > 0
+    ? 'this scenario misses it by ' + late + (late === 1 ? ' year' : ' years')
+    : late === 0 ? 'this lands exactly on it' : 'this lands ~' + lands + ', ahead of it';
+  return f.plain + ' by ~' + due + '; ' + verdict + '.';
+}
+
+/* ---- What holds the derivation up ---------------------------------------
+ * Deriving the year from the ramp makes "the card agrees with the ramp"
+ * unfalsifiable - the two sides are the same arithmetic. These are the
+ * assertions whose sides can still differ, so they are the ones worth making.
+ * The source-level half (nothing types a year back in) is in page-check.ts,
+ * because this module ships to the browser and cannot read files.
+ * ------------------------------------------------------------------------ */
+
+/* A threshold no ramp ever reaches would make careFromYear throw at build
+   time with a stack trace. This reports it by name first. */
+export interface CareGateProblem { card: string; ramp: string; atLeast: number; max: number }
+
+export function careGateProblems(ramps: RampSet = RAMPS): CareGateProblem[] {
+  const out: CareGateProblem[] = [];
+  for (const c of CARE_SCENARIOS) {
+    if (!c.nha.gates.length) {
+      out.push({ card: c.id, ramp: '(none declared)', atLeast: 0, max: 0 });
+      continue;
+    }
+    for (const g of c.nha.gates) {
+      const arr = ramps[g.ramp];
+      const max = arr ? Math.max.apply(null, arr) : NaN;
+      if (!(max >= g.atLeast - 1e-9)) {
+        out.push({ card: c.id, ramp: g.ramp, atLeast: g.atLeast, max: max });
+      }
+    }
+  }
+  return out;
+}
+
+/* §AY: `$0` at the counter is delivered by cost-sharing elimination and by
+   nothing else, so every card that promises it has to be gated on that ramp
+   reaching 1.00. Both sides are hand-written - which cards are point-of-care,
+   and which gates each one names - so this can fail, and it is what stops the
+   next author gating a bill on a ramp that arrives earlier. */
+export function pointOfCareCardsMissingCostShareGate(): string[] {
+  return CARE_SCENARIOS
+    .filter((c) => c.nha.promise === 'point-of-care')
+    .filter((c) => !c.nha.gates.some((g) => g.ramp === 'costShareElim' && g.atLeast >= 1))
+    .map((c) => c.id);
+}
+
+/* Every gate has to say why that ramp governs that card. A gate with no reason
+   is a year nobody can review, which is the state R81 found the file in. */
+export const CARE_GATE_WHY_FLOOR = 60;
+
+export function shallowCareGateReasons(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    for (const g of c.nha.gates) {
+      if (g.why.trim().length < CARE_GATE_WHY_FLOOR) out.push(c.id + '/' + g.ramp);
+    }
+  }
+  return out;
+}
+
+/* The phase-in year the page prints beside each chip: in the year it names at
+   least one of the card's ramps has to be moving, and in every year before it
+   none of them may be.
+ *
+ * ⚠️ Review [§S8]: be exact about what this can and cannot catch, because the
+ * first version of this comment claimed more. Two of the three things
+ * `careReliefYear` does are checkable here and one is not:
+ *
+ *   - `firstNonZeroIndex`'s contract IS checked. Breaking its comparison so it
+ *     returns an index whose value is zero fails this, which is the defect that
+ *     shipped for one build and printed the enactment year on all ten cards.
+ *   - The SELECTION across gates IS checked, for the four cards that carry two.
+ *     Taking the latest gate instead of the earliest leaves the other gate's
+ *     ramp already moving before the printed year, and this fires on all four.
+ *     Verified by mutation, not by argument.
+ *   - For the six single-gate cards it is a tautology: one gate, so the minimum
+ *     is that gate's own first non-zero index and both sides are the same
+ *     arithmetic. Nothing here can fail for those six and nothing pretends to.
+ *
+ * The prefix is scanned in full rather than only the year before, so a ramp
+ * with an early non-zero blip followed by zeroes cannot slip through. */
+export function reliefYearProblems(ramps: RampSet = RAMPS): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const y = careReliefYear(c, ramps);
+    if (y === null) continue;
+    const i = y - START_YEAR;
+    const moving = c.nha.gates.some((g) => (ramps[g.ramp][i] || 0) > 0);
+    if (!moving) out.push(c.id + ': nothing is moving in ' + y);
+    for (let j = 0; j < i; j++) {
+      const early = c.nha.gates.filter((g) => (ramps[g.ramp][j] || 0) > 0);
+      if (early.length) {
+        out.push(c.id + ': ' + early[0].ramp + ' was already moving in ' + (START_YEAR + j));
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/* Deleting `fromYear` from CareNha makes typing a year back into the FIELD a
+   type error, which the build already catches. The hole it leaves is prose:
+   a note reading "from 2034" beside a chip reading 2037 is the same defect
+   with no compiler to stop it. Source vintages are deliberately not in scope -
+   they belong in `source` and in the `today*` notes, and R205 wants more of
+   them, not fewer. */
+export function careNotesTypingYears(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const prose: Array<{ where: string; text: string }> = [
+      { where: 'note', text: c.nha.note },
+      { where: 'early', text: c.nha.early ? c.nha.early.what : '' }
+    ];
+    for (const p of prose) {
+      const hit = p.text.match(/\b20\d\d\b/);
+      if (hit) out.push(c.id + '.' + p.where + ': ' + hit[0]);
+    }
+  }
+  return out;
+}
+
+/* R82/R83 [§S8]: the other half of "the source contains the figures".
+   `careEvidenceMisses` proves the strings are in the file. This proves the
+   strings are about the card: every bound of every range the evidence claims
+   to back has to appear inside one of those strings. Without it a figure could
+   move from 20 to 25 and the file would still contain "$20-$60/session". */
+export function careEvidenceBoundsMissing(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const ev = c.evidence;
+    if (!ev) continue;
+    if (!ev.cites.length) { out.push(c.id + ': evidence cites no figure'); continue; }
+    for (const cite of ev.cites) {
+      const value = c[cite.amount][cite.end];
+      /* as a money figure in ITS OWN quotation, not merely as digits somewhere
+         among the card's citations */
+      if (!new RegExp('\\$' + value + '(?![0-9.])').test(cite.find)) {
+        out.push(c.id + '.' + cite.amount + '.' + cite.end + ': $' + value +
+          ' is not in "' + cite.find + '"');
+      }
+    }
+    /* and every bound the card publishes has to be cited by something */
+    for (const key of ['todayInsured', 'todayUninsured'] as CareAmountKey[]) {
+      for (const end of ['lo', 'hi'] as Array<'lo' | 'hi'>) {
+        const cited = ev.cites.some((x) => x.amount === key && x.end === end);
+        const backed = ev.cites.some((x) => x.amount === key);
+        if (backed && !cited) out.push(c.id + '.' + key + '.' + end + ': uncited');
+      }
+    }
+  }
+  return out;
+}
+
+/* R86 [§S8]: the two cards whose insured and uninsured ranges are identical.
+ *
+ * ⚠️ The finding behind this row was WITHDRAWN before the row was written.
+ * §AG8 read `hearing` and `nursing` repeating the same figures in both columns
+ * as a copy-paste bug and asked for a distinct "not covered either way"
+ * treatment. §AY5 checked and withdrew it: both are deliberate, both say so in
+ * their own notes, and hearing aids and nursing-home years genuinely cost the
+ * same whether or not a person has insurance. The row survived the withdrawal
+ * in the recommendation table with no note.
+ *
+ * So there is nothing to fix and something to protect. The equality is the
+ * fact the cards exist to report, and a later pass reading the page as §AG8
+ * did could "fix" it by nudging one range apart. This pins it: the two cards
+ * must keep both columns equal, and each must keep saying why, in its own
+ * words rather than in one shared sentence - the two reasons are different
+ * (an uncovered market, versus a benefit Medicare excludes) and collapsing
+ * them into one would lose the half that matters.
+ */
+export const UNCOVERED_EITHER_WAY = ['hearing', 'nursing'];
+export const UNCOVERED_REASON_FLOOR = 30;
+
+export function uncoveredEitherWayProblems(): string[] {
+  const out: string[] = [];
+  const notes: string[] = [];
+  for (const id of UNCOVERED_EITHER_WAY) {
+    const c = CARE_SCENARIOS.filter((x) => x.id === id)[0];
+    if (!c) { out.push(id + ': card is gone'); continue; }
+    if (c.todayInsured.lo !== c.todayUninsured.lo || c.todayInsured.hi !== c.todayUninsured.hi) {
+      out.push(id + ': the two columns no longer match, which is what the card reports');
+    }
+    for (const side of [c.todayInsured, c.todayUninsured]) {
+      if (side.note.trim().length < UNCOVERED_REASON_FLOOR) {
+        out.push(id + ': a column stopped explaining why the two are the same');
+      }
+      notes.push(side.note.trim());
+    }
+  }
+  if (new Set(notes).size !== notes.length) {
+    out.push('two columns share a sentence; the reasons are different and both matter');
+  }
+  return out;
+}
+
+/* And the other direction: no OTHER card may quietly become one of these. A
+   card whose two columns are equal and which is not declared above is either a
+   real copy-paste error or an undeclared member of this set. */
+export function undeclaredIdenticalColumns(): string[] {
+  return CARE_SCENARIOS
+    .filter((c) => UNCOVERED_EITHER_WAY.indexOf(c.id) < 0)
+    .filter((c) => c.todayInsured.lo === c.todayUninsured.lo &&
+      c.todayInsured.hi === c.todayUninsured.hi)
+    .map((c) => c.id);
+}
+
+/* R171 [§S8]: the cards' own rendered strings, checked by value rather than by
+   scanning the file. A catalog code belongs to the Quality and Risk chapters
+   (the owner's 2026-10-10 decision; Data once shared it), which use the
+   catalog's ids as identifiers and say what they are; a reader of the
+   Healthcare chapter has never met one. This module declares SR-DRUG-001 and
+   quotes it verbatim so the extract check has something to match against, and
+   neither string is rendered - which is exactly why a line scan is the wrong
+   instrument here and the field values are the right one. */
+const CATALOG_CODE = catalogCode();
+
+export function careProseCatalogCodes(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const rendered: Array<{ where: string; text: string }> = [
+      { where: 'title', text: c.title },
+      { where: 'source', text: c.source },
+      { where: 'todayInsured.note', text: c.todayInsured.note },
+      { where: 'todayUninsured.note', text: c.todayUninsured.note },
+      { where: 'nha.note', text: c.nha.note },
+      { where: 'nha.early.what', text: c.nha.early ? c.nha.early.what : '' },
+      { where: 'nha.framework.plain', text: c.nha.framework ? c.nha.framework.plain : '' }
+    ];
+    for (const r of rendered) {
+      const hit = r.text.match(CATALOG_CODE);
+      if (hit) out.push(c.id + '.' + r.where + ': ' + hit[0]);
+    }
+  }
+  if (CATALOG_CODE.test(RESIDUAL_BILLING_CAVEAT)) out.push('RESIDUAL_BILLING_CAVEAT');
+  return out;
+}
+
+/* R170 [§S8]: a card that says something arrives sooner has to be pointing at
+   something that does. Pointing `early` at the card's own gating ramp would
+   reproduce AY2 in one field: a real arrival described as if it were the $0. */
+export function earlyBenefitProblems(ramps: RampSet = RAMPS): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    if (!c.nha.early) continue;
+    const early = careEarlyYear(c, ramps);
+    const lands = careFromYear(c, ramps);
+    if (early === null) { out.push(c.id + ': early benefit never starts'); continue; }
+    if (early >= lands) out.push(c.id + ': "sooner" is ' + early + ', the card lands ' + lands);
+    if (c.nha.gates.some((g) => g.ramp === c.nha.early!.ramp)) {
+      out.push(c.id + ': early benefit rides ' + c.nha.early.ramp + ', which also gates the card');
+    }
+  }
+  return out;
+}
+
+/* R170 [§S8]: a requirement's deadline is checked against the phase the card
+   declares, so the declared phase has to be the one the requirement's own words
+   name. A quote saying "by Phase 8" filed under `byPhase: 'P2'` would pass every
+   other check and be exactly the substitution AY2 found. */
+export function frameworkPhaseMismatches(): string[] {
+  const out: string[] = [];
+  for (const c of CARE_SCENARIOS) {
+    const f = c.nha.framework;
+    if (!f) continue;
+    const spelled = 'Phase ' + f.byPhase.replace(/^P/, '');
+    if (!f.quote.includes(spelled) && !f.quote.includes(f.byPhase)) {
+      out.push(c.id + ': declares ' + f.byPhase + ', quote does not name it');
+    }
+  }
+  return out;
+}
+
+/* The derived table, for the page, the client and the before/after dump. */
+export interface CareCardYear {
+  id: string;
+  fromYear: number;
+  reliefYear: number | null;
+  bindingRamp: CareRamp;
+}
+
+export function careCardYears(ramps: RampSet = RAMPS): CareCardYear[] {
+  return CARE_SCENARIOS.map((c) => ({
+    id: c.id,
+    fromYear: careFromYear(c, ramps),
+    reliefYear: careReliefYear(c, ramps),
+    bindingRamp: careBindingGate(c, ramps).ramp
+  }));
+}
+
+/* R205 [§S8]: each component of a household profile declares its own vintage.
+ *
+ * §AG6: the profiles blend KFF's 2025 premium survey, CMS-derived out-of-pocket
+ * averages from 2023 and a note about subsidies expiring in 2026. Each figure is
+ * individually sourced and the combination has no single base year, so a reader
+ * comparing "today" with "the mature system" is comparing three different todays.
+ *
+ * `denominatorYear` is the sharp end of it. The family out-of-pocket average is
+ * a 2023 CMS total divided by a 2024 Census household count, which §AG6 filed
+ * against the repository's own vintage rule. The per-person figure beside it is
+ * 2023 over 2023 and has no such gap. Declaring the denominator's year
+ * separately is what makes the difference between them visible, and a check
+ * requires a component whose two years disagree to say both of them out loud.
+ *
+ * Same shape as DATASET_VINTAGES in taxparams.ts, deliberately: that is the
+ * pattern R38 established for this exact question one chapter over.
+ */
+export interface HouseholdComponent extends CareAmount {
+  dataYear: number;    /* the year the underlying statistic describes */
+  dollarYear: number;  /* the year its dollars are expressed in */
+  /* set only on a derived figure whose denominator comes from another year */
+  denominatorYear?: number;
+  source: string;
+}
+
 export interface HouseholdProfile {
   id: string;
   label: string;
-  premium: CareAmount;
-  oop: CareAmount;
+  premium: HouseholdComponent;
+  oop: HouseholdComponent;
   confidence: string;
 }
 
-/* docs/js/care.js:120 - Census 2024, millions of U.S. households */
-export const HOUSEHOLDS_M = 132.2;
+/* R84 [§S5]: the Census denominator, read from its declaration rather than
+   typed here. This is the right one for a whole-population per-household
+   figure; the CBO count (131.0M) is the right one for anything computed per
+   income group, and the two are not interchangeable. See
+   HOUSEHOLD_DENOMINATORS in params.ts for why. */
+export const HOUSEHOLDS_M = householdDenominator('census').households;
 
-/* docs/js/care.js:122-151 (verbatim) */
+/* docs/js/care.js:122-151, with R205's vintages added per component. */
 export const HOUSEHOLD_PROFILES: HouseholdProfile[] = [
   {
     id: 'emp-family',
     label: 'Family with employer coverage',
-    premium: { lo: 6850, hi: 6850, note: 'worker share of family premium (KFF 2025)' },
-    oop: { lo: 2500, hi: 5500, note: 'deductibles, copays, coinsurance; household average is about $3,825 (derived from CMS)' },
+    premium: {
+      lo: 6850, hi: 6850, dataYear: 2025, dollarYear: 2025,
+      source: 'KFF Employer Health Benefits Survey 2025',
+      note: 'worker share of a family premium'
+    },
+    oop: {
+      lo: 2500, hi: 5500, dataYear: 2023, dollarYear: 2023, denominatorYear: 2024,
+      source: 'CMS national out-of-pocket total, divided by the Census household count',
+      note: 'deductibles, copays, coinsurance; the household average of about $3,825 ' +
+        'divides a 2023 spending total by a 2024 household count, so it is not a ' +
+        'single-year figure'
+    },
     confidence: 'medium'
   },
   {
     id: 'emp-single',
     label: 'Single person with employer coverage',
-    premium: { lo: 1492, hi: 1492, note: 'worker share (~16%) of a $9,325 single premium (KFF 2025)' },
-    oop: { lo: 800, hi: 2500, note: 'per-person average ≈ $1,514 (derived from CMS)' },
+    premium: {
+      lo: 1492, hi: 1492, dataYear: 2025, dollarYear: 2025,
+      source: 'KFF Employer Health Benefits Survey 2025',
+      note: 'worker share (about 16%) of a $9,325 single premium'
+    },
+    oop: {
+      lo: 800, hi: 2500, dataYear: 2023, dollarYear: 2023,
+      source: 'CMS national out-of-pocket total, divided by the same year’s population',
+      note: 'per-person average of about $1,514; unlike the family figure, both ' +
+        'sides of this one are 2023'
+    },
     confidence: 'medium'
   },
   {
     id: 'marketplace',
     label: 'Family buying marketplace coverage',
-    premium: { lo: 6000, hi: 18000, note: 'varies enormously with age, state, and subsidy eligibility; enhanced subsidies expired in 2026' },
-    oop: { lo: 3000, hi: 9000, note: 'marketplace deductibles are typically much higher than employer plans' },
+    premium: {
+      lo: 6000, hi: 18000, dataYear: 2026, dollarYear: 2026,
+      source: 'Marketplace premium range after the enhanced subsidies expired',
+      note: 'varies enormously with age, state, and subsidy eligibility; the ' +
+        'enhanced subsidies expired in 2026 and this range is the world after that'
+    },
+    oop: {
+      lo: 3000, hi: 9000, dataYear: 2025, dollarYear: 2025,
+      source: 'Marketplace plan cost-sharing designs',
+      note: 'marketplace deductibles are typically much higher than employer plans'
+    },
     confidence: 'low'
   },
   {
     id: 'uninsured',
     label: 'Uninsured adult',
-    premium: { lo: 0, hi: 0, note: 'no premium, no protection' },
-    oop: { lo: 500, hi: 5000, note: 'averages hide the real risk: one hospitalization can mean five-figure debt' },
+    premium: {
+      lo: 0, hi: 0, dataYear: 2025, dollarYear: 2025,
+      source: 'No premium is paid, so there is no statistic to date',
+      note: 'no premium, no protection'
+    },
+    oop: {
+      lo: 500, hi: 5000, dataYear: 2023, dollarYear: 2023,
+      source: 'CMS out-of-pocket spending for the uninsured',
+      note: 'averages hide the real risk: one hospitalization can mean five-figure debt'
+    },
     confidence: 'low'
   }
 ];
+
+/* ---- What holds the vintages up ----------------------------------------- */
+
+/* A component whose numerator and denominator come from different years has to
+   say both years where a reader meets the figure. That is §AG6's finding, kept
+   as a rule rather than as a one-off correction. */
+export function undeclaredVintageGaps(): string[] {
+  const out: string[] = [];
+  for (const p of HOUSEHOLD_PROFILES) {
+    for (const key of ['premium', 'oop'] as Array<'premium' | 'oop'>) {
+      const c = p[key];
+      if (c.denominatorYear === undefined || c.denominatorYear === c.dataYear) continue;
+      const saysBoth = c.note.includes(String(c.dataYear)) &&
+        c.note.includes(String(c.denominatorYear));
+      if (!saysBoth) {
+        out.push(p.id + '.' + key + ': ' + c.dataYear + ' over ' +
+          c.denominatorYear + ', and the note says neither');
+      }
+    }
+  }
+  return out;
+}
+
+/* Every component declares a source, and no component is dated outside the
+   window the rest of the model works in. */
+export const HOUSEHOLD_SOURCE_FLOOR = 20;
+
+export function householdVintageProblems(): string[] {
+  const out: string[] = [];
+  for (const p of HOUSEHOLD_PROFILES) {
+    for (const key of ['premium', 'oop'] as Array<'premium' | 'oop'>) {
+      const c = p[key];
+      if (c.source.trim().length < HOUSEHOLD_SOURCE_FLOOR) {
+        out.push(p.id + '.' + key + ': source is thinner than ' + HOUSEHOLD_SOURCE_FLOOR + ' characters');
+      }
+      if (!(c.dataYear >= 2020 && c.dataYear < START_YEAR)) {
+        out.push(p.id + '.' + key + ': dataYear ' + c.dataYear + ' is outside the baseline window');
+      }
+      if (!(c.dollarYear >= 2020 && c.dollarYear < START_YEAR)) {
+        out.push(p.id + '.' + key + ': dollarYear ' + c.dollarYear + ' is outside the baseline window');
+      }
+    }
+  }
+  return out;
+}
+
+/* The span the profiles actually cover, computed rather than typed, so the page
+   can say "these are three different todays" with the right numbers in it. */
+export function householdVintageSpan(): { from: number; to: number; years: number[] } {
+  const years: number[] = [];
+  for (const p of HOUSEHOLD_PROFILES) {
+    for (const key of ['premium', 'oop'] as Array<'premium' | 'oop'>) {
+      const c = p[key];
+      years.push(c.dataYear);
+      if (c.denominatorYear !== undefined) years.push(c.denominatorYear);
+    }
+  }
+  const sorted = Array.from(new Set(years)).sort((a, b) => a - b);
+  return { from: sorted[0], to: sorted[sorted.length - 1], years: sorted };
+}
+
+export function householdVintageNote(): string {
+  const span = householdVintageSpan();
+  return 'The "today" column is not one year. Its components are dated ' +
+    span.years.join(', ') + ', a span of ' + (span.to - span.from) +
+    ' years, and each line below says which year it is from. The mature-system ' +
+    'column is a model projection and carries no survey year at all.';
+}

@@ -1,9 +1,46 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+/* R255 [§S2]: the headline years are derived from the phase map and gated
+   against the ramps that deliver them; this page renders them, and does not
+   restate any milestone year of its own. */
+import {
+  DOMAINS, GATES, gateIsMeasurable, PHASE_BANDS, ROLLOUT_HEADLINES, ROLLOUT_YEARS
+} from '../lib/rollout';
+/* R292 [S12]: the timeline's label spelled its own span as a word. */
+const rolloutYears = ROLLOUT_YEARS;
+/* R256 [§S2]: the calendar anchor is stated in params.ts and referenced here. */
+/* R253 + R156 [§S5]: the envelope is computed from transitionTotal and
+   itCapital rather than typed, and the cost bridge's exclusion is named here,
+   where the envelope is displayed. */
+import { CALENDAR_ANCHOR_NOTE, transitionEnvelope } from '../lib/params';
+
+/* R257 [§S11b]: five gates state a threshold and three state conditions. The
+   split is counted from the floor text, not typed, so a gate that gains a
+   number moves the sentence with it. */
+const measurableGates = GATES.filter(gateIsMeasurable).length;
+const qualitativeGates = GATES.length - measurableGates;
+
+const ENV = transitionEnvelope();
+const t = (b: number) => '$' + (b / 1000).toFixed(1) + 'T';
+const ENVELOPE_RANGE = t(ENV.low) + '–' + t(ENV.high);
+const ENVELOPE_MODE = t(ENV.mode);
+const ENVELOPE_NOTE =
+  'Derived from the model’s own transition-protection and information-mesh ' +
+  'capital parameters (' + t(ENV.low) + '–' + t(ENV.high) + ', central ' +
+  t(ENV.mode) + '), not typed. The plan’s controlled envelope is ' +
+  t(ENV.frameworkLow) + '–' + t(ENV.frameworkHigh) + '; the model is wider on ' +
+  'both ends because it prices the information mesh separately and holds a ' +
+  'wider band on transition protection. This spending is cumulative, so it is ' +
+  'not in the cost-bridge chart on the healthcare chapter, which decomposes a ' +
+  'single mature year (2041) by which point transition outlays have wound ' +
+  'down to zero.';
 ---
-<BaseLayout title="National Health Assurance: Phased Rollout">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Phased Rollout"
+  description={"What gets built in each year of the " + rolloutYears +
+    "-year rollout, and the evidence each gate requires before the next wave begins."}
+>
 
   <section class="card">
     <h2>Twelve years, sequenced by readiness</h2>
@@ -12,33 +49,20 @@ import ChapterNav from '../components/ChapterNav.astro';
       independent readiness gates can hold, resize, or roll back a wave before
       the next major commitment. Select a milestone to see what is built and
       what evidence permits the program to continue.</p>
-    <div class="tiles rollout-summary" aria-label="Rollout headline milestones">
-      <div class="tile">
-        <div class="label">Controlled roadmap</div>
-        <div class="value">P0–P8</div>
-        <div class="range">foundation plus eight delivery phases</div>
-      </div>
-      <div class="tile">
-        <div class="label">Public default coverage</div>
-        <div class="value">Year 8</div>
-        <div class="range">after claims, capacity, rights, and continuity checks</div>
-      </div>
-      <div class="tile">
-        <div class="label">Expanded benefits</div>
-        <div class="value">Year 10</div>
-        <div class="range">LTC, behavioral health, dental, vision, hearing, EMS</div>
-      </div>
-      <div class="tile">
-        <div class="label">Maturity certification</div>
-        <div class="value">Year 12</div>
-        <div class="range">full integration, manufacturing, records, and payment</div>
-      </div>
+    <div role="group" class="tiles rollout-summary" aria-label="Rollout headline milestones">
+      {ROLLOUT_HEADLINES.map((h) => (
+        <div class="tile">
+          <div class="label">{h.label}</div>
+          <div class="value">{h.value}</div>
+          <div class="range">{h.range}</div>
+        </div>
+      ))}
     </div>
-    <div id="rollout-timeline" class="rollout-timeline"
-      aria-label="Interactive twelve-year phase timeline"></div>
-    <div id="rollout-detail" class="rollout-detail" aria-live="polite"></div>
-    <p class="note">Year numbers are relative implementation anchors. They do
-      not assign a calendar start date or override a failed readiness gate.</p>
+    <div role="group" id="rollout-timeline" class="rollout-timeline"
+      aria-label={"Interactive " + rolloutYears + "-year phase timeline"}></div>
+    <div id="rollout-detail" class="rollout-detail"
+      role="region" aria-label="Selected rollout phase detail"></div>
+    <p class="note">{CALENDAR_ANCHOR_NOTE}</p>
   </section>
 
   <section class="card">
@@ -46,11 +70,11 @@ import ChapterNav from '../components/ChapterNav.astro';
     <p class="desc">Coverage cannot outrun identity and payment; cost-sharing
       cannot disappear before staffed diagnostic and specialist capacity
       exists; expanded benefits cannot outrun workforce and home-care
-      readiness. The lanes below preserve all thirteen domain workstreams in
+      readiness. The lanes below preserve all {DOMAINS.length} domain workstreams in
       the integrated roadmap.</p>
     <div class="tbl-scroll">
       <table class="data rollout-matrix" id="rollout-domain-matrix">
-        <caption class="sr-only">Thirteen rollout domains across five phase bands</caption>
+        <caption class="sr-only">{DOMAINS.length} rollout domains across {PHASE_BANDS.length} phase bands</caption>
       </table>
     </div>
   </section>
@@ -64,7 +88,7 @@ import ChapterNav from '../components/ChapterNav.astro';
     <div class="buildout-grid">
       <div class="buildout-panel">
         <h3>Community diagnostic-treatment network</h3>
-        <div id="unit-ramp" class="unit-ramp"
+        <div role="group" id="unit-ramp" class="unit-ramp"
           aria-label="Diagnostic-treatment unit network scale-up"></div>
         <p class="note">Type A micro, Type B neighborhood, Type C rural
           enhanced, and Type D urban/public-health units. Phase 5 reaches at
@@ -74,7 +98,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       </div>
       <div class="buildout-panel">
         <h3>Medicines, diagnostics, and public production</h3>
-        <div id="drug-pipeline" class="drug-pipeline"
+        <div role="group" id="drug-pipeline" class="drug-pipeline"
           aria-label="Public drug purchasing and manufacturing rollout"></div>
         <p class="note">The pharmacy claims utility, national purchasing,
           public manufacturing, formulary governance, shortage controls,
@@ -94,39 +118,48 @@ import ChapterNav from '../components/ChapterNav.astro';
   </section>
 
   <section class="card">
-    <h2>Eight gates that can stop the clock</h2>
+    <h2>{GATES.length} gates that can stop the clock</h2>
     <p class="desc">A gate is a decision, not a date. If evidence is below the
       floor, the plan preserves care and payment, invokes a manual or
       legacy fallback, repairs the defect, and re-enters review.</p>
+    <p class="desc">{measurableGates} of the {GATES.length} set a threshold a
+      number can be tested against. The other {qualitativeGates} set conditions
+      instead: a list of capabilities that must be working before the wave
+      proceeds, judged by the named body rather than scored. They are real
+      requirements and they are not measurements, and each says so on its own
+      card, because a page that presents all {GATES.length} identically invites
+      a reader to assume all {GATES.length} are the same kind of claim.</p>
     <div id="rollout-gates" class="gate-grid"></div>
   </section>
 
   <section class="card">
     <h2>Protected transition work</h2>
-    <p class="desc">The plan assumes $1.2–$2.0 trillion of incremental
-      transition and implementation cost over 10–12 years, but explicitly
-      does not invent phase shares or straight-line the total. Every dollar
+    <p class="desc">Incremental transition and implementation cost runs over
+      10–12 years and is not straight-lined: the model carries an annual
+      outlay profile, and the envelope below is the total of it. Every dollar
       must attach to a costed work package, deliverable, owner, gate,
       contingency, and transfer into mature operations.</p>
-    <div class="transition-envelope" aria-label="Transition cost envelope">
-      <div class="transition-envelope-value">$1.2T–$2.0T</div>
+    <div role="group" class="transition-envelope" aria-label="Transition cost envelope">
+      <div class="transition-envelope-value">{ENVELOPE_RANGE}</div>
       <div>
-        <b>Cumulative transition envelope</b>
+        <b>Cumulative transition envelope, central estimate {ENVELOPE_MODE}</b>
         <span>continuity, infrastructure, capacity, migration, stabilization,
-          workforce, and wind-down, not mature annual operating cost</span>
+          workforce, and wind-down, plus the information-mesh build-out
+          capital, and not mature annual operating cost</span>
       </div>
     </div>
+    <p class="note">{ENVELOPE_NOTE}</p>
     <div id="rollout-workstreams" class="workstream-grid"></div>
+    <p class="note" id="rollout-workstream-note"></p>
     <p class="note">A gate hold cannot cut mandatory care, medication,
       provider-payment, appeal, or continuity fallbacks. It changes the pace
       or scope of new deployment and triggers repair.</p>
   </section>
 
   <p class="rollout-source">
-    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources and methodology</a>.</p>
+    <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/README.md" target="_blank" rel="noopener">Sources and methodology</a>.</p>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

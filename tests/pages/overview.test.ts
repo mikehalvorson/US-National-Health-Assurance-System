@@ -11,7 +11,7 @@ test('overview includes Act-1/Act-2 with build-time tiles and sponsor table', as
   expect(html).toContain('id="problem-tiles"');
   expect(html).toContain('The system today');
   // problem tiles rendered at build time (at least one tile value present)
-  expect(html).toContain('17.6% of GDP');
+  expect(html).toContain('17.7% of GDP');
   // sponsor table rendered at build time (a source label present)
   expect(html).toContain('Households');
 });
@@ -83,4 +83,15 @@ test('overview shell has no em dash', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview);
   expect(html.includes('—')).toBe(false);
+});
+
+/* Owner, 2026-10-12: the assurance band typed "440 controlled parameters".
+   Ten of the 440 were never controlled, and a record added since made the
+   count wrong too. It reads the catalog's total and makes no claim of
+   control. */
+test('owner 2026-10-12: the Overview states the catalog total it reads, and does not call it controlled', async () => {
+  const { NHA_QUALITY_DATA } = await import('../../src/lib/quality-data');
+  const html = await (await AstroContainer.create()).renderToString(Overview);
+  expect(html).toContain('>' + NHA_QUALITY_DATA.counts.total + ' quality parameters</a>');
+  expect(html).not.toContain('controlled parameters');
 });

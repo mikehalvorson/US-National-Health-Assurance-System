@@ -1,8 +1,12 @@
 /* Governance tab client: renders the 9 governing bodies as SVG org diagrams
    (no dependencies) plus a detail card per entity. Port of docs/js/govapp.js.
    Runs on astro:page-load; idempotent via the groups host's dataset.wired. */
-import { el, div, showTip, hideTip, tipRow } from '../lib/chart-util';
-import { GOV_GROUPS, type GovGroup, type GovMember } from '../lib/gov';
+import { el, div, showTip, hideTip, tipRow, bindTipFocus, type TipPoint } from '../lib/chart-util';
+import { boundToPage } from '../lib/timing';
+import {
+  administrationsPhrase, GOV_GROUPS, LEADER_BASIS_LABELS, leaderBasis,
+  type GovGroup, type GovMember
+} from '../lib/gov';
 
 /* Fold a natural "Led by" lead-in into the leadership clause so the hover reads
    as one sentence, instead of a right-aligned "Led by" label. Clauses that are
@@ -30,10 +34,21 @@ function renderOrgChart(container: HTMLElement, group: GovGroup): void {
   const cx = W / 2;
 
   const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg org-chart',
-    role: 'img', 'aria-label': 'Organization diagram: ' + group.name }, container);
+    role: 'group', 'aria-label': 'Organization diagram: ' + group.name }, container);
 
   function box(x: number, y: number, m: GovMember, isHead?: boolean): SVGElement {
-    const g = el('g', { class: 'org-box' + (isHead ? ' head' : ''), tabindex: 0 }, svg);
+    const g = el('g', {
+      class: 'org-box' + (isHead ? ' head' : ''), tabindex: 0, role: 'group',
+      /* R166 [S14], review 8: a focus handler that shows a tooltip serves a
+         sighted keyboard user and nobody else - the tooltip is a role-less div
+         in <body>. These 84 boxes carry their own name now, the way
+         ltc-client.ts's rows do. */
+      'aria-label': m.name + '. ' + m.role + '. ' +
+        leadPhrase(m.leader.split(';')[0]),
+      /* its tooltip's heading is the entity's full name, so the acronym
+         decorator leaves its code label alone (acronyms-client.ts) */
+      'data-own-tooltip': ''
+    }, svg);
     el('rect', { x: x, y: y, width: BW, height: BH, rx: 8,
       fill: isHead ? group.color : 'var(--surface-1)',
       'fill-opacity': isHead ? 0.18 : 1,
@@ -45,15 +60,21 @@ function renderOrgChart(container: HTMLElement, group: GovGroup): void {
       'text-anchor': 'middle' }, g);
     t2.textContent = m.short.length > 30 ? m.short.slice(0, 29) + '…' : m.short;
 
-    function tipIt(evt: PointerEvent): void {
+    function tipIt(evt: TipPoint): void {
       const boxEl = document.createElement('div');
       div('tip-head', boxEl).textContent = m.name;
       tipRow(boxEl, group.color, '', m.role, false);
       tipRow(boxEl, '', '', leadPhrase(m.leader.split(';')[0]), false);
-      showTip(boxEl, evt.clientX, evt.clientY);
+      showTip(boxEl, evt);
     }
-    g.addEventListener('pointermove', tipIt as EventListener);
+    g.addEventListener('pointermove', function (e) { tipIt(e as PointerEvent); });
     g.addEventListener('pointerleave', hideTip);
+    /* R166 [S14]: all 84 boxes across the nine diagrams were tab stops that
+       delivered their role and leadership detail only on pointermove, so a
+       keyboard user reached every one of them and was shown nothing. The
+       detail cards below carry the same content, but the diagram did not. */
+    /* an org box is 216px wide: the tooltip is placed from its centre */
+    bindTipFocus(g, tipIt, hideTip, 'centre');
     g.addEventListener('click', function () {
       const card = document.getElementById('gov-' + m.code);
       if (!card) return;
@@ -61,7 +82,9 @@ function renderOrgChart(container: HTMLElement, group: GovGroup): void {
       if (det) det.open = true;
       card.scrollIntoView({ behavior: 'smooth', block: 'center' });
       card.classList.add('flash');
-      setTimeout(function () { card.classList.remove('flash'); }, 1600);
+      /* bound to the card, so the rule stays total: harmless today, since it
+         touches only the card it captured */
+      setTimeout(boundToPage(card, function () { card.classList.remove('flash'); }), 1600);
     });
     return g;
   }
@@ -108,17 +131,27 @@ function renderCards(container: HTMLElement, group: GovGroup): void {
     code.textContent = m.code;
     head.appendChild(code);
 
-    function line(label: string, text: string, cls?: string): void {
+    function line(label: string, text: string, cls?: string): HTMLElement {
       const row = div('gov-line' + (cls ? ' ' + cls : ''), card);
       const b = document.createElement('b');
       b.textContent = label + ': ';
       row.appendChild(b);
       row.appendChild(document.createTextNode(text));
+      return row;
     }
     line('What it does', m.role);
     line('Why it exists', m.why);
-    line('Replaces', m.replaces, /^New/.test(m.replaces) ? 'gov-new' : 'gov-replaces');
-    line('Who runs it', m.leader);
+    line('Replaces', m.replaces, m.novel ? 'gov-new' : 'gov-replaces');
+    /* R164 [§S8]: the title, and whose title it is. Same shape as the
+       Specified/Derived badge on the Data tab, which §BX1 confirmed carries
+       its meaning as text rather than as colour. */
+    const runs = line('Who runs it', m.leader);
+    const basis = leaderBasis(m.code);
+    const badge = document.createElement('span');
+    badge.className = 'data-basis' + (basis === 'design' ? ' derived' : '');
+    badge.textContent = LEADER_BASIS_LABELS[basis];
+    runs.appendChild(document.createElement('br'));
+    runs.appendChild(badge);
   });
 }
 
@@ -126,18 +159,29 @@ function renderCards(container: HTMLElement, group: GovGroup): void {
 function renderSummary(): void {
   const host = document.getElementById('gov-summary');
   if (!host) return;
+  /* R167 [§S12]: novelty is read from the declared field. It used to be
+     inferred by testing the free-text `replaces` string against /^New/, which
+     classified all 84 correctly and would have put an entry reading
+     "Nothing - this is a new capability" in the wrong column.
+     R240 [§S12]: the governing-body count used to be the string '9' beside
+     three tiles computed from the data. One typed number in a row of derived
+     ones drifts on the first change and nothing reads it. */
   let total = 0, novel = 0, replacing = 0;
   GOV_GROUPS.forEach(function (g) {
     g.members.forEach(function (m) {
       total++;
-      if (/^New/.test(m.replaces)) novel++; else replacing++;
+      if (m.novel) novel++; else replacing++;
     });
   });
   [
-    { label: 'Governing bodies', value: '9',
-      range: 'fiscal foundations, the operating department and its five administrations, independent oversight, transition, innovation' },
+    /* R161 [§S17]: this said "its five administrations"; there are four,
+       and the count is read from the declared list. */
+    { label: 'Governing bodies', value: String(GOV_GROUPS.length),
+      range: 'fiscal foundations, the operating department and its ' + administrationsPhrase() +
+        ', independent oversight, transition, innovation' },
     { label: 'Entities in total', value: String(total),
-      range: 'each with statutory duties, a named leadership position, and published metrics' },
+      range: 'each with statutory duties and published metrics; the leadership ' +
+        'position on every card is labelled with whose title it is' },
     { label: 'Replace existing functions', value: String(replacing),
       range: 'absorbing work now done by insurers, PBMs, state offices, and federal agencies' },
     { label: 'Wholly new capabilities', value: String(novel),

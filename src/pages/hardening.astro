@@ -1,9 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ChapterNav from '../components/ChapterNav.astro';
+import RemovalRuling from '../components/RemovalRuling.astro';
+import { LAYERS } from '../lib/hardening';
+
+/* R292 [§S12]: the stepper's label spelled its own item count as a word, on a
+   div with no role, so nothing on screen or in the accessibility tree could
+   contradict it. Read from the collection the client renders. */
+const layerCount = LAYERS.length;
 ---
-<BaseLayout title="National Health Assurance: Executive Hardening">
-  <main>
+<BaseLayout
+  title="National Health Assurance: Executive Hardening"
+  description="How distributed authority, mandatory funding and continuity duties are designed to keep the system running under a hostile administration."
+>
 
   <section class="card">
     <h2>The threat: dismantlement without repeal</h2>
@@ -23,7 +32,7 @@ import ChapterNav from '../components/ChapterNav.astro';
         prevent ordinary executive inaction from quietly operating as repeal
         and can preserve lawful continuity while Congress and courts respond.</p>
     </div>
-    <div class="hardening-threat-grid"
+    <div role="group" class="hardening-threat-grid"
       aria-label="Ways a hostile executive could try to hollow out the system">
       <article class="hardening-threat">
         <span>01</span>
@@ -89,10 +98,10 @@ import ChapterNav from '../components/ChapterNav.astro';
       is expected to carry the whole defense. Select a layer to see the attack
       it blocks, the continuity action that occurs without permission from the
       obstructing official, and the independent body that checks the result.</p>
-    <div id="hardening-stepper" class="hardening-stepper"
-      aria-label="Seven layers of executive-branch hardening"></div>
+    <div role="group" id="hardening-stepper" class="hardening-stepper"
+      aria-label={layerCount + " layers of executive-branch hardening"}></div>
     <div id="hardening-detail" class="hardening-detail"
-      aria-live="polite"></div>
+      role="region" aria-label="Selected hardening layer detail"></div>
   </section>
 
   <section class="card">
@@ -102,7 +111,7 @@ import ChapterNav from '../components/ChapterNav.astro';
       specifies a detection-to-remedy workflow driven by clocks, logs,
       obligations, staffing records, public-data completeness, escrow status,
       and complaints.</p>
-    <div class="hardening-response-flow"
+    <div role="group" class="hardening-response-flow"
       aria-label="Detection-to-remedy workflow for executive interference">
       <article>
         <span>01</span><h3>Detect</h3>
@@ -138,37 +147,31 @@ import ChapterNav from '../components/ChapterNav.astro';
       achieved performance. Independent evidence must show that the defenses
       actually work under vacancy, withholding, rule-failure, data-suppression,
       and vendor-obstruction exercises.</p>
-    <div class="hardening-target-grid"
+    <div role="group" class="hardening-target-grid"
       aria-label="Executive-hardening performance targets">
       <article>
         <strong>&ge;99.5%</strong>
         <span>core spending under mandatory payment protection</span>
-        <small>TPP-12.1 / SR-LAW-001</small>
       </article>
       <article>
         <strong>&ge;98%</strong>
         <span>critical-office staffing floor compliance</span>
-        <small>TPP-12.2 / SR-LAW-002</small>
       </article>
       <article>
         <strong>&ge;99%</strong>
         <span>critical functions continuing through leadership vacancies</span>
-        <small>TPP-12.3 / SR-LAW-003</small>
       </article>
       <article>
         <strong>&le;24 hours</strong>
         <span>to initiate action after an unlawful delay flag</span>
-        <small>TPP-12.5 / SR-LAW-004</small>
       </article>
       <article>
         <strong>&ge;99%</strong>
         <span>required public data published on time</span>
-        <small>TPP-12.4</small>
       </article>
       <article>
         <strong>&ge;99%</strong>
-        <span>critical legal provisions covered by a tested contingency</span>
-        <small>SR-LAW-009 / verification package</small>
+        <span>critical legal provisions with legal contingency coverage</span>
       </article>
     </div>
   </section>
@@ -235,9 +238,9 @@ import ChapterNav from '../components/ChapterNav.astro';
         <h3>Leadership rules still require legislation</h3>
         <p>Governing-body composition, appointment, terms, removal, quorum,
           conflicts, vacancy, and succession are left for final statutory
-          design. Trump v. Slaughter now
-          forecloses ordinary for-cause insulation for officers within the
-          President's general administrative control; every body still needs
+          design. <RemovalRuling /> That ruling forecloses ordinary
+          for-cause insulation for officers within the President's
+          general administrative control; every body still needs
           an Appointments Clause and separation-of-powers opinion.</p>
       </article>
       <article>
@@ -259,11 +262,10 @@ import ChapterNav from '../components/ChapterNav.astro';
       </article>
     </div>
     <p class="rollout-source">
-      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System" target="_blank" rel="noopener">Sources and methodology</a>.</p>
+      <a href="https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/research/README.md" target="_blank" rel="noopener">Sources and methodology</a>.</p>
   </section>
 
     <ChapterNav />
-  </main>
 </BaseLayout>
 
 <script>

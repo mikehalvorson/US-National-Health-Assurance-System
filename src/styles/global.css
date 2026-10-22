@@ -105,6 +105,18 @@ a { color: var(--accent); }
 
 .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
 
+/* R268 [S14]: off-screen until focused, then pinned to the top-left. Not
+   display:none and not visibility:hidden - either would take it out of the
+   tab order, which is the one thing it exists to be in. */
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 200;
+  background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 0 0 8px 0;
+  padding: 10px 16px; font-size: 14px; font-weight: 650; text-decoration: none;
+}
+.skip-link:focus { left: 0; outline: 2px solid var(--accent); outline-offset: 2px; }
+main:focus { outline: none; }
+
 /* ---- Header ---- */
 header.site {
   padding: 40px 0 8px;
@@ -227,6 +239,13 @@ button.btn:hover { border-color: var(--accent); }
 
 /* ---- Tables (data view + methodology) ---- */
 details.tableview { margin-top: 12px; }
+/* R141: the per-adjustment provenance under the scenario picker. Sized
+   like a note, because that is what it is. */
+.basis-list { list-style: none; margin-top: 8px; font-size: 12.5px;
+  color: var(--text-secondary); }
+.basis-list li { padding: 4px 0; border-bottom: 1px solid var(--gridline); }
+.basis-list li:last-child { border-bottom: none; }
+.basis-list b { color: var(--text-primary); }
 details.tableview summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; }
 table.data {
   width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px;
@@ -822,23 +841,23 @@ nav.tabs button:hover:not(.active), nav.tabs a:hover:not(.active) { color: var(-
   display: grid; grid-template-columns: 2fr 2fr 3fr 2fr 3fr;
   gap: 6px; margin-top: 18px;
 }
-.overview-rollout-arc article {
+.overview-rollout-arc > div {
   min-width: 0; padding: 10px 9px 12px; border-top: 4px solid var(--series-1);
   background: color-mix(in srgb, var(--series-1) 5%, transparent);
 }
-.overview-rollout-arc article:nth-child(2) {
+.overview-rollout-arc > div:nth-child(2) {
   border-top-color: var(--series-3);
   background: color-mix(in srgb, var(--series-3) 5%, transparent);
 }
-.overview-rollout-arc article:nth-child(3) {
+.overview-rollout-arc > div:nth-child(3) {
   border-top-color: var(--series-2);
   background: color-mix(in srgb, var(--series-2) 5%, transparent);
 }
-.overview-rollout-arc article:nth-child(4) {
+.overview-rollout-arc > div:nth-child(4) {
   border-top-color: var(--series-5);
   background: color-mix(in srgb, var(--series-5) 5%, transparent);
 }
-.overview-rollout-arc article:nth-child(5) {
+.overview-rollout-arc > div:nth-child(5) {
   border-top-color: var(--series-4);
   background: color-mix(in srgb, var(--series-4) 5%, transparent);
 }
@@ -978,7 +997,13 @@ nav.tabs button:hover:not(.active), nav.tabs a:hover:not(.active) { color: var(-
   padding: 1px 8px; margin-left: auto; white-space: nowrap;
 }
 .care-nha-note { color: var(--text-muted); font-size: 11.5px; margin-top: 3px; }
+/* R81 [§S8]: the years the benefit is arriving over, under the year it lands. */
+.care-nha-phasing { color: var(--text-secondary); font-size: 11.5px; margin-top: 4px; }
+/* R170 [§S8]: the framework requirement the card answers to, and its deadline. */
+.care-nha-req { color: var(--text-muted); font-size: 11px; margin-top: 4px; font-style: italic; }
 .care-src { color: var(--text-muted); font-size: 10.5px; margin-top: 9px; }
+/* R205 [§S8]: the vintage of each household-calculator component. */
+.hh-line-vintage { color: var(--text-muted); font-size: 10.5px; margin-top: 1px; font-style: italic; }
 
 /* ---- Household calculator ---- */
 .hh-picker { margin-top: 4px; }
@@ -1087,9 +1112,20 @@ footer.site a { color: var(--text-muted); }
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px;
 }
 .buildout-panel h3 { font-size: 14px; margin-bottom: 13px; }
+/* R258: two off-axis steps, a break, then three plotted steps. The break is a
+   real column so the axis visibly starts after it. */
 .unit-ramp-chart {
-  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 14px repeat(3, minmax(0, 1fr));
   gap: 8px; align-items: stretch; margin: 4px 0 10px;
+}
+/* Off-axis steps encode no quantity, so their height is fixed here rather
+   than coming from the data. It is the bar's min-height, i.e. the shortest a
+   bar can be, so it cannot read as a point on the coverage scale. Changing
+   this number changes no reading. */
+.unit-ramp-step.off-axis .unit-ramp-bar { height: 40px; }
+.unit-ramp-break {
+  align-self: stretch; margin-bottom: 22px;
+  border-left: 2px dashed var(--gridline-strong);
 }
 .unit-ramp-step {
   display: flex; min-width: 0; flex-direction: column; gap: 5px;
@@ -1169,6 +1205,12 @@ footer.site a { color: var(--text-muted); }
 .gate-when { color: var(--series-5); font-size: 11px; font-weight: 650; margin-top: 1px; }
 .gate-item p { color: var(--text-secondary); font-size: 12px; margin-top: 4px; }
 .gate-fallback { color: var(--text-muted); }
+/* R257 [S11b]: the three gates that set conditions rather than a
+   threshold say so on their own card. Review 5: the class was emitted
+   with no rule, so the note rendered identically to the floor paragraph
+   above it and the distinction it exists to draw was invisible. */
+.gate-qualitative { color: var(--text-muted); font-style: italic;
+  border-left: 2px solid var(--border); padding-left: 8px; margin-top: 6px; }
 .transition-envelope {
   display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center;
   padding: 12px 0 15px; border-bottom: 1px solid var(--gridline);
@@ -1187,17 +1229,16 @@ footer.site a { color: var(--text-muted); }
 .workstream-id { color: var(--text-muted); font-size: 10.5px; font-weight: 700; }
 .workstream-item b { display: block; font-size: 12.5px; }
 .workstream-item span { display: block; color: var(--text-secondary); font-size: 11.5px; }
+.workstream-meta { color: var(--text-muted); font-size: 10.5px; margin-top: 3px; }
+.instrument-band {
+  display: block; color: var(--text-muted); font-size: 10.5px; margin-top: 4px;
+}
 .rollout-source { color: var(--text-muted); font-size: 12px; margin-top: 18px; }
 
 /* ---- Data view ---- */
 .data-kicker {
   display: block; color: var(--text-muted); font-size: 11px; font-weight: 700;
   letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 3px;
-}
-.data-acronym {
-  color: inherit; cursor: text; text-decoration-line: underline;
-  text-decoration-style: dotted; text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
 }
 .data-target-legend {
   display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--text-secondary);
@@ -1266,6 +1307,11 @@ footer.site a { color: var(--text-muted); }
 .data-mature-target {
   color: var(--text-muted); font-size: 11px; line-height: 1.35;
   margin-top: 2px; overflow-wrap: anywhere;
+}
+/* R299: the population under the number, where it changes between phases. */
+.data-scope-change {
+  color: var(--text-secondary); font-size: 11px; line-height: 1.35;
+  margin-top: 2px; font-style: italic; overflow-wrap: anywhere;
 }
 .data-target-rationale { margin-top: 5px; }
 .data-target-rationale summary {
@@ -1471,11 +1517,6 @@ footer.site a { color: var(--text-muted); }
   display: block; color: var(--text-muted); font-size: 11px; font-weight: 700;
   letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 3px;
 }
-.quality-acronym {
-  color: inherit; cursor: text; text-decoration-line: underline;
-  text-decoration-style: dotted; text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-}
 .quality-counts {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px; margin: 3px 0 16px;
@@ -1584,6 +1625,23 @@ footer.site a { color: var(--text-muted); }
 .quality-type-cp {
   background: color-mix(in srgb, var(--series-5) 15%, transparent);
 }
+/* R220: the ten records the plan adopted later and has not put through
+   control. Outlined rather than filled, so it reads as a qualifier on the
+   type beside it rather than as a third type. */
+.quality-provisional {
+  display: inline-block; margin-left: 5px; padding: 1px 5px;
+  border: 1px solid color-mix(in srgb, var(--status-warning) 55%, transparent);
+  border-radius: 4px; color: var(--text-secondary);
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.02em;
+  line-height: 1.35; text-transform: uppercase;
+}
+/* R290: the cyber tiles that come from the controlled catalog, and the one
+   that does not. */
+.cyber-target-basis {
+  display: block; margin-top: 4px; color: var(--text-secondary);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
 .quality-detail-grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 11px 22px; margin-top: 15px;
@@ -1622,6 +1680,16 @@ footer.site a { color: var(--text-muted); }
   display: block; color: var(--text-muted); font-size: 11px; font-weight: 400;
   text-transform: capitalize;
 }
+/* R232: the equation's own number, next to the committed floor that replaced
+   it; R299: where the population under the number changes. Neither is
+   capitalized, because each is a value rather than a kind label. */
+.quality-cell-value small.quality-cell-raw,
+.quality-cell-value small.quality-cell-scope {
+  text-transform: none; font-style: italic; margin-top: 2px;
+}
+.quality-cell-why { margin-top: 4px; font-size: 10.5px; color: var(--text-muted); }
+.quality-cell-why summary { cursor: pointer; font-weight: 500; }
+.quality-cell-why p { margin: 4px 0 0; font-weight: 400; line-height: 1.45; }
 .quality-table-wrap { margin-top: 16px; }
 .quality-table { min-width: 900px; font-size: 11.5px; }
 .quality-table thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-1); }
@@ -1662,11 +1730,6 @@ footer.site a { color: var(--text-muted); }
 .workforce-kicker, .workforce-section-label {
   display: block; color: var(--text-muted); font-size: 11px; font-weight: 700;
   letter-spacing: .05em; text-transform: uppercase; margin-bottom: 4px;
-}
-.workforce-acronym {
-  color: inherit; cursor: text; text-decoration-line: underline;
-  text-decoration-style: dotted; text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
 }
 .workforce-challenge-grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1751,8 +1814,8 @@ footer.site a { color: var(--text-muted); }
   gap: 22px; margin-top: 22px; padding: 16px 0;
   border-top: 1px solid var(--gridline); border-bottom: 1px solid var(--gridline);
 }
-.workforce-ledger-grid article { min-width: 0; }
-.workforce-ledger-grid article > span {
+.workforce-ledger-grid > div { min-width: 0; }
+.workforce-ledger-grid > div > span {
   display: block; color: var(--series-5); font-size: 10.5px;
   font-weight: 700; letter-spacing: .035em; text-transform: uppercase;
 }
@@ -1943,6 +2006,28 @@ footer.site a { color: var(--text-muted); }
   color: var(--text-secondary); font-size: 11.2px; line-height: 1.5;
 }
 .workforce-scope-warning p span { color: var(--text-primary); font-weight: 700; }
+/* R168 [§S9a]: the under-specified benefit families, rendered from the
+   framework transcription at build time. Spans both columns of the scope
+   warning so it reads as a table under the paragraph rather than as a third
+   grid cell. Same three-column row shape as .workforce-risk-row. */
+.workforce-underspec-list {
+  grid-column: 1 / -1; margin: 4px 0 0; padding: 0; list-style: none;
+}
+.workforce-underspec-list li {
+  display: grid; grid-template-columns: minmax(150px, .8fr) minmax(0, 1fr) minmax(0, .8fr);
+  gap: 15px; align-items: baseline; padding: 7px 0;
+  border-top: 1px solid var(--gridline);
+}
+.workforce-underspec-list li > b {
+  color: var(--text-primary); font-size: 11.5px; line-height: 1.4;
+}
+.workforce-underspec-list li > span {
+  color: var(--text-secondary); font-size: 10.8px; line-height: 1.45;
+}
+.workforce-underspec-list li > span:last-child { color: var(--series-5); }
+@media (max-width: 720px) {
+  .workforce-underspec-list li { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+}
 .workforce-labor-grid {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 17px; margin-top: 18px;
@@ -1965,6 +2050,11 @@ footer.site a { color: var(--text-muted); }
 .workforce-labor-grid small {
   display: block; margin-top: 3px; color: var(--text-muted);
   font-size: 10.2px; line-height: 1.35;
+}
+/* outranks `.workforce-labor-grid span`, which would make the badge a block */
+.workforce-labor-grid .conf {
+  display: inline-block; margin-top: 3px; padding: 1px 5px;
+  border-radius: 4px; font-size: 9.5px;
 }
 .workforce-supply-layout {
   display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, .55fr);
@@ -2201,7 +2291,7 @@ footer.site a { color: var(--text-muted); }
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0 20px; margin-top: 12px;
 }
-.workforce-rural-steps article {
+.workforce-rural-steps > div {
   min-width: 0; padding: 12px 0 14px; border-top: 3px solid var(--series-2);
 }
 .workforce-rural-steps span {
@@ -2347,11 +2437,6 @@ footer.site a { color: var(--text-muted); }
 }
 
 /* ---- Executive hardening view ---- */
-.hardening-acronym {
-  color: inherit; cursor: text; text-decoration-line: underline;
-  text-decoration-style: dotted; text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-}
 .hardening-boundary {
   display: grid; grid-template-columns: 122px minmax(0, 1fr);
   gap: 18px; align-items: start; margin: 18px 0 6px; padding: 13px 0;
@@ -2509,9 +2594,6 @@ footer.site a { color: var(--text-muted); }
   display: block; color: var(--accent); font-size: 11px; font-weight: 500;
   letter-spacing: .055em; text-transform: uppercase; margin-bottom: 4px;
 }
-.legislation-acronym {
-  text-decoration: underline dotted; text-underline-offset: 2px; cursor: text;
-}
 .legislation-hero .desc { max-width: 840px; }
 .legislation-counts {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2594,23 +2676,23 @@ footer.site a { color: var(--text-muted); }
   display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 20px 24px; margin-top: 18px;
 }
-.legislation-title-stack article {
+.legislation-title-stack > div {
   min-width: 0; grid-column: span 4; padding-top: 10px;
   border-top: 3px solid var(--series-1);
 }
-.legislation-title-stack article:nth-child(2) {
+.legislation-title-stack > div:nth-child(2) {
   grid-column: span 5; border-top-color: var(--series-2);
 }
-.legislation-title-stack article:nth-child(3) {
+.legislation-title-stack > div:nth-child(3) {
   grid-column: span 3; border-top-color: var(--series-3);
 }
-.legislation-title-stack article:nth-child(4) {
+.legislation-title-stack > div:nth-child(4) {
   grid-column: span 6; border-top-color: var(--series-5);
 }
-.legislation-title-stack article:nth-child(5) {
+.legislation-title-stack > div:nth-child(5) {
   grid-column: span 6; border-top-color: var(--series-4);
 }
-.legislation-title-stack article > span {
+.legislation-title-stack > div > span {
   display: block; color: var(--text-muted); font-size: 10.5px;
   font-weight: 500; letter-spacing: .045em; text-transform: uppercase;
 }
@@ -2760,16 +2842,16 @@ footer.site a { color: var(--text-muted); }
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 12px; margin-top: 18px;
 }
-.legislation-steps article {
+.legislation-steps > div {
   min-width: 0; padding-top: 10px; border-top: 3px solid var(--series-1);
 }
-.legislation-steps article:nth-child(2),
-.legislation-steps article:nth-child(6) { border-top-color: var(--series-2); }
-.legislation-steps article:nth-child(3) { border-top-color: var(--series-3); }
-.legislation-steps article:nth-child(4) { border-top-color: var(--series-5); }
-.legislation-steps article:nth-child(5) { border-top-color: var(--series-4); }
-.legislation-steps article:nth-child(7) { border-top-color: var(--series-5); }
-.legislation-steps article > span {
+.legislation-steps > div:nth-child(2),
+.legislation-steps > div:nth-child(6) { border-top-color: var(--series-2); }
+.legislation-steps > div:nth-child(3) { border-top-color: var(--series-3); }
+.legislation-steps > div:nth-child(4) { border-top-color: var(--series-5); }
+.legislation-steps > div:nth-child(5) { border-top-color: var(--series-4); }
+.legislation-steps > div:nth-child(7) { border-top-color: var(--series-5); }
+.legislation-steps > div > span {
   color: var(--text-muted); font-size: 10px; font-weight: 500;
 }
 .legislation-steps strong {
@@ -3016,12 +3098,12 @@ footer.site a { color: var(--text-muted); }
   .legislation-path > i { display: none; }
   .legislation-constitutional-answer { grid-template-columns: 1fr; gap: 5px; }
   .legislation-title-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .legislation-title-stack article,
-  .legislation-title-stack article:nth-child(2),
-  .legislation-title-stack article:nth-child(3),
-  .legislation-title-stack article:nth-child(4),
-  .legislation-title-stack article:nth-child(5) { grid-column: auto; }
-  .legislation-title-stack article:nth-child(5) { grid-column: 1 / -1; }
+  .legislation-title-stack > div,
+  .legislation-title-stack > div:nth-child(2),
+  .legislation-title-stack > div:nth-child(3),
+  .legislation-title-stack > div:nth-child(4),
+  .legislation-title-stack > div:nth-child(5) { grid-column: auto; }
+  .legislation-title-stack > div:nth-child(5) { grid-column: 1 / -1; }
   .legislation-crosswalk { grid-template-columns: 1fr; gap: 18px; }
   .legislation-law-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .legislation-law-button { align-items: center; }
@@ -3076,7 +3158,7 @@ footer.site a { color: var(--text-muted); }
   .legislation-counts { grid-template-columns: 1fr; gap: 10px; }
   .legislation-path { grid-template-columns: 1fr; }
   .legislation-title-stack { grid-template-columns: 1fr; }
-  .legislation-title-stack article:nth-child(5) { grid-column: auto; }
+  .legislation-title-stack > div:nth-child(5) { grid-column: auto; }
   .legislation-law-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .legislation-law-fields { grid-template-columns: 1fr; }
   .legislation-law-field-wide { grid-column: auto; }
@@ -3298,9 +3380,29 @@ footer.site a { color: var(--text-muted); }
   padding: 1px 5px; border: 1px solid var(--border); border-radius: 999px;
   color: var(--text-muted); font-size: 9px; line-height: 1.45;
 }
+/* R174 [§S7]: the per-family provenance line. Quieter than the form, because
+   it explains the phase chip rather than the medicine. */
+.medications-family-why {
+  margin-top: 6px; color: var(--text-muted); font-size: 9.5px;
+  line-height: 1.5;
+}
 .medications-no-results {
   grid-column: 1 / -1; padding: 24px 0; color: var(--text-secondary);
   font-size: 12px; text-align: center;
+}
+/* R175 [§S7]: the phasing principle, stated where the portfolio is searched. */
+.medications-phase-principle {
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--gridline);
+}
+.medications-phase-principle ol {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 18px; margin: 10px 0 0; padding: 0; list-style: none;
+}
+.medications-phase-principle li {
+  color: var(--text-secondary); font-size: 11px; line-height: 1.5;
+}
+.medications-phase-principle li strong {
+  margin-right: 6px; color: var(--series-5); font-weight: 650;
 }
 .medications-production-flow {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3578,6 +3680,52 @@ footer.site a { color: var(--text-muted); }
   margin-top: 5px; color: var(--text-secondary); font-size: 11.5px;
   line-height: 1.45;
 }
+.ltc-impacts .conf {
+  display: inline-block; padding: 1px 6px; border-radius: 4px;
+  font-size: 10.5px;
+}
+/* R285 [S9d]: per-person spending, drawn on the chart. It used to exist
+   only inside the hover tooltip for seven of the eight rows, while the
+   page's own note told the reader to look for it there. */
+.ltc-percapita { fill: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.bench-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* R284 [S9d]: one grade per workforce bar. The largest of the three is a
+   planning estimate and was published beside two PHI measurements under a
+   single object-level grade. */
+.ltc-workforce-grades {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px; margin-top: 10px;
+}
+.ltc-workforce-grade {
+  min-width: 0; padding: 10px 0 0; border-top: 1px solid var(--border);
+  font-size: 11.5px; line-height: 1.45;
+}
+.ltc-workforce-grade b {
+  display: block; margin-top: 4px; color: var(--text-primary); font-weight: 650;
+}
+.ltc-workforce-grade .conf {
+  display: inline-block; margin-top: 4px; padding: 1px 6px;
+  border-radius: 4px; font-size: 10.5px;
+}
+.ltc-workforce-grade small {
+  display: block; margin-top: 5px; color: var(--text-secondary); font-size: 11px;
+}
+/* R284 [S9d]: the two assumptions the maturity bar divides, each with its own
+   grade rather than folded into the figure they produce. */
+.ltc-planning-inputs { margin-top: 10px; display: grid; gap: 10px; }
+.ltc-planning-inputs li {
+  list-style: none; padding: 9px 0 0; border-top: 1px solid var(--border);
+  font-size: 11.5px; line-height: 1.45;
+}
+.ltc-planning-inputs b { color: var(--text-primary); font-weight: 650; }
+.ltc-planning-inputs .conf {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  border-radius: 4px; font-size: 10.5px;
+}
+.ltc-planning-inputs small {
+  display: block; margin-top: 4px; color: var(--text-secondary); font-size: 11px;
+}
 .ltc-chart-wrap { margin-top: 16px; }
 .ltc-legend { margin-top: 8px; }
 .ltc-country-cards {
@@ -3593,13 +3741,22 @@ footer.site a { color: var(--text-muted); }
 .ltc-country-cards > .ltc-country-card:nth-child(3) { border-top-color: var(--series-2); }
 .ltc-country-cards > .ltc-country-card:nth-child(4) { border-top-color: var(--series-6); }
 .ltc-country-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  justify-content: space-between; gap: 10px;
 }
 .ltc-country-head strong {
   color: var(--text-primary); font-size: 16px; font-weight: 650;
 }
+/* The since value is sourced prose, not a fixed label: one country carries a
+   full clause there, 257px of it against a 258px card. `white-space: nowrap`
+   here was the overflow: it left the text no break point, so the head row
+   could not fit and the page scrolled sideways at 375px. Dropping it is the
+   fix, and measured sufficient on its own down to a 200px card.
+   `flex-wrap` on the row above is legibility, not the fix: it keeps the
+   country name whole on its own line instead of squeezing it into a narrow
+   column beside the clause. It does NOT prevent the overflow by itself. */
 .ltc-country-head span {
-  color: var(--text-muted); font-size: 11px; white-space: nowrap;
+  color: var(--text-muted); font-size: 11px;
 }
 .ltc-country-system {
   margin-top: 2px; color: var(--text-secondary); font-size: 12px;
@@ -3652,6 +3809,7 @@ footer.site a { color: var(--text-muted); }
 }
 @media (max-width: 860px) {
   .ltc-stats { grid-template-columns: 1fr 1fr; }
+  .ltc-workforce-grades { grid-template-columns: 1fr; }
   .ltc-stat:nth-child(3n+2), .ltc-stat:nth-child(3n) { padding-left: 0; border-left: none; }
   .ltc-stat:nth-child(2n) { padding-left: 18px; border-left: 1px solid var(--gridline); }
   .ltc-impacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -3669,6 +3827,9 @@ footer.site a { color: var(--text-muted); }
 .fmea-cell-high     { --band: var(--series-8); }
 .fmea-cell-moderate { --band: var(--series-3); }
 .fmea-cell-low      { --band: var(--series-4); }
+/* R276: not a risk level, the absence of one. Neutral on purpose, so a record
+   whose probability could not be derived does not read as low risk. */
+.fmea-cell-unscored { --band: var(--text-muted); }
 
 .fmea-kicker {
   display: block; color: var(--accent); font-size: 10.5px; font-weight: 650;
@@ -3719,8 +3880,10 @@ footer.site a { color: var(--text-muted); }
 
 /* ---- Matrix ---- */
 .fmea-matrix-wrap { margin-top: 14px; }
+/* R274: the column count is set by the client from the reachable probability
+   range, so a score the model cannot produce is never given a column. */
 .fmea-matrix {
-  display: grid; grid-template-columns: auto repeat(5, minmax(52px, 1fr));
+  display: grid; grid-template-columns: auto repeat(var(--fmea-cols, 5), minmax(52px, 1fr));
   gap: 4px; max-width: 560px;
 }
 .fmea-matrix-corner {
@@ -3891,7 +4054,7 @@ footer.site a { color: var(--text-muted); }
 
 /* ---- CP calibration panel ---- */
 .fmea-cp-layout { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 24px; align-items: start; }
-.fmea-matrix-cp { max-width: 320px; grid-template-columns: auto repeat(5, minmax(40px, 1fr)); }
+.fmea-matrix-cp { max-width: 320px; grid-template-columns: auto repeat(var(--fmea-cols, 5), minmax(40px, 1fr)); }
 .fmea-matrix-cp .fmea-cell { min-height: 38px; }
 .fmea-cp-right { min-width: 0; }
 .fmea-cp-families { display: grid; gap: 6px; margin-top: 10px; max-height: 340px; overflow-y: auto; }
