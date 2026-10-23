@@ -334,7 +334,7 @@ const GRADED = gradedUnitRows();
       {MODEL.selected_region_count} regions still scores best, so the two
       largest terms are not what decides this.
       {FRAGILE.length > 0 && (
-        <Fragment> The {FRAGILE.length === 1 ? 'term that does decide it is' : 'terms that decide it are'} {FRAGILE.map((i) => WEIGHT_LABELS[i.weight].toLowerCase()).join(' and ')}, {FRAGILE.length === 1 ? 'which sits' : 'which sit'} within {Math.round(FRAGILE_WITHIN * 100)} points of a weighting that selects a different number of regions.</Fragment>
+        <Fragment> The {FRAGILE.length === 1 ? 'term that does decide it is' : 'terms that decide it are'}{' '}{FRAGILE.map((i) => WEIGHT_LABELS[i.weight].toLowerCase()).join(' and ')}, {FRAGILE.length === 1 ? 'which sits' : 'which sit'} within {Math.round(FRAGILE_WITHIN * 100)} points of a weighting that selects a different number of regions.</Fragment>
       )}
       That is the honest summary of a {MARGIN.marginPct.toFixed(1)}% margin,
       and it is a reason to treat the count as a decision to be made in public

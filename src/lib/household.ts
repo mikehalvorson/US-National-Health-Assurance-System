@@ -95,7 +95,8 @@ export function renderHouseholdCalc(
     div('hh-line-val', nTax, '≤ $' + Math.round(kppShare).toLocaleString('en-US'));
     div('hh-line-note', nhaCol,
       'the plan caps ordinary households at 5% of new financing: 5% of the model’s ' +
-      money(m.newRevenueB) + '/yr new-revenue requirement ÷ ' + HOUSEHOLDS_M + 'M households. ' +
+      money(m.newRevenueB) + '/yr new-revenue requirement (the mature year on the central run) ÷ ' +
+      HOUSEHOLDS_M + 'M households. ' +
       'The rest falls on wealth, high-income, employer, and health-sector taxes, if those levers deliver.');
 
     foot.textContent =

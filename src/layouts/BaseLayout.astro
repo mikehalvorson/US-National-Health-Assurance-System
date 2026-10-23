@@ -7,6 +7,10 @@ import SiteFooter from '../components/SiteFooter.astro';
 interface Props { title: string; description?: string }
 const { title, description } = Astro.props;
 const pathname = Astro.url.pathname;
+/* Without a declared icon every page asked for /favicon.ico at the domain
+   root, outside the site's base path, and got a 404 (visual sweep of
+   2026-10-22). */
+const favicon = import.meta.env.BASE_URL + 'favicon.svg'; // BASE_URL ends with '/'
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -15,6 +19,7 @@ const pathname = Astro.url.pathname;
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   {description && <meta name="description" content={description} />}
+  <link rel="icon" type="image/svg+xml" href={favicon} />
   <ClientRouter />
   <script>import '../scripts/acronyms-client.ts';</script>
 </head>

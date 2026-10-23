@@ -19,6 +19,16 @@ test('health page renders the household subset, no em dash', async () => {
   expect(html.includes('—')).toBe(false);
 });
 
+/* The visual sweep of 2026-10-22: the tile and the "Who pays" panel showed two
+   new-revenue figures under one name. The tile is the median across runs at
+   steady state; the panel is the mature year on the central run. Each says so. */
+test('the two new-revenue figures on the page each say which they are', async () => {
+  const container = await AstroContainer.create();
+  const html = await container.renderToString(Health);
+  expect(html).toContain('New revenue needed (steady state, median)');
+  expect(html).toMatch(/These are the mature\s+year on the central run/);
+});
+
 test('health page now carries the full system-cost model', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Health);

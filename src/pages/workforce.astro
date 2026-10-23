@@ -22,6 +22,12 @@ import { ANNUAL_TRAINING_TARGET, LTC_WORKFORCE, trainingSupportPositions } from 
 import { WORKFORCE_ASSESS } from '../lib/ltc';
 const dc = LTC_WORKFORCE;
 const turnoverGrade = WORKFORCE_ASSESS.homeTurnover.confidence;
+/* The pay table's aide wage is set with set:text, not written as
+   <strong>{...}</strong>: Astro's compiler (2.13.1) leaves a <strong> that
+   holds an expression inside a table cell open, and its HTML repair then
+   wrapped every later section of this page in bold (visual sweep of
+   2026-10-22). tests/lib/rendered-markup.test.ts holds every page to it. */
+const aideWageText = '$' + dc.medianWageNow.toFixed(2) + '/hr';
 
 /* Declaration order, not sorted: a row that shares a cost line has to appear
    after the row that owns it, or "priced inside another" names nothing. */
@@ -693,7 +699,7 @@ const THICKEST_FAMILY = Math.max(...requirementFamilyCounts().values());
             </tr>
             <tr>
               <th>Long-term care direct-care aides</th>
-              <td><strong>${dc.medianWageNow.toFixed(2)}/hr</strong> median (about $36,100 full-time)
+              <td><strong set:text={aideWageText} /> median (about $36,100 full-time)
                 <span class="conf high">high</span></td>
               <td>The floor to lift, not a band to hold. The plan raises aide pay
                 toward a living-wage floor of about $22 an hour; that net-new

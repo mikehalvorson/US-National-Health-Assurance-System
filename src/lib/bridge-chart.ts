@@ -5,7 +5,7 @@
  * ========================================================================= */
 import {
   el, niceTicks, barPath, div, tipRow, showTip, hideTip, cssVar, legend, bindTipFocus,
-  type TipPoint
+  fitViewBox, type TipPoint
 } from './chart-util';
 import { money, moneyShort, axis } from './format';
 
@@ -109,6 +109,7 @@ export function renderBridgeChart(
     p.addEventListener('pointerleave', leave);
     bindTipFocus(p, showBarTip, leave);
   });
+  fitViewBox(svg);
 
   legend(container, [
     { color: 'var(--total-bar)', label: 'Totals' },

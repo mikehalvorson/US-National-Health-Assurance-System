@@ -3,7 +3,7 @@
  * renderFlowDiagram (lines 452-531). Sources on the left, channels on the
  * right, ribbons proportional to their value. No framework; hand-rolled SVG.
  * ========================================================================= */
-import { el, div, tipRow, showTip, hideTip, bindTipFocus, type TipPoint } from './chart-util';
+import { el, div, tipRow, showTip, hideTip, bindTipFocus, fitViewBox, type TipPoint } from './chart-util';
 import { money, moneyShort } from './format';
 
 export interface FlowNode {
@@ -56,7 +56,7 @@ export function renderFlowDiagram(container: HTMLElement, spec: FlowSpec): void 
   const L = layout(spec.sources), R = layout(spec.channels);
 
   const svg = el('svg', {
-    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg',
+    viewBox: '0 0 ' + W + ' ' + H, class: 'chart-svg flow-svg',
     role: 'group', 'aria-label': spec.aria || 'Money flow diagram'
   }, container);
 
@@ -130,4 +130,5 @@ export function renderFlowDiagram(container: HTMLElement, spec: FlowSpec): void 
     }, svg);
     val.textContent = moneyShort(n.node.value);
   });
+  fitViewBox(svg);
 }

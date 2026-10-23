@@ -25,6 +25,9 @@ test('the no-JS savings ledger is the ledger at the sliders\' defaults', async (
   const html = await container.renderToString(Medications);
   const cell = (id: string) => (html.match(new RegExp('id="' + id + '"[^>]*>([^<]*)<')) ?? [])[1];
   expect(cell('medications-pmc-savings-copy')).toBe(savingsMoney(ledger.pmc));
+  /* The visual sweep of 2026-10-22: the headline typed $43B/yr beside a
+     calculator that drew $42.0B. */
+  expect(cell('medications-pmc-headline')).toBe(savingsMoney(ledger.pmc) + '/yr');
   expect(cell('medications-purchasing-savings')).toBe(savingsMoney(ledger.purchasing));
   expect(cell('medications-total-drug-savings')).toBe(savingsMoney(ledger.whole));
   expect(html).toMatch(new RegExp('id="medications-pmc-share-bar" style="width:' + share.value + '%"'));

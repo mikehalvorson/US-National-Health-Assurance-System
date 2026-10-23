@@ -150,7 +150,11 @@ export function computeOverviewFromMc(mc: MonteCarloResult): OverviewView {
       range: "status quo reaches " + money(tBaseMature) + " by 2041"
     },
     {
-      label: "New revenue needed (mature)",
+      /* The median across runs at steady state, where the "Who pays" panel,
+         the household note and the Taxes tab read the mature year on the
+         central run; the two differ, so each label says which it is (visual
+         sweep of 2026-10-22). */
+      label: "New revenue needed (steady state, median)",
       value: money(mc.steady.newRevenue.p50 * DEF) + "/yr",
       range: bandTxt(mc.steady.newRevenue.p10 * DEF, mc.steady.newRevenue.p90 * DEF, moneyShort)
     }

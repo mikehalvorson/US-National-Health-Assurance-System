@@ -7,10 +7,18 @@
   --surface-1: #fcfcfb;
   --text-primary: #0b0b0b;
   --text-secondary: #52514e;
-  --text-muted: #898781;
+  /* Light only: #898781 read below the contrast WCAG AA asks of small text
+     on --surface-1 (visual sweep of 2026-10-22); dark keeps #898781, which
+     passes there. tests/lib/rendered-markup.test.ts holds every text token
+     to AA on both surfaces in both themes. */
+  --text-muted: #6e6c67;
   --gridline: #e1e0d9;
   --baseline: #c3c2b7;
   --border: rgba(11, 11, 11, 0.10);
+  /* The narrowest a chart draws before its frame scrolls sideways: wide
+     enough that the axis labels of the widest charts stay legible on a
+     phone (the org charts hold their own, narrower minimum). */
+  --chart-min-width: 720px;
   --series-1: #2a78d6;  /* blue - NHA */
   --series-2: #1baf7a;  /* aqua   */
   --series-3: #eda100;  /* yellow */
@@ -199,7 +207,14 @@ button.btn:hover { border-color: var(--accent); }
 .runs-note { color: var(--text-muted); font-size: 12.5px; }
 
 /* ---- Charts ---- */
-.chart-svg { width: 100%; height: auto; display: block; }
+.chart-svg { width: 100%; height: auto; display: block; min-width: var(--chart-min-width); }
+/* A chart scales its viewBox to its frame, text included, so on a phone its
+   labels drew too small to read (visual sweep of 2026-10-22). It keeps a minimum
+   width instead and its frame scrolls, as the tables' frames do. The money-flow
+   diagrams are drawn narrow and the county dot map carries no text, so they
+   still fit their frame. */
+.chart-svg.flow-svg, .chart-svg.units-map { min-width: 0; }
+:has(> .chart-svg) { overflow-x: auto; }
 .gridline { stroke: var(--gridline); stroke-width: 1; }
 .baseline-axis { stroke: var(--baseline); stroke-width: 1; }
 .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
@@ -210,6 +225,12 @@ button.btn:hover { border-color: var(--accent); }
 .row-label { font-size: 12.5px; fill: var(--text-secondary); }
 .row-note { font-size: 10.5px; fill: var(--text-muted); }
 .value-label { font-size: 12px; fill: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* The tax charts' annotations and presidents' names. They had no rule, so they
+   took SVG's default black fill, near-invisible on the dark surface (visual
+   sweep of 2026-10-22). tests/lib/rendered-markup.test.ts holds every SVG text class
+   to a fill rule. */
+.direct-label { font-size: 12px; fill: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.pres-label { font-size: 11px; fill: var(--text-muted); }
 .inbar-label { font-size: 12px; fill: #ffffff; font-weight: 600; }
 .connector { stroke: var(--baseline); stroke-width: 1; }
 .bar-mark { cursor: default; }
@@ -4133,7 +4154,11 @@ footer.site a { color: var(--text-muted); }
   background: color-mix(in srgb, var(--series-5) 14%, transparent); color: var(--series-5);
 }
 
-.quality-eq-formula-wrap { padding: 10px 4px; margin: 4px 0 10px; }
+/* position: relative makes the frame the containing block of the fractions'
+   screen-reader "/" spans, which are absolutely positioned; without it they
+   escaped the scroll frame and widened the page on a phone once the equation
+   kept one line. */
+.quality-eq-formula-wrap { padding: 10px 4px; margin: 4px 0 10px; position: relative; }
 .eq-formula {
   display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
   font-size: 13.5px; line-height: 1.9; font-variant-numeric: tabular-nums;
@@ -4177,5 +4202,9 @@ span.eq-var[data-eq-node] { cursor: help; }
 
 @media (max-width: 860px) {
   .quality-eq-diagram { max-height: 420px; }
-  .eq-formula { font-size: 12.5px; }
+  /* On a phone the equation wrapped one term per line, its parentheses lines
+     away from what they enclose (visual sweep of 2026-10-22). It keeps one
+     line and its frame (.tbl-scroll) scrolls. */
+  .eq-formula { font-size: 12.5px; flex-wrap: nowrap; width: max-content; }
+  .eq-row, .eq-frac-num, .eq-frac-den { flex-wrap: nowrap; }
 }

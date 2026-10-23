@@ -54,17 +54,43 @@ function localToday(): string {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-function lastContentRevision(rel: string, cwd = REPO_ROOT): string | null {
-  if (substantive(gitIn(cwd, 'diff', '--unified=0', 'HEAD', '--', rel))) return localToday();
+/* Squash-merges into main. The owner's decision of 2026-10-21 lands a
+ * working branch as one commit, so the branch's history (which held the
+ * remediation log) is not published; a squash dates every change it carries
+ * to its own day, so a document last changed inside one reads as revised that
+ * day. Each entry is a squash commit and what it squashed; the strict check
+ * ran on that branch's own history before the squash. A new squash adds its
+ * line here. */
+const SQUASHES: Record<string, string> = {
+  '2c4a5802a6835126d12ec1c698b2fa859281148b': 'nha-remediation at eb0d284'
+};
+
+interface Revision { date: string; sha: string | null }
+
+function lastContentCommit(rel: string, cwd = REPO_ROOT): Revision | null {
+  if (substantive(gitIn(cwd, 'diff', '--unified=0', 'HEAD', '--', rel))) return { date: localToday(), sha: null };
   /* --follow reads through a rename, which would otherwise show the renamed
      file's first commit as a rewrite of every line; --cc shows what a merge
      itself changed (a conflict resolution), which plain -p leaves out */
-  const log = gitIn(cwd, 'log', '--follow', '--cc', '--format=%x00%as', '--unified=0', '-p', '--', rel);
+  const log = gitIn(cwd, 'log', '--follow', '--cc', '--format=%x00%H %as', '--unified=0', '-p', '--', rel);
   for (const block of log.split('\u0000').slice(1)) {
-    const date = block.slice(0, 10);
-    if (substantive(block.slice(10))) return date;
+    const sha = block.slice(0, 40);
+    const date = block.slice(41, 51);
+    if (substantive(block.slice(51))) return { date: date, sha: sha };
   }
   return null;
+}
+
+function lastContentRevision(rel: string, cwd = REPO_ROOT): string | null {
+  const r = lastContentCommit(rel, cwd);
+  return r ? r.date : null;
+}
+
+/* A stamp holds when it is no earlier than the last content change; when that
+   change came in a squash, when it falls inside the squash's window instead:
+   later than the squash's parent and no later than the squash. */
+function stampHolds(stamp: string, changed: string, squashParent: string | null): boolean {
+  return squashParent === null ? changed <= stamp : squashParent < stamp && stamp <= changed;
 }
 
 test('review of P23: each research methodology\'s "Last revised" is no earlier than its last content change', () => {
@@ -74,13 +100,27 @@ test('review of P23: each research methodology\'s "Last revised" is no earlier t
   for (const rel of docs) {
     const m = STAMP.exec(readFileSync(join(REPO_ROOT, rel), 'utf8'));
     if (!m) continue; /* the build check reports a missing stamp */
-    const changed = lastContentRevision(rel);
+    const changed = lastContentCommit(rel);
     expect(changed).not.toBeNull();
     checked.push(rel);
-    if (changed! > m[2]) stale.push(rel + ': last revised ' + m[2] + ', content changed ' + changed);
+    const squash = changed!.sha !== null && changed!.sha in SQUASHES;
+    const parent = squash ? git('log', '-1', '--format=%as', changed!.sha + '^').trim() : null;
+    if (!stampHolds(m[2], changed!.date, parent)) {
+      stale.push(rel + ': last revised ' + m[2] + ', content changed ' + changed!.date +
+        (squash ? ' (in the squash of ' + SQUASHES[changed!.sha!] + ', after ' + parent + ')' : ''));
+    }
   }
   expect(stale).toEqual([]);
   expect(checked.length).toBeGreaterThanOrEqual(16);
+});
+
+test('a stamp inside a squash\'s window holds, and one outside it or behind a later edit does not', () => {
+  expect(stampHolds('2026-10-21', '2026-10-22', '2026-08-12')).toBe(true);
+  expect(stampHolds('2026-08-12', '2026-10-22', '2026-08-12')).toBe(false);
+  expect(stampHolds('2026-08-01', '2026-10-22', '2026-08-12')).toBe(false);
+  expect(stampHolds('2026-10-23', '2026-10-22', '2026-08-12')).toBe(false);
+  expect(stampHolds('2026-10-21', '2026-10-22', null)).toBe(false);
+  expect(stampHolds('2026-10-22', '2026-10-22', null)).toBe(true);
 });
 
 test('review of P23: a stamp line or a blank line alone is not a content change', () => {

@@ -23,6 +23,9 @@ test('units page renders prose + interactive containers, no em dash', async () =
   expect(html).toContain('id="units-filter"');
   expect(html).toContain('id="units-state-table"');
   expect(html).toContain('id="units-integrity"');
+  /* The visual sweep of 2026-10-22: "decide it arerural workload", the space
+     between two expressions inside a <Fragment> dropped. */
+  expect(html).toMatch(/decide it (?:is|are) [a-z]/);
   // pre-wrapped acronym abbrs kept verbatim
   expect(html).toContain('National Hospital Stewardship Authority');
   expect(html.includes('—')).toBe(false);

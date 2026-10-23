@@ -227,6 +227,24 @@ export function barPath(x: number, y: number, w: number, h: number, r: number, d
   );
 }
 
+/** Widen an SVG's viewBox sideways to take in anything drawn past its edges,
+ *  so a label longer than its margin is shown whole rather than cut off (the
+ *  cost bridge's benefit-expansion row and a money-flow node label were, in
+ *  the visual sweep of 2026-10-22). Call it once the chart is drawn and in the
+ *  document; where there is no layout to measure (a test DOM) it does nothing. */
+export function fitViewBox(svg: SVGElement): void {
+  const s = svg as unknown as SVGSVGElement;
+  if (!s.isConnected || typeof s.getBBox !== 'function' || !s.viewBox || !s.viewBox.baseVal) return;
+  const vb = s.viewBox.baseVal;
+  const bb = s.getBBox();
+  if (!bb.width) return;
+  const x0 = Math.min(vb.x, Math.floor(bb.x));
+  const x1 = Math.max(vb.x + vb.width, Math.ceil(bb.x + bb.width));
+  if (x0 < vb.x || x1 > vb.x + vb.width) {
+    s.setAttribute('viewBox', x0 + ' ' + vb.y + ' ' + (x1 - x0) + ' ' + vb.height);
+  }
+}
+
 /** (charts.js:116-118) */
 export function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
