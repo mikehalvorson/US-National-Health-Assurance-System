@@ -5,7 +5,7 @@ export default getViteConfig({
   // (production build) transforms, but Vitest's SSR module runner reads
   // `import.meta.env.BASE_URL` from Vite's own top-level `base` option instead.
   // Set it explicitly here so tests see the same BASE_URL the real build emits.
-  base: '/US-National-Health-Assurance-System/',
+  base: '/healthcare/',
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],

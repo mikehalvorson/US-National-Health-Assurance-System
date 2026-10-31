@@ -113,7 +113,7 @@ public/data/*.json     county, state and hospital-region geometry, fetched
 **To deploy publicly:** nothing to configure by hand. Pages is served by
 GitHub Actions: `.github/workflows/deploy.yml` builds `src/` on every push to
 `main` and uploads the result, publishing to
-`https://mikehalvorson.github.io/US-National-Health-Assurance-System/`.
+`https://mchalvorson.com/healthcare/`.
 
 > Do **not** set Settings → Pages → Source to "Deploy from a branch." That
 > switches Pages off the workflow above. The `docs/` directory in this repo is

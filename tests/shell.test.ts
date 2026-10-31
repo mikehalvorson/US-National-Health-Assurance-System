@@ -4,7 +4,7 @@ import TabNav from '../src/components/TabNav.astro';
 import BaseLayout from '../src/layouts/BaseLayout.astro';
 import { TABS } from '../src/lib/tabs';
 
-const BASE = '/US-National-Health-Assurance-System/';
+const BASE = '/healthcare/';
 
 test('TabNav renders 14 links with base-prefixed hrefs, in order', async () => {
   const container = await AstroContainer.create();
@@ -23,7 +23,7 @@ test('TabNav marks the current tab active', async () => {
     props: { pathname: BASE + 'health' },
   });
   // the health anchor carries the active class; overview does not
-  expect(htmlHealth).toMatch(/href="\/US-National-Health-Assurance-System\/health"[^>]*class="[^"]*active/);
+  expect(htmlHealth).toMatch(/href="\/healthcare\/health"[^>]*class="[^"]*active/);
 });
 
 test('rendered shell contains no em dashes', async () => {

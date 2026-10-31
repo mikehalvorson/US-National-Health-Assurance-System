@@ -141,7 +141,7 @@ export const DATA_PHASE_REWORDINGS: { id: string; phase: string }[] = NHA_DATA_P
    node:fs and data-client.ts is a client bundle.
    The repo base is still typed in ~20 other links across the site; that is a
    wider class than this row, and is not swept here. */
-const REPO_BLOB = 'https://github.com/mikehalvorson/US-National-Health-Assurance-System/blob/main/';
+const REPO_BLOB = 'https://github.com/mikehalvorson/healthcare/blob/main/';
 
 /* R299 [S16], review: the one wording of a population note, for the Data
    tab, the Quality strip, and the check that reads the methodology (which

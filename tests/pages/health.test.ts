@@ -73,10 +73,10 @@ test('health renders the build-time hero value and family note from the model', 
 test('health page ends with the story pager', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Health, {
-    request: new Request('http://localhost/US-National-Health-Assurance-System/health'),
+    request: new Request('http://localhost/healthcare/health'),
   });
   expect(html).toContain('chapter-nav');
   expect(html).toContain('Walk the story');
   // Back -> Overview and Next -> Taxes & Financing
-  expect(html).toContain('/US-National-Health-Assurance-System/tax');
+  expect(html).toContain('/healthcare/tax');
 });

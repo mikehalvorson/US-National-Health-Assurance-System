@@ -29,8 +29,8 @@ function selfTestGate() {
 }
 
 export default defineConfig({
-  site: 'https://mikehalvorson.github.io',
-  base: '/US-National-Health-Assurance-System/',
+  site: 'https://mchalvorson.com',
+  base: '/healthcare/',
   output: 'static',
   trailingSlash: 'ignore',
   integrations: [selfTestGate()],

@@ -303,7 +303,7 @@ export function typedEnvelopeLiterals(root = REPO_ROOT): CodeReference[] {
  * one page, the log said three, the first sweep said five, then four), and the
  * reason the check must enumerate rather than assert a number. */
 export const REPO_URL =
-  'https://github.com/mikehalvorson/US-National-Health-Assurance-System';
+  'https://github.com/mikehalvorson/healthcare';
 const REPO_LINK = new RegExp('href="' + REPO_URL + '([^"]*)"', 'g');
 
 export function repoLinkTargets(root = REPO_ROOT): {

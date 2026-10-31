@@ -41,21 +41,21 @@ test('overview includes the four operating-system diagrams with base-aware links
   expect(html).toContain('overview-rollout-arc');
   // SPA buttons converted to real links
   expect(html).not.toContain('data-dashboard-view');
-  expect(html).toContain('/US-National-Health-Assurance-System/health');
-  expect(html).toContain('/US-National-Health-Assurance-System/rollout');
+  expect(html).toContain('/healthcare/health');
+  expect(html).toContain('/healthcare/rollout');
 });
 
 test('overview ends with the chapter grid and story pager', async () => {
   const container = await AstroContainer.create();
   const html = await container.renderToString(Overview, {
-    request: new Request('http://localhost/US-National-Health-Assurance-System/'),
+    request: new Request('http://localhost/healthcare/'),
   });
   expect(html).toContain('overview-chapter-grid');
   expect(html).toContain('Each chapter answers a different implementation question');
   const grid = html.slice(html.indexOf('overview-chapter-grid'));
   const links = (grid.match(/<a /g) ?? []).length;
   expect(links).toBeGreaterThanOrEqual(11);
-  expect(html).toContain('/US-National-Health-Assurance-System/quality');
+  expect(html).toContain('/healthcare/quality');
   // story pager (Next -> Healthcare) restored at the end of the page
   expect(html).toContain('chapter-nav');
   expect(html).toContain('Walk the story');
