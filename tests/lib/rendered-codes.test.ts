@@ -525,7 +525,7 @@ const STUB_GLOBALS: Record<string, unknown> = {
     setInterval: (): number => 0, clearInterval: (): void => { /* inert */ },
     requestAnimationFrame: (fn: () => void): number => { fn(); return 0; },
     cancelAnimationFrame: (): void => { /* inert */ },
-    location: { pathname: '/US-National-Health-Assurance-System/', hash: '', search: '' },
+    location: { pathname: '/healthcare/', hash: '', search: '' },
     getComputedStyle: (): { getPropertyValue: () => string } => ({ getPropertyValue: () => '' }),
     matchMedia: (): { matches: boolean; addEventListener: () => void; removeEventListener: () => void } =>
       ({ matches: false, addEventListener(): void { /* inert */ }, removeEventListener(): void { /* inert */ } })

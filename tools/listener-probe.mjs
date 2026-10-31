@@ -35,7 +35,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
 const PORT = 9333;
 const SEND_TIMEOUT_MS = 30000;
 const ORIGIN = process.argv[2] || 'http://localhost:4321';
-const BASE = '/US-National-Health-Assurance-System/';
+const BASE = '/healthcare/';
 const ALL = ['', 'health', 'tax', 'legislation', 'units', 'ltc', 'medications', 'data',
   'workforce', 'gov', 'hardening', 'risk', 'rollout', 'quality'];
 const PAGES = process.argv.length > 3 ? process.argv.slice(3).map((p) => (p === 'overview' ? '' : p)) : ALL;
